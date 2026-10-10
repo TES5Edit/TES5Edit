@@ -8300,41 +8300,13 @@ begin
 end;
 
 procedure TfrmMain.mniNavBatchChangeReferencingRecordsClick(Sender: TObject);
-
-  function FindFile(const s: String): IwbFile;
-  var
-    i: Integer;
-  begin
-    for i := Low(Files) to High(Files) do
-      if AnsiSameText(Files[i].FileName, s) then begin
-        Result := Files[i];
-        Exit;
-      end;
-    Result := nil;
-  end;
-
 var
-  _File                       : IwbFile;
-  NodeData                    : PNavNodeData;
-  CSV, Line                   : TStringList;
-  i, j, k, l                  : Integer;
-  s                           : string;
-  OldMaster                   : IwbFile;
-  NewMaster                   : IwbFile;
-  OldRecord                   : IwbMainRecord;
-  NewRecord                   : IwbMainRecord;
-  RefRecord                   : IwbMainRecord;
-  lUpdate                     : TwbReferenceUpdate;
-  NewMasters                  : TStringList;
-  ReplaceList                 : array of record
-    rlOldRecord: IwbMainRecord;
-    rlNewRecord: IwbMainRecord;
-    rlUpdate : TwbReferenceUpdate;
-  end;
+  _File      : IwbFile;
+  NodeData   : PNavNodeData;
+  CSV        : TStringList;
+  lPlan      : TwbReferenceReplacementPlan;
+  NewMasters : TStringList;
 begin
-  ReplaceList := nil;
-  l := 0;
-
   if not xeContext.Settings.EditAllowed then
     Exit;
   if xeContext.Settings.TranslationMode then
@@ -8355,128 +8327,35 @@ begin
       Exit;
   end;
 
+  CSV := TStringList.Create;
+  try
+    CSV.LoadFromFile(odCSV.FileName);
+    lPlan := _File.PlanReferenceReplacement(CSV,
+      procedure(aMessage: string)
+      begin
+        AddMessage(aMessage);
+      end);
+  finally
+    CSV.Free;
+  end;
+
+  if Length(lPlan.Entries) > 0 then
+    if not EditWarn then
+      Exit;
+
   NewMasters := TStringList.Create;
   try
-    NewMasters.Sorted := True;
-    NewMasters.Duplicates := dupError;
-
-    CSV := TStringList.Create;
-    try
-      CSV.LoadFromFile(odCSV.FileName);
-      Line := TStringList.Create;
-      try
-        SetLength(ReplaceList, CSV.Count);
-        for i := 1 to Pred(CSV.Count) do begin //ignore first line
-          Line.CommaText := CSV[i];
-          if Line.Count <> 7 then begin
-            AddMessage('Skipping line '+IntToStr(i+1)+': 7 values expected but '+IntToStr(Line.Count)+' found.');
-            Continue;
-          end;
-
-          s := Trim(Line[1]);
-          OldMaster := FindFile(s);
-          if not Assigned(OldMaster) then begin
-            AddMessage('Skipping line '+IntToStr(i+1)+': Old Master "'+s+'" is not loaded.');
-            Continue;
-          end else if OldMaster.LoadOrder < 0 then begin
-            AddMessage('Skipping line '+IntToStr(i+1)+': Old Master "'+s+'" does not have a load order assigned.');
-            Continue;
-          end;
-
-          s := Trim(Line[5]);
-          NewMaster := FindFile(s);
-          if not Assigned(NewMaster) then begin
-            AddMessage('Skipping line '+IntToStr(i+1)+': New Master "'+s+'" is not loaded.');
-            Continue;
-          end else if NewMaster.LoadOrder < 0 then begin
-            AddMessage('Skipping line '+IntToStr(i+1)+': New Master "'+s+'" does not have a load order assigned.');
-            Continue;
-          end;
-
-          s := Trim(Line[2]);
-          j := StrToIntDef(s, -1);
-          if (j < 0) or (j > $FFFFFF) then begin
-            AddMessage('Skipping line '+IntToStr(i+1)+': Old FormID "'+s+'" is not in the valid range.');
-            Continue;
-          end;
-          OldRecord := OldMaster.RecordByFormID[TwbFormID.FromCardinal(j).ChangeFileID(xeContext.SlotLayout, OldMaster.FileFileID[True]), True, True];
-          if not Assigned(OldRecord) then begin
-            AddMessage('Skipping line '+IntToStr(i+1)+': Old Record with FormID "'+s+'" was not found in old Master "'+OldMaster.FileName+'".');
-            Continue;
-          end;
-
-          s := Trim(Line[6]);
-          j := StrToIntDef(s, -1);
-          if (j < 0) or (j > $FFFFFF) then begin
-            AddMessage('Skipping line '+IntToStr(i+1)+': New FormID "'+s+'" is not in the valid range.');
-            Continue;
-          end;
-          NewRecord := NewMaster.RecordByFormID[TwbFormID.FromCardinal(j).ChangeFileID(xeContext.SlotLayout, NewMaster.FileFileID[True]), True, True];
-          if not Assigned(NewRecord) then begin
-            AddMessage('Skipping line '+IntToStr(i+1)+': New Record with FormID "'+s+'" was not found in new Master "'+NewMaster.FileName+'".');
-            Continue;
-          end;
-
-          if OldRecord.Equals(NewRecord) then begin
-            AddMessage('Skipping line '+IntToStr(i+1)+': Old and new Record are identical".');
-            Continue;
-          end;
-
-          s := Trim(Line[0]);
-          if not SameText(OldRecord.Signature, s) then
-            AddMessage('Warning line '+IntToStr(i+1)+': Old Record do not have expected Signature ("'+OldRecord.Signature+'" vs. "'+s+'")".');
-          if not SameText(NewRecord.Signature, s) then
-            AddMessage('Warning line '+IntToStr(i+1)+': New Record do not have expected Signature ("'+NewRecord.Signature+'" vs. "'+s+'")".');
-
-          s := Trim(Line[3]);
-          if not SameText(OldRecord.EditorID, s) then
-            AddMessage('Warning line '+IntToStr(i+1)+': Old Record does not have expected EditorID ("'+OldRecord.EditorID+'" vs. "'+s+'")".');
-
-          s := Trim(Line[4]);
-          if not SameText(NewRecord.EditorID, s) then
-            AddMessage('Warning line '+IntToStr(i+1)+': New Record does not have expected EditorID ("'+NewRecord.EditorID+'" vs. "'+s+'")".');
-
-          lUpdate := OldRecord.PlanReferenceUpdate(_File);
-
-          if Length(lUpdate.Items) < 1 then begin
-            AddMessage('Skipping line '+IntToStr(i+1)+': Old Record "'+OldRecord.Name+'" is not referenced by any record in file "'+_File.Name+'".');
-            Continue;
-          end;
-
-          with ReplaceList[l] do begin
-            rlOldRecord := OldRecord;
-            rlNewRecord := NewRecord;
-            rlUpdate := lUpdate;
-            OldRecord := nil;
-            NewRecord := nil;
-            lUpdate.Items := nil;
-          end;
-          Inc(l);
-
-          if not NewMaster.Equals(_File) then
-            if not NewMasters.Find(NewMaster._File.FileName, k) then
-              NewMasters.AddObject(NewMaster._File.FileName, Pointer(NewMaster._File));
-        end;
-      finally
-        FreeAndNil(Line);
-      end;
-    finally
-      FreeAndNil(CSV);
-    end;
-    SetLength(ReplaceList, l);
-
-    if l > 0 then
-      if not EditWarn then
-        Exit;
+    for var lMaster in lPlan.NewMasters do
+      NewMasters.AddObject(lMaster.FileName, Pointer(lMaster));
 
     if AddRequiredMasters(NewMasters, _File) then
-      for i := 0 to Pred(l) do with ReplaceList[i] do begin
-        ShowChangeReferencedBy(rlOldRecord.LoadOrderFormID, rlNewRecord.LoadOrderFormID, rlUpdate, True);
-        RefRecord := _File.RecordByFormID[rlOldRecord.LoadOrderFormID, False, True];
-        if Assigned(RefRecord) and _File.Equals(RefRecord._File) then begin
-          AddMessage('Changing FormID ['+RefRecord.LoadOrderFormID.ToDisplayString(xeContext.SlotLayout)+'] to ['+rlNewRecord.LoadOrderFormID.ToDisplayString(xeContext.SlotLayout)+']');
-          RefRecord.LoadOrderFormID := rlNewRecord.LoadOrderFormID;
-        end;
+      for var lEntry in lPlan.Entries do begin
+        ShowChangeReferencedBy(lEntry.OldRecord.LoadOrderFormID, lEntry.NewRecord.LoadOrderFormID, lEntry.Update, True);
+        _File.SetOwnRecordFormID(lEntry.OldRecord.LoadOrderFormID, lEntry.NewRecord.LoadOrderFormID,
+          procedure(aMessage: string)
+          begin
+            AddMessage(aMessage);
+          end);
       end;
   finally
     NewMasters.Free;

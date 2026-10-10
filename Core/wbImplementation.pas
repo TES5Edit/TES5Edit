@@ -957,6 +957,8 @@ type
     procedure FinishFormIDChange(const aPlan: TwbFormIDChangePlan);
     procedure BuildOrLoadRefOfDependents;
     procedure RequireMasterFor(const aLoadOrderFormID: TwbFormID; const aAddMaster: TFunc<IwbFile, Boolean>);
+    function PlanReferenceReplacement(const aLines: TStrings; const aReport: TProc<string>): TwbReferenceReplacementPlan;
+    procedure SetOwnRecordFormID(const aOldFormID, aNewFormID: TwbFormID; const aReport: TProc<string>);
 
     function IsNewRecord(const aFileID: TwbFileID; aNew: Boolean): Boolean; overload;
     function IsNewRecord(const aFormID: TwbFormID; aNew: Boolean): Boolean; overload;
@@ -3023,6 +3025,145 @@ begin
     if not Assigned(aAddMaster) or not aAddMaster(lMaster) then
       raise;
   end;
+end;
+
+function TwbFile.PlanReferenceReplacement(const aLines: TStrings; const aReport: TProc<string>): TwbReferenceReplacementPlan;
+var
+  lSelfRef   : IwbFile;
+  lLayout    : TwbSlotLayout;
+  lLine      : TStringList;
+  lOldMaster : IwbFile;
+  lNewMaster : IwbFile;
+  lOldRecord : IwbMainRecord;
+  lNewRecord : IwbMainRecord;
+  lUpdate    : TwbReferenceUpdate;
+  lKnown     : Boolean;
+  s          : string;
+  j          : Integer;
+
+  procedure Report(const aText: string);
+  begin
+    if Assigned(aReport) then
+      aReport(aText);
+  end;
+
+begin
+  lSelfRef := Self;
+  lLayout := flContextObj.SlotLayout;
+  Result.Entries := nil;
+  Result.NewMasters := nil;
+
+  lLine := TStringList.Create;
+  try
+    for var i := 1 to Pred(aLines.Count) do begin
+      lLine.CommaText := aLines[i];
+      if lLine.Count <> 7 then begin
+        Report('Skipping line '+IntToStr(i+1)+': 7 values expected but '+IntToStr(lLine.Count)+' found.');
+        Continue;
+      end;
+
+      s := Trim(lLine[1]);
+      lOldMaster := flContextObj.FileByModuleName(s);
+      if not Assigned(lOldMaster) then begin
+        Report('Skipping line '+IntToStr(i+1)+': Old Master "'+s+'" is not loaded.');
+        Continue;
+      end else if lOldMaster.LoadOrder < 0 then begin
+        Report('Skipping line '+IntToStr(i+1)+': Old Master "'+s+'" does not have a load order assigned.');
+        Continue;
+      end;
+
+      s := Trim(lLine[5]);
+      lNewMaster := flContextObj.FileByModuleName(s);
+      if not Assigned(lNewMaster) then begin
+        Report('Skipping line '+IntToStr(i+1)+': New Master "'+s+'" is not loaded.');
+        Continue;
+      end else if lNewMaster.LoadOrder < 0 then begin
+        Report('Skipping line '+IntToStr(i+1)+': New Master "'+s+'" does not have a load order assigned.');
+        Continue;
+      end;
+
+      s := Trim(lLine[2]);
+      j := StrToIntDef(s, -1);
+      if (j < 0) or (j > $FFFFFF) then begin
+        Report('Skipping line '+IntToStr(i+1)+': Old FormID "'+s+'" is not in the valid range.');
+        Continue;
+      end;
+      lOldRecord := lOldMaster.RecordByFormID[TwbFormID.FromCardinal(j).ChangeFileID(lLayout, lOldMaster.FileFileID[True]), True, True];
+      if not Assigned(lOldRecord) then begin
+        Report('Skipping line '+IntToStr(i+1)+': Old Record with FormID "'+s+'" was not found in old Master "'+lOldMaster.FileName+'".');
+        Continue;
+      end;
+
+      s := Trim(lLine[6]);
+      j := StrToIntDef(s, -1);
+      if (j < 0) or (j > $FFFFFF) then begin
+        Report('Skipping line '+IntToStr(i+1)+': New FormID "'+s+'" is not in the valid range.');
+        Continue;
+      end;
+      lNewRecord := lNewMaster.RecordByFormID[TwbFormID.FromCardinal(j).ChangeFileID(lLayout, lNewMaster.FileFileID[True]), True, True];
+      if not Assigned(lNewRecord) then begin
+        Report('Skipping line '+IntToStr(i+1)+': New Record with FormID "'+s+'" was not found in new Master "'+lNewMaster.FileName+'".');
+        Continue;
+      end;
+
+      if lOldRecord.Equals(lNewRecord) then begin
+        Report('Skipping line '+IntToStr(i+1)+': Old and new Record are identical".');
+        Continue;
+      end;
+
+      s := Trim(lLine[0]);
+      if not SameText(lOldRecord.Signature, s) then
+        Report('Warning line '+IntToStr(i+1)+': Old Record do not have expected Signature ("'+lOldRecord.Signature+'" vs. "'+s+'")".');
+      if not SameText(lNewRecord.Signature, s) then
+        Report('Warning line '+IntToStr(i+1)+': New Record do not have expected Signature ("'+lNewRecord.Signature+'" vs. "'+s+'")".');
+
+      s := Trim(lLine[3]);
+      if not SameText(lOldRecord.EditorID, s) then
+        Report('Warning line '+IntToStr(i+1)+': Old Record does not have expected EditorID ("'+lOldRecord.EditorID+'" vs. "'+s+'")".');
+
+      s := Trim(lLine[4]);
+      if not SameText(lNewRecord.EditorID, s) then
+        Report('Warning line '+IntToStr(i+1)+': New Record does not have expected EditorID ("'+lNewRecord.EditorID+'" vs. "'+s+'")".');
+
+      lUpdate := lOldRecord.PlanReferenceUpdate(lSelfRef);
+      if Length(lUpdate.Items) < 1 then begin
+        Report('Skipping line '+IntToStr(i+1)+': Old Record "'+lOldRecord.Name+'" is not referenced by any record in file "'+lSelfRef.Name+'".');
+        Continue;
+      end;
+
+      SetLength(Result.Entries, Succ(Length(Result.Entries)));
+      Result.Entries[High(Result.Entries)].OldRecord := lOldRecord;
+      Result.Entries[High(Result.Entries)].NewRecord := lNewRecord;
+      Result.Entries[High(Result.Entries)].Update := lUpdate;
+
+      if not lNewMaster.Equals(lSelfRef) then begin
+        lKnown := False;
+        for var lMaster in Result.NewMasters do
+          if lMaster.Equals(lNewMaster) then begin
+            lKnown := True;
+            Break;
+          end;
+        if not lKnown then
+          Result.NewMasters := Result.NewMasters + [lNewMaster];
+      end;
+    end;
+  finally
+    lLine.Free;
+  end;
+end;
+
+procedure TwbFile.SetOwnRecordFormID(const aOldFormID, aNewFormID: TwbFormID; const aReport: TProc<string>);
+var
+  lSelfRef : IwbFile;
+  lRecord  : IwbMainRecord;
+begin
+  lSelfRef := Self;
+  lRecord := GetRecordByFormID(aOldFormID, False, True);
+  if not Assigned(lRecord) or not lSelfRef.Equals(lRecord._File) then
+    Exit;
+  if Assigned(aReport) then
+    aReport('Changing FormID ['+lRecord.LoadOrderFormID.ToDisplayString(flContextObj.SlotLayout)+'] to ['+aNewFormID.ToDisplayString(flContextObj.SlotLayout)+']');
+  lRecord.LoadOrderFormID := aNewFormID;
 end;
 
 function TwbFile.AddCopy(const aSource: IwbElement; aFlags: TwbCopyFlags; const aRules: TwbCopyRules): IwbElement;

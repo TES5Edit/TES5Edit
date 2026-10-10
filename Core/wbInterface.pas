@@ -1720,6 +1720,17 @@ type
     function AnyFailed: Boolean;
   end;
 
+  TwbReferenceReplacement = record
+    OldRecord : IwbMainRecord;
+    NewRecord : IwbMainRecord;
+    Update    : TwbReferenceUpdate;
+  end;
+
+  TwbReferenceReplacementPlan = record
+    Entries    : TArray<TwbReferenceReplacement>;
+    NewMasters : TwbFiles;
+  end;
+
   TwbMergeIntoMasterResult = record
     Plan                : TwbFormIDChangePlan;
     InjectSkippedUpdate : Boolean;
@@ -1868,6 +1879,8 @@ type
     procedure FinishFormIDChange(const aPlan: TwbFormIDChangePlan);
     procedure BuildOrLoadRefOfDependents;
     procedure RequireMasterFor(const aLoadOrderFormID: TwbFormID; const aAddMaster: TFunc<IwbFile, Boolean>);
+    function PlanReferenceReplacement(const aLines: TStrings; const aReport: TProc<string>): TwbReferenceReplacementPlan;
+    procedure SetOwnRecordFormID(const aOldFormID, aNewFormID: TwbFormID; const aReport: TProc<string>);
 
     function IsNewRecord(const aFileID: TwbFileID; aNew: Boolean): Boolean; overload;
     function IsNewRecord(const aFormID: TwbFormID; aNew: Boolean): Boolean; overload;
