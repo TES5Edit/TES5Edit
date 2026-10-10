@@ -3553,6 +3553,7 @@ var
 
 var
   sl              : TStringList;
+  HeldMasters     : TStringList;
   LastLoadOrder   : Integer;
   i               : Integer;
   EditState       : Boolean;
@@ -3574,16 +3575,20 @@ begin
       Exit;
 
   sl := TStringList.Create;
+  HeldMasters := TStringList.Create;
   try
+    TargetFile.GetMasters(HeldMasters);
     LastLoadOrder := -1;
     for i := Low(Files) to Pred(High(Files)) do
       with Files[i] do
         if LoadOrder > LastLoadOrder then begin
           LastLoadOrder := LoadOrder;
-          sl.Add(FileName);
+          if HeldMasters.IndexOf(FileName) < 0 then
+            sl.Add(FileName);
         end;
     TargetFile.AddMasters(sl);
   finally
+    FreeAndNil(HeldMasters);
     FreeAndNil(sl);
   end;
 
