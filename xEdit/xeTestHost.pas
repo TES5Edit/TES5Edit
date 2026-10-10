@@ -575,10 +575,10 @@ begin
        not wbFindCmdLineParam('testchangeformidrecords', ChangeFormIDRecords) or (ChangeFormIDRecords = '') or
        not wbFindCmdLineParam('testchangeformidout', ChangeFormIDOut) or (ChangeFormIDOut = '') or
        not (SameText(ChangeFormIDOp, 'changeformid') or SameText(ChangeFormIDOp, 'changerefs') or
-            SameText(ChangeFormIDOp, 'batchrefs')) or
+            SameText(ChangeFormIDOp, 'batchrefs') or SameText(ChangeFormIDOp, 'cleanupinjected')) or
        (SameText(ChangeFormIDOp, 'batchrefs') and (ChangeFormIDTarget = '')) then begin
       ShowMessage('testchangeformid requires -testchangeformid:<filename> -testchangeformidrecords:<EditorID>@<module>[,...] ' +
-        '-testchangeformidout:<folder> [-testchangeformidop:<changeformid|changerefs|batchrefs>] [-testchangeformidshift] ' +
+        '-testchangeformidout:<folder> [-testchangeformidop:<changeformid|changerefs|batchrefs|cleanupinjected>] [-testchangeformidshift] ' +
         '[-testchangeformidtarget:<module>] (batchrefs: the file focused) ' +
         '[-testchangeformidids:<hex|empty|offered|cancel>[,...]] [-testchangeformidanswers:<yes|no|yesall|cancel>[,...]] ' +
         '[-testchangeformidrefs:<all|none|cancel|<index>[;<index>...]>[,...]] [-testchangeformidcsv:<file|cancel>] ' +

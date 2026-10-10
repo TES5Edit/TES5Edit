@@ -4658,6 +4658,8 @@ begin
       lMenuItem := mniNavChangeReferencingRecords
     else if SameText(xeTestSwitches.ChangeFormIDOp, 'batchrefs') then
       lMenuItem := mniNavBatchChangeReferencingRecords
+    else if SameText(xeTestSwitches.ChangeFormIDOp, 'cleanupinjected') then
+      lMenuItem := mniNavCleanupInjected
     else
       lMenuItem := mniNavChangeFormID;
     lLines.Add('menu' + #9 + LowerCase(xeTestSwitches.ChangeFormIDOp) + ' ' + BoolToStr(lMenuItem.Visible, True) + #9 + 'selected ' +
@@ -4695,6 +4697,8 @@ begin
           mniNavChangeReferencingRecordsClick(lMenuItem)
         else if lMenuItem = mniNavBatchChangeReferencingRecords then
           mniNavBatchChangeReferencingRecordsClick(lMenuItem)
+        else if lMenuItem = mniNavCleanupInjected then
+          mniNavCleanupInjectedClick(lMenuItem)
         else
           mniNavChangeFormIDClick(lMenuItem);
         lLines.Add('returned');
