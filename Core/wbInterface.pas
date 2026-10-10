@@ -1714,6 +1714,21 @@ type
     Copied              : TDynElements;
   end;
 
+  TwbMergedPatchList = record
+    Signature : TwbSignature;
+    Lists     : TArray<string>;
+    Counts    : TArray<string>;
+    AsSet     : Boolean;
+  end;
+
+  TwbMergedPatchLists = TArray<TwbMergedPatchList>;
+
+  TwbMergedPatchResult = record
+    Merged : TArray<IwbMainRecord>;
+    Faulty : TArray<IwbMainRecord>;
+    Failed : TArray<IwbMainRecord>;
+  end;
+
   IwbFile = interface(IwbContainer)
     ['{38AA15A6-F652-45C7-B875-9CB502E5DA92}']
     function GetFileName: string;
@@ -1829,6 +1844,7 @@ type
     procedure AddCopies(const aElements: TDynElements; var aResult: TDynElements; var aOptions: TwbCopyOptions);
     function AcceptsCopiesOf(const aElements: TDynElements; aAsNew, aAsWrapper: Boolean; aRequiredLoadOrder: Integer): Boolean;
     function MergeIntoMaster(const aTarget: IwbFile): TwbMergeIntoMasterResult;
+    function BuildMergedPatch(const aFiles: TwbFiles; const aReport: TProc<string>): TwbMergedPatchResult;
 
     function GetObjectIDFloor: Cardinal;
     function GetTakesLightObjectIDs: Boolean;
@@ -3739,6 +3755,8 @@ type
     gdLightFlag                : Cardinal;
     gdUpdateFlag               : Cardinal;
     gdEslExtensionSupported    : Boolean;
+    gdMergedPatchLists         : TwbMergedPatchLists;
+    gdMergedPatchSupported     : Boolean;
 
     function GetKnownSubRecordSignature(aKind: TwbKnownSubRecord): TwbSignature;
 
@@ -3764,6 +3782,7 @@ type
     procedure Define; virtual;
     procedure CreateSaveDefs;
     class function ComputeCapabilities(aGameMode: TwbGameMode; const aInputs: TwbGameDefInputs): TwbGameCapabilities; static;
+    class function ComputeMergedPatchLists(aGameMode: TwbGameMode): TwbMergedPatchLists; static;
 
     function IsCS(const aDef1, aDef2: string): string; overload;
     function IsHNVSE(const aDef1, aDef2: TwbConflictPriority): TwbConflictPriority; overload;
@@ -3945,6 +3964,10 @@ type
       read gdUpdateFlag;
     property EslExtensionSupported: Boolean
       read gdEslExtensionSupported;
+    property MergedPatchLists: TwbMergedPatchLists
+      read gdMergedPatchLists;
+    property MergedPatchSupported: Boolean
+      read gdMergedPatchSupported;
     function NewLightFileExtension: string;
 
     function FindRecordDef(const aSignature: TwbSignature; out aRecordDef: PwbMainRecordDef): Boolean; overload;
@@ -6358,6 +6381,50 @@ begin
   end;
   gdHardcodedRangeAdmitted := aInputs.HardcodedRange;
   gdEslExtensionSupported := aInputs.EslExtension or (gcLightPlugins in ComputeCapabilities(aGameMode, Default(TwbGameDefInputs)));
+  gdMergedPatchLists := ComputeMergedPatchLists(aGameMode);
+  gdMergedPatchSupported := aGameMode in [gmTES3, gmTES4, gmTES4R, gmFO3, gmFNV];
+end;
+
+class function TwbGameDef.ComputeMergedPatchLists(aGameMode: TwbGameMode): TwbMergedPatchLists;
+var
+  lLists : TwbMergedPatchLists;
+
+  procedure Add(const aSignature: TwbSignature; const aListNames, aCountNames: array of string; aAsSet: Boolean = False);
+  var
+    lRow : TwbMergedPatchList;
+  begin
+    lRow.Signature := aSignature;
+    SetLength(lRow.Lists, Length(aListNames));
+    for var i := Low(aListNames) to High(aListNames) do
+      lRow.Lists[i] := aListNames[i];
+    SetLength(lRow.Counts, Length(aCountNames));
+    for var i := Low(aCountNames) to High(aCountNames) do
+      lRow.Counts[i] := aCountNames[i];
+    lRow.AsSet := aAsSet;
+    SetLength(lLists, Succ(Length(lLists)));
+    lLists[High(lLists)] := lRow;
+  end;
+
+begin
+  lLists := nil;
+  Add('LVLI', ['Leveled List Entries'], ['LLCT']);
+  Add('LVLC', ['Leveled List Entries'], ['LLCT']);
+  Add('LVLN', ['Leveled List Entries'], ['LLCT']);
+  Add('LVSP', ['Leveled List Entries'], ['LLCT']);
+  Add('CONT', ['Items'], ['COCT']);
+  Add('FACT', ['Relations'], []);
+  Add('RACE', ['HNAM - Hairs', 'ENAM - Eyes', 'Actor Effects'], ['', '', 'SPCT']);
+  Add('FLST', ['FormIDs'], [], True);
+  Add('CREA', ['Items', 'Factions'], ['COCT']);
+  // FNV doesn't merge DIAL quests properly at runtime
+  if aGameMode in [gmFNV] then
+    Add('DIAL', ['Added Quests'], []);
+  // exclude Head Parts for Skyrim, causes issues
+  if aGameMode >= gmTES5 then
+    Add('NPC_', ['Items', 'Factions', 'Actor Effects', 'Perks'], ['COCT', '', 'SPCT', 'PRKZ'])
+  else
+    Add('NPC_', ['Items', 'Factions', 'Head Parts', 'Actor Effects'], []);
+  Result := lLists;
 end;
 
 constructor TwbSaveDef.Create(aGameDef: TwbGameDef);

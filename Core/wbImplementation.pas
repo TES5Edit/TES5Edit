@@ -948,6 +948,7 @@ type
     procedure AddCopies(const aElements: TDynElements; var aResult: TDynElements; var aOptions: TwbCopyOptions);
     function AcceptsCopiesOf(const aElements: TDynElements; aAsNew, aAsWrapper: Boolean; aRequiredLoadOrder: Integer): Boolean;
     function MergeIntoMaster(const aTarget: IwbFile): TwbMergeIntoMasterResult;
+    function BuildMergedPatch(const aFiles: TwbFiles; const aReport: TProc<string>): TwbMergedPatchResult;
 
     function GetObjectIDFloor: Cardinal;
     function GetTakesLightObjectIDs: Boolean;
@@ -3321,6 +3322,321 @@ begin
     lYes := nil;
   end;
   ResetGroups;
+end;
+
+function TwbFile.BuildMergedPatch(const aFiles: TwbFiles; const aReport: TProc<string>): TwbMergedPatchResult;
+const
+  OrderedList = 'OrderedList';
+var
+  lMet    : THashSet<IwbMainRecord>;
+  lMerged : TDynMainRecords;
+  lFaulty : TDynMainRecords;
+  lFailed : TDynMainRecords;
+  lNames  : TStringList;
+  lHeld   : TStringList;
+  lOrder  : Integer;
+  lRows   : TwbMergedPatchLists;
+  i, r    : Integer;
+
+  procedure Report(const aMessage: string);
+  begin
+    if Assigned(aReport) then
+      aReport(aMessage);
+  end;
+
+  procedure UpdateOrderedTargetList(aLeftList, aRightList, aTargetList: TStringList);
+  begin
+    for var i := aLeftList.Count to Pred(aRightList.Count) do
+      aTargetList.AddObject(aRightList[i], aRightList.Objects[i]);
+  end;
+
+  procedure UpdateTargetList(aLeftList, aRightList, aTargetList: TStringList);
+  var
+    lLeft, lRight : Integer;
+    lIndex        : Integer;
+  begin
+    lLeft := 0;
+    lRight := 0;
+
+    while (lLeft < aLeftList.Count) and (lRight < aRightList.Count) do
+      case CompareText(aLeftList[lLeft], aRightList[lRight]) of
+        Low(Integer)..-1: begin
+          if aTargetList.Find(aLeftList[lLeft], lIndex) then
+            aTargetList.Delete(lIndex);
+          Inc(lLeft);
+        end;
+        0: begin
+          if aTargetList.Find(aLeftList[lLeft], lIndex) then
+            aTargetList.Objects[lIndex] := aRightList.Objects[lRight];
+          Inc(lLeft);
+          Inc(lRight);
+        end;
+        1..High(Integer): begin
+          if not aTargetList.Find(aRightList[lRight], lIndex) then
+            aTargetList.AddObject(aRightList[lRight], aRightList.Objects[lRight]);
+          Inc(lRight);
+        end;
+      end;
+
+    while (lLeft < aLeftList.Count) do begin
+      if aTargetList.Find(aLeftList[lLeft], lIndex) then
+        aTargetList.Delete(lIndex);
+      Inc(lLeft);
+    end;
+
+    while (lRight < aRightList.Count) do begin
+      if not aTargetList.Find(aRightList[lRight], lIndex) then
+        aTargetList.AddObject(aRightList[lRight], aRightList.Objects[lRight]);
+      Inc(lRight);
+    end;
+  end;
+
+  function ListsEqual(aLeft, aRight: TStringList; aForOrderedList: Boolean = False): Boolean;
+  begin
+    if aForOrderedList then
+      Result := aLeft.Count <= aRight.Count
+    else
+      Result := aLeft.Count = aRight.Count;
+
+    if Result then
+      for var i := 0 to Pred(aLeft.Count) do
+        if not SameText(aLeft[i], aRight[i]) then
+          Exit(False);
+  end;
+
+  procedure MergeMaster(const aMaster: IwbMainRecord; const aRow: TwbMergedPatchList);
+  var
+    lKeepAlive     : TArray<IwbContainerElementRef>;
+    lTargetLists   : array of TStringList;
+    lWinningLists  : array of TStringList;
+    lIsOrderedList : Boolean;
+    lIsFaulty      : Boolean;
+    lWinner        : IwbMainRecord;
+    lOverride      : IwbMainRecord;
+    lTargetRecord  : IwbMainRecord;
+    lCurrentMaster : IwbMainRecord;
+    lCurrentList   : TStringList;
+    lMasterList    : TStringList;
+    lMasters       : TDynMainRecords;
+    lSortable      : IwbSortableContainer;
+    lEditorID      : string;
+    lCountElement  : IwbElement;
+    lEntries       : IwbContainerElementRef;
+    j, k, l        : Integer;
+
+    function BuildList(const aEntries: IwbElement): TStringList;
+    var
+      lList  : IwbContainerElementRef;
+      lEntry : IwbContainerElementRef;
+      lLast  : string;
+      lCount : Integer;
+    begin
+      Result := TStringList.Create;
+      try
+        if aRow.AsSet and not lIsOrderedList then begin
+          Result.Sorted := True;
+          Result.Duplicates := dupIgnore;
+        end;
+        if not Supports(aEntries, IwbContainerElementRef, lList) then
+          Exit;
+        for var i := 0 to Pred(lList.ElementCount) do
+          if Supports(lList.Elements[i], IwbContainerElementRef, lEntry) then begin
+            SetLength(lKeepAlive, Succ(Length(lKeepAlive)));
+            lKeepAlive[High(lKeepAlive)] := lEntry;
+            Result.AddObject(lEntry.DisplaySortKey[True], Pointer(lEntry));
+          end;
+        if not aRow.AsSet then begin
+          Result.Sort;
+          lLast := '';
+          lCount := 0;
+          for var i := 0 to Pred(Result.Count) do begin
+            if Result[i] = lLast then
+              Inc(lCount)
+            else begin
+              lCount := 0;
+              lLast := Result[i];
+            end;
+            Result[i] := Result[i] + '#' + IntToHex64(lCount, 4);
+          end;
+          Result.Sorted := True;
+        end;
+      except
+        FreeAndNil(Result);
+        raise;
+      end;
+    end;
+
+  begin
+    SetLength(lTargetLists, Length(aRow.Lists));
+    SetLength(lWinningLists, Length(aRow.Lists));
+    try
+      lIsFaulty := False;
+      lWinner := aMaster.WinningOverride;
+      for l := Low(aRow.Lists) to High(aRow.Lists) do begin
+        lIsOrderedList := False;
+        if Supports(aMaster.ElementByName[aRow.Lists[l]], IwbSortableContainer, lSortable) then
+          if not lSortable.Sorted then begin
+            lEditorID := aMaster.EditorID;
+            if Length(lEditorID) > Length(OrderedList) then
+              Delete(lEditorID, 1, Length(lEditorID) - Length(OrderedList));
+            lIsOrderedList := SameText(lEditorID, OrderedList);
+            if not lIsOrderedList then
+              Continue;
+          end;
+
+        lTargetLists[l] := BuildList(aMaster.ElementByName[aRow.Lists[l]]);
+        for j := 0 to Pred(aMaster.OverrideCount) do begin
+          lOverride := aMaster.Overrides[j];
+          lCurrentList := BuildList(lOverride.ElementByName[aRow.Lists[l]]);
+          try
+            lMasters := lOverride.MasterRecordsFromMasterFilesAndSelf;
+            lCurrentMaster := nil;
+            for k := High(lMasters) downto Low(lMasters) do
+              if not lOverride.Equals(lMasters[k]) then begin
+                lCurrentMaster := lMasters[k];
+                Break;
+              end;
+            if not Assigned(lCurrentMaster) then
+              Continue;
+            lMasterList := BuildList(lCurrentMaster.ElementByName[aRow.Lists[l]]);
+            try
+              if lIsOrderedList then begin
+                if not ListsEqual(lMasterList, lCurrentList, True) then
+                  lIsFaulty := True
+                else
+                  UpdateOrderedTargetList(lMasterList, lCurrentList, lTargetLists[l]);
+              end else
+                UpdateTargetList(lMasterList, lCurrentList, lTargetLists[l]);
+            finally
+              lMasterList.Free;
+            end;
+          finally
+            lCurrentList.Free;
+          end;
+          if lIsFaulty then
+            Break;
+        end;
+        if lIsFaulty then
+          Break;
+        lWinningLists[l] := BuildList(lWinner.ElementByName[aRow.Lists[l]]);
+      end;
+
+      if lIsFaulty then begin
+        lFaulty.Add(aMaster);
+        Report('Error: Can''t merge faulty ordered list ' + aMaster.Name);
+        Exit;
+      end;
+
+      lTargetRecord := nil;
+      for l := Low(aRow.Lists) to High(aRow.Lists) do
+        if Assigned(lTargetLists[l]) and Assigned(lWinningLists[l]) then
+          if not ListsEqual(lTargetLists[l], lWinningLists[l]) then begin
+            if not Assigned(lTargetRecord) then begin
+              lTargetRecord := AddCopy(lWinner, [cfDeepCopy], wbNoCopyRules) as IwbMainRecord;
+              if not Assigned(lTargetRecord) then begin
+                lFailed.Add(aMaster);
+                Exit;
+              end;
+            end;
+
+            lTargetRecord.RemoveElement(aRow.Lists[l]);
+            for j := 0 to Pred(lTargetLists[l].Count) do
+              lTargetRecord.AddCopy(IwbElement(Pointer(lTargetLists[l].Objects[j])), [cfAsNew, cfDeepCopy]);
+
+            if (l <= High(aRow.Counts)) and (aRow.Counts[l] <> '') then begin
+              lTargetRecord.Add(aRow.Counts[l], True);
+              lCountElement := lTargetRecord.ElementByPath[aRow.Counts[l]];
+              if Assigned(lCountElement) then
+                if Supports(lTargetRecord.ElementByName[aRow.Lists[l]], IwbContainerElementRef, lEntries) then
+                  lCountElement.NativeValue := lEntries.ElementCount
+                else
+                  lCountElement.Remove;
+            end;
+          end;
+      if Assigned(lTargetRecord) then
+        lMerged.Add(aMaster);
+    finally
+      for l := Low(lTargetLists) to High(lTargetLists) do begin
+        FreeAndNil(lWinningLists[l]);
+        FreeAndNil(lTargetLists[l]);
+      end;
+      lKeepAlive := nil;
+    end;
+  end;
+
+  procedure MergeGroup(const aGroup: IwbGroupRecord; const aRow: TwbMergedPatchList);
+  var
+    lMainRecord : IwbMainRecord;
+    lMaster     : IwbMainRecord;
+  begin
+    if not Assigned(aGroup) then
+      Exit;
+    for var j := 0 to Pred(aGroup.ElementCount) do begin
+      lMaster := nil;
+      if Supports(aGroup.Elements[j], IwbMainRecord, lMainRecord) then try
+        lMaster := lMainRecord.MasterOrSelf;
+        if lMet.Contains(lMaster) then
+          Continue;
+        lMet.Add(lMaster);
+        if lMaster.OverrideCount < 2 then
+          Continue;
+        MergeMaster(lMaster, aRow);
+      except
+        on E: Exception do begin
+          if Assigned(lMaster) then
+            lFailed.Add(lMaster);
+          Report(E.Message);
+        end;
+      end;
+    end;
+  end;
+
+begin
+  Result := Default(TwbMergedPatchResult);
+  if not flContextObj.Settings.EditAllowed then
+    raise Exception.Create('Create merged patch: editing is not allowed');
+  if flContextObj.Settings.TranslationMode then
+    raise Exception.Create('Create merged patch: not available in translation mode');
+  if not flContextObj.LoaderDone then
+    raise Exception.Create('Create merged patch: the context is still loading');
+  if GetRecordCount > 0 then
+    raise Exception.CreateFmt('Create merged patch: "%s" already holds records', [GetFileName]);
+  for i := Low(aFiles) to High(aFiles) do
+    if Equals(aFiles[i]) then
+      raise Exception.CreateFmt('Create merged patch: "%s" is among the files to merge', [GetFileName]);
+
+  lNames := TStringList.Create;
+  lHeld := TStringList.Create;
+  try
+    GetMasters(lHeld);
+    lOrder := -1;
+    for i := Low(aFiles) to High(aFiles) do
+      if aFiles[i].LoadOrder > lOrder then begin
+        lOrder := aFiles[i].LoadOrder;
+        if lHeld.IndexOf(aFiles[i].FileName) < 0 then
+          lNames.Add(aFiles[i].FileName);
+      end;
+    AddMasters(lNames, False);
+  finally
+    lHeld.Free;
+    lNames.Free;
+  end;
+
+  lRows := flContextObj.GameDefObj.MergedPatchLists;
+  lMet := THashSet<IwbMainRecord>.Create;
+  try
+    for i := Succ(Low(aFiles)) to High(aFiles) do
+      for r := Low(lRows) to High(lRows) do
+        MergeGroup(aFiles[i].GroupBySignature[lRows[r].Signature], lRows[r]);
+  finally
+    lMet.Free;
+  end;
+
+  CleanMasters;
+
+  Result.Merged := lMerged;
+  Result.Faulty := lFaulty;
+  Result.Failed := lFailed;
 end;
 
 procedure TwbFile.AddMasters(const aMasters: array of string; aSilent: Boolean);
