@@ -8751,6 +8751,8 @@ begin
       Continue;
     if not Supports(NodeData.Element, IwbMainRecord, MainRecord) then
       Continue;
+    if not MainRecord.IsEditable then
+      Continue;
 
     OldFormID := MainRecord.LoadOrderFormID;
     if not Assigned(_File) then begin
