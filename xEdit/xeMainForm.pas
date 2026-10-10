@@ -8685,20 +8685,17 @@ end;
 procedure TfrmMain.mniNavChangeFormIDClick(Sender: TObject);
 var
   s                           : string;
-  i, j, k                     : Integer;
+  i, j                        : Integer;
   NewFormID                   : TwbFormID;
   OldFormID                   : TwbFormID;
   NodeData                    : PNavNodeData;
   MainRecord                  : IwbMainRecord;
-  ReferencedBy, Overrides     : TDynMainRecords;
+  ReferencedBy                : TDynMainRecords;
   Nodes                       : TNodeArray;
   OldFileID                   : TwbFileID;
-  NewFileID                   : TwbFileID;
   AnyErrors                   : Boolean;
   Master                      : IwbMainRecord;
   _File                       : IwbFile;
-  _OldFile                    : IwbFile;
-  _NewMasterFile              : IwbFile;
 begin
   if not xeContext.Settings.EditAllowed then
     Exit;
@@ -8767,10 +8764,7 @@ begin
             Exit;
         end;
         NewFormID := TwbFormID.FromStr(s);
-        if NewFormID.IsNull then
-          raise Exception.Create('00000000 is not a valid FormID');
-        if NewFormID.IsPlayer then
-          raise Exception.Create('00000014 is not a valid FormID');
+        NewFormID.CheckAssignable;
       end else
         Exit;
 
@@ -8790,79 +8784,38 @@ begin
 
     AddMessage('Changing FormID ['+OldFormID.ToDisplayString(xeContext.SlotLayout)+'] in file "'+MainRecord._File.FileName+'" to ['+NewFormID.ToDisplayString(xeContext.SlotLayout)+']');
 
-    try
-      MainRecord._File.LoadOrderFormIDtoFileFormID(NewFormID, True);
-    except
-      NewFileID := NewFormID.FileID[xeContext.SlotLayout];
-      _OldFile := MainRecord._File;
-      _NewMasterFile := nil;
-      for i := Low(Files) to High(Files) do begin
-        if Files[i].LoadOrder >= _OldFile.LoadOrder then
-          Break;
-        if Files[i].LoadOrderFileID = NewFileID then begin
-          _NewMasterFile := Files[i];
-          Break;
-        end;
-      end;
-      if not Assigned(_NewMasterFile) then
-        raise;
-      if not AddRequiredMaster(_NewMasterFile, _OldFile) then
-        raise;
-    end;
+    MainRecord._File.RequireMasterFor(NewFormID,
+      function(aMaster: IwbFile): Boolean
+      begin
+        Result := AddRequiredMaster(aMaster, MainRecord._File);
+      end);
 
     Master := MainRecord.MasterOrSelf;
     SetLength(ReferencedBy, Master.ReferencedByCount);
     for i := 0 to Pred(Master.ReferencedByCount) do
       ReferencedBy[i] := Master.ReferencedBy[i];
 
-    k := -1;
     AddMessage('Record is referenced by '+IntToStr(Length(ReferencedBy))+' other record(s)');
     try
-      if Master.OverrideCount <> 0 then begin
-        // store overrides since they change on the go when renumbering FormIDs
-        SetLength(Overrides, Master.OverrideCount);
-        for i := 0 to Pred(Master.OverrideCount) do begin
-          Overrides[i] := Master.Overrides[i];
-          // index of the focused record in overrides list
-          if Overrides[i].Equals(MainRecord) then k := i;
-        end;
-        // if it is not the last override and user confirms
-        if (k < Pred(Length(Overrides))) then begin
-          var lYes := lYesToAll;
-          if not lYes then
+      if MainRecord.ChangeFormID(NewFormID,
+        function: Boolean
+        begin
+          Result := lYesToAll;
+          if not Result then
             case MessageDlg('Record '+MainRecord.Name+' has later overrides, update them too?', mtConfirmation, [mbYesToAll, mbYes, mbNo], 0) of
               mrYes:
-                lYes := True;
+                Result := True;
               mrYesToAll: begin
-                lYes := True;
+                Result := True;
                 lYesToAll := True;
               end;
             end;
-          // happens when master record is selected which is not in the list of overrides, renumber all overrides
-          if lYes then begin
-            if k = -1 then
-              k := 0;
-          end else
-            k := -1;
-        end else
-          k := -1;
-      end;
-
-      if MainRecord.LoadOrderFormID <> NewFormID then begin
-        MainRecord.LoadOrderFormID := NewFormID;
-        AddMessage('Renumbered ' + MainRecord.FullPath);
-
-        if k >= 0 then
-          for i := k to Pred(Length(Overrides)) do try
-             Overrides[i].LoadOrderFormID := NewFormID;
-             AddMessage('Renumbered ' + Overrides[i].FullPath);
-          except
-            on E: Exception do begin
-              AddMessage('Error renumbering ' + Overrides[i].FullPath + ': ' + E.Message);
-              AnyErrors := True;
-            end;
-          end;
-      end;
+        end,
+        procedure(aMessage: string)
+        begin
+          AddMessage(aMessage);
+        end) > 0 then
+        AnyErrors := True;
 
       NodeData.ConflictAll := caUnknown;
       NodeData.ConflictThis := ctUnknown;

@@ -1097,6 +1097,7 @@ type
     function IsNone   : Boolean; inline;
 
     function IsHardcoded: Boolean; inline;
+    procedure CheckAssignable;
 
     procedure SetObjectID(aLayout: TwbSlotLayout; const Value: Cardinal; aSilent: Boolean); overload;
 
@@ -1852,6 +1853,7 @@ type
     function ApplyFormIDChange(const aPlan: TwbFormIDChangePlan): Boolean;
     procedure FinishFormIDChange(const aPlan: TwbFormIDChangePlan);
     procedure BuildOrLoadRefOfDependents;
+    procedure RequireMasterFor(const aLoadOrderFormID: TwbFormID; const aAddMaster: TFunc<IwbFile, Boolean>);
 
     function IsNewRecord(const aFileID: TwbFileID; aNew: Boolean): Boolean; overload;
     function IsNewRecord(const aFormID: TwbFormID; aNew: Boolean): Boolean; overload;
@@ -2245,6 +2247,7 @@ type
     procedure Delete;
     procedure DeleteInto(const aFile: IwbFile);
     function AddCopy(const aSource: IwbElement; aFlags: TwbCopyFlags): IwbElement;
+    function ChangeFormID(const aNewFormID: TwbFormID; const aUpdateLaterOverrides: TFunc<Boolean>; const aReport: TProc<string>): Integer;
 
     procedure MakePartialForm;
 
@@ -24840,6 +24843,14 @@ end;
 function TwbFormID.IsPlayer: Boolean;
 begin
   Result := _FormID = $00000014;
+end;
+
+procedure TwbFormID.CheckAssignable;
+begin
+  if IsNull then
+    raise Exception.Create('00000000 is not a valid FormID');
+  if IsPlayer then
+    raise Exception.Create('00000014 is not a valid FormID');
 end;
 
 class operator TwbFormID.LessThan(const A, B: TwbFormID): Boolean;

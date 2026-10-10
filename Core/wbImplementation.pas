@@ -956,6 +956,7 @@ type
     function ApplyFormIDChange(const aPlan: TwbFormIDChangePlan): Boolean;
     procedure FinishFormIDChange(const aPlan: TwbFormIDChangePlan);
     procedure BuildOrLoadRefOfDependents;
+    procedure RequireMasterFor(const aLoadOrderFormID: TwbFormID; const aAddMaster: TFunc<IwbFile, Boolean>);
 
     function IsNewRecord(const aFileID: TwbFileID; aNew: Boolean): Boolean; overload;
     function IsNewRecord(const aFormID: TwbFormID; aNew: Boolean): Boolean; overload;
@@ -1478,6 +1479,7 @@ type
     procedure Delete;
     procedure DeleteInto(const aFile: IwbFile);
     function AddCopy(const aSource: IwbElement; aFlags: TwbCopyFlags): IwbElement;
+    function ChangeFormID(const aNewFormID: TwbFormID; const aUpdateLaterOverrides: TFunc<Boolean>; const aReport: TProc<string>): Integer;
 
     procedure MakePartialForm;
 
@@ -3036,6 +3038,28 @@ begin
   for lFile in flContextObj.Files do
     if Assigned(lFile) and not (fsRefsBuild in lFile.FileStates) and lFile.HasMaster(lFileName) then
       lFile.BuildOrLoadRef(False);
+end;
+
+procedure TwbFile.RequireMasterFor(const aLoadOrderFormID: TwbFormID; const aAddMaster: TFunc<IwbFile, Boolean>);
+var
+  lFileID : TwbFileID;
+  lMaster : IwbFile;
+begin
+  try
+    LoadOrderFormIDtoFileFormID(aLoadOrderFormID, True);
+  except
+    lFileID := aLoadOrderFormID.FileID[flContextObj.SlotLayout];
+    lMaster := nil;
+    for var lFile in flContextObj.Files do
+      if Assigned(lFile) and (lFile.LoadOrder < flLoadOrder) and (lFile.LoadOrderFileID = lFileID) then begin
+        lMaster := lFile;
+        Break;
+      end;
+    if not Assigned(lMaster) then
+      raise;
+    if not Assigned(aAddMaster) or not aAddMaster(lMaster) then
+      raise;
+  end;
 end;
 
 function TwbFile.AddCopy(const aSource: IwbElement; aFlags: TwbCopyFlags; const aRules: TwbCopyRules): IwbElement;
@@ -12692,6 +12716,57 @@ begin
     Result := lTarget.AddIfMissing(aSource, aFlags, wbNoCopyRules)
   else
     Result := nil;
+end;
+
+function TwbMainRecord.ChangeFormID(const aNewFormID: TwbFormID; const aUpdateLaterOverrides: TFunc<Boolean>; const aReport: TProc<string>): Integer;
+var
+  lSelfRef   : IwbMainRecord;
+  lMaster    : IwbMainRecord;
+  lOverrides : TDynMainRecords;
+  k          : Integer;
+
+  procedure Report(const aLine: string);
+  begin
+    if Assigned(aReport) then
+      aReport(aLine);
+  end;
+
+begin
+  lSelfRef := Self;
+  Result := 0;
+  aNewFormID.CheckAssignable;
+
+  lMaster := lSelfRef.MasterOrSelf;
+  k := -1;
+  if lMaster.OverrideCount <> 0 then begin
+    SetLength(lOverrides, lMaster.OverrideCount);
+    for var i := 0 to Pred(lMaster.OverrideCount) do begin
+      lOverrides[i] := lMaster.Overrides[i];
+      if lOverrides[i].Equals(lSelfRef) then
+        k := i;
+    end;
+    if (k < Pred(Length(lOverrides))) and Assigned(aUpdateLaterOverrides) and aUpdateLaterOverrides() then begin
+      if k = -1 then
+        k := 0;
+    end else
+      k := -1;
+  end;
+
+  if lSelfRef.LoadOrderFormID <> aNewFormID then begin
+    lSelfRef.LoadOrderFormID := aNewFormID;
+    Report('Renumbered ' + lSelfRef.FullPath);
+
+    if k >= 0 then
+      for var i := k to High(lOverrides) do try
+        lOverrides[i].LoadOrderFormID := aNewFormID;
+        Report('Renumbered ' + lOverrides[i].FullPath);
+      except
+        on E: Exception do begin
+          Report('Error renumbering ' + lOverrides[i].FullPath + ': ' + E.Message);
+          Inc(Result);
+        end;
+      end;
+  end;
 end;
 
 destructor TwbMainRecord.Destroy;
