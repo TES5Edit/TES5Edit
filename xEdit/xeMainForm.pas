@@ -881,7 +881,7 @@ type
 
     function NodeDatasForMainRecord(const aMainRecord: IwbMainRecord): TDynViewNodeDatas;
 
-    procedure ShowChangeReferencedBy(const OldFormID, NewFormID: TwbFormID; const ReferencedBy: TDynMainRecords; aSilent: Boolean);
+    procedure ShowChangeReferencedBy(const OldFormID, NewFormID: TwbFormID; const aUpdate: TwbReferenceUpdate; aSilent: Boolean);
     function GetTargetElement(Target: TBaseVirtualTree; var TargetNode: PVirtualNode; TargetColumn: Integer; out TargetIndex: Integer; out TargetElement: IwbElement; out aAlignedMemoryIndex: Integer): Boolean;
     function PerformDrop(TargetTree: TBaseVirtualTree; TargetNode: PVirtualNode; TargetColumn: Integer; const SourceElement: IwbElement): Boolean; overload;
     function PerformDrop(const TargetElement: IwbElement; TargetIndex, AlignedMemoryIndex: Integer; TargetCell: TViewNodeData; const SourceElement: IwbElement): Boolean; overload;
@@ -2774,12 +2774,10 @@ end;
 procedure TfrmMain.mniNavChangeReferencingRecordsClick(Sender: TObject);
 var
   s                           : string;
-  i                           : Integer;
   NewFormID                   : TwbFormID;
   OldFormID                   : TwbFormID;
   NodeData                    : PNavNodeData;
   MainRecord                  : IwbMainRecord;
-  ReferencedBy                : TDynMainRecords;
 begin
   if not xeContext.Settings.EditAllowed then
     Exit;
@@ -2792,10 +2790,7 @@ begin
   if not EditWarn then
     Exit;
 
-  var lMaster := MainRecord.MasterOrSelf;
-  SetLength(ReferencedBy, lMaster.ReferencedByCount);
-  for i := 0 to Pred(lMaster.ReferencedByCount) do
-    ReferencedBy[i] := lMaster.ReferencedBy[i];
+  var lUpdate := MainRecord.MasterOrSelf.PlanReferenceUpdate;
 
   if InputQuery('New FormID', 'Please enter the new FormID in hex. e.g. 0404CC43. The FormID needs to be a load order corrected form ID.', s) then try
     NewFormID := TwbFormID.FromStr(s);
@@ -2810,8 +2805,8 @@ begin
       Exit;
     end;
 
-    if Length(ReferencedBy) > 0 then
-      ShowChangeReferencedBy(OldFormID, NewFormID, ReferencedBy, False)
+    if Length(lUpdate.Items) > 0 then
+      ShowChangeReferencedBy(OldFormID, NewFormID, lUpdate, False)
     else
       raise Exception.Create('No other records reference this record');
   except
@@ -8329,12 +8324,12 @@ var
   OldRecord                   : IwbMainRecord;
   NewRecord                   : IwbMainRecord;
   RefRecord                   : IwbMainRecord;
-  ReferencedBy                : TDynMainRecords;
+  lUpdate                     : TwbReferenceUpdate;
   NewMasters                  : TStringList;
   ReplaceList                 : array of record
     rlOldRecord: IwbMainRecord;
     rlNewRecord: IwbMainRecord;
-    rlReferencedBy : TDynMainRecords;
+    rlUpdate : TwbReferenceUpdate;
   end;
 begin
   ReplaceList := nil;
@@ -8441,21 +8436,9 @@ begin
           if not SameText(NewRecord.EditorID, s) then
             AddMessage('Warning line '+IntToStr(i+1)+': New Record does not have expected EditorID ("'+NewRecord.EditorID+'" vs. "'+s+'")".');
 
-          ReferencedBy := nil;
-          SetLength(ReferencedBy, OldRecord.ReferencedByCount);
-          k := 0;
+          lUpdate := OldRecord.PlanReferenceUpdate(_File);
 
-          for j := 0 to Pred(OldRecord.ReferencedByCount) do begin
-            RefRecord := OldRecord.ReferencedBy[j];
-            if _File.Equals(RefRecord._File) then begin
-              ReferencedBy[k] := RefRecord;
-              Inc(k);
-            end;
-          end;
-
-          SetLength(ReferencedBy, k);
-
-          if k < 1 then begin
+          if Length(lUpdate.Items) < 1 then begin
             AddMessage('Skipping line '+IntToStr(i+1)+': Old Record "'+OldRecord.Name+'" is not referenced by any record in file "'+_File.Name+'".');
             Continue;
           end;
@@ -8463,11 +8446,10 @@ begin
           with ReplaceList[l] do begin
             rlOldRecord := OldRecord;
             rlNewRecord := NewRecord;
-            rlReferencedBy := ReferencedBy;
+            rlUpdate := lUpdate;
             OldRecord := nil;
             NewRecord := nil;
-            RefRecord := nil;
-            ReferencedBy := nil;
+            lUpdate.Items := nil;
           end;
           Inc(l);
 
@@ -8489,7 +8471,7 @@ begin
 
     if AddRequiredMasters(NewMasters, _File) then
       for i := 0 to Pred(l) do with ReplaceList[i] do begin
-        ShowChangeReferencedBy(rlOldRecord.LoadOrderFormID, rlNewRecord.LoadOrderFormID, rlReferencedBy, True);
+        ShowChangeReferencedBy(rlOldRecord.LoadOrderFormID, rlNewRecord.LoadOrderFormID, rlUpdate, True);
         RefRecord := _File.RecordByFormID[rlOldRecord.LoadOrderFormID, False, True];
         if Assigned(RefRecord) and _File.Equals(RefRecord._File) then begin
           AddMessage('Changing FormID ['+RefRecord.LoadOrderFormID.ToDisplayString(xeContext.SlotLayout)+'] to ['+rlNewRecord.LoadOrderFormID.ToDisplayString(xeContext.SlotLayout)+']');
@@ -8688,12 +8670,12 @@ end;
 procedure TfrmMain.mniNavChangeFormIDClick(Sender: TObject);
 var
   s                           : string;
-  i, j                        : Integer;
+  j                           : Integer;
   NewFormID                   : TwbFormID;
   OldFormID                   : TwbFormID;
   NodeData                    : PNavNodeData;
   MainRecord                  : IwbMainRecord;
-  ReferencedBy                : TDynMainRecords;
+  lUpdate                     : TwbReferenceUpdate;
   Nodes                       : TNodeArray;
   OldFileID                   : TwbFileID;
   AnyErrors                   : Boolean;
@@ -8799,11 +8781,9 @@ begin
       end);
 
     Master := MainRecord.MasterOrSelf;
-    SetLength(ReferencedBy, Master.ReferencedByCount);
-    for i := 0 to Pred(Master.ReferencedByCount) do
-      ReferencedBy[i] := Master.ReferencedBy[i];
+    lUpdate := Master.PlanReferenceUpdate;
 
-    AddMessage('Record is referenced by '+IntToStr(Length(ReferencedBy))+' other record(s)');
+    AddMessage('Record is referenced by '+IntToStr(Length(lUpdate.Items))+' other record(s)');
     try
       if MainRecord.ChangeFormID(NewFormID,
         function: Boolean
@@ -8830,8 +8810,8 @@ begin
       NodeData.Flags := [];
       vstNav.InvalidateNode(vstNav.FocusedNode);
 
-      if Length(ReferencedBy) > 0 then
-        ShowChangeReferencedBy(OldFormID, NewFormID, ReferencedBy, Assigned(_File) );
+      if Length(lUpdate.Items) > 0 then
+        ShowChangeReferencedBy(OldFormID, NewFormID, lUpdate, Assigned(_File) );
     except
       on E: Exception do begin
         AddMessage('Error: ' + E.Message);
@@ -15274,20 +15254,42 @@ begin
     pgMain.ActivePage.Visible := True;
 end;
 
-procedure TfrmMain.ShowChangeReferencedBy(const OldFormID, NewFormID: TwbFormID; const ReferencedBy: TDynMainRecords; aSilent: Boolean);
+procedure TfrmMain.ShowChangeReferencedBy(const OldFormID, NewFormID: TwbFormID; const aUpdate: TwbReferenceUpdate; aSilent: Boolean);
 var
   Counter    : Integer;
   i          : Integer;
-  Error      : Boolean;
   s          : string;
+  lUpdate    : TwbReferenceUpdate;
 begin
+  lUpdate.Items := Copy(aUpdate.Items);
+
+  if aSilent then begin
+    Counter := 0;
+    for i := Low(lUpdate.Items) to High(lUpdate.Items) do
+      if lUpdate.Items[i].Rec.IsEditable then
+        Inc(Counter);
+    if Counter <= 0 then
+      Exit;
+
+    if wbCurrentAction = '' then
+      s := 'Updating referencing records'
+    else
+      s := '';
+
+    PerformLongAction(s, '', procedure
+    begin
+      lUpdate.Apply(OldFormID, NewFormID);
+    end);
+    Exit;
+  end;
+
   with TfrmFileSelect.Create(nil) do try
     Caption := 'Please select records to update';
 
     Counter := 0;
-    for i := Low(ReferencedBy) to High(ReferencedBy) do begin
-      CheckListBox1.AddItem(ReferencedBy[i].Name + ' - ' + ReferencedBy[i]._File.Name, Pointer(ReferencedBy[i]));
-      if ReferencedBy[i].IsEditable then begin
+    for i := Low(lUpdate.Items) to High(lUpdate.Items) do begin
+      CheckListBox1.AddItem(lUpdate.Items[i].Rec.Name + ' - ' + lUpdate.Items[i].Rec._File.Name, nil);
+      if lUpdate.Items[i].Rec.IsEditable then begin
         CheckListBox1.ItemEnabled[i] := True;
         Inc(Counter)
       end else
@@ -15295,61 +15297,44 @@ begin
     end;
 
     if Counter <= 0 then begin
-      if not aSilent then
-        ShowMessage('There are ' + IntToStr(Length(ReferencedBy)) + ' records referencing FormID ' + OldFormID.ToDisplayString(xeContext.SlotLayout) + ' but none of them are in editable files.');
+      ShowMessage('There are ' + IntToStr(Length(lUpdate.Items)) + ' records referencing FormID ' + OldFormID.ToDisplayString(xeContext.SlotLayout) + ' but none of them are in editable files.');
       Exit;
     end;
 
-    if not aSilent then begin
-      if ShowModal <> mrOk then
-        Exit;
+    if ShowModal <> mrOk then
+      Exit;
 
-      for i := Pred(CheckListBox1.Count) downto 0 do
-        if not CheckListBox1.Checked[i] then
-          CheckListBox1.Items.Delete(i)
-        else
-          CheckListBox1.Checked[i] := False;
+    Counter := 0;
+    for i := Low(lUpdate.Items) to High(lUpdate.Items) do begin
+      lUpdate.Items[i].Selected := CheckListBox1.Checked[i];
+      if lUpdate.Items[i].Selected then
+        Inc(Counter);
     end;
+    if Counter <= 0 then
+      Exit;
 
-    if CheckListBox1.Count > 0 then begin
+    if wbCurrentAction = '' then
+      s := 'Updating referencing records'
+    else
+      s := '';
 
-      if wbCurrentAction = '' then
-        s := 'Updating referencing records'
+    PerformLongAction(s, '', procedure
+    begin
+      lUpdate.Apply(OldFormID, NewFormID);
+    end);
+
+    if lUpdate.AnyFailed then
+      ShowMessage('At least one record could not be updated. Check the message log for detailed error messages');
+
+    for i := Pred(CheckListBox1.Count) downto 0 do
+      if lUpdate.Items[i].Selected then
+        CheckListBox1.Checked[i] := lUpdate.Items[i].Outcome = ruoUpdated
       else
-        s := '';
+        CheckListBox1.Items.Delete(i);
 
-      PerformLongAction(s, '', procedure
-      var
-        i       : Integer;
-        Counter : Integer;
-      begin
-        Counter := 0;
-        Error := False;
-        for i := 0 to Pred(CheckListBox1.Count) do try
-          CheckListBox1.Checked[i] := IwbMainRecord(Pointer(CheckListBox1.Items.Objects[i])).CompareExchangeFormID(OldFormID, NewFormID);
-          if CheckListBox1.Checked[i] then
-            Inc(Counter);
-          wbTick;
-        except
-          on E: Exception do begin
-            wbProgress('Error updating FormID for ' + CheckListBox1.Items[i] + ': ' + E.Message);
-            Error := True;
-          end;
-        end;
+    Caption := 'These records have been successfully updated:';
 
-        wbProgress(IntToStr(Counter) + ' records out of '+IntToStr(Length(ReferencedBy))+' total records which reference FormID [' + OldFormID.ToDisplayString(xeContext.SlotLayout) + '] have been updated to [' + NewFormID.ToDisplayString(xeContext.SlotLayout) + ']');
-      end);
-
-      if not aSilent then begin
-        if Error then
-          ShowMessage('At least one record could not be updated. Check the message log for detailed error messages');
-
-        Caption := 'These records have been successfully updated:';
-
-        ShowModal;
-      end;
-
-    end;
+    ShowModal;
 
   finally
     Free;

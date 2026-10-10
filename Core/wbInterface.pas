@@ -1706,6 +1706,20 @@ type
     InUseHolder    : IwbMainRecord;
   end;
 
+  TwbReferenceUpdateOutcome = (ruoNotTried, ruoUnchanged, ruoUpdated, ruoFailed);
+
+  TwbReferenceUpdateItem = record
+    Rec      : IwbMainRecord;
+    Selected : Boolean;
+    Outcome  : TwbReferenceUpdateOutcome;
+  end;
+
+  TwbReferenceUpdate = record
+    Items : TArray<TwbReferenceUpdateItem>;
+    procedure Apply(const aOldFormID, aNewFormID: TwbFormID);
+    function AnyFailed: Boolean;
+  end;
+
   TwbMergeIntoMasterResult = record
     Plan                : TwbFormIDChangePlan;
     InjectSkippedUpdate : Boolean;
@@ -2248,6 +2262,7 @@ type
     procedure DeleteInto(const aFile: IwbFile);
     function AddCopy(const aSource: IwbElement; aFlags: TwbCopyFlags): IwbElement;
     function ChangeFormID(const aNewFormID: TwbFormID; const aUpdateLaterOverrides: TFunc<Boolean>; const aReport: TProc<string>): Integer;
+    function PlanReferenceUpdate(const aInFile: IwbFile = nil): TwbReferenceUpdate;
 
     procedure MakePartialForm;
 
@@ -25346,6 +25361,54 @@ begin
 
   if (Result = coDelete) and not Assigned(aTarget) then
     Result := coSkip;
+end;
+
+{ TwbReferenceUpdate }
+
+procedure TwbReferenceUpdate.Apply(const aOldFormID, aNewFormID: TwbFormID);
+var
+  lTried   : TArray<Integer>;
+  lLabels  : TArray<string>;
+  lUpdated : Integer;
+  k        : Integer;
+begin
+  for var i := Low(Items) to High(Items) do
+    if Items[i].Selected and Items[i].Rec.IsEditable then begin
+      lTried := lTried + [i];
+      lLabels := lLabels + [Items[i].Rec.Name + ' - ' + Items[i].Rec._File.Name];
+    end;
+  if Length(lTried) = 0 then
+    Exit;
+
+  lUpdated := 0;
+  for var j := Low(lTried) to High(lTried) do begin
+    k := lTried[j];
+    try
+      if Items[k].Rec.CompareExchangeFormID(aOldFormID, aNewFormID) then begin
+        Items[k].Outcome := ruoUpdated;
+        Inc(lUpdated);
+      end else
+        Items[k].Outcome := ruoUnchanged;
+      wbTick;
+    except
+      on E: Exception do begin
+        Items[k].Outcome := ruoFailed;
+        wbProgress('Error updating FormID for ' + lLabels[j] + ': ' + E.Message);
+      end;
+    end;
+  end;
+
+  var lLayout := Items[lTried[0]].Rec.ContextObj.SlotLayout;
+  wbProgress(IntToStr(lUpdated) + ' records out of ' + IntToStr(Length(Items)) + ' total records which reference FormID [' +
+    aOldFormID.ToDisplayString(lLayout) + '] have been updated to [' + aNewFormID.ToDisplayString(lLayout) + ']');
+end;
+
+function TwbReferenceUpdate.AnyFailed: Boolean;
+begin
+  for var i := Low(Items) to High(Items) do
+    if Items[i].Outcome = ruoFailed then
+      Exit(True);
+  Result := False;
 end;
 
 

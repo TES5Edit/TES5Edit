@@ -1480,6 +1480,7 @@ type
     procedure DeleteInto(const aFile: IwbFile);
     function AddCopy(const aSource: IwbElement; aFlags: TwbCopyFlags): IwbElement;
     function ChangeFormID(const aNewFormID: TwbFormID; const aUpdateLaterOverrides: TFunc<Boolean>; const aReport: TProc<string>): Integer;
+    function PlanReferenceUpdate(const aInFile: IwbFile): TwbReferenceUpdate;
 
     procedure MakePartialForm;
 
@@ -2934,47 +2935,11 @@ var
   lLayout       : TwbSlotLayout;
   lRecord       : IwbMainRecord;
   lMaster       : IwbMainRecord;
-  lReferencedBy : TArray<IwbMainRecord>;
+  lUpdate       : TwbReferenceUpdate;
   lOverrides    : TArray<IwbMainRecord>;
   lOld          : TwbFormID;
   lNew          : TwbFormID;
-  i, k, l       : Integer;
-
-  procedure ExchangeInReferencing(const aOld, aNew: TwbFormID; const aReferencedBy: TArray<IwbMainRecord>);
-  var
-    lLabels   : TArray<string>;
-    lEditable : TArray<Boolean>;
-    lAny      : Boolean;
-    lCount    : Integer;
-    m         : Integer;
-  begin
-    SetLength(lLabels, Length(aReferencedBy));
-    SetLength(lEditable, Length(aReferencedBy));
-    lAny := False;
-    for m := Low(aReferencedBy) to High(aReferencedBy) do begin
-      lLabels[m] := aReferencedBy[m].Name + ' - ' + aReferencedBy[m]._File.Name;
-      lEditable[m] := aReferencedBy[m].IsEditable;
-      if lEditable[m] then
-        lAny := True;
-    end;
-    if not lAny then
-      Exit;
-
-    lCount := 0;
-    for m := Low(aReferencedBy) to High(aReferencedBy) do
-      if lEditable[m] then try
-        if aReferencedBy[m].CompareExchangeFormID(aOld, aNew) then
-          Inc(lCount);
-        wbTick;
-      except
-        on E: Exception do
-          wbProgress('Error updating FormID for ' + lLabels[m] + ': ' + E.Message);
-      end;
-
-    wbProgress(IntToStr(lCount) + ' records out of ' + IntToStr(Length(aReferencedBy)) + ' total records which reference FormID [' +
-      aOld.ToDisplayString(lLayout) + '] have been updated to [' + aNew.ToDisplayString(lLayout) + ']');
-  end;
-
+  k, l          : Integer;
 begin
   lLayout := flContextObj.SlotLayout;
   Result := False;
@@ -2986,9 +2951,7 @@ begin
     wbProgress('Changing FormID ['+lOld.ToDisplayString(lLayout)+'] in file "'+lRecord._File.FileName+'" to ['+lNew.ToDisplayString(lLayout)+']');
 
     lMaster := lRecord.MasterOrSelf;
-    SetLength(lReferencedBy, lMaster.ReferencedByCount);
-    for i := 0 to Pred(lMaster.ReferencedByCount) do
-      lReferencedBy[i] := lMaster.ReferencedBy[i];
+    lUpdate := lMaster.PlanReferenceUpdate;
 
     try
       SetLength(lOverrides, lRecord.OverrideCount);
@@ -3006,9 +2969,9 @@ begin
 
       wbTick;
 
-      if Length(lReferencedBy) > 0 then begin
-        wbProgress('Record is referenced by '+Length(lReferencedBy).ToString+' other record(s)');
-        ExchangeInReferencing(lOld, lNew, lReferencedBy);
+      if Length(lUpdate.Items) > 0 then begin
+        wbProgress('Record is referenced by '+Length(lUpdate.Items).ToString+' other record(s)');
+        lUpdate.Apply(lOld, lNew);
       end;
     except
       on E: Exception do begin
@@ -12767,6 +12730,28 @@ begin
         end;
       end;
   end;
+end;
+
+function TwbMainRecord.PlanReferenceUpdate(const aInFile: IwbFile): TwbReferenceUpdate;
+var
+  lSelfRef : IwbMainRecord;
+  lRecord  : IwbMainRecord;
+  lCount   : Integer;
+begin
+  lSelfRef := Self;
+  Result.Items := nil;
+  SetLength(Result.Items, lSelfRef.ReferencedByCount);
+  lCount := 0;
+  for var i := 0 to Pred(lSelfRef.ReferencedByCount) do begin
+    lRecord := lSelfRef.ReferencedBy[i];
+    if Assigned(aInFile) and not aInFile.Equals(lRecord._File) then
+      Continue;
+    Result.Items[lCount].Rec := lRecord;
+    Result.Items[lCount].Selected := True;
+    Result.Items[lCount].Outcome := ruoNotTried;
+    Inc(lCount);
+  end;
+  SetLength(Result.Items, lCount);
 end;
 
 destructor TwbMainRecord.Destroy;
