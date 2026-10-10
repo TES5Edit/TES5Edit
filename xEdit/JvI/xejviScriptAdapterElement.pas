@@ -24,7 +24,6 @@ uses
   System.SysUtils,
   System.TypInfo,
 
-  wbImplementation,
   wbInterface,
   wbConflict,
   xeMainForm,
@@ -684,7 +683,7 @@ var
 begin
   if Supports(IInterface(Args.Values[0]), IwbElement, Element) then
     if Supports(IInterface(Args.Values[1]), IwbFile, _File) then
-      Value := wbCopyElementToFile(Element, _File, CopyFlags(Args.Values[2], Args.Values[3]), wbNoCopyRules);
+      Value := _File.AddCopy(Element, CopyFlags(Args.Values[2], Args.Values[3]), wbNoCopyRules);
 end;
 
 procedure _wbCopyElementToFileWithPrefix(var Value: Variant; Args: TJvInterpreterArgs);
@@ -698,7 +697,7 @@ begin
       Rules.PrefixRemove := Args.Values[4];
       Rules.Prefix := Args.Values[5];
       Rules.Suffix := Args.Values[6];
-      Value := wbCopyElementToFile(Element, _File, CopyFlags(Args.Values[2], Args.Values[3]), Rules);
+      Value := _File.AddCopy(Element, CopyFlags(Args.Values[2], Args.Values[3]), Rules);
     end;
 end;
 
@@ -714,7 +713,7 @@ begin
       Rules.SuffixRemove := Args.Values[5];
       Rules.Prefix := Args.Values[6];
       Rules.Suffix := Args.Values[7];
-      Value := wbCopyElementToFile(Element, _File, CopyFlags(Args.Values[2], Args.Values[3]), Rules);
+      Value := _File.AddCopy(Element, CopyFlags(Args.Values[2], Args.Values[3]), Rules);
     end;
 end;
 
@@ -725,7 +724,7 @@ var
 begin
   if Supports(IInterface(Args.Values[0]), IwbElement, Element) then
     if Supports(IInterface(Args.Values[1]), IwbMainRecord, MainRecord) then
-      Value := wbCopyElementToRecord(Element, MainRecord, Args.Values[2], Args.Values[3]);
+      Value := MainRecord.AddCopy(Element, CopyFlags(Args.Values[2], Args.Values[3]));
 end;
 
 

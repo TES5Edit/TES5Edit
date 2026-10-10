@@ -1825,6 +1825,7 @@ type
 
     procedure RemoveIdenticalDeltaFast;
 
+    function AddCopy(const aSource: IwbElement; aFlags: TwbCopyFlags; const aRules: TwbCopyRules): IwbElement;
     procedure AddCopies(const aElements: TDynElements; var aResult: TDynElements; var aOptions: TwbCopyOptions);
     function AcceptsCopiesOf(const aElements: TDynElements; aAsNew, aAsWrapper: Boolean; aRequiredLoadOrder: Integer): Boolean;
     function MergeIntoMaster(const aTarget: IwbFile): TwbMergeIntoMasterResult;
@@ -2227,6 +2228,7 @@ type
 
     procedure Delete;
     procedure DeleteInto(const aFile: IwbFile);
+    function AddCopy(const aSource: IwbElement; aFlags: TwbCopyFlags): IwbElement;
 
     procedure MakePartialForm;
 

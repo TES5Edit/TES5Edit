@@ -1701,7 +1701,7 @@ var
        (lRecord.Signature <> 'TES4') and
        not lRecord.IsDeleted and
        (aNode.cnThis = ctOnlyOne) and
-       Supports(wbCopyElementToFile(lRecord, aNew, [], wbNoCopyRules), IwbMainRecord, lCopy)
+       Supports(aNew.AddCopy(lRecord, [], wbNoCopyRules), IwbMainRecord, lCopy)
     then begin
       lCopy.IsDeleted := True;
       Inc(lCounts.Copied);

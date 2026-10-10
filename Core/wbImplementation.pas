@@ -74,9 +74,6 @@ type
 
 function StartsWith(const s, t: string): Boolean;
 
-function wbCopyElementToFile(const aSource: IwbElement; aFile: IwbFile; aFlags: TwbCopyFlags; const aRules: TwbCopyRules): IwbElement;
-function wbCopyElementToRecord(const aSource: IwbElement; aMainRecord: IwbMainRecord; aAsNew, aDeepCopy: Boolean): IwbElement;
-
 function wbFormListToArray(const aFormList: IwbMainRecord; const aSignatures: string): TDynMainRecords;
 
 function wbCreateKeepAliveRoot: IwbKeepAliveRoot;
@@ -194,66 +191,6 @@ threadvar
   mreHeader: TwbMainRecordEntryHeader;
 var
   mreNextGen: Integer;
-
-function wbCopyElementToFile(const aSource: IwbElement; aFile: IwbFile; aFlags: TwbCopyFlags; const aRules: TwbCopyRules): IwbElement;
-var
-  MainRecord  : IwbMainRecord;
-  Container   : IwbContainer;
-  Target      : IwbElement;
-begin
-  Inc(wbCopyIsRunning);
-  try
-    wbTick;
-    Container := aSource.Container;
-    if Assigned(Container) then begin
-      if Supports(Container, IwbMainRecord, MainRecord) then
-        Container := MainRecord.HighestOverrideVisibleForFile[aFile];
-      Target := wbCopyElementToFile(Container, aFile, [], aRules)
-    end else begin
-      Result := aFile;
-      Exit;
-    end;
-
-    if Assigned(Target) then
-      Result := Target.AddIfMissing(aSource, aFlags, aRules)
-    else
-      Result := nil;
-  finally
-    Dec(wbCopyIsRunning);
-  end;
-end;
-
-function wbCopyElementToRecord(const aSource: IwbElement; aMainRecord: IwbMainRecord; aAsNew, aDeepCopy: Boolean): IwbElement;
-var
-  Container                   : IwbContainer;
-  Target                      : IwbElement;
-  CER                         : IwbContainerElementRef;
-begin
-  CER := aMainRecord as IwbContainerElementRef;
-
-  if Assigned(aSource) and (aSource.ElementType = etMainRecord) then begin
-    if aSource.Equals(aMainRecord) then
-      Result := nil
-    else
-      Result := aMainRecord;
-    Exit;
-  end;
-
-  Container := aSource.Container;
-  Assert(Assigned(Container), '[wbCopyElementToRecord] not Assigned(Container)');
-  Target := wbCopyElementToRecord(Container, aMainRecord, False, False);
-
-  var lFlags: TwbCopyFlags := [];
-  if aAsNew then
-    Include(lFlags, cfAsNew);
-  if aDeepCopy then
-    Include(lFlags, cfDeepCopy);
-
-  if Assigned(Target) then
-    Result := Target.AddIfMissing(aSource, lFlags, wbNoCopyRules)
-  else
-    Result := nil;
-end;
 
 function StartsWith(const s, t: string): Boolean;
 var
@@ -1007,6 +944,7 @@ type
     function GetCompareToFile: IwbFile;
     procedure RemoveIdenticalDeltaFast;
 
+    function AddCopy(const aSource: IwbElement; aFlags: TwbCopyFlags; const aRules: TwbCopyRules): IwbElement;
     procedure AddCopies(const aElements: TDynElements; var aResult: TDynElements; var aOptions: TwbCopyOptions);
     function AcceptsCopiesOf(const aElements: TDynElements; aAsNew, aAsWrapper: Boolean; aRequiredLoadOrder: Integer): Boolean;
     function MergeIntoMaster(const aTarget: IwbFile): TwbMergeIntoMasterResult;
@@ -1538,6 +1476,7 @@ type
 
     procedure Delete;
     procedure DeleteInto(const aFile: IwbFile);
+    function AddCopy(const aSource: IwbElement; aFlags: TwbCopyFlags): IwbElement;
 
     procedure MakePartialForm;
 
@@ -3098,6 +3037,36 @@ begin
       lFile.BuildOrLoadRef(False);
 end;
 
+function TwbFile.AddCopy(const aSource: IwbElement; aFlags: TwbCopyFlags; const aRules: TwbCopyRules): IwbElement;
+var
+  lSelfRef    : IwbFile;
+  lMainRecord : IwbMainRecord;
+  lContainer  : IwbContainer;
+  lTarget     : IwbElement;
+begin
+  lSelfRef := Self;
+  Inc(wbCopyIsRunning);
+  try
+    wbTick;
+    lContainer := aSource.Container;
+    if Assigned(lContainer) then begin
+      if Supports(lContainer, IwbMainRecord, lMainRecord) then
+        lContainer := lMainRecord.HighestOverrideVisibleForFile[lSelfRef];
+      lTarget := AddCopy(lContainer, [], aRules)
+    end else begin
+      Result := lSelfRef;
+      Exit;
+    end;
+
+    if Assigned(lTarget) then
+      Result := lTarget.AddIfMissing(aSource, aFlags, aRules)
+    else
+      Result := nil;
+  finally
+    Dec(wbCopyIsRunning);
+  end;
+end;
+
 procedure TwbFile.AddCopies(const aElements: TDynElements; var aResult: TDynElements; var aOptions: TwbCopyOptions);
 var
   lFile                 : IwbFile;
@@ -3136,7 +3105,7 @@ begin
       wbCurrentProgress := Format('[%s] into [%s]', [lMainRecord.FullPath, lFile.FullPath]);
       wbProgress(aOptions.Operation + ' ' + wbCurrentProgress);
 
-      lMainRecord2 := wbCopyElementToFile(lMainRecord, lFile, [cfAsNew, cfDeepCopy], lRules) as IwbMainRecord;
+      lMainRecord2 := AddCopy(lMainRecord, [cfAsNew, cfDeepCopy], lRules) as IwbMainRecord;
       wbProgress('');
 
       Assert(Assigned(lMainRecord2));
@@ -3147,7 +3116,7 @@ begin
       lWrappedFlags := [];
       if aOptions.AllowOverwrite then
         Include(lWrappedFlags, cfAllowOverwrite);
-      lMainRecord := wbCopyElementToFile(lMainRecord, lFile, lWrappedFlags, lCallbackOnly) as IwbMainRecord;
+      lMainRecord := AddCopy(lMainRecord, lWrappedFlags, lCallbackOnly) as IwbMainRecord;
       wbProgress('');
       Assert(Assigned(lMainRecord));
       lMainRecord.Assign(Low(Integer), nil, False);
@@ -3174,12 +3143,12 @@ begin
       try
         if aOptions.DeepCopy and Supports(aElements[j], IwbMainRecord, lMainRecord) and Assigned(lMainRecord.ChildGroup) then begin
           wbProgress(aOptions.Operation + ' ' + wbCurrentProgress);
-          aResult[j] := wbCopyElementToFile(lMainRecord.ChildGroup, lFile, PathFlags, lRules);
+          aResult[j] := AddCopy(lMainRecord.ChildGroup, PathFlags, lRules);
           wbProgress('');
         end else begin
           wbCurrentProgress := Format('[%s] into [%s]', [aElements[j].FullPath, lFile.FullPath]);
           wbProgress(aOptions.Operation + ' ' + wbCurrentProgress);
-          lCopiedElement := wbCopyElementToFile(aElements[j], lFile, PathFlags, lRules);
+          lCopiedElement := AddCopy(aElements[j], PathFlags, lRules);
           wbProgress('');
           if Assigned(lCopiedElement) then begin
             if Assigned(aOptions.AfterCopy) then
@@ -3199,12 +3168,12 @@ begin
     if aOptions.DeepCopy and Supports(aElements[0], IwbMainRecord, lMainRecord) and Assigned(lMainRecord.ChildGroup) then begin
       wbCurrentProgress := Format('[%s] into [%s]', [lMainRecord.ChildGroup.FullPath, lFile.FullPath]);
       wbProgress(aOptions.Operation + ' ' + wbCurrentProgress);
-      aResult[0] := wbCopyElementToFile(lMainRecord.ChildGroup, lFile, PathFlags, lCallbackOnly);
+      aResult[0] := AddCopy(lMainRecord.ChildGroup, PathFlags, lCallbackOnly);
       wbProgress('');
     end else begin
       wbCurrentProgress := Format('[%s] into [%s]', [aElements[0].FullPath, lFile.FullPath]);
       wbProgress(aOptions.Operation + ' ' + wbCurrentProgress);
-      lCopiedElement := wbCopyElementToFile(aElements[0], lFile, PathFlags, lCallbackOnly);
+      lCopiedElement := AddCopy(aElements[0], PathFlags, lCallbackOnly);
       wbProgress('');
       if Assigned(lCopiedElement) then begin
         if Assigned(aOptions.AfterCopy) then
@@ -12382,6 +12351,32 @@ begin
     MainRecord.Delete;
 end;
 
+function TwbMainRecord.AddCopy(const aSource: IwbElement; aFlags: TwbCopyFlags): IwbElement;
+var
+  lSelfRef   : IwbContainerElementRef;
+  lContainer : IwbContainer;
+  lTarget    : IwbElement;
+begin
+  lSelfRef := Self as IwbContainerElementRef;
+
+  if Assigned(aSource) and (aSource.ElementType = etMainRecord) then begin
+    if aSource.Equals(Self) then
+      Result := nil
+    else
+      Result := Self as IwbMainRecord;
+    Exit;
+  end;
+
+  lContainer := aSource.Container;
+  Assert(Assigned(lContainer), '[TwbMainRecord.AddCopy] not Assigned(Container)');
+  lTarget := AddCopy(lContainer, []);
+
+  if Assigned(lTarget) then
+    Result := lTarget.AddIfMissing(aSource, aFlags, wbNoCopyRules)
+  else
+    Result := nil;
+end;
+
 destructor TwbMainRecord.Destroy;
 begin
   if mrDenseID <> 0 then begin
@@ -19715,7 +19710,7 @@ begin
     if Assigned(MainRecord) then begin
       if MainRecord._File.Equals(_File) then
         Exit(MainRecord);
-      Result := wbCopyElementToFile(MainRecord, _File, [cfDeepCopy], wbNoCopyRules);
+      Result := _File.AddCopy(MainRecord, [cfDeepCopy], wbNoCopyRules);
       Exit;
     end;
   end;
@@ -19738,7 +19733,7 @@ begin
     if Assigned(MainRecord) then begin
       if MainRecord._File.Equals(_File) then
         Exit(MainRecord);
-      Result := wbCopyElementToFile(MainRecord, _File, [cfDeepCopy], wbNoCopyRules);
+      Result := _File.AddCopy(MainRecord, [cfDeepCopy], wbNoCopyRules);
       Exit;
     end;
   end;
@@ -19789,7 +19784,7 @@ begin
     if Assigned(MainRecord) then begin
       if MainRecord._File.Equals(_File) then
         Exit(MainRecord);
-      Result := wbCopyElementToFile(MainRecord, _File, [cfDeepCopy], wbNoCopyRules);
+      Result := _File.AddCopy(MainRecord, [cfDeepCopy], wbNoCopyRules);
       Exit;
     end;
   end;
@@ -22250,14 +22245,14 @@ begin
 
     var lMainRecord: IwbMainRecord;
     if (cfDeepCopy in aFlags) and Supports(Self, IwbMainRecord, lMainRecord) and Assigned(lMainRecord.ChildGroup) then begin
-      Result := wbCopyElementToFile(lMainRecord.ChildGroup, aFile, aFlags * [cfAsNew] + [cfDeepCopy], aRules {CheckMe!});
+      Result := aFile.AddCopy(lMainRecord.ChildGroup, aFlags * [cfAsNew] + [cfDeepCopy], aRules {CheckMe!});
       var lGroupRecord: IwbGroupRecord;
       if Supports(Result, IwbGroupRecord, lGroupRecord) then
         Result := lGroupRecord.ChildrenOf
       else
         Result := nil;
     end else
-      Result := wbCopyElementToFile(Self, aFile, aFlags * [cfAsNew] + [cfDeepCopy], aRules {CheckMe!});
+      Result := aFile.AddCopy(Self, aFlags * [cfAsNew] + [cfDeepCopy], aRules {CheckMe!});
   finally
     lMasters.Free;
   end;
@@ -28846,7 +28841,7 @@ begin
         Exit;
       end;
       if not _File.Equals(NewOwner._File) then
-        NewOwner := wbCopyElementToFile(NewOwner, _File, [cfDeepCopy], wbNoCopyRules) as IwbMainRecord;
+        NewOwner := _File.AddCopy(NewOwner, [cfDeepCopy], wbNoCopyRules) as IwbMainRecord;
       GroupRecord := NewOwner.EnsureChildGroup;
 
       case GroupRecord.GroupType of

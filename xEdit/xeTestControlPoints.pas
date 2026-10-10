@@ -741,10 +741,10 @@ begin
       Continue;
     if not lSource.CanCopy or not Assigned(lSource.ElementBySignature['FULL']) then
       Continue;
-    lRecordA := wbCopyElementToFile(lSource, TestHost.TestNavCopyFileA, [cfAsNew, cfDeepCopy], wbNoCopyRules) as IwbMainRecord;
+    lRecordA := TestHost.TestNavCopyFileA.AddCopy(lSource, [cfAsNew, cfDeepCopy], wbNoCopyRules) as IwbMainRecord;
     if not Assigned(lRecordA) then
       Continue;
-    lRecordB := wbCopyElementToFile(lRecordA, TestHost.TestNavCopyFileB, [cfDeepCopy], wbNoCopyRules) as IwbMainRecord;
+    lRecordB := TestHost.TestNavCopyFileB.AddCopy(lRecordA, [cfDeepCopy], wbNoCopyRules) as IwbMainRecord;
     if not Assigned(lRecordB) then
       raise Exception.Create('no override of ' + lRecordA.Name + ' was created');
     lRecordB.ElementEditValues['FULL'] := lRecordB.ElementEditValues['FULL'] + ' (B)';
@@ -753,7 +753,7 @@ begin
     if xeTestSwitches.NavCopyTwo then
       lRecordC := lRecordB
     else begin
-      lRecordC := wbCopyElementToFile(lRecordA, TestHost.TestNavCopyFileC, [cfDeepCopy], wbNoCopyRules) as IwbMainRecord;
+      lRecordC := TestHost.TestNavCopyFileC.AddCopy(lRecordA, [cfDeepCopy], wbNoCopyRules) as IwbMainRecord;
       if not Assigned(lRecordC) then
         raise Exception.Create('no second override of ' + lRecordA.Name + ' was created');
       lRecordC.ElementEditValues['FULL'] := lRecordC.ElementEditValues['FULL'] + ' (C)';
@@ -2608,7 +2608,7 @@ begin
       var lFile := AddNewFileName('CopyIntoGap.esp', False, False);
       if not AddRequiredMasters(lSource, lFile, False, True) then
         raise Exception.Create('the masters of ' + lSource.Name + ' could not be added');
-      lRecord := wbCopyElementToFile(lSource, lFile, [cfDeepCopy], wbNoCopyRules) as IwbMainRecord;
+      lRecord := lFile.AddCopy(lSource, [cfDeepCopy], wbNoCopyRules) as IwbMainRecord;
       if not Assigned(lRecord) then
         raise Exception.Create('no override of ' + lSource.Name + ' was created');
 

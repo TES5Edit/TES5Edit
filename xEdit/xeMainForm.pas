@@ -3520,11 +3520,11 @@ var
             if Assigned(TargetLists[l]) and Assigned(WinningLists[l]) then
               if not ListsEqual(TargetLists[l], WinningLists[l]) then begin
                 if not Assigned(TargetRecord) then
-                  TargetRecord := wbCopyElementToFile(MainRecord, TargetFile, [cfDeepCopy], wbNoCopyRules) as IwbMainRecord;
+                  TargetRecord := TargetFile.AddCopy(MainRecord, [cfDeepCopy], wbNoCopyRules) as IwbMainRecord;
 
                 TargetRecord.RemoveElement(aListNames[l]);
                 for j := 0 to Pred(TargetLists[l].Count) do
-                  wbCopyElementToRecord(IwbElement(Pointer(TargetLists[l].Objects[j])), TargetRecord, True, True);
+                  TargetRecord.AddCopy(IwbElement(Pointer(TargetLists[l].Objects[j])), [cfAsNew, cfDeepCopy]);
 
                 // update counts
                 if (l <= High(aCntNames)) and (aCntNames[l] <> '') then begin
@@ -4026,7 +4026,7 @@ begin
 
     if AddRequiredMasters(sl, ReferenceFile) then
       for j := Low(Elements) to High(Elements) do begin
-        wbCopyElementToFile(Elements[j], ReferenceFile, [cfDeepCopy], wbNoCopyRules);
+        ReferenceFile.AddCopy(Elements[j], [cfDeepCopy], wbNoCopyRules);
         if Elements[j].RemoveInjected(False) then begin
           pgMain.ActivePage := tbsMessages;
           AddMessage('Injected references in '+Elements[j].Name+' could not all be removed automatically.');
@@ -7355,7 +7355,7 @@ begin
               if not EditWarn then
                 Exit;
 
-              wbCopyElementToRecord(Element, MainRecords[i], False, True)
+              MainRecords[i].AddCopy(Element, [cfDeepCopy])
             end;
           end;
         end else begin
