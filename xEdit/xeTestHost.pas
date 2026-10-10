@@ -109,6 +109,7 @@ type
     TestChangeFormIDNotOffered  : Boolean;
     TestChangeFormIDFallback    : Boolean;
     TestChangeFormIDCsvAnswered : Boolean;
+    TestChangeFormIDClosed      : Boolean;
     TestFilterAnswer         : TTimer;
     TestFilterAnswered       : string;
     TestPumpTimer            : TTimer;
@@ -575,12 +576,14 @@ begin
        not wbFindCmdLineParam('testchangeformidrecords', ChangeFormIDRecords) or (ChangeFormIDRecords = '') or
        not wbFindCmdLineParam('testchangeformidout', ChangeFormIDOut) or (ChangeFormIDOut = '') or
        not (SameText(ChangeFormIDOp, 'changeformid') or SameText(ChangeFormIDOp, 'changerefs') or
-            SameText(ChangeFormIDOp, 'batchrefs') or SameText(ChangeFormIDOp, 'cleanupinjected')) or
-       (SameText(ChangeFormIDOp, 'batchrefs') and (ChangeFormIDTarget = '')) then begin
+            SameText(ChangeFormIDOp, 'batchrefs') or SameText(ChangeFormIDOp, 'cleanupinjected') or
+            SameText(ChangeFormIDOp, 'localize')) or
+       ((SameText(ChangeFormIDOp, 'batchrefs') or SameText(ChangeFormIDOp, 'localize')) and (ChangeFormIDTarget = '')) then begin
       ShowMessage('testchangeformid requires -testchangeformid:<filename> -testchangeformidrecords:<EditorID>@<module>[,...] ' +
-        '-testchangeformidout:<folder> [-testchangeformidop:<changeformid|changerefs|batchrefs|cleanupinjected>] [-testchangeformidshift] ' +
-        '[-testchangeformidtarget:<module>] (batchrefs: the file focused) ' +
-        '[-testchangeformidids:<hex|empty|offered|cancel>[,...]] [-testchangeformidanswers:<yes|no|yesall|cancel>[,...]] ' +
+        '-testchangeformidout:<folder> [-testchangeformidop:<changeformid|changerefs|batchrefs|cleanupinjected|localize>] ' +
+        '[-testchangeformidshift] [-testchangeformidtarget:<module>] (batchrefs, localize: the file focused) ' +
+        '[-testchangeformidids:<hex|empty|offered|cancel>[,...]] ' +
+        '[-testchangeformidanswers:<yes|no|yesall|cancel|ok|translate:<from>:<to>>[,...]] ' +
         '[-testchangeformidrefs:<all|none|cancel|<index>[;<index>...]>[,...]] [-testchangeformidcsv:<file|cancel>] ' +
         '[-testchangeformidview:<none|<EditorID>@<module>>] (changerefs: the view left empty, or showing that record) ' +
         '[-testchangeformidcompareto:<file loaded to compare with the last module>]');

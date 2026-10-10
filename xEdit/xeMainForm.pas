@@ -5423,6 +5423,16 @@ begin
     TestPumpNote('FormClose entered: inside ' + IfThen(xeTestSwitches.PumpModal, 'a modal loop ', 'a nested pump ') + BoolToStr(TestPumpInside, True) +
       ', client panel enabled ' + BoolToStr(pnlClient.Enabled, True) + ', action "' + wbCurrentAction + '"' + lShown);
   end;
+  if Assigned(TestHost) and Assigned(TestHost.TestChangeFormIDLines) then begin
+    var lMsg: TMsg;
+    while PeekMessage(lMsg, Handle, WM_USER, WM_USER, PM_REMOVE) do
+      DispatchMessage(lMsg);
+    if Assigned(NewMessages) and (NewMessages.Count > 0) then begin
+      mmoMessages.Lines.AddStrings(NewMessages);
+      NewMessages.Clear;
+    end;
+    TestChangeFormIDOnClose;
+  end;
 {$ENDIF}
   Action := caFree;
   if LoaderStarted and not xeContext.LoaderDone then begin

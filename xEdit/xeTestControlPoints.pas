@@ -90,8 +90,11 @@ type
     procedure TestChangeFormIDRunTimer(Sender: TObject);
     procedure TestChangeFormIDAnswerTimer(Sender: TObject);
     procedure TestChangeFormIDReportTimer(Sender: TObject);
+    procedure TestChangeFormIDAfter(aLines: TStrings);
     procedure TestChangeFormIDNodes(aLines: TStrings);
+    procedure TestChangeFormIDSave;
     procedure TestChangeFormIDWrite;
+    procedure TestChangeFormIDOnClose;
     procedure TestDeltaPatchStates(const aWhen: string);
     procedure TestDeltaPatchWrite;
     procedure TestDeltaPatchCancelTimer(Sender: TObject);
@@ -4504,6 +4507,24 @@ begin
   end;
 end;
 
+procedure TestChangeFormIDLocalization(aLines: TStrings; const aWhen: string; const aTarget: IwbFile);
+var
+  lHandler : TwbLocalizationHandler;
+  lStrings : TwbLocalizationFile;
+begin
+  if Assigned(aTarget) then
+    aLines.Add('localized' + #9 + aWhen + #9 + aTarget.FileName + #9 + BoolToStr(aTarget.IsLocalized, True));
+  lHandler := xeContext.LocalizationHandler;
+  for var i := 0 to Pred(lHandler.Count) do begin
+    lStrings := lHandler[i];
+    aLines.Add('strings' + #9 + aWhen + #9 + lStrings.Name + #9 + 'count ' + IntToStr(lStrings.Count) + #9 + 'modified ' +
+      BoolToStr(lStrings.Modified, True) + #9 + 'next ' + IntToStr(lStrings.NextID));
+    for var j := 0 to Pred(lStrings.Count) do
+      aLines.Add('string' + #9 + aWhen + #9 + lStrings.Name + #9 + IntToStr(lStrings.IndexToID(j)) + #9 +
+        lStrings.Items[j].Replace(#13, '\r').Replace(#10, '\n'));
+  end;
+end;
+
 procedure TestChangeFormIDRecordLines(aLines: TStrings; const aWhen: string; const aRecords: TDynMainRecords;
   const aBefore: TArray<TwbFormID>);
 var
@@ -4636,7 +4657,7 @@ begin
 
     lFirst := nil;
     vstNav.ClearSelection;
-    if SameText(xeTestSwitches.ChangeFormIDOp, 'batchrefs') then begin
+    if SameText(xeTestSwitches.ChangeFormIDOp, 'batchrefs') or SameText(xeTestSwitches.ChangeFormIDOp, 'localize') then begin
       lFirst := FindNodeForElement(TestHost.TestChangeFormIDTarget);
       if not Assigned(lFirst) then
         raise Exception.Create('no nav node for ' + TestHost.TestChangeFormIDTarget.FileName);
@@ -4660,10 +4681,16 @@ begin
       lMenuItem := mniNavBatchChangeReferencingRecords
     else if SameText(xeTestSwitches.ChangeFormIDOp, 'cleanupinjected') then
       lMenuItem := mniNavCleanupInjected
+    else if SameText(xeTestSwitches.ChangeFormIDOp, 'localize') then
+      lMenuItem := mniNavLocalizationSwitch
     else
       lMenuItem := mniNavChangeFormID;
     lLines.Add('menu' + #9 + LowerCase(xeTestSwitches.ChangeFormIDOp) + ' ' + BoolToStr(lMenuItem.Visible, True) + #9 + 'selected ' +
       IntToStr(vstNav.SelectedCount) + #9 + 'focused first ' + BoolToStr(vstNav.FocusedNode = lFirst, True));
+    if lMenuItem = mniNavLocalizationSwitch then begin
+      lLines.Add('caption' + #9 + StripHotkey(lMenuItem.Caption) + #9 + 'submenu ' + BoolToStr(mniNavLocalization.Visible, True));
+      TestChangeFormIDLocalization(lLines, 'before', TestHost.TestChangeFormIDTarget);
+    end;
     if lShowView and tmrPendingSetActive.Enabled then
       tmrPendingSetActiveTimer(tmrPendingSetActive);
     if SameText(xeTestSwitches.ChangeFormIDOp, 'changerefs') then
@@ -4699,6 +4726,8 @@ begin
           mniNavBatchChangeReferencingRecordsClick(lMenuItem)
         else if lMenuItem = mniNavCleanupInjected then
           mniNavCleanupInjectedClick(lMenuItem)
+        else if lMenuItem = mniNavLocalizationSwitch then
+          mniNavLocalizationSwitchClick(lMenuItem)
         else
           mniNavChangeFormIDClick(lMenuItem);
         lLines.Add('returned');
@@ -4716,6 +4745,14 @@ begin
         lState[VK_SHIFT] := lShift;
         SetKeyboardState(lState);
       end;
+    end;
+
+    if TestHost.TestChangeFormIDClosed then begin
+      _wbProgressCallback := nil;
+      FreeAndNil(TestHost.TestChangeFormIDLines);
+      TestHost.TestChangeFormIDRecords := nil;
+      TestHost.TestChangeFormIDTarget := nil;
+      Exit;
     end;
 
     if TestHost.TestChangeFormIDNotOffered then
@@ -4935,6 +4972,30 @@ begin
       lExtra := ListItems;
       lResult := mrOk;
     end;
+  end else if lForm is TfrmLocalizePlugin then begin
+    var lLocalize := TfrmLocalizePlugin(lForm);
+    lExtra := 'offered: ' + string.Join(' | ', lLocalize.clbFrom.Items.ToStringArray);
+    lToken := NextToken(xeTestSwitches.ChangeFormIDAnswers, TestHost.TestChangeFormIDAnswerIndex);
+    if lToken = 'ok' then
+      lResult := mrOk
+    else if lToken = 'cancel' then
+      lResult := mrCancel
+    else if lToken.StartsWith('translate:') then begin
+      var lParts := lToken.Split([':']);
+      lLocalize.cbTranslation.Checked := True;
+      for var i := 0 to Pred(lLocalize.clbFrom.Count) do begin
+        lLocalize.clbFrom.Checked[i] := (Length(lParts) > 1) and SameText(lLocalize.clbFrom.Items[i], lParts[1]);
+        lLocalize.clbTo.Checked[i] := (Length(lParts) > 2) and SameText(lLocalize.clbTo.Items[i], lParts[2]);
+      end;
+      lResult := mrOk;
+    end;
+    if lToken <> '' then
+      lExtra := lExtra + ' listed answer ' + lToken;
+    if lResult = mrNone then begin
+      lResult := mrCancel;
+      lExtra := lExtra + ' fallback';
+      TestHost.TestChangeFormIDFallback := True;
+    end;
   end else if string(lForm.Caption).StartsWith('New FormID') then begin
     lEdit := FindEdit(lForm);
     if Assigned(lEdit) then
@@ -4999,15 +5060,24 @@ begin
 end;
 
 procedure TxeTestFormHelper.TestChangeFormIDReportTimer(Sender: TObject);
-var
-  lLines  : TStringList;
-  lStream : TMemoryStream;
-  lPosted : TDictionary<string, Integer>;
-  lText   : string;
-  lCount  : Integer;
 begin
   TestHost.TestChangeFormIDTimer.Enabled := False;
-  lLines := TestHost.TestChangeFormIDLines;
+  TestChangeFormIDAfter(TestHost.TestChangeFormIDLines);
+  TestChangeFormIDWrite;
+end;
+
+procedure TxeTestFormHelper.TestChangeFormIDAfter(aLines: TStrings);
+var
+  lLines    : TStrings;
+  lStream   : TMemoryStream;
+  lPosted   : TDictionary<string, Integer>;
+  lText     : string;
+  lCount    : Integer;
+  lLocalize : Boolean;
+  lHandler  : TwbLocalizationHandler;
+begin
+  lLines := aLines;
+  lLocalize := SameText(xeTestSwitches.ChangeFormIDOp, 'localize');
   try
     lPosted := TDictionary<string, Integer>.Create;
     try
@@ -5033,6 +5103,8 @@ begin
     end;
     TestChangeFormIDRecordLines(lLines, 'after', TestHost.TestChangeFormIDRecords, TestHost.TestChangeFormIDBefore);
     TestChangeFormIDFiles(lLines, 'after', Files);
+    if lLocalize then
+      TestChangeFormIDLocalization(lLines, 'after', TestHost.TestChangeFormIDTarget);
 
     ForceDirectories(xeTestSwitches.ChangeFormIDOut);
     for var i := Low(Files) to High(Files) do
@@ -5052,6 +5124,22 @@ begin
           lStream.Free;
         end;
       end;
+    if lLocalize then begin
+      lHandler := xeContext.LocalizationHandler;
+      ForceDirectories(TPath.Combine(xeTestSwitches.ChangeFormIDOut, 'Strings'));
+      for var i := 0 to Pred(lHandler.Count) do
+        if lHandler[i].Modified then begin
+          lStream := TMemoryStream.Create;
+          try
+            lHandler[i].WriteToStream(lStream);
+            lStream.SaveToFile(TPath.Combine(TPath.Combine(xeTestSwitches.ChangeFormIDOut, 'Strings'), lHandler[i].Name));
+            lLines.Add('written' + #9 + 'Strings\' + lHandler[i].Name + #9 + IntToStr(lStream.Size) + #9 +
+              IntToHex(TwbHash.XXH64(lStream.Memory, lStream.Size), 16));
+          finally
+            lStream.Free;
+          end;
+        end;
+    end;
     CheckResult := 0;
   except
     on E: Exception do begin
@@ -5059,25 +5147,44 @@ begin
       lLines.Add('# FAILED: ' + E.ClassName + ': ' + E.Message);
     end;
   end;
-  TestChangeFormIDWrite;
 end;
 
-procedure TxeTestFormHelper.TestChangeFormIDWrite;
+procedure TxeTestFormHelper.TestChangeFormIDSave;
 var
   lTmp : string;
 begin
+  TestHost.TestChangeFormIDLines.Add('# checkResult = ' + IntToStr(CheckResult));
+  lTmp := xeTestSwitches.ChangeFormIDFile + '.partial';
+  TestHost.TestChangeFormIDLines.SaveToFile(lTmp, TEncoding.UTF8);
+  if not MoveFileEx(PChar(lTmp), PChar(xeTestSwitches.ChangeFormIDFile), MOVEFILE_REPLACE_EXISTING) then
+    RaiseLastOSError;
+end;
+
+procedure TxeTestFormHelper.TestChangeFormIDWrite;
+begin
   try
-    TestHost.TestChangeFormIDLines.Add('# checkResult = ' + IntToStr(CheckResult));
-    lTmp := xeTestSwitches.ChangeFormIDFile + '.partial';
-    TestHost.TestChangeFormIDLines.SaveToFile(lTmp, TEncoding.UTF8);
-    if not MoveFileEx(PChar(lTmp), PChar(xeTestSwitches.ChangeFormIDFile), MOVEFILE_REPLACE_EXISTING) then
-      RaiseLastOSError;
+    TestChangeFormIDSave;
   finally
     FreeAndNil(TestHost.TestChangeFormIDLines);
     TestHost.TestChangeFormIDRecords := nil;
     TestHost.TestChangeFormIDTarget := nil;
     if xeAutoExit then
       tmrShutdown.Enabled := True;
+  end;
+end;
+
+procedure TxeTestFormHelper.TestChangeFormIDOnClose;
+begin
+  if not Assigned(TestHost.TestChangeFormIDLines) or TestHost.TestChangeFormIDClosed then
+    Exit;
+  TestHost.TestChangeFormIDClosed := True;
+  TestHost.TestChangeFormIDLines.Add('close');
+  TestChangeFormIDAfter(TestHost.TestChangeFormIDLines);
+  try
+    TestChangeFormIDSave;
+  except
+    on E: Exception do
+      AddMessage('[Test Change FormID] the report could not be written: ' + E.ClassName + ': ' + E.Message);
   end;
 end;
 
