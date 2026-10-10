@@ -3614,25 +3614,9 @@ begin
         CheckGroup(GroupBySignature['DIAL'], ['Added Quests'], []);
       // exclude Head Parts for Skyrim, causes issues
       if lGameDef.GameMode >= gmTES5 then
-        CheckGroup(GroupBySignature['NPC_'], ['Items', 'Factions', 'Actor Effects', 'Perks', 'KWDA - Keywords'], ['COCT', '', 'SPCT', 'PRKZ', 'KSIZ'])
+        CheckGroup(GroupBySignature['NPC_'], ['Items', 'Factions', 'Actor Effects', 'Perks'], ['COCT', '', 'SPCT', 'PRKZ'])
       else
         CheckGroup(GroupBySignature['NPC_'], ['Items', 'Factions', 'Head Parts', 'Actor Effects'], []);
-      // keywords
-      if lGameDef.GameMode >= gmTES5 then begin
-        CheckGroup(GroupBySignature['ALCH'], ['KWDA - Keywords'], ['KSIZ']);
-        CheckGroup(GroupBySignature['ARMO'], ['KWDA - Keywords'], ['KSIZ']);
-        CheckGroup(GroupBySignature['AMMO'], ['KWDA - Keywords'], ['KSIZ']);
-        CheckGroup(GroupBySignature['BOOK'], ['KWDA - Keywords'], ['KSIZ']);
-        CheckGroup(GroupBySignature['FLOR'], ['KWDA - Keywords'], ['KSIZ']);
-        CheckGroup(GroupBySignature['FURN'], ['KWDA - Keywords'], ['KSIZ']);
-        CheckGroup(GroupBySignature['INGR'], ['KWDA - Keywords'], ['KSIZ']);
-        CheckGroup(GroupBySignature['MGEF'], ['KWDA - Keywords'], ['KSIZ']);
-        CheckGroup(GroupBySignature['MISC'], ['KWDA - Keywords'], ['KSIZ']);
-        CheckGroup(GroupBySignature['SCRL'], ['KWDA - Keywords'], ['KSIZ']);
-        CheckGroup(GroupBySignature['SLGM'], ['KWDA - Keywords'], ['KSIZ']);
-        CheckGroup(GroupBySignature['SPEL'], ['KWDA - Keywords'], ['KSIZ']);
-        CheckGroup(GroupBySignature['WEAP'], ['KWDA - Keywords'], ['KSIZ']);
-      end;
     end;
 
   finally
