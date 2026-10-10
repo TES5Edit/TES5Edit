@@ -3520,7 +3520,7 @@ var
             if Assigned(TargetLists[l]) and Assigned(WinningLists[l]) then
               if not ListsEqual(TargetLists[l], WinningLists[l]) then begin
                 if not Assigned(TargetRecord) then
-                  TargetRecord := wbCopyElementToFile(MainRecord, TargetFile, False, True, '', '', '', '', False) as IwbMainRecord;
+                  TargetRecord := wbCopyElementToFile(MainRecord, TargetFile, False, True, '', '', '', '', False, nil) as IwbMainRecord;
 
                 TargetRecord.RemoveElement(aListNames[l]);
                 for j := 0 to Pred(TargetLists[l].Count) do
@@ -4026,7 +4026,7 @@ begin
 
     if AddRequiredMasters(sl, ReferenceFile) then
       for j := Low(Elements) to High(Elements) do begin
-        wbCopyElementToFile(Elements[j], ReferenceFile, False, True, '', '', '', '', False);
+        wbCopyElementToFile(Elements[j], ReferenceFile, False, True, '', '', '', '', False, nil);
         if Elements[j].RemoveInjected(False) then begin
           pgMain.ActivePage := tbsMessages;
           AddMessage('Injected references in '+Elements[j].Name+' could not all be removed automatically.');

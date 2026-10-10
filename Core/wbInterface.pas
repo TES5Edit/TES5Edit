@@ -1155,6 +1155,9 @@ type
 
   TwbTemplateElements = TArray<IwbTemplateElement>;
 
+  TwbCanOverwriteAction = (coCopy, coDelete, coSkip);
+  TwbCanOverwriteCallback = reference to function(const aTarget, aSource: IwbElement) : TwbCanOverwriteAction;
+
   IwbElement = interface(IwbInterface)
     ['{F4B4637D-C794-415F-B5C7-587EAA4095B3}']
 
@@ -1231,7 +1234,7 @@ type
     function GetNoReach: Boolean;
     procedure ReportRequiredMasters(aMasters: TwbFilesSet; aAsNew: Boolean; recursive: Boolean = True; initial: Boolean = False);
     procedure ReportRequiredMastersForCopy(aMasters: TwbFilesSet; aAsNew, aDeepCopy: Boolean; const aTarget: IwbFile = nil);
-    function AddIfMissing(const aElement: IwbElement; aAsNew, aDeepCopy : Boolean; const aPrefixRemove, aSuffixRemove, aPrefix, aSuffix: string; aAllowOverwrite: Boolean): IwbElement;
+    function AddIfMissing(const aElement: IwbElement; aAsNew, aDeepCopy : Boolean; const aPrefixRemove, aSuffixRemove, aPrefix, aSuffix: string; aAllowOverwrite: Boolean; const aCanOverwrite: TwbCanOverwriteCallback): IwbElement;
     procedure ResetConflict;
     procedure ResetReachable;
     function RemoveInjected(aCanRemove: Boolean): Boolean;
@@ -1651,8 +1654,6 @@ type
 
   TDynElements = array of IwbElement;
 
-  TwbCanOverwriteAction = (coCopy, coDelete, coSkip);
-  TwbCanOverwriteCallback = reference to function(const aTarget, aSource: IwbElement) : TwbCanOverwriteAction;
   TwbCopyDecision = reference to function(const aTarget, aSource: IwbElement): Boolean;
 
   TwbAfterCopyCallback = procedure(const aElement: IwbElement);
@@ -5759,11 +5760,6 @@ function wbLighter(Color: TColor; Amount: Double = 0.5): TColor;
 function wbDarker(Color: TColor; Amount: Double = 0.25): TColor;
 function wbIsDarkMode: Boolean;
 
-threadvar
-  _wbCanOverwriteCallback : TwbCanOverwriteCallback;
-
-function wbCanOverwrite(const aTarget, aSource: IwbElement): TwbCanOverwriteAction;
-
 var
   wbVarPointer: TVarType = $7FF;
 
@@ -5840,14 +5836,6 @@ type
   IwbMainRecordDefInternal = interface(IwbMainRecordDef)
     ['{4EC86F13-A1B7-4FDF-B073-84DC6FA00158}']
   end;
-
-function wbCanOverwrite(const aTarget, aSource: IwbElement): TwbCanOverwriteAction;
-begin
-  if Assigned(_wbCanOverwriteCallback) then
-    Result := _wbCanOverwriteCallback(aTarget, aSource)
-  else
-    Result := coCopy;
-end;
 
 function RGBTripleToCol(const aCol: TRGBTriple ): TColor;
 begin

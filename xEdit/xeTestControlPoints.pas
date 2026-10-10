@@ -741,10 +741,10 @@ begin
       Continue;
     if not lSource.CanCopy or not Assigned(lSource.ElementBySignature['FULL']) then
       Continue;
-    lRecordA := wbCopyElementToFile(lSource, TestHost.TestNavCopyFileA, True, True, '', '', '', '', False) as IwbMainRecord;
+    lRecordA := wbCopyElementToFile(lSource, TestHost.TestNavCopyFileA, True, True, '', '', '', '', False, nil) as IwbMainRecord;
     if not Assigned(lRecordA) then
       Continue;
-    lRecordB := wbCopyElementToFile(lRecordA, TestHost.TestNavCopyFileB, False, True, '', '', '', '', False) as IwbMainRecord;
+    lRecordB := wbCopyElementToFile(lRecordA, TestHost.TestNavCopyFileB, False, True, '', '', '', '', False, nil) as IwbMainRecord;
     if not Assigned(lRecordB) then
       raise Exception.Create('no override of ' + lRecordA.Name + ' was created');
     lRecordB.ElementEditValues['FULL'] := lRecordB.ElementEditValues['FULL'] + ' (B)';
@@ -753,7 +753,7 @@ begin
     if xeTestSwitches.NavCopyTwo then
       lRecordC := lRecordB
     else begin
-      lRecordC := wbCopyElementToFile(lRecordA, TestHost.TestNavCopyFileC, False, True, '', '', '', '', False) as IwbMainRecord;
+      lRecordC := wbCopyElementToFile(lRecordA, TestHost.TestNavCopyFileC, False, True, '', '', '', '', False, nil) as IwbMainRecord;
       if not Assigned(lRecordC) then
         raise Exception.Create('no second override of ' + lRecordA.Name + ' was created');
       lRecordC.ElementEditValues['FULL'] := lRecordC.ElementEditValues['FULL'] + ' (C)';
@@ -2608,7 +2608,7 @@ begin
       var lFile := AddNewFileName('CopyIntoGap.esp', False, False);
       if not AddRequiredMasters(lSource, lFile, False, True) then
         raise Exception.Create('the masters of ' + lSource.Name + ' could not be added');
-      lRecord := wbCopyElementToFile(lSource, lFile, False, True, '', '', '', '', False) as IwbMainRecord;
+      lRecord := wbCopyElementToFile(lSource, lFile, False, True, '', '', '', '', False, nil) as IwbMainRecord;
       if not Assigned(lRecord) then
         raise Exception.Create('no override of ' + lSource.Name + ' was created');
 
@@ -3520,7 +3520,7 @@ begin
         lLines.Add('unusedanswers' + #9 + IntToStr(Length(lListed) - TestHost.TestCopyIntoAnswerIndex) + #9 +
           string.Join(',', lListed, TestHost.TestCopyIntoAnswerIndex, Length(lListed) - TestHost.TestCopyIntoAnswerIndex));
     end;
-    lLines.Add('after' + #9 + 'hook ' + BoolToStr(Assigned(_wbCanOverwriteCallback), True) + #9 + 'progress "' + wbCurrentProgress + '"');
+    lLines.Add('after' + #9 + 'progress "' + wbCurrentProgress + '"');
     for var i := Low(lElements) to High(lElements) do
       if Supports(lElements[i], IwbMainRecord, lRecord) then
         lLines.Add('sourceafter' + #9 + IntToStr(i) + #9 + 'flags=' + IntToHex(lRecord.Flags._Flags, 8) + #9 + lRecord.EditorID);
