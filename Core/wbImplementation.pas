@@ -3471,7 +3471,7 @@ var
     SetLength(lWinningLists, Length(aRow.Lists));
     try
       lIsFaulty := False;
-      lWinner := aMaster.WinningOverride;
+      lWinner := nil;
       for l := Low(aRow.Lists) to High(aRow.Lists) do begin
         lIsOrderedList := False;
         if Supports(aMaster.ElementByName[aRow.Lists[l]], IwbSortableContainer, lSortable) then
@@ -3518,12 +3518,13 @@ var
         end;
         if lIsFaulty then
           Break;
+        lWinner := aMaster.WinningOverride;
         lWinningLists[l] := BuildList(lWinner.ElementByName[aRow.Lists[l]]);
       end;
 
       if lIsFaulty then begin
-        lFaulty.Add(aMaster);
         Report('Error: Can''t merge faulty ordered list ' + aMaster.Name);
+        lFaulty.Add(aMaster);
         Exit;
       end;
 
