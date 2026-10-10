@@ -1731,6 +1731,14 @@ type
     NewMasters : TwbFiles;
   end;
 
+  TwbCleanupInjectedPlan = record
+    Target     : IwbFile;
+    Records    : TArray<IwbMainRecord>;
+    NewMasters : TwbFiles;
+    class function Plan(const aElements: TDynElements): TwbCleanupInjectedPlan; static;
+    procedure Apply(const aReport: TProc<string>);
+  end;
+
   TwbMergeIntoMasterResult = record
     Plan                : TwbFormIDChangePlan;
     InjectSkippedUpdate : Boolean;
@@ -25422,6 +25430,57 @@ begin
     if Items[i].Outcome = ruoFailed then
       Exit(True);
   Result := False;
+end;
+
+{ TwbCleanupInjectedPlan }
+
+class function TwbCleanupInjectedPlan.Plan(const aElements: TDynElements): TwbCleanupInjectedPlan;
+var
+  lMainRecord : IwbMainRecord;
+  lSources    : TwbFiles;
+  lContainer  : IwbContainer;
+  lMasters    : TwbFilesSet;
+begin
+  Result := Default(TwbCleanupInjectedPlan);
+  for var lElement in aElements do
+    if Assigned(lElement) and (lElement.ElementType = etMainRecord) and Supports(lElement, IwbMainRecord, lMainRecord) then begin
+      lSources := lElement.InjectionSourceFiles;
+      if Length(lSources) = 1 then begin
+        if not Assigned(Result.Target) then
+          Result.Target := lSources[0]
+        else
+          if not Result.Target.Equals(lSources[0]) then
+            Continue;
+        Result.Records := Result.Records + [lMainRecord];
+      end;
+    end;
+  if Length(Result.Records) < 1 then
+    Exit;
+
+  lMasters := TwbFilesSet.Create;
+  try
+    for var lRecord in Result.Records do begin
+      lRecord.ReportRequiredMasters(lMasters, False);
+      lContainer := lRecord.Container;
+      while Assigned(lContainer) do begin
+        lContainer.ReportRequiredMasters(lMasters, False, False);
+        lContainer := lContainer.Container;
+      end;
+    end;
+    for var lFile in lMasters do
+      Result.NewMasters := Result.NewMasters + [lFile];
+  finally
+    lMasters.Free;
+  end;
+end;
+
+procedure TwbCleanupInjectedPlan.Apply(const aReport: TProc<string>);
+begin
+  for var lRecord in Records do begin
+    Target.AddCopy(lRecord, [cfDeepCopy], wbNoCopyRules);
+    if lRecord.RemoveInjected(False) and Assigned(aReport) then
+      aReport('Injected references in ' + lRecord.Name + ' could not all be removed automatically.');
+  end;
 end;
 
 

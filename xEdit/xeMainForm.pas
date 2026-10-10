@@ -3658,14 +3658,12 @@ end;
 
 procedure TfrmMain.mniNavCleanupInjectedClick(Sender: TObject);
 var
-  SelectedNodes               : TNodeArray;
-  NodeData                    : PNavNodeData;
-  Elements                    : array of IwbElement;
-  ReferenceFile               : IwbFile;
-  Container                   : IwbContainer;
-  InjectionSourceFiles        : TwbFiles;
-  sl                          : TStringList;
-  i, j                        : Integer;
+  SelectedNodes : TNodeArray;
+  NodeData      : PNavNodeData;
+  Elements      : TDynElements;
+  lPlan         : TwbCleanupInjectedPlan;
+  sl            : TStringList;
+  i             : Integer;
 begin
   if not xeContext.Settings.EditAllowed then
     Exit;
@@ -3676,58 +3674,30 @@ begin
     Exit;
 
   SelectedNodes := vstNav.GetSortedSelection(True);
-  if Length(SelectedNodes) < 1 then
-    Exit;
-
-  j := 0;
   SetLength(Elements, Length(SelectedNodes));
   for i := Low(SelectedNodes) to High(SelectedNodes) do begin
     NodeData := vstNav.GetNodeData(SelectedNodes[i]);
-    if Assigned(NodeData.Element) and (NodeData.Element.ElementType = etMainRecord) then begin
-      InjectionSourceFiles := NodeData.Element.InjectionSourceFiles;
-      if Length(InjectionSourceFiles) = 1 then begin
-        if not Assigned(ReferenceFile) then
-          ReferenceFile := InjectionSourceFiles[0]
-        else
-          if not ReferenceFile.Equals(InjectionSourceFiles[0]) then
-            Continue;
-        Elements[j] := NodeData.Element;
-        Inc(j);
-      end;
-    end;
+    Elements[i] := NodeData.Element;
   end;
-  if j < 1 then
+  lPlan := TwbCleanupInjectedPlan.Plan(Elements);
+  Elements := nil;
+  if Length(lPlan.Records) < 1 then
     Exit;
-  SetLength(Elements, j);
 
   sl := TStringList.Create;
   sl.Sorted := True;
   sl.Duplicates := dupIgnore;
   try
-    var lMasters := TwbFilesSet.Create;
-    try
-      for i := Low(Elements) to High(Elements) do begin
-        Elements[i].ReportRequiredMasters(lMasters, False);
-        Container := Elements[i].Container;
-        while Assigned(Container) do begin
-          Container.ReportRequiredMasters(lMasters, False, False);
-          Container := Container.Container;
-        end;
-      end;
-      for var lFile in lMasters do
-        sl.AddObject(lFile.FileName, Pointer(lFile));
-    finally
-      FreeAndNil(lMasters);
-    end;
+    for var lFile in lPlan.NewMasters do
+      sl.AddObject(lFile.FileName, Pointer(lFile));
 
-    if AddRequiredMasters(sl, ReferenceFile) then
-      for j := Low(Elements) to High(Elements) do begin
-        ReferenceFile.AddCopy(Elements[j], [cfDeepCopy], wbNoCopyRules);
-        if Elements[j].RemoveInjected(False) then begin
+    if AddRequiredMasters(sl, lPlan.Target) then
+      lPlan.Apply(
+        procedure(aMessage: string)
+        begin
           pgMain.ActivePage := tbsMessages;
-          AddMessage('Injected references in '+Elements[j].Name+' could not all be removed automatically.');
-        end;
-      end;
+          AddMessage(aMessage);
+        end);
   finally
     sl.Free;
   end;
