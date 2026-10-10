@@ -72,6 +72,12 @@ type
     TestMergeAnswer          : TTimer;
     TestMergeTarget          : IwbFile;
     TestMergeNotOffered      : Boolean;
+    TestMergedPatchLines     : TStringList;
+    TestMergedPatchTimer     : TTimer;
+    TestMergedPatchAnswer    : TTimer;
+    TestMergedPatchAnswers   : Integer;
+    TestMergedPatchMessages  : Integer;
+    TestMergedPatchFileCount : Integer;
     TestCopyIntoLines        : TStringList;
     TestCopyIntoTimer        : TTimer;
     TestCopyIntoAnswer       : TTimer;
@@ -188,6 +194,11 @@ type
     MergeSource           : string;
     MergeTarget           : string;
     MergeOut              : string;
+    MergedPatch           : Boolean;
+    MergedPatchFile       : string;
+    MergedPatchName       : string;
+    MergedPatchOut        : string;
+    MergedPatchAnswer     : string;
     CopyInto              : Boolean;
     CopyIntoFile          : string;
     CopyIntoMode          : string;
@@ -457,6 +468,20 @@ begin
     xeAutoLoad  := True;
   end;
 
+  if wbFindCmdLineParam('testmergedpatch', MergedPatchFile) then begin
+    wbFindCmdLineParam('testmergedpatchanswer', MergedPatchAnswer);
+    if (MergedPatchFile = '') or
+       not wbFindCmdLineParam('testmergedpatchname', MergedPatchName) or (MergedPatchName = '') or
+       not wbFindCmdLineParam('testmergedpatchout', MergedPatchOut) or (MergedPatchOut = '') or
+       not ((MergedPatchAnswer = '') or SameText(MergedPatchAnswer, 'yes') or SameText(MergedPatchAnswer, 'no')) then begin
+      ShowMessage('testmergedpatch requires -testmergedpatch:<filename> -testmergedpatchname:<module name without extension> ' +
+        '-testmergedpatchout:<file> [-testmergedpatchanswer:<yes|no>]');
+      Exit(False);
+    end;
+    MergedPatch := True;
+    xeAutoLoad := True;
+  end;
+
   if wbFindCmdLineParam('testcopyinto', CopyIntoFile) then begin
     wbFindCmdLineParam('testcopyintotargets', CopyIntoTargets);
     wbFindCmdLineParam('testcopyintotemplate', CopyIntoTemplate);
@@ -556,7 +581,7 @@ end;
 
 function TxeTestSwitches.Any: Boolean;
 begin
-  Result := Conflicts or NavCopy or ViewText or ViewTree or Options or CopyIntoGap or DropMaster or DeltaPatch or Merge or CopyInto or
+  Result := Conflicts or NavCopy or ViewText or ViewTree or Options or CopyIntoGap or DropMaster or DeltaPatch or Merge or MergedPatch or CopyInto or
     Renumber or Hide or Filter or SaveContexts or (Pump <> '') or (StateManifest <> '');
 end;
 

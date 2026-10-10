@@ -77,6 +77,10 @@ type
     procedure TestMergeRunTimer(Sender: TObject);
     procedure TestMergeAnswerTimer(Sender: TObject);
     procedure TestMergeWrite;
+    procedure TestMergedPatchRunTimer(Sender: TObject);
+    procedure TestMergedPatchAnswerTimer(Sender: TObject);
+    procedure TestMergedPatchReportTimer(Sender: TObject);
+    procedure TestMergedPatchWrite;
     procedure TestCopyIntoRunTimer(Sender: TObject);
     procedure TestCopyIntoAnswerTimer(Sender: TObject);
     procedure TestCopyIntoWrite;
@@ -117,6 +121,7 @@ type
     procedure DoTestDeltaPatchStart;
     procedure DoTestDeltaPatchReport;
     procedure DoTestMerge;
+    procedure DoTestMergedPatch;
     procedure DoTestCopyInto;
     procedure DoTestRenumber;
     procedure DoTestHide;
@@ -3368,6 +3373,227 @@ begin
       RaiseLastOSError;
   finally
     FreeAndNil(TestHost.TestMergeLines);
+    if xeAutoExit then
+      tmrShutdown.Enabled := True;
+  end;
+end;
+
+procedure TxeTestFormHelper.DoTestMergedPatch;
+begin
+  xeContext.Settings.DontSave := True;
+  CheckResult := 2;
+  TestHost.TestMergedPatchLines := TStringList.Create;
+  TestHost.TestMergedPatchLines.Add('# xEdit create merged patch probe');
+  TestHost.TestMergedPatchLines.Add('# ' + xeApplicationTitle);
+  TestHost.TestMergedPatchLines.Add('# name = ' + xeTestSwitches.MergedPatchName + ', out = ' + xeTestSwitches.MergedPatchOut +
+    ', answer = ' + xeTestSwitches.MergedPatchAnswer);
+  TestHost.TestMergedPatchLines.Add('# Columns, tab separated: what / details');
+  TestHost.TestMergedPatchTimer := TTimer.Create(Self);
+  TestHost.TestMergedPatchTimer.Interval := 500;
+  TestHost.TestMergedPatchTimer.OnTimer := TestMergedPatchRunTimer;
+  TestHost.TestMergedPatchTimer.Enabled := True;
+end;
+
+procedure TxeTestFormHelper.TestMergedPatchRunTimer(Sender: TObject);
+begin
+  TestHost.TestMergedPatchTimer.Enabled := False;
+  try
+    for var i := Low(Files) to High(Files) do
+      TestHost.TestMergedPatchLines.Add('file' + #9 + IntToStr(i) + #9 + IntToStr(Files[i].LoadOrder) + #9 + Files[i].FileName);
+    var lContextFiles := xeContext.Files;
+    for var i := Low(lContextFiles) to High(lContextFiles) do
+      TestHost.TestMergedPatchLines.Add('contextfile' + #9 + IntToStr(i) + #9 + IntToStr(lContextFiles[i].LoadOrder) + #9 +
+        lContextFiles[i].FileName);
+    TestHost.TestMergedPatchLines.Add('allowinternaledit' + #9 + 'before' + #9 + BoolToStr(xeContext.Settings.AllowInternalEdit, True));
+    TestHost.TestMergedPatchFileCount := Length(Files);
+    TestHost.TestMergedPatchMessages := mmoMessages.Lines.Count;
+
+    TestHost.TestMergedPatchAnswer := TTimer.Create(Self);
+    TestHost.TestMergedPatchAnswer.Interval := 100;
+    TestHost.TestMergedPatchAnswer.OnTimer := TestMergedPatchAnswerTimer;
+    TestHost.TestMergedPatchAnswer.Enabled := True;
+
+    mniNavCreateMergedPatchClick(mniNavCreateMergedPatch);
+
+    TestHost.TestMergedPatchAnswer.Enabled := False;
+    TestHost.TestMergedPatchLines.Add('allowinternaledit' + #9 + 'after' + #9 + BoolToStr(xeContext.Settings.AllowInternalEdit, True));
+    TestHost.TestMergedPatchTimer.OnTimer := TestMergedPatchReportTimer;
+    TestHost.TestMergedPatchTimer.Interval := 2000;
+    TestHost.TestMergedPatchTimer.Enabled := True;
+  except
+    on E: Exception do begin
+      AddMessage('[Test Merged Patch] FAILED: ' + E.ClassName + ': ' + E.Message);
+      TestHost.TestMergedPatchLines.Add('# FAILED: ' + E.ClassName + ': ' + E.Message);
+      if Assigned(TestHost.TestMergedPatchAnswer) then
+        TestHost.TestMergedPatchAnswer.Enabled := False;
+      TestMergedPatchWrite;
+    end;
+  end;
+end;
+
+procedure TxeTestFormHelper.TestMergedPatchAnswerTimer(Sender: TObject);
+var
+  lForm   : TCustomForm;
+  lResult : TModalResult;
+  lText   : string;
+  lExtra  : string;
+
+  function HasButton(aOwner: TComponent; aResult: TModalResult): Boolean;
+  begin
+    Result := False;
+    for var i := 0 to Pred(aOwner.ComponentCount) do begin
+      if (aOwner.Components[i] is TButton) and (TButton(aOwner.Components[i]).ModalResult = aResult) then
+        Exit(True);
+      if HasButton(aOwner.Components[i], aResult) then
+        Exit(True);
+    end;
+  end;
+
+  procedure CollectText(aOwner: TComponent);
+  begin
+    for var i := 0 to Pred(aOwner.ComponentCount) do begin
+      if aOwner.Components[i] is TLabel then
+        lText := lText + ' ' + TLabel(aOwner.Components[i]).Caption;
+      CollectText(aOwner.Components[i]);
+    end;
+  end;
+
+  function FindEdit(aOwner: TComponent): TEdit;
+  begin
+    Result := nil;
+    for var i := 0 to Pred(aOwner.ComponentCount) do begin
+      if aOwner.Components[i] is TEdit then
+        Exit(TEdit(aOwner.Components[i]));
+      Result := FindEdit(aOwner.Components[i]);
+      if Assigned(Result) then
+        Exit;
+    end;
+  end;
+
+begin
+  if not Assigned(TestHost.TestMergedPatchLines) then
+    Exit;
+  lForm := nil;
+  for var i := 0 to Pred(Screen.CustomFormCount) do
+    if (Screen.CustomForms[i] <> Self) and Screen.CustomForms[i].Visible and
+       (fsModal in Screen.CustomForms[i].FormState) and (Screen.CustomForms[i].ModalResult = mrNone) then begin
+      lForm := Screen.CustomForms[i];
+      Break;
+    end;
+  if not Assigned(lForm) then
+    Exit;
+  lText := '';
+  lExtra := '';
+  CollectText(lForm);
+  lResult := mrNone;
+  Inc(TestHost.TestMergedPatchAnswers);
+  if TestHost.TestMergedPatchAnswers > 10 then begin
+    lResult := mrCancel;
+    lExtra := 'too many dialogs, cancelled';
+  end else if SameText(lForm.Caption, 'New Module File') then begin
+    var lEdit := FindEdit(lForm);
+    if Assigned(lEdit) then begin
+      lExtra := 'offered: ' + lEdit.Text;
+      lEdit.Text := xeTestSwitches.MergedPatchName;
+      lExtra := lExtra + ' entered: ' + lEdit.Text;
+    end;
+    lResult := mrOk;
+  end else if HasButton(lForm, mrYes) then begin
+    if SameText(xeTestSwitches.MergedPatchAnswer, 'no') then
+      lResult := mrNo
+    else
+      lResult := mrYes;
+  end else if HasButton(lForm, mrOk) then
+    lResult := mrOk;
+  if lResult = mrNone then
+    Exit;
+  lText := lText.Replace(#13, ' ').Replace(#10, ' ');
+  if Length(lText) > 300 then
+    lText := Copy(lText, 1, 300) + '...';
+  TestHost.TestMergedPatchLines.Add('answer' + #9 + lForm.Caption + #9 + IntToStr(lResult) + #9 + lText.Trim + #9 + lExtra);
+  lForm.ModalResult := lResult;
+end;
+
+procedure TxeTestFormHelper.TestMergedPatchReportTimer(Sender: TObject);
+
+  procedure AddElements(const aElement: IwbElement; aDepth: Integer);
+  var
+    lContainer : IwbContainerElementRef;
+  begin
+    TestHost.TestMergedPatchLines.Add('element' + #9 + IntToStr(aDepth) + #9 + aElement.Name + #9 + aElement.EditValue);
+    if Supports(aElement, IwbContainerElementRef, lContainer) then
+      for var i := 0 to Pred(lContainer.ElementCount) do
+        AddElements(lContainer.Elements[i], Succ(aDepth));
+  end;
+
+  procedure AddTree(const aContainer: IwbContainer; aDepth: Integer);
+  var
+    lGroup  : IwbGroupRecord;
+    lRecord : IwbMainRecord;
+  begin
+    for var i := 0 to Pred(aContainer.ElementCount) do
+      if Supports(aContainer.Elements[i], IwbGroupRecord, lGroup) then begin
+        TestHost.TestMergedPatchLines.Add('targettree' + #9 + IntToStr(aDepth) + #9 + 'GRUP' + #9 + IntToStr(lGroup.GroupType) + #9 +
+          IntToHex(lGroup.GroupLabel, 8));
+        AddTree(lGroup, Succ(aDepth));
+      end else if Supports(aContainer.Elements[i], IwbMainRecord, lRecord) then begin
+        TestHost.TestMergedPatchLines.Add('targettree' + #9 + IntToStr(aDepth) + #9 + string(lRecord.Signature) + #9 +
+          IntToHex(lRecord.LoadOrderFormID.ToCardinal, 8) + #9 + 'flags=' + IntToHex(lRecord.Flags._Flags, 8) + #9 + lRecord.EditorID);
+        AddElements(lRecord, Succ(aDepth));
+      end;
+  end;
+
+var
+  lTarget : IwbFile;
+  lStream : TMemoryStream;
+begin
+  TestHost.TestMergedPatchTimer.Enabled := False;
+  try
+    for var i := TestHost.TestMergedPatchMessages to Pred(mmoMessages.Lines.Count) do
+      TestHost.TestMergedPatchLines.Add('message' + #9 + mmoMessages.Lines[i]);
+    lTarget := nil;
+    if Length(Files) > TestHost.TestMergedPatchFileCount then
+      lTarget := Files[High(Files)];
+    if not Assigned(lTarget) then
+      TestHost.TestMergedPatchLines.Add('target' + #9 + 'none')
+    else begin
+      TestHost.TestMergedPatchLines.Add('target' + #9 + lTarget.FileName + #9 + 'load order ' + IntToStr(lTarget.LoadOrder) + #9 +
+        'records ' + IntToStr(lTarget.RecordCount) + #9 + 'masters ' + IntToStr(lTarget.MasterCount[True]));
+      for var i := 0 to Pred(lTarget.MasterCount[True]) do
+        TestHost.TestMergedPatchLines.Add('master' + #9 + IntToStr(i) + #9 + lTarget.Masters[i, True].FileName);
+      AddTree(lTarget, 0);
+      lStream := TMemoryStream.Create;
+      try
+        lTarget.WriteToStream(lStream, rmNo);
+        lStream.SaveToFile(xeTestSwitches.MergedPatchOut);
+        TestHost.TestMergedPatchLines.Add('patch' + #9 + ExtractFileName(xeTestSwitches.MergedPatchOut) + #9 + IntToStr(lStream.Size) + #9 +
+          IntToHex(TwbHash.XXH64(lStream.Memory, lStream.Size), 16));
+      finally
+        lStream.Free;
+      end;
+    end;
+    CheckResult := 0;
+  except
+    on E: Exception do begin
+      AddMessage('[Test Merged Patch] FAILED: ' + E.ClassName + ': ' + E.Message);
+      TestHost.TestMergedPatchLines.Add('# FAILED: ' + E.ClassName + ': ' + E.Message);
+    end;
+  end;
+  TestMergedPatchWrite;
+end;
+
+procedure TxeTestFormHelper.TestMergedPatchWrite;
+var
+  lTmp : string;
+begin
+  try
+    TestHost.TestMergedPatchLines.Add('# checkResult = ' + IntToStr(CheckResult));
+    lTmp := xeTestSwitches.MergedPatchFile + '.partial';
+    TestHost.TestMergedPatchLines.SaveToFile(lTmp, TEncoding.UTF8);
+    if not MoveFileEx(PChar(lTmp), PChar(xeTestSwitches.MergedPatchFile), MOVEFILE_REPLACE_EXISTING) then
+      RaiseLastOSError;
+  finally
+    FreeAndNil(TestHost.TestMergedPatchLines);
     if xeAutoExit then
       tmrShutdown.Enabled := True;
   end;
