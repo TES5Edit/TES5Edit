@@ -1158,6 +1158,17 @@ type
   TwbCanOverwriteAction = (coCopy, coDelete, coSkip);
   TwbCanOverwriteCallback = reference to function(const aTarget, aSource: IwbElement) : TwbCanOverwriteAction;
 
+  TwbCopyFlag = (cfAsNew, cfDeepCopy, cfAllowOverwrite);
+  TwbCopyFlags = set of TwbCopyFlag;
+
+  TwbCopyRules = record
+    PrefixRemove : string;
+    SuffixRemove : string;
+    Prefix       : string;
+    Suffix       : string;
+    CanOverwrite : TwbCanOverwriteCallback;
+  end;
+
   IwbElement = interface(IwbInterface)
     ['{F4B4637D-C794-415F-B5C7-587EAA4095B3}']
 
@@ -1234,7 +1245,7 @@ type
     function GetNoReach: Boolean;
     procedure ReportRequiredMasters(aMasters: TwbFilesSet; aAsNew: Boolean; recursive: Boolean = True; initial: Boolean = False);
     procedure ReportRequiredMastersForCopy(aMasters: TwbFilesSet; aAsNew, aDeepCopy: Boolean; const aTarget: IwbFile = nil);
-    function AddIfMissing(const aElement: IwbElement; aAsNew, aDeepCopy : Boolean; const aPrefixRemove, aSuffixRemove, aPrefix, aSuffix: string; aAllowOverwrite: Boolean; const aCanOverwrite: TwbCanOverwriteCallback): IwbElement;
+    function AddIfMissing(const aElement: IwbElement; aFlags: TwbCopyFlags; const aRules: TwbCopyRules): IwbElement;
     procedure ResetConflict;
     procedure ResetReachable;
     function RemoveInjected(aCanRemove: Boolean): Boolean;
@@ -1290,7 +1301,7 @@ type
 
     procedure WriteToStream(aStream: TStream; aResetModified: TwbResetModified);
 
-    function CopyInto(const aFile: IwbFile; AsNew, DeepCopy: Boolean; const aPrefixRemove, aSuffixRemove, aPrefix, aSuffix: string): IwbElement;
+    function CopyInto(const aFile: IwbFile; aFlags: TwbCopyFlags; const aRules: TwbCopyRules): IwbElement;
 
     function GetTreeHead: Boolean;              // Is the element expected to be a "header record" in the tree navigator
     function GetTreeBranch: Boolean;            // Is the element expected to show in the tree navigator
@@ -1665,13 +1676,9 @@ type
     DeepCopy       : Boolean;
     AllowOverwrite : Boolean;
     EditorID       : string;
-    PrefixRemove   : string;
-    SuffixRemove   : string;
-    Prefix         : string;
-    Suffix         : string;
+    Rules          : TwbCopyRules;
     Operation      : string;
     AfterCopy      : TwbAfterCopyCallback;
-    CanOverwrite   : TwbCanOverwriteCallback;
     class function IsMultiple(const aElements: TDynElements): Boolean; static;
     class function OverwriteAction(const aTarget, aSource: IwbElement; const aConfirmOverwrite, aConfirmRemove: TwbCopyDecision): TwbCanOverwriteAction; static;
   end;
@@ -4489,6 +4496,8 @@ type
 
 const
   sStringID = 'STRINGID:';
+
+  wbNoCopyRules: TwbCopyRules = ();
 
   wbLocalizationExtension: array [TwbLStringType] of string = (
     '.DLSTRINGS',

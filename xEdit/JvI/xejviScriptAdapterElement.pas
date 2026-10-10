@@ -668,6 +668,15 @@ begin
   end;
 end;
 
+function CopyFlags(aAsNew, aDeepCopy: Boolean): TwbCopyFlags;
+begin
+  Result := [];
+  if aAsNew then
+    Include(Result, cfAsNew);
+  if aDeepCopy then
+    Include(Result, cfDeepCopy);
+end;
+
 procedure _wbCopyElementToFile(var Value: Variant; Args: TJvInterpreterArgs);
 var
   Element: IwbElement;
@@ -675,27 +684,38 @@ var
 begin
   if Supports(IInterface(Args.Values[0]), IwbElement, Element) then
     if Supports(IInterface(Args.Values[1]), IwbFile, _File) then
-      Value := wbCopyElementToFile(Element, _File, Args.Values[2], Args.Values[3], '', '', '', '', False, nil);
+      Value := wbCopyElementToFile(Element, _File, CopyFlags(Args.Values[2], Args.Values[3]), wbNoCopyRules);
 end;
 
 procedure _wbCopyElementToFileWithPrefix(var Value: Variant; Args: TJvInterpreterArgs);
 var
   Element: IwbElement;
   _File: IwbFile;
+  Rules: TwbCopyRules;
 begin
   if Supports(IInterface(Args.Values[0]), IwbElement, Element) then
-    if Supports(IInterface(Args.Values[1]), IwbFile, _File) then
-      Value := wbCopyElementToFile(Element, _File, Args.Values[2], Args.Values[3], Args.Values[4], '', Args.Values[5], Args.Values[6], False, nil);
+    if Supports(IInterface(Args.Values[1]), IwbFile, _File) then begin
+      Rules.PrefixRemove := Args.Values[4];
+      Rules.Prefix := Args.Values[5];
+      Rules.Suffix := Args.Values[6];
+      Value := wbCopyElementToFile(Element, _File, CopyFlags(Args.Values[2], Args.Values[3]), Rules);
+    end;
 end;
 
 procedure _wbCopyElementToFileWithPrefixAndSuffix(var Value: Variant; Args: TJvInterpreterArgs);
 var
   Element: IwbElement;
   _File: IwbFile;
+  Rules: TwbCopyRules;
 begin
   if Supports(IInterface(Args.Values[0]), IwbElement, Element) then
-    if Supports(IInterface(Args.Values[1]), IwbFile, _File) then
-      Value := wbCopyElementToFile(Element, _File, Args.Values[2], Args.Values[3], Args.Values[4], Args.Values[5], Args.Values[6], Args.Values[7], False, nil);
+    if Supports(IInterface(Args.Values[1]), IwbFile, _File) then begin
+      Rules.PrefixRemove := Args.Values[4];
+      Rules.SuffixRemove := Args.Values[5];
+      Rules.Prefix := Args.Values[6];
+      Rules.Suffix := Args.Values[7];
+      Value := wbCopyElementToFile(Element, _File, CopyFlags(Args.Values[2], Args.Values[3]), Rules);
+    end;
 end;
 
 procedure _wbCopyElementToRecord(var Value: Variant; Args: TJvInterpreterArgs);

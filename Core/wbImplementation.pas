@@ -74,7 +74,7 @@ type
 
 function StartsWith(const s, t: string): Boolean;
 
-function wbCopyElementToFile(const aSource: IwbElement; aFile: IwbFile; aAsNew, aDeepCopy: Boolean; const aPrefixRemove, aSuffixRemove, aPrefix, aSuffix: string; aAllowOverwrite: Boolean; const aCanOverwrite: TwbCanOverwriteCallback): IwbElement;
+function wbCopyElementToFile(const aSource: IwbElement; aFile: IwbFile; aFlags: TwbCopyFlags; const aRules: TwbCopyRules): IwbElement;
 function wbCopyElementToRecord(const aSource: IwbElement; aMainRecord: IwbMainRecord; aAsNew, aDeepCopy: Boolean): IwbElement;
 
 function wbFormListToArray(const aFormList: IwbMainRecord; const aSignatures: string): TDynMainRecords;
@@ -195,7 +195,7 @@ threadvar
 var
   mreNextGen: Integer;
 
-function wbCopyElementToFile(const aSource: IwbElement; aFile: IwbFile; aAsNew, aDeepCopy: Boolean; const aPrefixRemove, aSuffixRemove, aPrefix, aSuffix: string; aAllowOverwrite: Boolean; const aCanOverwrite: TwbCanOverwriteCallback): IwbElement;
+function wbCopyElementToFile(const aSource: IwbElement; aFile: IwbFile; aFlags: TwbCopyFlags; const aRules: TwbCopyRules): IwbElement;
 var
   MainRecord  : IwbMainRecord;
   Container   : IwbContainer;
@@ -208,14 +208,14 @@ begin
     if Assigned(Container) then begin
       if Supports(Container, IwbMainRecord, MainRecord) then
         Container := MainRecord.HighestOverrideVisibleForFile[aFile];
-      Target := wbCopyElementToFile(Container, aFile, False, False, aPrefixRemove, aSuffixRemove, aPrefix, aSuffix, False, nil)
+      Target := wbCopyElementToFile(Container, aFile, [], aRules)
     end else begin
       Result := aFile;
       Exit;
     end;
 
     if Assigned(Target) then
-      Result := Target.AddIfMissing(aSource, aAsNew, aDeepCopy, aPrefixRemove, aSuffixRemove, aPrefix, aSuffix, aAllowOverwrite, aCanOverwrite)
+      Result := Target.AddIfMissing(aSource, aFlags, aRules)
     else
       Result := nil;
   finally
@@ -243,8 +243,14 @@ begin
   Assert(Assigned(Container), '[wbCopyElementToRecord] not Assigned(Container)');
   Target := wbCopyElementToRecord(Container, aMainRecord, False, False);
 
+  var lFlags: TwbCopyFlags := [];
+  if aAsNew then
+    Include(lFlags, cfAsNew);
+  if aDeepCopy then
+    Include(lFlags, cfDeepCopy);
+
   if Assigned(Target) then
-    Result := Target.AddIfMissing(aSource, aAsNew, aDeepCopy, '', '', '', '', False, nil)
+    Result := Target.AddIfMissing(aSource, lFlags, wbNoCopyRules)
   else
     Result := nil;
 end;
@@ -445,8 +451,8 @@ type
     function CanContainFormIDs: Boolean; virtual;
     function ContainsReflection: Boolean; virtual;
     function ContainsUnmappedFormID: Boolean; virtual;
-    function AddIfMissing(const aElement: IwbElement; aAsNew, aDeepCopy : Boolean; const aPrefixRemove, aSuffixRemove, aPrefix, aSuffix: string; aAllowOverwrite: Boolean; const aCanOverwrite: TwbCanOverwriteCallback): IwbElement;
-    function AddIfMissingInternal(const aElement: IwbElement; aAsNew, aDeepCopy : Boolean; const aPrefixRemove, aSuffixRemove, aPrefix, aSuffix: string; aAllowOverwrite: Boolean; const aCanOverwrite: TwbCanOverwriteCallback): IwbElement; virtual;
+    function AddIfMissing(const aElement: IwbElement; aFlags: TwbCopyFlags; const aRules: TwbCopyRules): IwbElement;
+    function AddIfMissingInternal(const aElement: IwbElement; aFlags: TwbCopyFlags; const aRules: TwbCopyRules): IwbElement; virtual;
     procedure ResetConflict; virtual;
     procedure ResetReachable; virtual;
     function RemoveInjected(aCanRemove: Boolean): Boolean; virtual;
@@ -503,7 +509,7 @@ type
     function GetLocalized: TwbTriBool;
     procedure SetLocalized(const aValue: TwbTriBool);
 
-    function CopyInto(const aFile: IwbFile; aAsNew, aDeepCopy: Boolean; const aPrefixRemove, aSuffixRemove, aPrefix, aSuffix: string): IwbElement;
+    function CopyInto(const aFile: IwbFile; aFlags: TwbCopyFlags; const aRules: TwbCopyRules): IwbElement;
 
     function BeginUpdate: Integer;
     function EndUpdate: Integer;
@@ -868,7 +874,7 @@ type
     procedure WriteToStream(aStream: TStream; aResetModified: TwbResetModified); override; final;
     procedure WriteToStreamInternal(aStream: TStream; aResetModified: TwbResetModified); override; final;
 
-    function AddIfMissingInternal(const aElement: IwbElement; aAsNew, aDeepCopy : Boolean; const aPrefixRemove, aSuffixRemove, aPrefix, aSuffix: string; aAllowOverwrite: Boolean; const aCanOverwrite: TwbCanOverwriteCallback): IwbElement; override;
+    function AddIfMissingInternal(const aElement: IwbElement; aFlags: TwbCopyFlags; const aRules: TwbCopyRules): IwbElement; override;
 
     function NewFormID: TwbFormID;
 
@@ -1055,7 +1061,7 @@ type
     procedure Scan; override; final;
     function GetAddList: TDynStrings; override; final;
     function Add(const aName: string; aSilent: Boolean): IwbElement; override; final;
-    function AddIfMissingInternal(const aElement: IwbElement; aAsNew, aDeepCopy : Boolean; const aPrefixRemove, aSuffixRemove, aPrefix, aSuffix: string; aAllowOverwrite: Boolean; const aCanOverwrite: TwbCanOverwriteCallback): IwbElement; override; final;
+    function AddIfMissingInternal(const aElement: IwbElement; aFlags: TwbCopyFlags; const aRules: TwbCopyRules): IwbElement; override; final;
     constructor CreateNew(const aContext: TwbGameContext; const aFileName: string; aLoadOrder: Integer);
     procedure GetMasters(aMasters: TStrings); override; final;
     procedure GetPluginNames(const aHeader: IwbFileHeader; aNames, aLightNames: TStrings);
@@ -1405,7 +1411,7 @@ type
 
     function CanAssignInternal(aIndex: Integer; const aElement: IwbElement; aCheckDontShow: Boolean): Boolean; override; final;
     function AssignInternal(aIndex: Integer; const aElement: IwbElement; aOnlySK: Boolean): IwbElement; override; final;
-    function AddIfMissingInternal(const aElement: IwbElement; aAsNew, aDeepCopy : Boolean; const aPrefixRemove, aSuffixRemove, aPrefix, aSuffix: string; aAllowOverwrite: Boolean; const aCanOverwrite: TwbCanOverwriteCallback): IwbElement; override; final;
+    function AddIfMissingInternal(const aElement: IwbElement; aFlags: TwbCopyFlags; const aRules: TwbCopyRules): IwbElement; override; final;
 
     procedure CollapseStorage(aKAR: PwbKeepAliveRoot; aForce: Boolean);
 
@@ -1703,7 +1709,7 @@ type
 
     function CanAssignInternal(aIndex: Integer; const aElement: IwbElement; aCheckDontShow: Boolean): Boolean; override; final;
     function AssignInternal(aIndex: Integer; const aElement: IwbElement; aOnlySK: Boolean): IwbElement; override; final;
-    function AddIfMissingInternal(const aElement: IwbElement; aAsNew, aDeepCopy : Boolean; const aPrefixRemove, aSuffixRemove, aPrefix, aSuffix: string; aAllowOverwrite: Boolean; const aCanOverwrite: TwbCanOverwriteCallback): IwbElement; override; final;
+    function AddIfMissingInternal(const aElement: IwbElement; aFlags: TwbCopyFlags; const aRules: TwbCopyRules): IwbElement; override; final;
     function GetIsInSK(aIndex: Integer): Boolean; override; final;
     function CanAssignAligned(aIndex: Integer; aCheckDontShow: Boolean): Boolean; override; final;
     function AssignAligned(aIndex, aMemoryIndex: Integer; const aElement: IwbElement; aOnlySK: Boolean): IwbElement; override; final;
@@ -1823,7 +1829,7 @@ type
 
     function CanAssignInternal(aIndex: Integer; const aElement: IwbElement; aCheckDontShow: Boolean): Boolean; override; final;
     function AssignInternal(aIndex: Integer; const aElement: IwbElement; aOnlySK: Boolean): IwbElement; override; final;
-    function AddIfMissingInternal(const aElement: IwbElement; aAsNew, aDeepCopy : Boolean; const aPrefixRemove, aSuffixRemove, aPrefix, aSuffix: string; aAllowOverwrite: Boolean; const aCanOverwrite: TwbCanOverwriteCallback): IwbElement; override; final;
+    function AddIfMissingInternal(const aElement: IwbElement; aFlags: TwbCopyFlags; const aRules: TwbCopyRules): IwbElement; override; final;
 
     procedure PrepareSave; override; final;
     procedure CheckTerminator;
@@ -1907,7 +1913,7 @@ type
     function GetIsEditable: Boolean; override; final;
     function GetIsRemovable: Boolean; override; final;
     procedure ElementChanged(const aElement: IwbElement; aContainer: Pointer); override; final;
-    function AddIfMissingInternal(const aElement: IwbElement; aAsNew, aDeepCopy : Boolean; const aPrefixRemove, aSuffixRemove, aPrefix, aSuffix: string; aAllowOverwrite: Boolean; const aCanOverwrite: TwbCanOverwriteCallback): IwbElement; override; final;
+    function AddIfMissingInternal(const aElement: IwbElement; aFlags: TwbCopyFlags; const aRules: TwbCopyRules): IwbElement; override; final;
   end;
 
   TwbValue = class(TwbValueBase, IwbSortableContainer)
@@ -1919,7 +1925,7 @@ type
     function CompareExchangeFormID(aOldFormID: TwbFormID; aNewFormID: TwbFormID): Boolean; override;
     function MastersUpdated(const aOld, aNew: TwbFileIDs; aOldCount, aNewCount: TwbSlotCounts): Boolean; override; final;
     procedure FindUsedMasters(aMasters: PwbUsedMasters); override; final;
-    function AddIfMissingInternal(const aElement: IwbElement; aAsNew, aDeepCopy : Boolean; const aPrefixRemove, aSuffixRemove, aPrefix, aSuffix: string; aAllowOverwrite: Boolean; const aCanOverwrite: TwbCanOverwriteCallback): IwbElement; override; final;
+    function AddIfMissingInternal(const aElement: IwbElement; aFlags: TwbCopyFlags; const aRules: TwbCopyRules): IwbElement; override; final;
 
     function IsFlags: Boolean; override; final;
 
@@ -2102,7 +2108,7 @@ type
     function MastersUpdated(const aOld, aNew: TwbFileIDs; aOldCount, aNewCount: TwbSlotCounts): Boolean; override; final;
     procedure FindUsedMasters(aMasters: PwbUsedMasters); override; final;
 
-    function AddIfMissingInternal(const aElement: IwbElement; aAsNew, aDeepCopy : Boolean; const aPrefixRemove, aSuffixRemove, aPrefix, aSuffix: string; aAllowOverwrite: Boolean; const aCanOverwrite: TwbCanOverwriteCallback): IwbElement; override; final;
+    function AddIfMissingInternal(const aElement: IwbElement; aFlags: TwbCopyFlags; const aRules: TwbCopyRules): IwbElement; override; final;
 
     procedure MakeHeaderWriteable;
 
@@ -2184,7 +2190,7 @@ type
     function CanAssignInternal(aIndex: Integer; const aElement: IwbElement; aCheckDontShow: Boolean): Boolean; override; final;
 //    function GetAssignTemplates(aIndex: Integer): TwbTemplateElements; override;
     function AssignInternal(aIndex: Integer; const aElement: IwbElement; aOnlySK: Boolean): IwbElement; override; final;
-    function AddIfMissingInternal(const aElement: IwbElement; aAsNew, aDeepCopy : Boolean; const aPrefixRemove, aSuffixRemove, aPrefix, aSuffix: string; aAllowOverwrite: Boolean; const aCanOverwrite: TwbCanOverwriteCallback): IwbElement; override; final;
+    function AddIfMissingInternal(const aElement: IwbElement; aFlags: TwbCopyFlags; const aRules: TwbCopyRules): IwbElement; override; final;
 
     function CanMoveElement: Boolean; override; final;
 
@@ -2235,7 +2241,7 @@ type
     function CanAssignInternal(aIndex: Integer; const aElement: IwbElement; aCheckDontShow: Boolean): Boolean; override; final;
 //    function GetAssignTemplates(aIndex: Integer): TwbTemplateElements; override;
     function AssignInternal(aIndex: Integer; const aElement: IwbElement; aOnlySK: Boolean): IwbElement; override; final;
-    function AddIfMissingInternal(const aElement: IwbElement; aAsNew, aDeepCopy : Boolean; const aPrefixRemove, aSuffixRemove, aPrefix, aSuffix: string; aAllowOverwrite: Boolean; const aCanOverwrite: TwbCanOverwriteCallback): IwbElement; override; final;
+    function AddIfMissingInternal(const aElement: IwbElement; aFlags: TwbCopyFlags; const aRules: TwbCopyRules): IwbElement; override; final;
     function GetIsInSK(aIndex: Integer): Boolean; override; final;
 
     {--- IwbHasSignature ---}
@@ -2524,7 +2530,7 @@ begin
         lMasterFileInternal.AddAllMastersToSet(aMasters);
 end;
 
-function TwbFile.AddIfMissingInternal(const aElement: IwbElement; aAsNew, aDeepCopy : Boolean; const aPrefixRemove, aSuffixRemove, aPrefix, aSuffix: string; aAllowOverwrite: Boolean; const aCanOverwrite: TwbCanOverwriteCallback): IwbElement;
+function TwbFile.AddIfMissingInternal(const aElement: IwbElement; aFlags: TwbCopyFlags; const aRules: TwbCopyRules): IwbElement;
 var
   GroupRecord : IwbGroupRecord;
   Dummy       : Integer;
@@ -2550,9 +2556,9 @@ begin
       wbMergeSortPtr(@cntElements[1],  High(cntElements), CompareSortOrder);
   end;
 
-  if aDeepCopy then
+  if cfDeepCopy in aFlags then
     for i := 0 to Pred(GroupRecord.ElementCount) do
-      Result.AddIfMissing(GroupRecord.Elements[i], aAsNew, True, aPrefixRemove, aSuffixRemove, aPrefix, aSuffix, aAllowOverwrite, aCanOverwrite);
+      Result.AddIfMissing(GroupRecord.Elements[i], aFlags, aRules);
 end;
 
 procedure TwbFile.AddMainRecord(const aRecord: IwbMainRecord);
@@ -3102,12 +3108,26 @@ var
   lLeveledListEntries   : IwbContainerElementRef;
   lLeveledListEntry     : IwbContainerElementRef;
   lCopiedElement        : IwbElement;
-  lCanOverwrite         : TwbCanOverwriteCallback;
+  lRules                : TwbCopyRules;
+  lCallbackOnly         : TwbCopyRules;
+  lWrappedFlags         : TwbCopyFlags;
   j                     : Integer;
+
+  function PathFlags: TwbCopyFlags;
+  begin
+    Result := [cfDeepCopy];
+    if aOptions.Mode = cmNew then
+      Include(Result, cfAsNew);
+    if aOptions.AllowOverwrite then
+      Include(Result, cfAllowOverwrite);
+  end;
+
 begin
   lFile := Self;
   lMultiple := TwbCopyOptions.IsMultiple(aElements);
-  lCanOverwrite := aOptions.CanOverwrite;
+  lRules := aOptions.Rules;
+  lCallbackOnly := wbNoCopyRules;
+  lCallbackOnly.CanOverwrite := lRules.CanOverwrite;
   if aOptions.Mode = cmWrapper then begin
 
     lIsOblivion := flContextObj.GameDefObj.IsOblivion;
@@ -3116,7 +3136,7 @@ begin
       wbCurrentProgress := Format('[%s] into [%s]', [lMainRecord.FullPath, lFile.FullPath]);
       wbProgress(aOptions.Operation + ' ' + wbCurrentProgress);
 
-      lMainRecord2 := wbCopyElementToFile(lMainRecord, lFile, True, True, aOptions.PrefixRemove, aOptions.SuffixRemove, aOptions.Prefix, aOptions.Suffix, False, lCanOverwrite) as IwbMainRecord;
+      lMainRecord2 := wbCopyElementToFile(lMainRecord, lFile, [cfAsNew, cfDeepCopy], lRules) as IwbMainRecord;
       wbProgress('');
 
       Assert(Assigned(lMainRecord2));
@@ -3124,7 +3144,10 @@ begin
         lMainRecord2.EditorID := aOptions.EditorID;
 
       aOptions.EditorID := lMainRecord.EditorID;
-      lMainRecord := wbCopyElementToFile(lMainRecord, lFile, False, False, '', '', '', '', aOptions.AllowOverwrite, lCanOverwrite) as IwbMainRecord;
+      lWrappedFlags := [];
+      if aOptions.AllowOverwrite then
+        Include(lWrappedFlags, cfAllowOverwrite);
+      lMainRecord := wbCopyElementToFile(lMainRecord, lFile, lWrappedFlags, lCallbackOnly) as IwbMainRecord;
       wbProgress('');
       Assert(Assigned(lMainRecord));
       lMainRecord.Assign(Low(Integer), nil, False);
@@ -3151,12 +3174,12 @@ begin
       try
         if aOptions.DeepCopy and Supports(aElements[j], IwbMainRecord, lMainRecord) and Assigned(lMainRecord.ChildGroup) then begin
           wbProgress(aOptions.Operation + ' ' + wbCurrentProgress);
-          aResult[j] := wbCopyElementToFile(lMainRecord.ChildGroup, lFile, aOptions.Mode = cmNew, True, aOptions.PrefixRemove, aOptions.SuffixRemove, aOptions.Prefix, aOptions.Suffix, aOptions.AllowOverwrite, lCanOverwrite);
+          aResult[j] := wbCopyElementToFile(lMainRecord.ChildGroup, lFile, PathFlags, lRules);
           wbProgress('');
         end else begin
           wbCurrentProgress := Format('[%s] into [%s]', [aElements[j].FullPath, lFile.FullPath]);
           wbProgress(aOptions.Operation + ' ' + wbCurrentProgress);
-          lCopiedElement := wbCopyElementToFile(aElements[j], lFile, aOptions.Mode = cmNew, True, aOptions.PrefixRemove, aOptions.SuffixRemove, aOptions.Prefix, aOptions.Suffix, aOptions.AllowOverwrite, lCanOverwrite);
+          lCopiedElement := wbCopyElementToFile(aElements[j], lFile, PathFlags, lRules);
           wbProgress('');
           if Assigned(lCopiedElement) then begin
             if Assigned(aOptions.AfterCopy) then
@@ -3176,12 +3199,12 @@ begin
     if aOptions.DeepCopy and Supports(aElements[0], IwbMainRecord, lMainRecord) and Assigned(lMainRecord.ChildGroup) then begin
       wbCurrentProgress := Format('[%s] into [%s]', [lMainRecord.ChildGroup.FullPath, lFile.FullPath]);
       wbProgress(aOptions.Operation + ' ' + wbCurrentProgress);
-      aResult[0] := wbCopyElementToFile(lMainRecord.ChildGroup, lFile, aOptions.Mode = cmNew, True, '', '', '', '', aOptions.AllowOverwrite, lCanOverwrite);
+      aResult[0] := wbCopyElementToFile(lMainRecord.ChildGroup, lFile, PathFlags, lCallbackOnly);
       wbProgress('');
     end else begin
       wbCurrentProgress := Format('[%s] into [%s]', [aElements[0].FullPath, lFile.FullPath]);
       wbProgress(aOptions.Operation + ' ' + wbCurrentProgress);
-      lCopiedElement := wbCopyElementToFile(aElements[0], lFile, aOptions.Mode = cmNew, True, '', '', '', '', aOptions.AllowOverwrite, lCanOverwrite);
+      lCopiedElement := wbCopyElementToFile(aElements[0], lFile, PathFlags, lCallbackOnly);
       wbProgress('');
       if Assigned(lCopiedElement) then begin
         if Assigned(aOptions.AfterCopy) then
@@ -3318,14 +3341,14 @@ begin
   lOptions.DeepCopy := True;
   lOptions.AllowOverwrite := True;
   lOptions.Operation := 'Copying as override (with overwrite)';
-  lOptions.CanOverwrite := function(const aTargetElement, aSourceElement: IwbElement): TwbCanOverwriteAction
+  lOptions.Rules.CanOverwrite := function(const aTargetElement, aSourceElement: IwbElement): TwbCanOverwriteAction
     begin
       Result := TwbCopyOptions.OverwriteAction(aTargetElement, aSourceElement, lYes, lYes);
     end;
   try
     aTarget.AddCopies(Result.Groups, Result.Copied, lOptions);
   finally
-    lOptions.CanOverwrite := nil;
+    lOptions.Rules.CanOverwrite := nil;
     lYes := nil;
   end;
   ResetGroups;
@@ -11025,7 +11048,7 @@ begin
   end;
 end;
 
-function TwbMainRecord.AddIfMissingInternal(const aElement: IwbElement; aAsNew, aDeepCopy: Boolean; const aPrefixRemove, aSuffixRemove, aPrefix, aSuffix: string; aAllowOverwrite: Boolean; const aCanOverwrite: TwbCanOverwriteCallback): IwbElement;
+function TwbMainRecord.AddIfMissingInternal(const aElement: IwbElement; aFlags: TwbCopyFlags; const aRules: TwbCopyRules): IwbElement;
 var
   SelfRef   : IwbContainerElementRef;
 begin
@@ -11076,14 +11099,14 @@ begin
     end;
 
     if not Assigned(Result) then begin
-      Assign(aElement.SortOrder, aElement, not aDeepCopy);
+      Assign(aElement.SortOrder, aElement, not (cfDeepCopy in aFlags));
       Result := GetElementBySortOrder(aElement.SortOrder + GetAdditionalElementCount);
       Assert(Assigned(Result));
 
       if ContextObj.Settings.SortSubRecords and (Length(cntElements) > 1) then
         wbMergeSortPtr(@cntElements[0], Length(cntElements), CompareSubRecords);
     end else
-      Result.Assign(wbAssignThis, aElement, not aDeepCopy);
+      Result.Assign(wbAssignThis, aElement, not (cfDeepCopy in aFlags));
   end;
 end;
 
@@ -12355,7 +12378,7 @@ procedure TwbMainRecord.DeleteInto(const aFile: IwbFile);
 var
   MainRecord: IwbMainRecord;
 begin
-  if Supports(CopyInto(aFile, False, False, '', '', '', ''), IwbMainRecord, MainRecord) then
+  if Supports(CopyInto(aFile, [], wbNoCopyRules), IwbMainRecord, MainRecord) then
     MainRecord.Delete;
 end;
 
@@ -17953,7 +17976,7 @@ begin
     Result := inherited Add(aName, aSilent);
 end;
 
-function TwbSubRecord.AddIfMissingInternal(const aElement: IwbElement; aAsNew, aDeepCopy: Boolean; const aPrefixRemove, aSuffixRemove, aPrefix, aSuffix: string; aAllowOverwrite: Boolean; const aCanOverwrite: TwbCanOverwriteCallback): IwbElement;
+function TwbSubRecord.AddIfMissingInternal(const aElement: IwbElement; aFlags: TwbCopyFlags; const aRules: TwbCopyRules): IwbElement;
 var
   SelfRef    : IwbContainerElementRef;
   i          : Integer;
@@ -17985,7 +18008,7 @@ begin
           Assert(not (srsSortInvalid in srStates));
           if FindBySortKey(aElement.SortKey[False], False, i) then begin
             Result := cntElements[i];
-            if aDeepCopy then
+            if cfDeepCopy in aFlags then
               Result.Assign(wbAssignThis, aElement, False);
             Exit;
           end;
@@ -18003,7 +18026,7 @@ begin
             Result := cntElements[0];
             Exclude(cntStates, csAsCreatedEmpty);
             try
-              Result.Assign(wbAssignThis, aElement, not aDeepCopy);
+              Result.Assign(wbAssignThis, aElement, not (cfDeepCopy in aFlags));
             except
               Result := nil;
               raise;
@@ -18015,12 +18038,12 @@ begin
             if dfUnionStaticResolve in ValueDef.DefFlags then
               ValueDef := Resolve(ValueDef, nil, nil, aElement);
             case ValueDef.DefType of
-              dtArray: Result := TwbArray.Create(Self, ValueDef, aElement, not aDeepCopy, s);
-              dtStruct: Result := TwbStruct.Create(Self, ValueDef, aElement, not aDeepCopy, s);
-              dtStructChapter: Result := TwbChapter.Create(Self, ValueDef, aElement, not aDeepCopy, s);
-              dtUnion: Result := wbUnionCreate(Self, ValueDef, aElement, not aDeepCopy, s);
+              dtArray: Result := TwbArray.Create(Self, ValueDef, aElement, not (cfDeepCopy in aFlags), s);
+              dtStruct: Result := TwbStruct.Create(Self, ValueDef, aElement, not (cfDeepCopy in aFlags), s);
+              dtStructChapter: Result := TwbChapter.Create(Self, ValueDef, aElement, not (cfDeepCopy in aFlags), s);
+              dtUnion: Result := wbUnionCreate(Self, ValueDef, aElement, not (cfDeepCopy in aFlags), s);
             else
-              Result := TwbValue.Create(Self, ValueDef, aElement, not aDeepCopy, s);
+              Result := TwbValue.Create(Self, ValueDef, aElement, not (cfDeepCopy in aFlags), s);
             end;
           end;
 
@@ -18039,22 +18062,22 @@ begin
 
         Assert(StructDef.Members[aElement.SortOrder].CanAssign(Result, wbAssignThis, aElement.ValueDef));
 
-        if not aDeepCopy then
+        if not (cfDeepCopy in aFlags) then
           if Supports(Result.ValueDef, IwbIntegerDef, IntegerDef) then
             if Supports(IntegerDef.Formater[Result], IwbFlagsDef, FlagsDef) then
               Exit(Result);
 
-        Result.Assign(wbAssignThis, aElement, not aDeepCopy);
+        Result.Assign(wbAssignThis, aElement, not (cfDeepCopy in aFlags));
       end;
       dtUnion: begin
-        inherited AddIfMissingInternal(aElement, aAsNew, aDeepCopy, aPrefixRemove, aSuffixRemove, aPrefix, aSuffix, aAllowOverwrite, aCanOverwrite);
+        inherited AddIfMissingInternal(aElement, aFlags, aRules);
       end;
     else
-      inherited AddIfMissingInternal(aElement, aAsNew, aDeepCopy, aPrefixRemove, aSuffixRemove, aPrefix, aSuffix, aAllowOverwrite, aCanOverwrite);
+      inherited AddIfMissingInternal(aElement, aFlags, aRules);
     end;
 
   end else
-    inherited AddIfMissingInternal(aElement, aAsNew, aDeepCopy, aPrefixRemove, aSuffixRemove, aPrefix, aSuffix, aAllowOverwrite, aCanOverwrite);
+    inherited AddIfMissingInternal(aElement, aFlags, aRules);
 end;
 
 function TwbSubRecord.AssignAligned(aIndex, aMemoryIndex: Integer; const aElement: IwbElement; aOnlySK: Boolean): IwbElement;
@@ -19692,7 +19715,7 @@ begin
     if Assigned(MainRecord) then begin
       if MainRecord._File.Equals(_File) then
         Exit(MainRecord);
-      Result := wbCopyElementToFile(MainRecord, _File, false, true, '', '', '', '', False, nil);
+      Result := wbCopyElementToFile(MainRecord, _File, [cfDeepCopy], wbNoCopyRules);
       Exit;
     end;
   end;
@@ -19715,7 +19738,7 @@ begin
     if Assigned(MainRecord) then begin
       if MainRecord._File.Equals(_File) then
         Exit(MainRecord);
-      Result := wbCopyElementToFile(MainRecord, _File, false, true, '', '', '', '', False, nil);
+      Result := wbCopyElementToFile(MainRecord, _File, [cfDeepCopy], wbNoCopyRules);
       Exit;
     end;
   end;
@@ -19766,7 +19789,7 @@ begin
     if Assigned(MainRecord) then begin
       if MainRecord._File.Equals(_File) then
         Exit(MainRecord);
-      Result := wbCopyElementToFile(MainRecord, _File, false, true, '', '', '', '', False, nil);
+      Result := wbCopyElementToFile(MainRecord, _File, [cfDeepCopy], wbNoCopyRules);
       Exit;
     end;
   end;
@@ -19871,7 +19894,7 @@ begin
     inherited;
 end;
 
-function TwbGroupRecord.AddIfMissingInternal(const aElement: IwbElement; aAsNew, aDeepCopy : Boolean; const aPrefixRemove, aSuffixRemove, aPrefix, aSuffix: string; aAllowOverwrite: Boolean; const aCanOverwrite: TwbCanOverwriteCallback): IwbElement;
+function TwbGroupRecord.AddIfMissingInternal(const aElement: IwbElement; aFlags: TwbCopyFlags; const aRules: TwbCopyRules): IwbElement;
 var
   SelfRef      : IwbContainerElementRef;
   _File        : IwbFile;
@@ -19902,7 +19925,7 @@ var
         end;
 
     var lFormID := TwbFormID.Null;
-    if aAsNew then
+    if cfAsNew in aFlags then
       lFormID := _File.NewFormID
     else begin
       Result := _File.ContainedRecordByLoadOrderFormID[aSource.LoadOrderFormID, False];
@@ -19921,13 +19944,13 @@ var
 
     end else begin
 
-      if not aAllowOverwrite then
+      if not (cfAllowOverwrite in aFlags) then
         Exit;
 
-      if aDeepCopy then begin
+      if cfDeepCopy in aFlags then begin
         var lAction := coCopy;
-        if Assigned(aCanOverwrite) then
-          lAction := aCanOverwrite(Result, aElement);
+        if Assigned(aRules.CanOverwrite) then
+          lAction := aRules.CanOverwrite(Result, aElement);
         case lAction of
           coCopy: begin
             if not Equals(Result.Container) then begin
@@ -19948,7 +19971,7 @@ var
 
     end;
 
-    if aDeepCopy then begin
+    if cfDeepCopy in aFlags then begin
       var lResult := Result as IwbMainRecord;
 
       if not aSource.IsDeleted then
@@ -19966,17 +19989,17 @@ var
 
       if not lResult.IsDeleted and (aSource.EditorID <> '') then begin
         var lEditorID := aSource.EditorID;
-        lEditorID := RemovePrefix(lEditorID, aPrefixRemove);
-        lEditorID := RemoveSuffix(lEditorID, aSuffixRemove);
+        lEditorID := RemovePrefix(lEditorID, aRules.PrefixRemove);
+        lEditorID := RemoveSuffix(lEditorID, aRules.SuffixRemove);
         if ContextObj.BeginInternalEdit(True) then try
-          lResult.EditorID := aPrefix + lEditorID + aSuffix;
+          lResult.EditorID := aRules.Prefix + lEditorID + aRules.Suffix;
         finally
           wbEndInternalEdit;
         end;
       end;
     end;
 
-    if not aAsNew and aSource.IsMaster then
+    if not (cfAsNew in aFlags) and aSource.IsMaster then
       if (Result._File.LoadOrder < aSource._File.LoadOrder) or
         ((Result._File.LoadOrder = aSource._File.LoadOrder) and not (fsIsCompareLoad in Result._File.FileStates) )
       then begin
@@ -20013,19 +20036,19 @@ begin
           if not Assigned(lSourceMainRecord0Dial) then
             raise Exception.Create('Can''t find record for ' + lGroupRecord0Dial.Name);
           lSourceMainRecord0Dial := lSourceMainRecord0Dial.HighestOverrideVisibleForFile[_File];
-          var lTargetMainRecord0Dial := AddIfMissingInternal(lSourceMainRecord0Dial, aAsNew, True, aPrefixRemove, aSuffixRemove, aPrefix, aSuffix, False, nil {CheckMe!}) as IwbMainRecord;
+          var lTargetMainRecord0Dial := AddIfMissingInternal(lSourceMainRecord0Dial, aFlags - [cfAllowOverwrite] + [cfDeepCopy], aRules {CheckMe!}) as IwbMainRecord;
           if Assigned(lTargetMainRecord0Dial) then begin
             Result := lTargetMainRecord0Dial.ChildGroup;
             if not Assigned(Result) then
               Result := TwbGroupRecord.Create(Self, 7, lTargetMainRecord0Dial);
 
-            if aDeepCopy then begin
+            if cfDeepCopy in aFlags then begin
               var lContainerElementRef0DialResult: IwbContainerElementRef;
               if Supports(Result, IwbContainerElementRef, lContainerElementRef0DialResult) then begin
                 lContainerElementRef0DialResult.BeginUpdate;
                 try
                   for var lGroupRecord0DialElementIdx := 0 to Pred(lGroupRecord0Dial.ElementCount) do
-                    lContainerElementRef0DialResult.AddIfMissing(lGroupRecord0Dial.Elements[lGroupRecord0DialElementIdx], aAsNew, aDeepCopy, aPrefixRemove, aSuffixRemove, aPrefix, aSuffix, aAllowOverwrite, aCanOverwrite {CheckMe!});
+                    lContainerElementRef0DialResult.AddIfMissing(lGroupRecord0Dial.Elements[lGroupRecord0DialElementIdx], aFlags, aRules {CheckMe!});
                 finally
                   lContainerElementRef0DialResult.EndUpdate;
                 end;
@@ -20054,13 +20077,13 @@ begin
           if not Assigned(Result) then
             Result := TwbGroupRecord.Create(Self, 2, lGroupRecord0Cell.GroupLabel);
 
-          if aDeepCopy then begin
+          if cfDeepCopy in aFlags then begin
             var lContainerElementRef0CellResult: IwbContainerElementRef;
             if Supports(Result, IwbContainerElementRef, lContainerElementRef0CellResult) then begin
               lContainerElementRef0CellResult.BeginUpdate;
               try
                 for var lGroupRecord0CellElementIdx := 0 to Pred(lGroupRecord0Cell.ElementCount) do
-                  lContainerElementRef0CellResult.AddIfMissing(lGroupRecord0Cell.Elements[lGroupRecord0CellElementIdx], aAsNew, aDeepCopy, aPrefixRemove, aSuffixRemove, aPrefix, aSuffix, aAllowOverwrite, aCanOverwrite {CheckMe!});
+                  lContainerElementRef0CellResult.AddIfMissing(lGroupRecord0Cell.Elements[lGroupRecord0CellElementIdx], aFlags, aRules {CheckMe!});
               finally
                 lContainerElementRef0CellResult.EndUpdate;
               end;
@@ -20078,19 +20101,19 @@ begin
           if not Assigned(lSourceMainRecord0Wrld) then
             raise Exception.Create('Can''t find record for ' + lGroupRecord0Wrld.Name);
           lSourceMainRecord0Wrld := lSourceMainRecord0Wrld.HighestOverrideVisibleForFile[_File];
-          var lTargetMainRecord0Wrld := AddIfMissingInternal(lSourceMainRecord0Wrld, aAsNew, True, aPrefixRemove, aSuffixRemove, aPrefix, aSuffix, False, nil {CheckMe!}) as IwbMainRecord;
+          var lTargetMainRecord0Wrld := AddIfMissingInternal(lSourceMainRecord0Wrld, aFlags - [cfAllowOverwrite] + [cfDeepCopy], aRules {CheckMe!}) as IwbMainRecord;
           if Assigned(lTargetMainRecord0Wrld) then begin
             Result := lTargetMainRecord0Wrld.ChildGroup;
             if not Assigned(Result) then
               Result := TwbGroupRecord.Create(Self, 1, lTargetMainRecord0Wrld);
 
-            if aDeepCopy then begin
+            if cfDeepCopy in aFlags then begin
               var lContainerElementRef0WrldResult: IwbContainerElementRef;
               if Supports(Result, IwbContainerElementRef, lContainerElementRef0WrldResult) then begin
                 lContainerElementRef0WrldResult.BeginUpdate;
                 try
                   for var lGroupRecord0WrldElementIdx := 0 to Pred(lGroupRecord0Wrld.ElementCount) do
-                    lContainerElementRef0WrldResult.AddIfMissing(lGroupRecord0Wrld.Elements[lGroupRecord0WrldElementIdx], aAsNew, aDeepCopy, aPrefixRemove, aSuffixRemove, aPrefix, aSuffix, aAllowOverwrite, aCanOverwrite {CheckMe!});
+                    lContainerElementRef0WrldResult.AddIfMissing(lGroupRecord0Wrld.Elements[lGroupRecord0WrldElementIdx], aFlags, aRules {CheckMe!});
                 finally
                   lContainerElementRef0WrldResult.EndUpdate;
                 end;
@@ -20109,19 +20132,19 @@ begin
           if not Assigned(lSourceMainRecord0Qust) then
             raise Exception.Create('Can''t find record for ' + lGroupRecord0Qust.Name);
           lSourceMainRecord0Qust := lSourceMainRecord0Qust.HighestOverrideVisibleForFile[_File];
-          var lTargetMainRecord0Qust := AddIfMissingInternal(lSourceMainRecord0Qust, aAsNew, True, aPrefixRemove, aSuffixRemove, aPrefix, aSuffix, False, nil {CheckMe!}) as IwbMainRecord;
+          var lTargetMainRecord0Qust := AddIfMissingInternal(lSourceMainRecord0Qust, aFlags - [cfAllowOverwrite] + [cfDeepCopy], aRules {CheckMe!}) as IwbMainRecord;
           if Assigned(lTargetMainRecord0Qust) then begin
             Result := lTargetMainRecord0Qust.ChildGroup;
             if not Assigned(Result) then
               Result := TwbGroupRecord.Create(Self, 10, lTargetMainRecord0Qust);
 
-            if aDeepCopy then begin
+            if cfDeepCopy in aFlags then begin
               var lContainerElementRef0QustResult: IwbContainerElementRef;
               if Supports(Result, IwbContainerElementRef, lContainerElementRef0QustResult) then begin
                 lContainerElementRef0QustResult.BeginUpdate;
                 try
                   for var lGroupRecord0QustElementIdx := 0 to Pred(lGroupRecord0Qust.ElementCount) do
-                    lContainerElementRef0QustResult.AddIfMissing(lGroupRecord0Qust.Elements[lGroupRecord0QustElementIdx], aAsNew, aDeepCopy, aPrefixRemove, aSuffixRemove, aPrefix, aSuffix, aAllowOverwrite, aCanOverwrite {CheckMe!});
+                    lContainerElementRef0QustResult.AddIfMissing(lGroupRecord0Qust.Elements[lGroupRecord0QustElementIdx], aFlags, aRules {CheckMe!});
                 finally
                   lContainerElementRef0QustResult.EndUpdate;
                 end;
@@ -20157,13 +20180,13 @@ begin
           if not Assigned(Result) then
             Result := TwbGroupRecord.Create(Self, 4, lGroupRecord1.GroupLabel);
 
-          if aDeepCopy then begin
+          if cfDeepCopy in aFlags then begin
             var lContainerElementRef1Result: IwbContainerElementRef;
             if Supports(Result, IwbContainerElementRef, lContainerElementRef1Result) then begin
               lContainerElementRef1Result.BeginUpdate;
               try
                 for var lGroupRecord1ElementIdx := 0 to Pred(lGroupRecord1.ElementCount) do
-                  lContainerElementRef1Result.AddIfMissing(lGroupRecord1.Elements[lGroupRecord1ElementIdx], aAsNew, aDeepCopy, aPrefixRemove, aSuffixRemove, aPrefix, aSuffix, aAllowOverwrite, aCanOverwrite {CheckMe!});
+                  lContainerElementRef1Result.AddIfMissing(lGroupRecord1.Elements[lGroupRecord1ElementIdx], aFlags, aRules {CheckMe!});
               finally
                 lContainerElementRef1Result.EndUpdate;
               end;
@@ -20178,19 +20201,19 @@ begin
         if not Assigned(lSourceMainRecord1) then
           raise Exception.Create('Can''t find record for ' + lGroupRecord1.Name);
         lSourceMainRecord1 := lSourceMainRecord1.HighestOverrideVisibleForFile[_File];
-        var lTargetMainRecord1 := AddIfMissingInternal(lSourceMainRecord1, aAsNew, True, aPrefixRemove, aSuffixRemove, aPrefix, aSuffix, False, nil {CheckMe!}) as IwbMainRecord;
+        var lTargetMainRecord1 := AddIfMissingInternal(lSourceMainRecord1, aFlags - [cfAllowOverwrite] + [cfDeepCopy], aRules {CheckMe!}) as IwbMainRecord;
         if Assigned(lTargetMainRecord1) then begin
           Result := lTargetMainRecord1.ChildGroup;
           if not Assigned(Result) then
             Result := TwbGroupRecord.Create(Self, 6, lTargetMainRecord1);
 
-          if aDeepCopy then begin
+          if cfDeepCopy in aFlags then begin
             var lContainerElementRef1bResult: IwbContainerElementRef;
             if Supports(Result, IwbContainerElementRef, lContainerElementRef1bResult) then begin
               lContainerElementRef1bResult.BeginUpdate;
               try
                 for var lGroupRecord1bElementIndex := 0 to Pred(lGroupRecord1.ElementCount) do
-                  lContainerElementRef1bResult.AddIfMissing(lGroupRecord1.Elements[lGroupRecord1bElementIndex], aAsNew, aDeepCopy, aPrefixRemove, aSuffixRemove, aPrefix, aSuffix, aAllowOverwrite, aCanOverwrite {CheckMe!});
+                  lContainerElementRef1bResult.AddIfMissing(lGroupRecord1.Elements[lGroupRecord1bElementIndex], aFlags, aRules {CheckMe!});
               finally
                 lContainerElementRef1bResult.EndUpdate;
               end;
@@ -20207,7 +20230,7 @@ begin
         if (lMainRecord1.Signature <> 'CELL') and (lMainRecord1.Signature <> 'ROAD') then
           raise Exception.Create('Can''t add main record with signature ' + lMainRecord1.Signature + ' to ' + GetName);
 
-        if aAsNew then
+        if cfAsNew in aFlags then
           raise Exception.Create('Can''t copy record ' + lMainRecord1.Name + ' as new record.');
 
         CopyMainRecord(lMainRecord1);
@@ -20230,13 +20253,13 @@ begin
         if not Assigned(Result) then
           Result := TwbGroupRecord.Create(Self, lGroupRecord24.GroupType, lGroupRecord24.GroupLabel);
 
-        if aDeepCopy then begin
+        if cfDeepCopy in aFlags then begin
           var lContainerElementRef24Result: IwbContainerElementRef;
           if Supports(Result, IwbContainerElementRef, lContainerElementRef24Result) then begin
             lContainerElementRef24Result.BeginUpdate;
             try
               for var lGroupRecord24ElementIdx := 0 to Pred(lGroupRecord24.ElementCount) do
-                lContainerElementRef24Result.AddIfMissing(lGroupRecord24.Elements[lGroupRecord24ElementIdx], aAsNew, aDeepCopy, aPrefixRemove, aSuffixRemove, aPrefix, aSuffix, aAllowOverwrite, aCanOverwrite {CheckMe!});
+                lContainerElementRef24Result.AddIfMissing(lGroupRecord24.Elements[lGroupRecord24ElementIdx], aFlags, aRules {CheckMe!});
             finally
               lContainerElementRef24Result.EndUpdate;
             end;
@@ -20256,19 +20279,19 @@ begin
         if not Assigned(lSourceMainRecord35) then
           raise Exception.Create('Can''t find record for ' + lGroupRecord35.Name);
         lSourceMainRecord35 := lSourceMainRecord35.HighestOverrideVisibleForFile[_File];
-        var lTargetMainRecord35 := AddIfMissingInternal(lSourceMainRecord35, aAsNew, True, aPrefixRemove, aSuffixRemove, aPrefix, aSuffix, False, nil {CheckMe!}) as IwbMainRecord;
+        var lTargetMainRecord35 := AddIfMissingInternal(lSourceMainRecord35, aFlags - [cfAllowOverwrite] + [cfDeepCopy], aRules {CheckMe!}) as IwbMainRecord;
         if Assigned(lTargetMainRecord35) then begin
           Result := lTargetMainRecord35.ChildGroup;
           if not Assigned(Result) then
             Result := TwbGroupRecord.Create(Self, 6, lTargetMainRecord35);
 
-          if aDeepCopy then begin
+          if cfDeepCopy in aFlags then begin
             var lContainerElementRef35Result: IwbContainerElementRef;
             if Supports(Result, IwbContainerElementRef, lContainerElementRef35Result) then begin
               lContainerElementRef35Result.BeginUpdate;
               try
                 for var lGroupRecord35ElementIdx := 0 to Pred(lGroupRecord35.ElementCount) do
-                  lContainerElementRef35Result.AddIfMissing(lGroupRecord35.Elements[lGroupRecord35ElementIdx], aAsNew, aDeepCopy, aPrefixRemove, aSuffixRemove, aPrefix, aSuffix, aAllowOverwrite, aCanOverwrite {CheckMe!});
+                  lContainerElementRef35Result.AddIfMissing(lGroupRecord35.Elements[lGroupRecord35ElementIdx], aFlags, aRules {CheckMe!});
               finally
                 lContainerElementRef35Result.EndUpdate;
               end;
@@ -20286,7 +20309,7 @@ begin
         if lMainRecord35.Signature <> 'CELL' then
           raise Exception.Create('Can''t add main record with signature ' + lMainRecord35.Signature + ' to ' + GetName);
 
-        if aAsNew then
+        if cfAsNew in aFlags then
           raise Exception.Create('Can''t copy record ' + lMainRecord35.Name + ' as new record.');
 
         CopyMainRecord(lMainRecord35);
@@ -20309,13 +20332,13 @@ begin
         if not Assigned(Result) then
           Result := TwbGroupRecord.Create(Self, lGroupRecord6.GroupType, Self.GetChildrenOf);
 
-        if aDeepCopy then begin
+        if cfDeepCopy in aFlags then begin
           var lContainerElementRef6Result: IwbContainerElementRef;
           if Supports(Result, IwbContainerElementRef, lContainerElementRef6Result) then begin
             lContainerElementRef6Result.BeginUpdate;
             try
               for var lGroupRecord6ElementIdx := 0 to Pred(lGroupRecord6.ElementCount) do
-                lContainerElementRef6Result.AddIfMissing(lGroupRecord6.Elements[lGroupRecord6ElementIdx], aAsNew, aDeepCopy, aPrefixRemove, aSuffixRemove, aPrefix, aSuffix, aAllowOverwrite, aCanOverwrite {CheckMe!});
+                lContainerElementRef6Result.AddIfMissing(lGroupRecord6.Elements[lGroupRecord6ElementIdx], aFlags, aRules {CheckMe!});
             finally
               lContainerElementRef6Result.EndUpdate;
             end;
@@ -20344,19 +20367,19 @@ begin
         if not Assigned(lSourceMainRecord8910) then
           raise Exception.Create('Can''t find record for ' + lGroupRecord8910.Name);
         lSourceMainRecord8910 := lSourceMainRecord8910.HighestOverrideVisibleForFile[_File];
-        var lTargetMainRecord8910 := AddIfMissingInternal(lSourceMainRecord8910, aAsNew, True, aPrefixRemove, aSuffixRemove, aPrefix, aSuffix, False, nil {CheckMe!}) as IwbMainRecord;
+        var lTargetMainRecord8910 := AddIfMissingInternal(lSourceMainRecord8910, aFlags - [cfAllowOverwrite] + [cfDeepCopy], aRules {CheckMe!}) as IwbMainRecord;
         if Assigned(lTargetMainRecord8910) then begin
           Result := lTargetMainRecord8910.ChildGroup;
           if not Assigned(Result) then
             Result := TwbGroupRecord.Create(Self, 7, lTargetMainRecord8910);
 
-          if aDeepCopy then begin
+          if cfDeepCopy in aFlags then begin
             var lContainerElementRef8910Result: IwbContainerElementRef;
             if Supports(Result, IwbContainerElementRef, lContainerElementRef8910Result) then begin
               lContainerElementRef8910Result.BeginUpdate;
               try
                 for var lGroupRecord8910ElementIdx := 0 to Pred(lGroupRecord8910.ElementCount) do
-                  lContainerElementRef8910Result.AddIfMissing(lGroupRecord8910.Elements[lGroupRecord8910ElementIdx], aAsNew, aDeepCopy, aPrefixRemove, aSuffixRemove, aPrefix, aSuffix, aAllowOverwrite, aCanOverwrite {CheckMe!});
+                  lContainerElementRef8910Result.AddIfMissing(lGroupRecord8910.Elements[lGroupRecord8910ElementIdx], aFlags, aRules {CheckMe!});
               finally
                 lContainerElementRef8910Result.EndUpdate;
               end;
@@ -21784,7 +21807,7 @@ end;
 
 { TwbElement }
 
-function TwbElement.AddIfMissing(const aElement: IwbElement; aAsNew, aDeepCopy : Boolean; const aPrefixRemove, aSuffixRemove, aPrefix, aSuffix: string; aAllowOverwrite: Boolean; const aCanOverwrite: TwbCanOverwriteCallback): IwbElement;
+function TwbElement.AddIfMissing(const aElement: IwbElement; aFlags: TwbCopyFlags; const aRules: TwbCopyRules): IwbElement;
 {$IFDEF USE_CODESITE}
 var
   Log: Boolean;
@@ -21812,7 +21835,7 @@ begin
   {$ENDIF}
   BeginUpdate;
   try
-    Result := AddIfMissingInternal(aElement, aAsNew, aDeepCopy, aPrefixRemove, aSuffixRemove, aPrefix, aSuffix, aAllowOverwrite, aCanOverwrite);
+    Result := AddIfMissingInternal(aElement, aFlags, aRules);
   finally
     EndUpdate;
   {$IFDEF USE_CODESITE}
@@ -21830,7 +21853,7 @@ begin
   end;
 end;
 
-function TwbElement.AddIfMissingInternal(const aElement: IwbElement; aAsNew, aDeepCopy : Boolean; const aPrefixRemove, aSuffixRemove, aPrefix, aSuffix: string; aAllowOverwrite: Boolean; const aCanOverwrite: TwbCanOverwriteCallback): IwbElement;
+function TwbElement.AddIfMissingInternal(const aElement: IwbElement; aFlags: TwbCopyFlags; const aRules: TwbCopyRules): IwbElement;
 begin
   raise Exception.Create(ClassName + '.AddIfMissingInternal is not implemented');
 end;
@@ -22218,23 +22241,23 @@ begin
   end;
 end;
 
-function TwbElement.CopyInto(const aFile: IwbFile; aAsNew, aDeepCopy: Boolean; const aPrefixRemove, aSuffixRemove, aPrefix, aSuffix: string): IwbElement;
+function TwbElement.CopyInto(const aFile: IwbFile; aFlags: TwbCopyFlags; const aRules: TwbCopyRules): IwbElement;
 begin
   var lMasters := TwbFilesSet.Create;
   try
-    ReportRequiredMasters(lMasters, aAsNew);
+    ReportRequiredMasters(lMasters, cfAsNew in aFlags);
     AddRequiredMasters(lMasters, aFile);
 
     var lMainRecord: IwbMainRecord;
-    if aDeepCopy and Supports(Self, IwbMainRecord, lMainRecord) and Assigned(lMainRecord.ChildGroup) then begin
-      Result := wbCopyElementToFile(lMainRecord.ChildGroup, aFile, aAsNew, True, aPrefixRemove, aSuffixRemove, aPrefix, aSuffix, False, nil {CheckMe!});
+    if (cfDeepCopy in aFlags) and Supports(Self, IwbMainRecord, lMainRecord) and Assigned(lMainRecord.ChildGroup) then begin
+      Result := wbCopyElementToFile(lMainRecord.ChildGroup, aFile, aFlags * [cfAsNew] + [cfDeepCopy], aRules {CheckMe!});
       var lGroupRecord: IwbGroupRecord;
       if Supports(Result, IwbGroupRecord, lGroupRecord) then
         Result := lGroupRecord.ChildrenOf
       else
         Result := nil;
     end else
-      Result := wbCopyElementToFile(Self, aFile, aAsNew, True, aPrefixRemove, aSuffixRemove, aPrefix, aSuffix, False, nil {CheckMe!});
+      Result := wbCopyElementToFile(Self, aFile, aFlags * [cfAsNew] + [cfDeepCopy], aRules {CheckMe!});
   finally
     lMasters.Free;
   end;
@@ -23624,7 +23647,7 @@ begin
   Result := Assign(StrToIntDef(aName, wbAssignAdd), nil, False);
 end;
 
-function TwbSubRecordArray.AddIfMissingInternal(const aElement: IwbElement; aAsNew, aDeepCopy: Boolean; const aPrefixRemove, aSuffixRemove, aPrefix, aSuffix: string; aAllowOverwrite: Boolean; const aCanOverwrite: TwbCanOverwriteCallback): IwbElement;
+function TwbSubRecordArray.AddIfMissingInternal(const aElement: IwbElement; aFlags: TwbCopyFlags; const aRules: TwbCopyRules): IwbElement;
 var
   SelfRef   : IwbContainerElementRef;
   i         : Integer;
@@ -23640,11 +23663,11 @@ begin
   Assert(Assigned(aElement.Def));
   Assert(arcDef.Element.Equals(aElement.Def));
 
-  if arcSorted and not aAsNew then begin
+  if arcSorted and not (cfAsNew in aFlags) then begin
     Assert(not arcSortInvalid);
     if FindBySortKey(aElement.SortKey[False], False,i) then begin
       Result := cntElements[i];
-      if aDeepCopy then
+      if cfDeepCopy in aFlags then
         Result.Assign(wbAssignThis, aElement, False);
       Exit;
     end;
@@ -23668,7 +23691,7 @@ begin
     end;
 
   try
-    Result.Assign(wbAssignThis, aElement, not aDeepCopy);
+    Result.Assign(wbAssignThis, aElement, not (cfDeepCopy in aFlags));
   except
     Result.Container.RemoveElement(Result);
     Result := nil;
@@ -24287,7 +24310,7 @@ begin
   end;
 end;
 
-function TwbSubRecordStruct.AddIfMissingInternal(const aElement: IwbElement; aAsNew, aDeepCopy: Boolean; const aPrefixRemove, aSuffixRemove, aPrefix, aSuffix: string; aAllowOverwrite: Boolean; const aCanOverwrite: TwbCanOverwriteCallback): IwbElement;
+function TwbSubRecordStruct.AddIfMissingInternal(const aElement: IwbElement; aFlags: TwbCopyFlags; const aRules: TwbCopyRules): IwbElement;
 var
   SelfRef   : IwbContainerElementRef;
 begin
@@ -24306,14 +24329,14 @@ begin
 
   Result := GetElementBySortOrder(aElement.SortOrder + GetAdditionalElementCount);
   if not Assigned(Result) then begin
-    Assign(aElement.SortOrder, aElement, not aDeepCopy);
+    Assign(aElement.SortOrder, aElement, not (cfDeepCopy in aFlags));
     Result := GetElementBySortOrder(aElement.SortOrder + GetAdditionalElementCount);
     Assert(Assigned(Result));
 
     if ContextObj.Settings.SortSubRecords and (Length(cntElements) > 1) then
       wbMergeSortPtr(@cntElements[0], Length(cntElements), CompareSubRecords);
   end else
-    Result.Assign(wbAssignThis, aElement, not aDeepCopy);
+    Result.Assign(wbAssignThis, aElement, not (cfDeepCopy in aFlags));
 end;
 
 procedure TwbSubRecordStruct.AddRequiredElements;
@@ -25180,7 +25203,7 @@ begin
   Result := Assign(StrToIntDef(aName, wbAssignAdd), nil, False);
 end;
 
-function TwbArray.AddIfMissingInternal(const aElement: IwbElement; aAsNew, aDeepCopy: Boolean; const aPrefixRemove, aSuffixRemove, aPrefix, aSuffix: string; aAllowOverwrite: Boolean; const aCanOverwrite: TwbCanOverwriteCallback): IwbElement;
+function TwbArray.AddIfMissingInternal(const aElement: IwbElement; aFlags: TwbCopyFlags; const aRules: TwbCopyRules): IwbElement;
 var
   SelfRef   : IwbContainerElementRef;
   i         : Integer;
@@ -25203,7 +25226,7 @@ begin
     Assert(not arrSortInvalid);
     if FindBySortKey(aElement.SortKey[False], False, i) then begin
       Result := cntElements[i];
-      if aDeepCopy then
+      if cfDeepCopy in aFlags then
         Result.Assign(wbAssignThis, aElement, False);
       Exit;
     end;
@@ -25221,12 +25244,12 @@ begin
     if dfUnionStaticResolve in ValueDef.DefFlags then
       ValueDef := Resolve(ValueDef, nil, nil, aElement);
     case ValueDef.DefType of
-      dtArray: Result := TwbArray.Create(Self, ValueDef, aElement, not aDeepCopy, s);
-      dtStruct: Result := TwbStruct.Create(Self, ValueDef, aElement, not aDeepCopy, s);
-      dtStructChapter: Result := TwbChapter.Create(Self, ValueDef, aElement, not aDeepCopy, s);
-      dtUnion: Result := wbUnionCreate(Self, ValueDef, aElement, not aDeepCopy, s);
+      dtArray: Result := TwbArray.Create(Self, ValueDef, aElement, not (cfDeepCopy in aFlags), s);
+      dtStruct: Result := TwbStruct.Create(Self, ValueDef, aElement, not (cfDeepCopy in aFlags), s);
+      dtStructChapter: Result := TwbChapter.Create(Self, ValueDef, aElement, not (cfDeepCopy in aFlags), s);
+      dtUnion: Result := wbUnionCreate(Self, ValueDef, aElement, not (cfDeepCopy in aFlags), s);
     else
-      Result := TwbValue.Create(Self, ValueDef, aElement, not aDeepCopy, s);
+      Result := TwbValue.Create(Self, ValueDef, aElement, not (cfDeepCopy in aFlags), s);
     end;
 
   CheckCount;
@@ -26010,16 +26033,10 @@ end;
 
 { TwbValue }
 
-function TwbValue.AddIfMissingInternal(const aElement        : IwbElement;
-                                             aAsNew          : Boolean;
-                                             aDeepCopy       : Boolean;
-                                       const aPrefixRemove   : string;
-                                       const aSuffixRemove   : string;
-                                       const aPrefix         : string;
-                                       const aSuffix         : string;
-                                             aAllowOverwrite : Boolean;
-                                       const aCanOverwrite   : TwbCanOverwriteCallback)
-                                                             : IwbElement;
+function TwbValue.AddIfMissingInternal(const aElement : IwbElement;
+                                             aFlags   : TwbCopyFlags;
+                                       const aRules   : TwbCopyRules)
+                                                      : IwbElement;
 var
   Flag       : IwbFlag;
   IntegerDef : IwbIntegerDef;
@@ -26039,7 +26056,7 @@ begin
           end;
         end;
 
-  Result := inherited AddIfMissingInternal(aElement, aAsNew, aDeepCopy, aPrefixRemove, aSuffixRemove, aPrefix, aSuffix, aAllowOverwrite, aCanOverwrite)
+  Result := inherited AddIfMissingInternal(aElement, aFlags, aRules)
 end;
 
 function TwbValue.CompareExchangeFormID(aOldFormID, aNewFormID: TwbFormID): Boolean;
@@ -28452,16 +28469,10 @@ end;
 
 { TwbRecordHeaderStruct }
 
-function TwbRecordHeaderStruct.AddIfMissingInternal(const aElement        : IwbElement;
-                                                          aAsNew          : Boolean;
-                                                          aDeepCopy       : Boolean;
-                                                    const aPrefixRemove   : string;
-                                                    const aSuffixRemove   : string;
-                                                    const aPrefix         : string;
-                                                    const aSuffix         : string;
-                                                          aAllowOverwrite : Boolean;
-                                                    const aCanOverwrite   : TwbCanOverwriteCallback)
-                                                                          : IwbElement;
+function TwbRecordHeaderStruct.AddIfMissingInternal(const aElement : IwbElement;
+                                                          aFlags   : TwbCopyFlags;
+                                                    const aRules   : TwbCopyRules)
+                                                                   : IwbElement;
 var
   StructDef : IwbStructDef;
   SelfRef   : IwbContainerElementRef;
@@ -28486,7 +28497,7 @@ begin
 
   Result := GetElementBySortOrder(aElement.SortOrder + GetAdditionalElementCount);
   Assert(Assigned(Result));
-  Result.Assign(wbAssignThis, aElement, not aDeepCopy);
+  Result.Assign(wbAssignThis, aElement, not (cfDeepCopy in aFlags));
 end;
 
 procedure TwbRecordHeaderStruct.BuildRef;
@@ -28835,7 +28846,7 @@ begin
         Exit;
       end;
       if not _File.Equals(NewOwner._File) then
-        NewOwner := wbCopyElementToFile(NewOwner, _File, False, True, '', '', '', '', False, nil) as IwbMainRecord;
+        NewOwner := wbCopyElementToFile(NewOwner, _File, [cfDeepCopy], wbNoCopyRules) as IwbMainRecord;
       GroupRecord := NewOwner.EnsureChildGroup;
 
       case GroupRecord.GroupType of
@@ -29022,7 +29033,7 @@ begin
   raise Exception.Create('"' + GetFileName + '" is a save and holds no records');
 end;
 
-function TwbFileSource.AddIfMissingInternal(const aElement: IwbElement; aAsNew, aDeepCopy : Boolean; const aPrefixRemove, aSuffixRemove, aPrefix, aSuffix: string; aAllowOverwrite: Boolean; const aCanOverwrite: TwbCanOverwriteCallback): IwbElement;
+function TwbFileSource.AddIfMissingInternal(const aElement: IwbElement; aFlags: TwbCopyFlags; const aRules: TwbCopyRules): IwbElement;
 begin
   raise Exception.Create('"' + GetFileName + '" is a save and holds no records');
 end;

@@ -2527,7 +2527,7 @@ begin
           end;
         end;
       end;
-      lOptions.CanOverwrite := function (const aTarget, aSource: IwbElement): TwbCanOverwriteAction
+      lOptions.Rules.CanOverwrite := function (const aTarget, aSource: IwbElement): TwbCanOverwriteAction
       begin
         Result := TwbCopyOptions.OverwriteAction(aTarget, aSource, lConfirmOverwrite, lConfirmRemove);
 
@@ -2686,10 +2686,10 @@ begin
         lOptions.DeepCopy := DeepCopy;
         lOptions.AllowOverwrite := AllowOverwrite;
         lOptions.EditorID := EditorID;
-        lOptions.PrefixRemove := EditorIDPrefixRemove;
-        lOptions.SuffixRemove := EditorIDSuffixRemove;
-        lOptions.Prefix := EditorIDPrefix;
-        lOptions.Suffix := EditorIDSuffix;
+        lOptions.Rules.PrefixRemove := EditorIDPrefixRemove;
+        lOptions.Rules.SuffixRemove := EditorIDSuffixRemove;
+        lOptions.Rules.Prefix := EditorIDPrefix;
+        lOptions.Rules.Suffix := EditorIDSuffix;
         lOptions.Operation := Operation;
         lOptions.AfterCopy := aAfterCopyCallback;
 
@@ -2733,7 +2733,7 @@ begin
         Free;
       end;
     finally
-      lOptions.CanOverwrite := nil;
+      lOptions.Rules.CanOverwrite := nil;
       lConfirmOverwrite := nil;
       lConfirmRemove := nil;
     end;
@@ -3520,7 +3520,7 @@ var
             if Assigned(TargetLists[l]) and Assigned(WinningLists[l]) then
               if not ListsEqual(TargetLists[l], WinningLists[l]) then begin
                 if not Assigned(TargetRecord) then
-                  TargetRecord := wbCopyElementToFile(MainRecord, TargetFile, False, True, '', '', '', '', False, nil) as IwbMainRecord;
+                  TargetRecord := wbCopyElementToFile(MainRecord, TargetFile, [cfDeepCopy], wbNoCopyRules) as IwbMainRecord;
 
                 TargetRecord.RemoveElement(aListNames[l]);
                 for j := 0 to Pred(TargetLists[l].Count) do
@@ -4026,7 +4026,7 @@ begin
 
     if AddRequiredMasters(sl, ReferenceFile) then
       for j := Low(Elements) to High(Elements) do begin
-        wbCopyElementToFile(Elements[j], ReferenceFile, False, True, '', '', '', '', False, nil);
+        wbCopyElementToFile(Elements[j], ReferenceFile, [cfDeepCopy], wbNoCopyRules);
         if Elements[j].RemoveInjected(False) then begin
           pgMain.ActivePage := tbsMessages;
           AddMessage('Injected references in '+Elements[j].Name+' could not all be removed automatically.');
