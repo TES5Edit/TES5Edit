@@ -8350,6 +8350,8 @@ begin
     Exit;
   if not Supports(NodeData.Element, IwbFile, _File) then
     Exit;
+  if not _File.IsEditable then
+    Exit;
 
   with odCSV do begin
     FileName := '';
