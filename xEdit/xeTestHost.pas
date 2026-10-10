@@ -108,6 +108,7 @@ type
     TestChangeFormIDAnswerCount : Integer;
     TestChangeFormIDNotOffered  : Boolean;
     TestChangeFormIDFallback    : Boolean;
+    TestChangeFormIDCsvAnswered : Boolean;
     TestFilterAnswer         : TTimer;
     TestFilterAnswered       : string;
     TestPumpTimer            : TTimer;
@@ -243,6 +244,9 @@ type
     ChangeFormIDRefs      : string;
     ChangeFormIDOut       : string;
     ChangeFormIDCompareTo : string;
+    ChangeFormIDOp        : string;
+    ChangeFormIDCsv       : string;
+    ChangeFormIDView      : string;
     Hide                  : Boolean;
     HideFile              : string;
     HideRecord            : string;
@@ -561,14 +565,24 @@ begin
     wbFindCmdLineParam('testchangeformidanswers', ChangeFormIDAnswers);
     wbFindCmdLineParam('testchangeformidrefs', ChangeFormIDRefs);
     wbFindCmdLineParam('testchangeformidcompareto', ChangeFormIDCompareTo);
+    wbFindCmdLineParam('testchangeformidop', ChangeFormIDOp);
+    wbFindCmdLineParam('testchangeformidcsv', ChangeFormIDCsv);
+    wbFindCmdLineParam('testchangeformidview', ChangeFormIDView);
     ChangeFormIDShift := FindCmdLineSwitch('testchangeformidshift');
+    if ChangeFormIDOp = '' then
+      ChangeFormIDOp := 'changeformid';
     if (ChangeFormIDFile = '') or
        not wbFindCmdLineParam('testchangeformidrecords', ChangeFormIDRecords) or (ChangeFormIDRecords = '') or
-       not wbFindCmdLineParam('testchangeformidout', ChangeFormIDOut) or (ChangeFormIDOut = '') then begin
+       not wbFindCmdLineParam('testchangeformidout', ChangeFormIDOut) or (ChangeFormIDOut = '') or
+       not (SameText(ChangeFormIDOp, 'changeformid') or SameText(ChangeFormIDOp, 'changerefs') or
+            SameText(ChangeFormIDOp, 'batchrefs')) or
+       (SameText(ChangeFormIDOp, 'batchrefs') and (ChangeFormIDTarget = '')) then begin
       ShowMessage('testchangeformid requires -testchangeformid:<filename> -testchangeformidrecords:<EditorID>@<module>[,...] ' +
-        '-testchangeformidout:<folder> [-testchangeformidshift] [-testchangeformidtarget:<module>] ' +
+        '-testchangeformidout:<folder> [-testchangeformidop:<changeformid|changerefs|batchrefs>] [-testchangeformidshift] ' +
+        '[-testchangeformidtarget:<module>] (batchrefs: the file focused) ' +
         '[-testchangeformidids:<hex|empty|offered|cancel>[,...]] [-testchangeformidanswers:<yes|no|yesall|cancel>[,...]] ' +
-        '[-testchangeformidrefs:<all|none|cancel|<index>[;<index>...]>[,...]] ' +
+        '[-testchangeformidrefs:<all|none|cancel|<index>[;<index>...]>[,...]] [-testchangeformidcsv:<file|cancel>] ' +
+        '[-testchangeformidview:<none|<EditorID>@<module>>] (changerefs: the view left empty, or showing that record) ' +
         '[-testchangeformidcompareto:<file loaded to compare with the last module>]');
       Exit(False);
     end;

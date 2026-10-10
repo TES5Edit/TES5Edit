@@ -169,6 +169,8 @@ uses
   Vcl.Themes,
 
   Winapi.CommCtrl,
+  Winapi.CommDlg,
+  Winapi.Dlgs,
   Winapi.ShellAPI,
   Winapi.WinInet,
 
@@ -4538,7 +4540,9 @@ begin
   TestHost.TestChangeFormIDLines.Add('# records = ' + xeTestSwitches.ChangeFormIDRecords + ', shift = ' +
     BoolToStr(xeTestSwitches.ChangeFormIDShift, True) + ', target = ' + xeTestSwitches.ChangeFormIDTarget + ', ids = ' +
     xeTestSwitches.ChangeFormIDIds + ', answers = ' + xeTestSwitches.ChangeFormIDAnswers + ', refs = ' +
-    xeTestSwitches.ChangeFormIDRefs + ', compareto = ' + xeTestSwitches.ChangeFormIDCompareTo);
+    xeTestSwitches.ChangeFormIDRefs + ', compareto = ' + xeTestSwitches.ChangeFormIDCompareTo + ', op = ' +
+    xeTestSwitches.ChangeFormIDOp + ', csv = ' + ExtractFileName(xeTestSwitches.ChangeFormIDCsv) + ', view = ' +
+    xeTestSwitches.ChangeFormIDView);
   TestHost.TestChangeFormIDLines.Add('# Columns, tab separated: what / details');
   TestHost.TestChangeFormIDTimer := TTimer.Create(Self);
   TestHost.TestChangeFormIDTimer.Interval := 500;
@@ -4568,16 +4572,32 @@ procedure TxeTestFormHelper.TestChangeFormIDRunTimer(Sender: TObject);
         string.Join(',', lListed, aUsed, Length(lListed) - aUsed));
   end;
 
+  function FindRecord(const aSpec: string): IwbMainRecord;
+  var
+    lAt   : Integer;
+    lFile : IwbFile;
+  begin
+    lAt := aSpec.LastIndexOf('@');
+    if lAt < 1 then
+      raise Exception.Create('not <EditorID>@<module>: ' + aSpec);
+    lFile := FindFile(aSpec.Substring(lAt + 1));
+    if not Assigned(lFile) then
+      raise Exception.Create(aSpec.Substring(lAt + 1) + ' is not loaded');
+    for var j := 0 to Pred(lFile.RecordCount) do
+      if SameText(lFile.Records[j].EditorID, aSpec.Substring(0, lAt)) then
+        Exit(lFile.Records[j]);
+    raise Exception.Create('no record ' + aSpec.Substring(0, lAt) + ' in ' + lFile.FileName);
+  end;
+
 var
   lLines  : TStringList;
-  lFile   : IwbFile;
   lRecord : IwbMainRecord;
   lNode   : PVirtualNode;
   lFirst  : PVirtualNode;
-  lAt     : Integer;
-  lName   : string;
   lState  : TKeyboardState;
   lShift  : Byte;
+  lMenuItem : TMenuItem;
+  lShowView : Boolean;
 begin
   TestHost.TestChangeFormIDTimer.Enabled := False;
   lLines := TestHost.TestChangeFormIDLines;
@@ -4591,45 +4611,65 @@ begin
     TestHost.TestChangeFormIDRecords := nil;
     TestHost.TestChangeFormIDBefore := nil;
     for var lSpec in xeTestSwitches.ChangeFormIDRecords.Split([',']) do begin
-      lAt := lSpec.LastIndexOf('@');
-      if lAt < 1 then
-        raise Exception.Create('not <EditorID>@<module>: ' + lSpec);
-      lName := lSpec.Substring(0, lAt);
-      lFile := FindFile(lSpec.Substring(lAt + 1));
-      if not Assigned(lFile) then
-        raise Exception.Create(lSpec.Substring(lAt + 1) + ' is not loaded');
-      lRecord := nil;
-      for var j := 0 to Pred(lFile.RecordCount) do
-        if SameText(lFile.Records[j].EditorID, lName) then begin
-          lRecord := lFile.Records[j];
-          Break;
-        end;
-      if not Assigned(lRecord) then
-        raise Exception.Create('no record ' + lName + ' in ' + lFile.FileName);
+      lRecord := FindRecord(lSpec);
       TestHost.TestChangeFormIDRecords := TestHost.TestChangeFormIDRecords + [lRecord];
       TestHost.TestChangeFormIDBefore := TestHost.TestChangeFormIDBefore + [lRecord.LoadOrderFormID];
-      lLines.Add('selected' + #9 + IntToStr(High(TestHost.TestChangeFormIDRecords)) + #9 + lFile.FileName + #9 + lName + #9 +
-        TestChangeFormIDText(lRecord.LoadOrderFormID) + #9 + string(lRecord.Signature) + #9 +
-        'editable ' + BoolToStr(lRecord.IsEditable, True));
+      lLines.Add('selected' + #9 + IntToStr(High(TestHost.TestChangeFormIDRecords)) + #9 + lRecord._File.FileName + #9 +
+        lSpec.Substring(0, lSpec.LastIndexOf('@')) + #9 + TestChangeFormIDText(lRecord.LoadOrderFormID) + #9 +
+        string(lRecord.Signature) + #9 + 'editable ' + BoolToStr(lRecord.IsEditable, True));
     end;
     TestChangeFormIDRecordLines(lLines, 'before', TestHost.TestChangeFormIDRecords, TestHost.TestChangeFormIDBefore);
     TestChangeFormIDFiles(lLines, 'before', Files);
 
+    lShowView := SameText(xeTestSwitches.ChangeFormIDOp, 'changerefs') and (xeTestSwitches.ChangeFormIDView = '');
+    if SameText(xeTestSwitches.ChangeFormIDOp, 'changerefs') and (xeTestSwitches.ChangeFormIDView <> '') and
+       not SameText(xeTestSwitches.ChangeFormIDView, 'none') then begin
+      lNode := FindNodeForElement(FindRecord(xeTestSwitches.ChangeFormIDView));
+      if not Assigned(lNode) then
+        raise Exception.Create('no nav node for ' + xeTestSwitches.ChangeFormIDView);
+      vstNav.ClearSelection;
+      vstNav.FocusedNode := lNode;
+      vstNav.Selected[lNode] := True;
+      if tmrPendingSetActive.Enabled then
+        tmrPendingSetActiveTimer(tmrPendingSetActive);
+    end;
+
     lFirst := nil;
     vstNav.ClearSelection;
-    for lRecord in TestHost.TestChangeFormIDRecords do begin
-      lNode := FindNodeForElement(lRecord);
-      if not Assigned(lNode) then
-        raise Exception.Create('no nav node for ' + lRecord.Name);
-      if not Assigned(lFirst) then begin
-        lFirst := lNode;
-        vstNav.FocusedNode := lNode;
+    if SameText(xeTestSwitches.ChangeFormIDOp, 'batchrefs') then begin
+      lFirst := FindNodeForElement(TestHost.TestChangeFormIDTarget);
+      if not Assigned(lFirst) then
+        raise Exception.Create('no nav node for ' + TestHost.TestChangeFormIDTarget.FileName);
+      vstNav.FocusedNode := lFirst;
+      vstNav.Selected[lFirst] := True;
+    end else
+      for lRecord in TestHost.TestChangeFormIDRecords do begin
+        lNode := FindNodeForElement(lRecord);
+        if not Assigned(lNode) then
+          raise Exception.Create('no nav node for ' + lRecord.Name);
+        if not Assigned(lFirst) then begin
+          lFirst := lNode;
+          vstNav.FocusedNode := lNode;
+        end;
+        vstNav.Selected[lNode] := True;
       end;
-      vstNav.Selected[lNode] := True;
-    end;
     pmuNavPopup(nil);
-    lLines.Add('menu' + #9 + 'changeformid ' + BoolToStr(mniNavChangeFormID.Visible, True) + #9 + 'selected ' +
+    if SameText(xeTestSwitches.ChangeFormIDOp, 'changerefs') then
+      lMenuItem := mniNavChangeReferencingRecords
+    else if SameText(xeTestSwitches.ChangeFormIDOp, 'batchrefs') then
+      lMenuItem := mniNavBatchChangeReferencingRecords
+    else
+      lMenuItem := mniNavChangeFormID;
+    lLines.Add('menu' + #9 + LowerCase(xeTestSwitches.ChangeFormIDOp) + ' ' + BoolToStr(lMenuItem.Visible, True) + #9 + 'selected ' +
       IntToStr(vstNav.SelectedCount) + #9 + 'focused first ' + BoolToStr(vstNav.FocusedNode = lFirst, True));
+    if lShowView and tmrPendingSetActive.Enabled then
+      tmrPendingSetActiveTimer(tmrPendingSetActive);
+    if SameText(xeTestSwitches.ChangeFormIDOp, 'changerefs') then
+      if Assigned(ActiveRecord) then
+        lLines.Add('view' + #9 + ActiveRecord.Name + #9 + ActiveRecord._File.FileName + #9 + 'master ' +
+          ActiveRecord.MasterOrSelf._File.FileName + #9 + 'refby ' + IntToStr(ActiveRecord.MasterOrSelf.ReferencedByCount))
+      else
+        lLines.Add('view' + #9 + 'none');
 
     lShift := 0;
     if xeTestSwitches.ChangeFormIDShift then begin
@@ -4651,7 +4691,12 @@ begin
     _wbProgressCallback := TestChangeFormIDProgress;
     try
       try
-        mniNavChangeFormIDClick(mniNavChangeFormID);
+        if lMenuItem = mniNavChangeReferencingRecords then
+          mniNavChangeReferencingRecordsClick(lMenuItem)
+        else if lMenuItem = mniNavBatchChangeReferencingRecords then
+          mniNavBatchChangeReferencingRecordsClick(lMenuItem)
+        else
+          mniNavChangeFormIDClick(lMenuItem);
         lLines.Add('returned');
       except
         on E: Exception do
@@ -4674,6 +4719,8 @@ begin
     AddUnused(lLines, 'ids', xeTestSwitches.ChangeFormIDIds, TestHost.TestChangeFormIDIdIndex);
     AddUnused(lLines, 'answers', xeTestSwitches.ChangeFormIDAnswers, TestHost.TestChangeFormIDAnswerIndex);
     AddUnused(lLines, 'refs', xeTestSwitches.ChangeFormIDRefs, TestHost.TestChangeFormIDRefIndex);
+    if (xeTestSwitches.ChangeFormIDCsv <> '') and not TestHost.TestChangeFormIDCsvAnswered then
+      lLines.Add('unusedanswers' + #9 + 'csv' + #9 + '1' + #9 + ExtractFileName(xeTestSwitches.ChangeFormIDCsv));
     if TestHost.TestChangeFormIDFallback then
       lLines.Add('fallback' + #9 + 'a dialog was answered with no listed answer');
     lLines.Add('after' + #9 + 'progress "' + wbCurrentProgress + '"' + #9 + 'page ' + pgMain.ActivePage.Name);
@@ -4783,6 +4830,41 @@ var
     Result := 'items:' + Result;
   end;
 
+  procedure AnswerOpenDialog;
+  var
+    lWnd     : HWND;
+    lItem    : Integer;
+    lAnswer  : Integer;
+    lCaption : array[0..255] of Char;
+  begin
+    if (xeTestSwitches.ChangeFormIDCsv = '') or TestHost.TestChangeFormIDCsvAnswered then
+      Exit;
+    lWnd := 0;
+    repeat
+      lWnd := FindWindowEx(0, lWnd, '#32770', nil);
+      if (lWnd = 0) or not IsWindowVisible(lWnd) or (GetWindowThreadProcessId(lWnd, nil) <> MainThreadID) then
+        Continue;
+      if GetDlgItem(lWnd, cmb13) <> 0 then
+        lItem := cmb13
+      else if GetDlgItem(lWnd, edt1) <> 0 then
+        lItem := edt1
+      else
+        Continue;
+      TestHost.TestChangeFormIDCsvAnswered := True;
+      GetWindowText(lWnd, lCaption, Length(lCaption));
+      if SameText(xeTestSwitches.ChangeFormIDCsv, 'cancel') then
+        lAnswer := IDCANCEL
+      else begin
+        SendMessage(lWnd, CDM_SETCONTROLTEXT, lItem, LPARAM(PChar(xeTestSwitches.ChangeFormIDCsv)));
+        lAnswer := IDOK;
+      end;
+      TestHost.TestChangeFormIDLines.Add('answer' + #9 + string(lCaption) + #9 + IntToStr(lAnswer) + #9 + 'open dialog' + #9 +
+        'listed csv ' + ExtractFileName(xeTestSwitches.ChangeFormIDCsv));
+      PostMessage(lWnd, WM_COMMAND, lAnswer, 0);
+      Exit;
+    until lWnd = 0;
+  end;
+
 begin
   if not Assigned(TestHost.TestChangeFormIDLines) then
     Exit;
@@ -4793,8 +4875,10 @@ begin
       lForm := Screen.CustomForms[i];
       Break;
     end;
-  if not Assigned(lForm) then
+  if not Assigned(lForm) then begin
+    AnswerOpenDialog;
     Exit;
+  end;
   lText := '';
   lExtra := '';
   CollectText(lForm);
