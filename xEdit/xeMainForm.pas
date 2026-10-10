@@ -2792,9 +2792,10 @@ begin
   if not EditWarn then
     Exit;
 
-  SetLength(ReferencedBy, ActiveMaster.ReferencedByCount);
-  for i := 0 to Pred(ActiveMaster.ReferencedByCount) do
-    ReferencedBy[i] := ActiveMaster.ReferencedBy[i];
+  var lMaster := MainRecord.MasterOrSelf;
+  SetLength(ReferencedBy, lMaster.ReferencedByCount);
+  for i := 0 to Pred(lMaster.ReferencedByCount) do
+    ReferencedBy[i] := lMaster.ReferencedBy[i];
 
   if InputQuery('New FormID', 'Please enter the new FormID in hex. e.g. 0404CC43. The FormID needs to be a load order corrected form ID.', s) then try
     NewFormID := TwbFormID.FromStr(s);
