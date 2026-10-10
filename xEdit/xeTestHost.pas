@@ -95,6 +95,19 @@ type
     TestRenumberAnswerCount  : Integer;
     TestRenumberNotOffered   : Boolean;
     TestRenumberFallback     : Boolean;
+    TestChangeFormIDLines    : TStringList;
+    TestChangeFormIDTimer    : TTimer;
+    TestChangeFormIDAnswer   : TTimer;
+    TestChangeFormIDTarget   : IwbFile;
+    TestChangeFormIDRecords  : TDynMainRecords;
+    TestChangeFormIDBefore   : TArray<TwbFormID>;
+    TestChangeFormIDMessages : Integer;
+    TestChangeFormIDIdIndex  : Integer;
+    TestChangeFormIDAnswerIndex : Integer;
+    TestChangeFormIDRefIndex : Integer;
+    TestChangeFormIDAnswerCount : Integer;
+    TestChangeFormIDNotOffered  : Boolean;
+    TestChangeFormIDFallback    : Boolean;
     TestFilterAnswer         : TTimer;
     TestFilterAnswered       : string;
     TestPumpTimer            : TTimer;
@@ -220,6 +233,16 @@ type
     RenumberOut           : string;
     RenumberCompareTo     : string;
     RenumberFilter        : Boolean;
+    ChangeFormID          : Boolean;
+    ChangeFormIDFile      : string;
+    ChangeFormIDRecords   : string;
+    ChangeFormIDShift     : Boolean;
+    ChangeFormIDTarget    : string;
+    ChangeFormIDIds       : string;
+    ChangeFormIDAnswers   : string;
+    ChangeFormIDRefs      : string;
+    ChangeFormIDOut       : string;
+    ChangeFormIDCompareTo : string;
     Hide                  : Boolean;
     HideFile              : string;
     HideRecord            : string;
@@ -532,6 +555,27 @@ begin
     xeAutoLoad := True;
   end;
 
+  if wbFindCmdLineParam('testchangeformid', ChangeFormIDFile) then begin
+    wbFindCmdLineParam('testchangeformidtarget', ChangeFormIDTarget);
+    wbFindCmdLineParam('testchangeformidids', ChangeFormIDIds);
+    wbFindCmdLineParam('testchangeformidanswers', ChangeFormIDAnswers);
+    wbFindCmdLineParam('testchangeformidrefs', ChangeFormIDRefs);
+    wbFindCmdLineParam('testchangeformidcompareto', ChangeFormIDCompareTo);
+    ChangeFormIDShift := FindCmdLineSwitch('testchangeformidshift');
+    if (ChangeFormIDFile = '') or
+       not wbFindCmdLineParam('testchangeformidrecords', ChangeFormIDRecords) or (ChangeFormIDRecords = '') or
+       not wbFindCmdLineParam('testchangeformidout', ChangeFormIDOut) or (ChangeFormIDOut = '') then begin
+      ShowMessage('testchangeformid requires -testchangeformid:<filename> -testchangeformidrecords:<EditorID>@<module>[,...] ' +
+        '-testchangeformidout:<folder> [-testchangeformidshift] [-testchangeformidtarget:<module>] ' +
+        '[-testchangeformidids:<hex|empty|offered|cancel>[,...]] [-testchangeformidanswers:<yes|no|yesall|cancel>[,...]] ' +
+        '[-testchangeformidrefs:<all|none|cancel|<index>[;<index>...]>[,...]] ' +
+        '[-testchangeformidcompareto:<file loaded to compare with the last module>]');
+      Exit(False);
+    end;
+    ChangeFormID := True;
+    xeAutoLoad := True;
+  end;
+
   if wbFindCmdLineParam('testhide', HideFile) then begin
     if (HideFile = '') or
        not wbFindCmdLineParam('testhiderecord', HideRecord) or
@@ -582,7 +626,7 @@ end;
 function TxeTestSwitches.Any: Boolean;
 begin
   Result := Conflicts or NavCopy or ViewText or ViewTree or Options or CopyIntoGap or DropMaster or DeltaPatch or Merge or MergedPatch or CopyInto or
-    Renumber or Hide or Filter or SaveContexts or (Pump <> '') or (StateManifest <> '');
+    Renumber or ChangeFormID or Hide or Filter or SaveContexts or (Pump <> '') or (StateManifest <> '');
 end;
 
 initialization
