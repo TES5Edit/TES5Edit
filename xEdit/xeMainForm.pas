@@ -8759,9 +8759,12 @@ begin
       if InputQuery('New FormID', 'Please enter the new FormID in hex. e.g. 0404CC43. The FormID needs to be a load order corrected form ID.', s) then begin
 
         if s = '' then begin
+          var lNextObjectID := MainRecord._File.NextObjectID;
           s := MainRecord._File.FileFormIDtoLoadOrderFormID(MainRecord._File.NewFormID, True).ToString;
-          if not InputQuery('New FormID generated', 'Please verify the newly generated FormID. The FormID needs to be a load order corrected form ID.', s) then
+          if not InputQuery('New FormID generated', 'Please verify the newly generated FormID. The FormID needs to be a load order corrected form ID.', s) then begin
+            MainRecord._File.NextObjectID := lNextObjectID;
             Exit;
+          end;
         end;
         NewFormID := TwbFormID.FromStr(s);
         NewFormID.CheckAssignable;
