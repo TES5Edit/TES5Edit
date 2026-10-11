@@ -1751,6 +1751,14 @@ type
     class procedure AfterCopy(const aElement: IwbElement); static;
   end;
 
+  TwbIdleModelGroup = record
+    Prefix  : string;
+    Records : TDynElements;
+    function RetargetCopies(const aCopies: TDynElements; const aNewPrefix: string): Boolean;
+  end;
+
+  TwbIdleModelGroups = TArray<TwbIdleModelGroup>;
+
   TwbLocalizationPlan = record
     Target          : IwbFile;
     Elements        : TDynElements;
@@ -4368,6 +4376,7 @@ type
     function MarkPluginOnamsForRebuild(const aReport: TProc<string>): Boolean;
     function ClearEspESMFlags(const aReport: TProc<string>): Boolean;
     function SortAndCleanMasters(const aModuleNames: TStrings): Boolean;
+    function IdleModelGroups: TwbIdleModelGroups;
 
     function LoadFile(const aFileName: string; aLoadOrder: Integer = -1; const aCompareTo: string = ''; aStates: TwbFileStates = []; const aData: TBytes = nil): IwbFile; virtual; abstract;
     function NewFile(const aFileName: string; aLoadOrder: Integer; aIsLight, aIsMedium: Boolean): IwbFile; overload; virtual; abstract;
@@ -7826,6 +7835,48 @@ begin
       lFile.CleanMasters;
       Result := Result or lFile.Modified;
     end;
+end;
+
+function TwbGameContext.IdleModelGroups: TwbIdleModelGroups;
+var
+  lPrefixes : TwbFastStringListIC;
+  lSeen     : THashSet<Pointer>;
+  lGroup    : IwbContainerElementRef;
+  lRecord   : IwbMainRecord;
+  lPrefix   : string;
+  k         : Integer;
+begin
+  Result := nil;
+  lPrefixes := TwbFastStringListIC.CreateSorted;
+  lSeen := THashSet<Pointer>.Create;
+  try
+    for var lFile in gcFiles do
+      if Supports(lFile.GroupBySignature['IDLE'], IwbContainerElementRef, lGroup) then
+        for var j := 0 to Pred(lGroup.ElementCount) do
+          if Supports(lGroup.Elements[j], IwbMainRecord, lRecord) then begin
+            lRecord := lRecord.WinningOverride;
+            if not lSeen.Contains(lRecord.ElementID) then begin
+              lSeen.Add(lRecord.ElementID);
+              lPrefix := Trim(LowerCase(lRecord.ElementEditValues['MODL\MODL']));
+              if ExtractFileExt(lPrefix) <> '' then
+                lPrefix := ExtractFilePath(lPrefix);
+              lPrefix := ExcludeTrailingPathDelimiter(lPrefix);
+
+              if not lPrefixes.Find(lPrefix, k) then begin
+                k := lPrefixes.Add(lPrefix);
+                var lNew: TwbIdleModelGroup;
+                lNew.Prefix := lPrefix;
+                Insert(lNew, Result, k);
+              end;
+
+              SetLength(Result[k].Records, Succ(Length(Result[k].Records)));
+              Result[k].Records[High(Result[k].Records)] := lRecord;
+            end;
+          end;
+  finally
+    lSeen.Free;
+    lPrefixes.Free;
+  end;
 end;
 
 function TwbGameContext.AllocateFullSlot: Integer;
@@ -25618,6 +25669,39 @@ var
 begin
   if Supports(aElement, IwbMainRecord, lRecord) then
     lRecord.IsVisibleWhenDistant := True;
+end;
+
+{ TwbIdleModelGroup }
+
+function TwbIdleModelGroup.RetargetCopies(const aCopies: TDynElements; const aNewPrefix: string): Boolean;
+var
+  lOldFormIDs : TwbFormIDs;
+  lNewFormIDs : TwbFormIDs;
+  lCopy       : IwbMainRecord;
+  s           : string;
+begin
+  Result := False;
+  if Length(aCopies) <> Length(Records) then
+    Exit;
+  for var lElement in aCopies do
+    if not Supports(lElement, IwbMainRecord) then
+      Exit;
+
+  SetLength(lOldFormIDs, Length(aCopies));
+  SetLength(lNewFormIDs, Length(aCopies));
+  for var i := Low(aCopies) to High(aCopies) do begin
+    lOldFormIDs[i] := (Records[i] as IwbMainRecord).LoadOrderFormID;
+    lNewFormIDs[i] := (aCopies[i] as IwbMainRecord).LoadOrderFormID;
+  end;
+
+  for var lElement in aCopies do begin
+    lCopy := lElement as IwbMainRecord;
+    s := Trim(LowerCase(lCopy.ElementValues['MODL\MODL']));
+    lCopy.ElementEditValues['MODL\MODL'] := aNewPrefix + Copy(s, Succ(Length(Prefix)), High(Integer));
+    for var k := Low(lOldFormIDs) to High(lOldFormIDs) do
+      lCopy.CompareExchangeFormID(lOldFormIDs[k], lNewFormIDs[k]);
+  end;
+  Result := True;
 end;
 
 { TwbLocalizationPlan }

@@ -3144,21 +3144,8 @@ end;
 
 procedure TfrmMain.mniNavCopyIdleClick(Sender: TObject);
 var
-  i, j, k        : Integer;
-  Container      : IwbContainerElementRef;
-  MainRecord     : IwbMainRecord;
-  MainRecords    : TDynMainRecords;
-  s              : string;
-  sl             : TwbFastStringListIC;
-  List           : TList;
-  OldElements    : TDynElements;
-  NewElements    : TDynElements;
-  OldModelPrefix : string;
+  lGroups        : TwbIdleModelGroups;
   NewModelPrefix : string;
-  OldFormIDs     : TwbFormIDs;
-  NewFormIDs     : TwbFormIDs;
-  OldMainRecord  : IwbMainRecord;
-  NewMainRecord  : IwbMainRecord;
 begin
   if not xeContext.Settings.EditAllowed then
     Exit;
@@ -3168,92 +3155,31 @@ begin
   if not EditWarn then
     Exit;
 
-  ResetAllTags;
+  lGroups := xeContext.IdleModelGroups;
 
-  sl := TwbFastStringListIC.CreateSorted;
-  try
-    for i := Low(Files) to High(Files) do
-      if Supports(Files[i].GroupBySignature['IDLE'], IwbContainerElementRef, Container) then begin
-        for j := 0 to Pred(Container.ElementCount) do
-          if Supports(Container.Elements[j], IwbMainRecord, MainRecord) then begin
-            MainRecord := MainRecord.WinningOverride;
-            if not MainRecord.IsTagged then begin
-              MainRecord.Tag;
-              s := Trim(LowerCase((MainRecord.ElementEditValues['MODL\MODL'])));
-              if ExtractFileExt(s) <> '' then
-                s := ExtractFilePath(s);
-              s := ExcludeTrailingPathDelimiter(s);
+  with TfrmFileSelect.Create(nil) do try
 
-              if not sl.Find(s, k) then
-                k := sl.AddObject(s, TList.Create);
+    for var lGroup in lGroups do
+      CheckListBox1.Items.Add(lGroup.Prefix);
+    Caption := 'Which Idles do you want to copy?';
 
-              TList(sl.Objects[k]).Add(Pointer(MainRecord));
+    if ShowModal <> mrOK then
+      Exit;
 
-              SetLength(MainRecords, Succ(Length(MainRecords)));
-              MainRecords[High(MainRecords)] := MainRecord;
-            end;
-          end;
-      end;
+    for var i := 0 to Pred(CheckListBox1.Items.Count) do
+      if CheckListBox1.Selected[i] then begin
+        NewModelPrefix := lGroups[i].Prefix;
 
-      with TfrmFileSelect.Create(nil) do try
+        repeat
+          if not InputQuery('Model Prefix', 'Please change the model prefix', NewModelPrefix) then
+            Exit;
+        until not SameText(lGroups[i].Prefix, NewModelPrefix);
 
-        CheckListBox1.Items.Assign(sl);
-        Caption := 'Which Idles do you want to copy?';
-
-        if ShowModal <> mrOK then
+        if not lGroups[i].RetargetCopies(CopyInto(True, False, False, True, False, lGroups[i].Records), NewModelPrefix) then
           Exit;
-
-        for i := 0 to Pred(CheckListBox1.Items.Count) do
-          if CheckListBox1.Selected[i] then begin
-            List := CheckListBox1.Items.Objects[i] as TList;
-            SetLength(OldElements, List.Count);
-            for j := 0 to Pred(List.Count) do
-              Supports(IInterface(List[j]), IwbElement, OldElements[j]);
-
-            OldModelPrefix := CheckListBox1.Items[i];
-            NewModelPrefix := OldModelPrefix;
-
-            repeat
-              if not InputQuery('Model Prefix', 'Please change the model prefix', NewModelPrefix) then
-                Exit;
-            until not SameText(OldModelPrefix, NewModelPrefix);
-
-            NewElements := CopyInto(True, False, False, True, False, OldElements);
-            Assert(Length(NewElements) = Length(OldElements));
-
-            SetLength(OldFormIDs, Length(NewElements));
-            SetLength(NewFormIDs, Length(NewElements));
-
-            for j := Low(NewElements) to High(NewElements) do begin
-              if not Supports(OldElements[j], IwbMainRecord, OldMainRecord) then
-                Assert(False);
-              if not Supports(NewElements[j], IwbMainRecord, NewMainRecord) then
-                Assert(False);
-
-              OldFormIDs[j] := OldMainRecord.LoadOrderFormID;
-              NewFormIDs[j] := NewMainRecord.LoadOrderFormID;
-            end;
-
-            for j := Low(NewElements) to High(NewElements) do begin
-              if not Supports(NewElements[j], IwbMainRecord, NewMainRecord) then
-                Assert(False);
-
-              s := Trim(LowerCase((NewMainRecord.ElementValues['MODL\MODL'])));
-              s := NewModelPrefix + Copy(s, Succ(Length(OldModelPrefix)), High(Integer));
-              NewMainRecord.ElementEditValues['MODL\MODL'] := s;
-
-              for k := Low(OldFormIDs) to High(OldFormIDs) do
-                NewMainRecord.CompareExchangeFormID(OldFormIDs[k], NewFormIDs[k]);
-            end;
-          end;
-      finally
-        Free;
       end;
-
   finally
-    for i := 0 to Pred(sl.Count) do
-      sl.Objects[i].Free;
-    sl.Free;
+    Free;
   end;
 end;
 
