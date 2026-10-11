@@ -15921,6 +15921,10 @@ begin
       PostAddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] a working version. But it is recommended to contact the author of the module');
       PostAddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] to get the original fixed.');
     end else try
+{$IFDEF XE_TEST_CONTROL_POINTS}
+      if xeTestSwitches.FileLists <> '' then
+        TestWriteFileLists;
+{$ENDIF}
       if (xeToolMode = tmSortAndCleanMasters) then begin
         for i := Low(Files) to High(Files) do
           if xeModulesToUse.Find(Files[i].FileName, dummy) and Files[i].IsEditable then begin
@@ -16010,6 +16014,10 @@ begin
       end else
         if (xeToolMode in wbPluginModes) then
           AutoDone := true;
+{$IFDEF XE_TEST_CONTROL_POINTS}
+      if xeTestSwitches.ToolModeAuto then
+        AutoDone := True;
+{$ENDIF}
 
     except
       xeContext.Settings.DontSave := True;

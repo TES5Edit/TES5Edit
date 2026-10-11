@@ -166,6 +166,8 @@ type
     ViewTextFile          : string;
     ViewTextRecord        : string;
     StateManifest         : string;
+    FileLists             : string;
+    ToolModeAuto          : Boolean;
     ViewTree              : Boolean;
     ViewTreeFile          : string;
     ViewTreeList          : string;
@@ -277,6 +279,7 @@ type
 
     function ParsePump: Boolean;
     function ParseStateManifest: Boolean;
+    function ParseToolMode: Boolean;
     function ParseEdit: Boolean;
     function ParseSaveContexts: Boolean;
     function Any: Boolean;
@@ -342,6 +345,18 @@ begin
     ShowMessage('teststatemanifest requires an output file, as -teststatemanifest:<filename>');
     Exit(False);
   end;
+end;
+
+function TxeTestSwitches.ParseToolMode: Boolean;
+begin
+  Result := True;
+  if wbFindCmdLineParam('testfilelists', FileLists) and (FileLists = '') then begin
+    ShowMessage('testfilelists requires an output file, as -testfilelists:<filename>');
+    Exit(False);
+  end;
+  ToolModeAuto := FindCmdLineSwitch('testtoolmodeauto');
+  if ToolModeAuto then
+    xeAutoLoad := True;
 end;
 
 function TxeTestSwitches.ParseEdit: Boolean;

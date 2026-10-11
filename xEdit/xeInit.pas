@@ -861,6 +861,8 @@ begin
     Exit(False);
   if not xeTestSwitches.ParseStateManifest then
     Exit(False);
+  if not xeTestSwitches.ParseToolMode then
+    Exit(False);
 {$ENDIF}
 
   if xeToolMode = tmEdit then begin

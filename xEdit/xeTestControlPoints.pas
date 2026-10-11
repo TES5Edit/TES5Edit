@@ -140,6 +140,7 @@ type
     procedure DoTestSaveContextsCompare;
     procedure TestWriteStateManifest(const aTarget: IwbFile);
     procedure TestWriteStateManifestEnd;
+    procedure TestWriteFileLists;
   end;
 
 procedure TestSaveContextsReport(const aStage: string);
@@ -6206,6 +6207,53 @@ begin
     lLines.LoadFromFile(xeTestSwitches.StateManifest, TEncoding.UTF8);
     AddRuntimeEnd(lLines, xeContext);
     lLines.SaveToFile(xeTestSwitches.StateManifest, TEncoding.UTF8);
+  finally
+    lLines.Free;
+  end;
+end;
+
+procedure TxeTestFormHelper.TestWriteFileLists;
+
+  function Describe(const aFile: IwbFile): string;
+  var
+    lStates : string;
+  begin
+    lStates := '';
+    for var lState := Low(TwbFileState) to High(TwbFileState) do
+      if lState in aFile.FileStates then begin
+        if lStates <> '' then
+          lStates := lStates + ',';
+        lStates := lStates + GetEnumName(TypeInfo(TwbFileState), Ord(lState));
+      end;
+    Result := aFile.FileName + ' | lo ' + IntToStr(aFile.LoadOrder) + ' | esm ' + BoolToStr(aFile.IsESM, True) +
+      ' | editable ' + BoolToStr(aFile.IsEditable, True) + ' | masters ' + IntToStr(aFile.MasterCount[True]) +
+      ' | states [' + lStates + ']';
+  end;
+
+var
+  lLines   : TStringList;
+  lContext : TwbFiles;
+  lSame    : Boolean;
+begin
+  lContext := xeContext.Files;
+  lLines := TStringList.Create;
+  try
+    lLines.Add('toolmode=' + GetEnumName(TypeInfo(TwbToolMode), Ord(xeToolMode)));
+    lLines.Add('editor.Count=' + IntToStr(Length(Files)));
+    for var i := Low(Files) to High(Files) do
+      lLines.Add('editor[' + IntToStr(i) + ']=' + Describe(Files[i]));
+    lLines.Add('context.Count=' + IntToStr(Length(lContext)));
+    for var i := Low(lContext) to High(lContext) do
+      lLines.Add('context[' + IntToStr(i) + ']=' + Describe(lContext[i]));
+    lSame := Length(Files) = Length(lContext);
+    if lSame then
+      for var i := Low(Files) to High(Files) do
+        if not Files[i].Equals(lContext[i]) then begin
+          lLines.Add('differs at ' + IntToStr(i));
+          lSame := False;
+        end;
+    lLines.Add('same=' + BoolToStr(lSame, True));
+    lLines.SaveToFile(xeTestSwitches.FileLists, TEncoding.UTF8);
   finally
     lLines.Free;
   end;
