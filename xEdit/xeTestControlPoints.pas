@@ -4621,6 +4621,8 @@ var
   lShift  : Byte;
   lMenuItem : TMenuItem;
   lShowView : Boolean;
+  lSelFiles : TArray<IwbFile>;
+  lSelFile  : IwbFile;
 begin
   TestHost.TestChangeFormIDTimer.Enabled := False;
   lLines := TestHost.TestChangeFormIDLines;
@@ -4633,7 +4635,18 @@ begin
     end;
     TestHost.TestChangeFormIDRecords := nil;
     TestHost.TestChangeFormIDBefore := nil;
+    lSelFiles := nil;
     for var lSpec in xeTestSwitches.ChangeFormIDRecords.Split([',']) do begin
+      if lSpec.StartsWith('@') and (SameText(xeTestSwitches.ChangeFormIDOp, 'setvwd') or
+         SameText(xeTestSwitches.ChangeFormIDOp, 'setvwdinto')) then begin
+        lSelFile := FindFile(lSpec.Substring(1));
+        if not Assigned(lSelFile) then
+          raise Exception.Create(lSpec.Substring(1) + ' is not loaded');
+        lSelFiles := lSelFiles + [lSelFile];
+        lLines.Add('selectedfile' + #9 + IntToStr(High(lSelFiles)) + #9 + lSelFile.FileName + #9 + 'editable ' +
+          BoolToStr(lSelFile.IsEditable, True));
+        Continue;
+      end;
       lRecord := FindRecord(lSpec);
       TestHost.TestChangeFormIDRecords := TestHost.TestChangeFormIDRecords + [lRecord];
       TestHost.TestChangeFormIDBefore := TestHost.TestChangeFormIDBefore + [lRecord.LoadOrderFormID];
@@ -4676,6 +4689,16 @@ begin
         end;
         vstNav.Selected[lNode] := True;
       end;
+    for lSelFile in lSelFiles do begin
+      lNode := FindNodeForElement(lSelFile);
+      if not Assigned(lNode) then
+        raise Exception.Create('no nav node for ' + lSelFile.FileName);
+      if not Assigned(lFirst) then begin
+        lFirst := lNode;
+        vstNav.FocusedNode := lNode;
+      end;
+      vstNav.Selected[lNode] := True;
+    end;
     pmuNavPopup(nil);
     if SameText(xeTestSwitches.ChangeFormIDOp, 'changerefs') then
       lMenuItem := mniNavChangeReferencingRecords
@@ -4687,6 +4710,10 @@ begin
       lMenuItem := mniNavLocalizationSwitch
     else if SameText(xeTestSwitches.ChangeFormIDOp, 'locview') then
       lMenuItem := nil
+    else if SameText(xeTestSwitches.ChangeFormIDOp, 'setvwd') then
+      lMenuItem := mniNavSetVWDAuto
+    else if SameText(xeTestSwitches.ChangeFormIDOp, 'setvwdinto') then
+      lMenuItem := mniNavSetVWDAutoInto
     else
       lMenuItem := mniNavChangeFormID;
     if Assigned(lMenuItem) then
@@ -4733,6 +4760,10 @@ begin
           mniNavCleanupInjectedClick(lMenuItem)
         else if lMenuItem = mniNavLocalizationSwitch then
           mniNavLocalizationSwitchClick(lMenuItem)
+        else if lMenuItem = mniNavSetVWDAuto then
+          mniNavSetVWDAutoClick(lMenuItem)
+        else if lMenuItem = mniNavSetVWDAutoInto then
+          mniNavSetVWDAutoIntoClick(lMenuItem)
         else if not Assigned(lMenuItem) then
           TestChangeFormIDLocView(lLines)
         else

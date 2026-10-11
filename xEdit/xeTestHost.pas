@@ -592,10 +592,12 @@ begin
        not wbFindCmdLineParam('testchangeformidout', ChangeFormIDOut) or (ChangeFormIDOut = '') or
        not (SameText(ChangeFormIDOp, 'changeformid') or SameText(ChangeFormIDOp, 'changerefs') or
             SameText(ChangeFormIDOp, 'batchrefs') or SameText(ChangeFormIDOp, 'cleanupinjected') or
-            SameText(ChangeFormIDOp, 'localize') or SameText(ChangeFormIDOp, 'locview')) or
+            SameText(ChangeFormIDOp, 'localize') or SameText(ChangeFormIDOp, 'locview') or
+            SameText(ChangeFormIDOp, 'setvwd') or SameText(ChangeFormIDOp, 'setvwdinto')) or
        ((SameText(ChangeFormIDOp, 'batchrefs') or SameText(ChangeFormIDOp, 'localize')) and (ChangeFormIDTarget = '')) then begin
       ShowMessage('testchangeformid requires -testchangeformid:<filename> -testchangeformidrecords:<EditorID>@<module>[,...] ' +
-        '-testchangeformidout:<folder> [-testchangeformidop:<changeformid|changerefs|batchrefs|cleanupinjected|localize|locview>] ' +
+        '(setvwd, setvwdinto: also @<module>, the file''s node) -testchangeformidout:<folder> ' +
+        '[-testchangeformidop:<changeformid|changerefs|batchrefs|cleanupinjected|localize|locview|setvwd|setvwdinto>] ' +
         '[-testchangeformidshift] [-testchangeformidtarget:<module>] (batchrefs, localize: the file focused) ' +
         '[-testchangeformidids:<hex|empty|offered|cancel>[,...]] ' +
         '[-testchangeformidanswers:<yes|no|yesall|cancel|ok|translate:<from>:<to>>[,...]] ' +
