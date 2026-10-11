@@ -15830,7 +15830,7 @@ end;
 procedure TfrmMain.tmrMessagesTimer(Sender: TObject);
 var
   ChangesMade : Boolean;
-  i, dummy: Integer;
+  i: Integer;
 begin
   if (ShowNexusModsHint <> 0) and (ShowNexusModsHint < Now) then
     if NexusModsVersion > VersionString then begin
@@ -15928,7 +15928,7 @@ begin
 {$ENDIF}
       if (xeToolMode = tmSortAndCleanMasters) then begin
         for i := Low(Files) to High(Files) do
-          if xeModulesToUse.Find(Files[i].FileName, dummy) and Files[i].IsEditable then begin
+          if (xeModulesToUse.IndexOf(Files[i].FileName) >= 0) and Files[i].IsEditable then begin
             Files[i].SortMasters;
             Files[i].CleanMasters;
             ChangesMade := ChangesMade or Files[i].Modified;
