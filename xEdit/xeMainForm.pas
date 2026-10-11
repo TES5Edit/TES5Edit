@@ -8692,7 +8692,7 @@ var
   NamedDef                    : IwbNamedDef;
   IntegerDef                  : IwbIntegerDef;
   Flags                       : IwbFlagsDef;
-  i, StringID                 : Integer;
+  i                           : Integer;
 begin
   if not xeContext.Settings.EditAllowed then
     Exit;
@@ -8751,8 +8751,7 @@ begin
       // localization editor
       else if Element._File.IsLocalized and Assigned(Element.ValueDef) and (Element.ValueDef.DefType = dtLString) then begin
         with TfrmLocalization.Create(Self) do try
-          StringID := Element.StringID;
-          EditValue(Element._File.FileName, StringID);
+          EditValue(ExtractFileName(xeContext.LocalizationHandler.GetLocalizationFileNameByElement(Element)), Element.StringID);
           ShowModal;
         finally
           Free;
