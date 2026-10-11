@@ -19928,7 +19928,9 @@ begin
       GetElement(1).EditValue := '00000000';
       Result := False;
     end;
-  end else begin
+  end else if Length(cntElements) = 0 then
+    Result := GetReferencesInjected
+  else begin
     for i := High(cntElements) downto Low(cntElements) do
       if cntElements[i].CanContainFormIDs then begin
         Result := cntElements[i].RemoveInjected(True) or Result;
