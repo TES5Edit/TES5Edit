@@ -16000,7 +16000,7 @@ begin
 {$ENDIF}
           xeContext.Settings.DontSave := True;
         end;
-      end else if xeToolMode = tmMasterUpdate then
+      end else if xeToolMode in [tmMasterUpdate, tmESMify] then
         ChangesMade := SetAllToMaster
       else if xeToolMode = tmOnamUpdate then begin
         ChangesMade := UpdateAllOnam;
