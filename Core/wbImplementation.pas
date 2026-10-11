@@ -882,7 +882,9 @@ type
     function FileFormIDtoLoadOrderFormID(const aFormID: TwbFormID; aNew: Boolean): TwbFormID;
 
     function LoadOrderFileIDtoFileFileID(const aFileID: TwbFileID; aNew: Boolean): TwbFileID;
+    function TryLoadOrderFileIDtoFileFileID(const aFileID: TwbFileID; aNew: Boolean; out aFileFileID: TwbFileID): Boolean;
     function FileFileIDtoLoadOrderFileID(const aFileID: TwbFileID; aNew: Boolean): TwbFileID;
+    function GetOwnRecordByLoadOrderFormID(const aFormID: TwbFormID): IwbMainRecord;
 
     procedure AddMasters(aMasters: TStrings; aSilent: Boolean = False); overload;
     procedure AddMasters(const aMasters: array of string; aSilent: Boolean = False); overload;
@@ -3159,12 +3161,10 @@ end;
 
 procedure TwbFile.SetOwnRecordFormID(const aOldFormID, aNewFormID: TwbFormID; const aReport: TProc<string>);
 var
-  lSelfRef : IwbFile;
-  lRecord  : IwbMainRecord;
+  lRecord : IwbMainRecord;
 begin
-  lSelfRef := Self;
-  lRecord := GetRecordByFormID(aOldFormID, False, True);
-  if not Assigned(lRecord) or not lSelfRef.Equals(lRecord._File) then
+  lRecord := GetOwnRecordByLoadOrderFormID(aOldFormID);
+  if not Assigned(lRecord) then
     Exit;
   if Assigned(aReport) then
     aReport('Changing FormID ['+lRecord.LoadOrderFormID.ToDisplayString(flContextObj.SlotLayout)+'] to ['+aNewFormID.ToDisplayString(flContextObj.SlotLayout)+']');
@@ -6347,6 +6347,26 @@ begin
     Result := flInjectedRecords[i];
 end;
 
+function TwbFile.GetOwnRecordByLoadOrderFormID(const aFormID: TwbFormID): IwbMainRecord;
+var
+  lSelfRef : IwbFile;
+  lFormID  : TwbFormID;
+  lFileID  : TwbFileID;
+begin
+  lSelfRef := Self;
+  Result := nil;
+  lFormID := aFormID;
+  if not lFormID.IsHardcoded then begin
+    var lLayout := flContextObj.SlotLayout;
+    if not TryLoadOrderFileIDtoFileFileID(lFormID.FileID[lLayout], True, lFileID) then
+      Exit;
+    lFormID.FileID[lLayout] := lFileID;
+  end;
+  Result := GetRecordByFormID(lFormID, False, True);
+  if Assigned(Result) and not lSelfRef.Equals(Result._File) then
+    Result := nil;
+end;
+
 function TwbFile.GetCRC32: TwbCRC32;
 begin
   Result := flCRC32;
@@ -7302,9 +7322,18 @@ end;
 
 function TwbFile.LoadOrderFileIDtoFileFileID(const aFileID: TwbFileID; aNew: Boolean): TwbFileID;
 begin
+  if not TryLoadOrderFileIDtoFileFileID(aFileID, aNew, Result) then
+    raise Exception.Create('Load order FileID [' + aFileID.ToString + '] can not be mapped to file FileID for file "' + GetFileName + '"');
+end;
+
+function TwbFile.TryLoadOrderFileIDtoFileFileID(const aFileID: TwbFileID; aNew: Boolean; out aFileFileID: TwbFileID): Boolean;
+begin
+  Result := True;
   if flComplexFileFileID then begin
-    if aFileID = flLoadOrderFileID then
-      Exit(GetFileFileID(aNew));
+    if aFileID = flLoadOrderFileID then begin
+      aFileFileID := GetFileFileID(aNew);
+      Exit;
+    end;
 
     var lFullIndex := 0;
     var lLightIndex := 0;
@@ -7313,9 +7342,18 @@ begin
     for var lIndex := 0 to Pred(GetMasterCount(aNew)) do begin
       var lMaster := GetMaster(lIndex, aNew);
       if lMaster.LoadOrderFileID = aFileID then case lMaster.ModuleType of 
-        mtLight: Exit(TwbFileID.CreateLight(lLightIndex, flContextObj.SlotLayout));
-        mtMedium: Exit(TwbFileID.CreateMedium(lMediumIndex, flContextObj.SlotLayout));
-        mtFull: Exit(TwbFileID.CreateFull(lFullIndex));
+        mtLight: begin
+          aFileFileID := TwbFileID.CreateLight(lLightIndex, flContextObj.SlotLayout);
+          Exit;
+        end;
+        mtMedium: begin
+          aFileFileID := TwbFileID.CreateMedium(lMediumIndex, flContextObj.SlotLayout);
+          Exit;
+        end;
+        mtFull: begin
+          aFileFileID := TwbFileID.CreateFull(lFullIndex);
+          Exit;
+        end;
       end else case lMaster.ModuleType of 
         mtLight: Inc(lLightIndex);
         mtMedium: Inc(lMediumIndex);
@@ -7323,18 +7361,21 @@ begin
       end;
     end;
   end else begin
-    if aFileID = flLoadOrderFileID then
+    if aFileID = flLoadOrderFileID then begin
       if fsIsCompareLoad in flStates then
-        Exit(TwbFileID.CreateFull(Pred(GetMasterCount(aNew))))
+        aFileFileID := TwbFileID.CreateFull(Pred(GetMasterCount(aNew)))
       else
-        Exit(GetFileFileID(aNew))
-    else
-      for var i := Pred(GetMasterCount(aNew)) downto 0 do
-        if GetMaster(i, aNew).LoadOrderFileID = aFileID then
-          Exit(TwbFileID.CreateFull(i));
+        aFileFileID := GetFileFileID(aNew);
+      Exit;
+    end;
+    for var i := Pred(GetMasterCount(aNew)) downto 0 do
+      if GetMaster(i, aNew).LoadOrderFileID = aFileID then begin
+        aFileFileID := TwbFileID.CreateFull(i);
+        Exit;
+      end;
   end;
 
-  raise Exception.Create('Load order FileID [' + aFileID.ToString + '] can not be mapped to file FileID for file "' + GetFileName + '"');
+  Result := False;
 end;
 
 function TwbFile.LoadOrderFormIDtoFileFormID(const aFormID: TwbFormID; aNew: Boolean): TwbFormID;
