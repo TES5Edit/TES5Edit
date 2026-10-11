@@ -1451,6 +1451,9 @@ type
     function GetIsVisibleWhenDistant: Boolean;
     procedure SetIsVisibleWhenDistant(aValue: Boolean);
     function GetHasVisibleWhenDistantMesh: Boolean;
+    function GetIsInExterior: Boolean;
+    function GetNeedsVisibleWhenDistant: Boolean;
+    function ApplyNeededVisibleWhenDistant(const aReport: TProc<string>): Boolean;
     function GetHasMesh: Boolean;
     function GetHasPrecombinedMesh: Boolean;
     function GetPrecombinedMesh: string;
@@ -14711,6 +14714,54 @@ begin
     end;
   end;
   Result := mrsHasVWDMesh in mrStates;
+end;
+
+function TwbMainRecord.GetIsInExterior: Boolean;
+var
+  lContainer : IwbContainer;
+  lGroup     : IwbGroupRecord;
+begin
+  lContainer := GetContainer;
+  while Assigned(lContainer) do begin
+    if Supports(lContainer, IwbGroupRecord, lGroup) then
+      case lGroup.GroupType of
+        0: Exit(TwbSignature(lGroup.GroupLabel) = 'WRLD');
+        1, 4, 5: Exit(True);
+        2, 3: Exit(False);
+      end;
+    lContainer := lContainer.Container;
+  end;
+  Result := False;
+end;
+
+function TwbMainRecord.GetNeedsVisibleWhenDistant: Boolean;
+var
+  lName : IwbContainerElementRef;
+  lBase : IwbMainRecord;
+begin
+  var lRefHold: TRefGuard;
+  RefShortHold(lRefHold, Self);
+  Result := (GetSignature = 'REFR') and not GetIsVisibleWhenDistant and GetIsInExterior and
+    Supports(GetRecordBySignature('NAME'), IwbContainerElementRef, lName) and
+    Supports(lName.LinksTo, IwbMainRecord, lBase) and lBase.HasVisibleWhenDistantMesh;
+end;
+
+function TwbMainRecord.ApplyNeededVisibleWhenDistant(const aReport: TProc<string>): Boolean;
+begin
+  var lRefHold: TRefGuard;
+  RefShortHold(lRefHold, Self);
+  Result := False;
+  if not GetNeedsVisibleWhenDistant then
+    Exit;
+  if not GetIsEditable then begin
+    if Assigned(aReport) then
+      aReport('Can''t change: ' + GetName);
+    Exit;
+  end;
+  if Assigned(aReport) then
+    aReport('Setting VWD: ' + GetName);
+  SetIsVisibleWhenDistant(True);
+  Result := True;
 end;
 
 function TwbMainRecord.GetHighestOverrideOrSelf(aMaxLoadOrder: Integer): IwbMainRecord;

@@ -1745,6 +1745,12 @@ type
     procedure Apply(const aReport: TProc<string>);
   end;
 
+  TwbVisibleWhenDistantCopyPlan = record
+    Records : TDynElements;
+    class function Plan(const aRecords: TArray<IwbMainRecord>; const aReport: TProc<string>): TwbVisibleWhenDistantCopyPlan; static;
+    class procedure AfterCopy(const aElement: IwbElement); static;
+  end;
+
   TwbLocalizationPlan = record
     Target          : IwbFile;
     Elements        : TDynElements;
@@ -2270,6 +2276,9 @@ type
     function GetIsVisibleWhenDistant: Boolean;
     procedure SetIsVisibleWhenDistant(aValue: Boolean);
     function GetHasVisibleWhenDistantMesh: Boolean;
+    function GetIsInExterior: Boolean;
+    function GetNeedsVisibleWhenDistant: Boolean;
+    function ApplyNeededVisibleWhenDistant(const aReport: TProc<string>): Boolean;
     function GetHasMesh: Boolean;
     function GetHasPrecombinedMesh: Boolean;
     function GetPrecombinedMesh: string;
@@ -2433,6 +2442,10 @@ type
       write SetIsVisibleWhenDistant;
     property HasVisibleWhenDistantMesh: Boolean
       read GetHasVisibleWhenDistantMesh;
+    property IsInExterior: Boolean
+      read GetIsInExterior;
+    property NeedsVisibleWhenDistant: Boolean
+      read GetNeedsVisibleWhenDistant;
     property HasMesh: Boolean
       read GetHasMesh;
     property HasPrecombinedMesh: Boolean
@@ -25559,6 +25572,52 @@ begin
     if lRecord.RemoveInjected(False) and Assigned(aReport) then
       aReport('Injected references in ' + lRecord.Name + ' could not all be removed automatically.');
   end;
+end;
+
+{ TwbVisibleWhenDistantCopyPlan }
+
+class function TwbVisibleWhenDistantCopyPlan.Plan(const aRecords: TArray<IwbMainRecord>; const aReport: TProc<string>): TwbVisibleWhenDistantCopyPlan;
+var
+  lElements : TDynElements;
+  lRecord   : IwbMainRecord;
+  j         : Integer;
+begin
+  Result := Default(TwbVisibleWhenDistantCopyPlan);
+  for lRecord in aRecords do
+    if (lRecord.Signature = 'REFR') and lRecord.IsInExterior then begin
+      SetLength(lElements, Succ(Length(lElements)));
+      lElements[High(lElements)] := lRecord;
+    end;
+
+  if Length(lElements) > 1 then begin
+    wbMergeSortPtr(@lElements[0], Length(lElements), CompareElementsFormIDAndLoadOrder);
+    j := 0;
+    for var i := Succ(Low(lElements)) to High(lElements) do begin
+      if (lElements[j] as IwbMainRecord).LoadOrderFormID <> (lElements[i] as IwbMainRecord).LoadOrderFormID then
+        Inc(j);
+      if j <> i then
+        lElements[j] := lElements[i];
+    end;
+    SetLength(lElements, Succ(j));
+  end;
+
+  for var lElement in lElements do begin
+    lRecord := lElement as IwbMainRecord;
+    if lRecord.NeedsVisibleWhenDistant then
+      if lRecord.HasErrors then begin
+        if Assigned(aReport) then
+          aReport('Skipping: ' + lRecord.Name);
+      end else
+        Result.Records := Result.Records + [lElement];
+  end;
+end;
+
+class procedure TwbVisibleWhenDistantCopyPlan.AfterCopy(const aElement: IwbElement);
+var
+  lRecord : IwbMainRecord;
+begin
+  if Supports(aElement, IwbMainRecord, lRecord) then
+    lRecord.IsVisibleWhenDistant := True;
 end;
 
 { TwbLocalizationPlan }

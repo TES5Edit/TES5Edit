@@ -9506,28 +9506,6 @@ begin
   InvalidateElementsTreeView(NoNodes);
 end;
 
-function IsExterior(aElement: IwbElement): Boolean;
-var
-  GroupRecord: IwbGroupRecord;
-begin
-  Result := False;
-  if not Assigned(aElement) then
-    Exit;
-  if Supports(aElement, IwbGroupRecord, GroupRecord) then
-    case GroupRecord.GroupType of
-      0: begin
-        Result := TwbSignature(GroupRecord.GroupLabel) = 'WRLD';
-        Exit;
-      end;
-      1, 4, 5: begin
-        Result := True;
-        Exit;
-      end;
-      2, 3: Exit;
-    end;
-  Result := IsExterior(aElement.Container);
-end;
-
 procedure TfrmMain.mniNavSetVWDAutoClick(Sender: TObject);
 const
   sJustWait                   = 'Setting VWD for all REFR with VWD Mesh. Please wait...';
@@ -9536,8 +9514,6 @@ var
   StartNode, Node, NextNode   : PVirtualNode;
   NodeData                    : PNavNodeData;
   MainRecord                  : IwbMainRecord;
-  MainRecord2                 : IwbMainRecord;
-  NameRec                     : IwbContainerElementRef;
   Count                       : Cardinal;
   ChangeCount                 : Cardinal;
   StartTick                   : UInt64;
@@ -9580,22 +9556,13 @@ begin
         NodeData := vstNav.GetNodeData(Node);
 
         if Supports(NodeData.Element, IwbMainRecord, MainRecord) and
-          (MainRecord.Signature = 'REFR') and
-          not MainRecord.IsVisibleWhenDistant and
-          IsExterior(MainRecord) and
-          Supports(MainRecord.RecordBySignature['NAME'], IwbContainerElementRef, NameRec) and
-          Supports(NameRec.LinksTo, IwbMainRecord, MainRecord2) and
-          MainRecord2.HasVisibleWhenDistantMesh then begin
-
-          if not MainRecord.IsEditable then
-            AddMessage('Can''t change: ' + MainRecord.Name)
-          else begin
-            AddMessage('Setting VWD: ' + MainRecord.Name);
-            MainRecord.IsVisibleWhenDistant := True;
-            Inc(ChangeCount);
-            vstNav.DeleteNode(Node);
-          end;
-
+          MainRecord.ApplyNeededVisibleWhenDistant(
+            procedure(aMessage: string)
+            begin
+              AddMessage(aMessage);
+            end) then begin
+          Inc(ChangeCount);
+          vstNav.DeleteNode(Node);
         end;
 
         Node := NextNode;
@@ -9626,14 +9593,6 @@ begin
   end;
 end;
 
-procedure SetVWDCallback(const aElement: IwbElement);
-var
-  MainRecord: IwbMainRecord;
-begin
-  if Supports(aElement, IwbMainRecord, MainRecord) then
-    MainRecord.IsVisibleWhenDistant := True;
-end;
-
 procedure TfrmMain.mniNavSetVWDAutoIntoClick(Sender: TObject);
 const
   sJustWaitScan               = 'Scanning for REFR without VWD Flag but with VWD Mesh';
@@ -9642,9 +9601,7 @@ var
   StartNode, Node, NextNode   : PVirtualNode;
   NodeData                    : PNavNodeData;
   MainRecord                  : IwbMainRecord;
-  MainRecord2                 : IwbMainRecord;
-  NameRec                     : IwbContainerElementRef;
-  Elements                    : TDynElements;
+  Records                     : TDynMainRecords;
 begin
   if not xeContext.Settings.EditAllowed then
     Exit;
@@ -9668,8 +9625,8 @@ begin
       i, j : Integer;
     begin
       j := 0;
-      Elements := nil;
-      SetLength(Elements, 1024);
+      Records := nil;
+      SetLength(Records, 1024);
       try
         for i := Low(Selection) to High(Selection) do begin
           StartNode := Selection[i];
@@ -9682,15 +9639,12 @@ begin
             NextNode := vstNav.GetPrevious(Node);
             NodeData := vstNav.GetNodeData(Node);
 
-            if Supports(NodeData.Element, IwbMainRecord, MainRecord) and
-              (MainRecord.Signature = 'REFR') and IsExterior(MainRecord) then begin
-
-                if j > High(Elements) then
-                  SetLength(Elements, Length(Elements)*2);
-                Elements[j] := MainRecord;
-                Inc(j);
-
-              end;
+            if Supports(NodeData.Element, IwbMainRecord, MainRecord) then begin
+              if j > High(Records) then
+                SetLength(Records, Length(Records)*2);
+              Records[j] := MainRecord;
+              Inc(j);
+            end;
 
             Node := NextNode;
             if Node = StartNode then
@@ -9702,47 +9656,15 @@ begin
         UpdatePnlCancelVisible;
       end;
 
-      SetLength(Elements, j);
+      SetLength(Records, j);
 
-      if Length(Elements) > 1 then begin
-        wbMergeSortPtr(@Elements[0], Length(Elements), CompareElementsFormIDAndLoadOrder);
-
-        j := 0;
-        for i := Succ(Low(Elements)) to High(Elements) do begin
-          if (Elements[j] as IwbMainRecord).LoadOrderFormID <> (Elements[i] as IwbMainRecord).LoadOrderFormID then
-            Inc(j);
-          if j <> i then
-            Elements[j] := Elements[i];
-        end;
-        SetLength(Elements, Succ(j));
-      end;
-
-      if Length(Elements) > 0 then begin
-
-        j := 0;
-        for i := Low(Elements) to High(Elements) do begin
-          MainRecord := Elements[i] as IwbMainRecord;
-          if not MainRecord.IsVisibleWhenDistant and
-            Supports(MainRecord.RecordBySignature['NAME'], IwbContainerElementRef, NameRec) and
-            Supports(NameRec.LinksTo, IwbMainRecord, MainRecord2) and
-            MainRecord2.HasVisibleWhenDistantMesh then begin
-
-            if MainRecord.HasErrors then
-              AddMessage('[Setting VWD for all REFR with VWD Mesh] Skipping: ' + MainRecord.Name)
-            else begin
-              if j <> i then
-                Elements[j] := Elements[i];
-              Inc(j);
-            end;
-
-          end;
-        end;
-        SetLength(Elements, j);
-
-      end;
-
-      if Length(Elements) > 0 then
-        CopyInto(False, False, False, False, False, Elements, SetVWDCallback);
+      var lPlan := TwbVisibleWhenDistantCopyPlan.Plan(Records,
+        procedure(aMessage: string)
+        begin
+          AddMessage('[Setting VWD for all REFR with VWD Mesh] ' + aMessage);
+        end);
+      if Length(lPlan.Records) > 0 then
+        CopyInto(False, False, False, False, False, lPlan.Records, TwbVisibleWhenDistantCopyPlan.AfterCopy);
     end);
 
     vstNav.Invalidate;
