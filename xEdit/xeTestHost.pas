@@ -599,9 +599,10 @@ begin
       ShowMessage('testchangeformid requires -testchangeformid:<filename> -testchangeformidrecords:<EditorID>@<module>[,...] ' +
         '(setvwd, setvwdinto: also @<module>, the file''s node) -testchangeformidout:<folder> ' +
         '[-testchangeformidop:<changeformid|changerefs|batchrefs|cleanupinjected|localize|locview|setvwd|setvwdinto|copyidle>] ' +
-        '(copyidle: the idle list answered with the next of -testchangeformidrefs, a listed folder, none or cancel; the model ' +
+        '(copyidle: the idle list answered with the next of -testchangeformidrefs, listed folders joined by ;, none or cancel; the model ' +
         'prefix prompt with the next of -testchangeformidids) ' +
-        '[-testchangeformidshift] [-testchangeformidtarget:<module>] (batchrefs, localize: the file focused) ' +
+        '[-testchangeformidshift] [-testchangeformidtarget:<module|new>] (batchrefs, localize: the file focused; new: the ' +
+        'picker''s first <new file> template, its name prompt answered with the next of -testchangeformidids) ' +
         '[-testchangeformidids:<hex|empty|offered|cancel>[,...]] ' +
         '[-testchangeformidanswers:<yes|no|yesall|cancel|ok|translate:<from>:<to>>[,...]] ' +
         '[-testchangeformidrefs:<all|none|cancel|<index>[;<index>...]>[,...]] [-testchangeformidcsv:<file|cancel>] ' +

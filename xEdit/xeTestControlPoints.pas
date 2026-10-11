@@ -4628,7 +4628,7 @@ begin
   lLines := TestHost.TestChangeFormIDLines;
   try
     TestHost.TestChangeFormIDTarget := nil;
-    if xeTestSwitches.ChangeFormIDTarget <> '' then begin
+    if (xeTestSwitches.ChangeFormIDTarget <> '') and not SameText(xeTestSwitches.ChangeFormIDTarget, 'new') then begin
       TestHost.TestChangeFormIDTarget := FindFile(xeTestSwitches.ChangeFormIDTarget);
       if not Assigned(TestHost.TestChangeFormIDTarget) then
         raise Exception.Create(xeTestSwitches.ChangeFormIDTarget + ' is not loaded');
@@ -4742,6 +4742,8 @@ begin
       SetKeyboardState(lState);
     end;
     lLines.Add('call' + #9 + 'shift ' + BoolToStr(GetKeyState(VK_SHIFT) < 0, True));
+    if xeTestSwitches.FileLists <> '' then
+      TestWriteFileLists;
     TestHost.TestChangeFormIDMessages := mmoMessages.Lines.Count;
 
     TestHost.TestChangeFormIDAnswer := TTimer.Create(Self);
@@ -5008,13 +5010,15 @@ begin
   lResult := mrNone;
   if lForm is TfrmModuleSelect then begin
     lExtra := 'offered: ' + string.Join(' | ', TfrmModuleSelect(lForm).AllModules.ToStrings(False));
-    var lOffered := False;
-    if Assigned(TestHost.TestChangeFormIDTarget) then
-      for var lInfo in TfrmModuleSelect(lForm).AllModules do
+    var lOffered: PwbModuleInfo := nil;
+    for var lInfo in TfrmModuleSelect(lForm).AllModules do
+      if Assigned(TestHost.TestChangeFormIDTarget) then begin
         if lInfo = PwbModuleInfo(TestHost.TestChangeFormIDTarget.ModuleInfo) then
-          lOffered := True;
-    if lOffered then begin
-      Include(PwbModuleInfo(TestHost.TestChangeFormIDTarget.ModuleInfo).miFlags, mfTagged);
+          lOffered := lInfo;
+      end else if SameText(xeTestSwitches.ChangeFormIDTarget, 'new') and (mfTemplate in lInfo.miFlags) and not Assigned(lOffered) then
+        lOffered := lInfo;
+    if Assigned(lOffered) then begin
+      Include(lOffered.miFlags, mfTagged);
       lResult := mrOk;
     end else begin
       TestHost.TestChangeFormIDNotOffered := True;
@@ -5062,13 +5066,17 @@ begin
         lExtra := lExtra + ' listed answer cancel';
       end else begin
         lList.ItemIndex := -1;
-        if lToken <> 'none' then begin
-          for var i := 0 to Pred(lList.Count) do
-            if SameText(lList.Items[i], lToken) then
-              lList.Selected[i] := True;
-          if lList.ItemIndex < 0 then
-            lExtra := lExtra + ' ' + lToken + ' not listed';
-        end;
+        if lToken <> 'none' then
+          for var lFolder in lToken.Split([';']) do begin
+            var lListed := False;
+            for var i := 0 to Pred(lList.Count) do
+              if SameText(lList.Items[i], lFolder) then begin
+                lList.Selected[i] := True;
+                lListed := True;
+              end;
+            if not lListed then
+              lExtra := lExtra + ' ' + lFolder + ' not listed';
+          end;
         lExtra := lExtra + ' listed answer ' + lToken + ' selected ' + IntToStr(lList.ItemIndex);
         lResult := mrOk;
       end;
@@ -5109,7 +5117,7 @@ begin
     else
       lExtra := 'focused none';
     lResult := mrOk;
-  end else if SameText(lForm.Caption, 'Model Prefix') then begin
+  end else if SameText(lForm.Caption, 'Model Prefix') or SameText(lForm.Caption, 'New Module File') then begin
     lEdit := FindEdit(lForm);
     if Assigned(lEdit) then
       lExtra := 'offered: ' + lEdit.Text;
