@@ -3045,6 +3045,13 @@ var
   lNewRecord : IwbMainRecord;
   lUpdate    : TwbReferenceUpdate;
   lKnown     : Boolean;
+  lOldID     : TwbFormID;
+  lNewID     : TwbFormID;
+  lOwn       : IwbMainRecord;
+  lHeldIDs   : TArray<TwbFormID>;
+  lHeld      : TArray<IwbMainRecord>;
+  lMovedIDs  : TArray<TwbFormID>;
+  lMoved     : TArray<IwbMainRecord>;
   s          : string;
   j          : Integer;
 
@@ -3052,6 +3059,65 @@ var
   begin
     if Assigned(aReport) then
       aReport(aText);
+  end;
+
+  function FormIDOf(const aRecord: IwbMainRecord): TwbFormID;
+  begin
+    for var k := High(lMoved) downto 0 do
+      if lMoved[k].Equals(aRecord) then
+        Exit(lMovedIDs[k]);
+    Result := aRecord.LoadOrderFormID;
+  end;
+
+  function OwnRecord(const aFormID: TwbFormID): IwbMainRecord;
+  begin
+    for var k := High(lHeldIDs) downto 0 do
+      if lHeldIDs[k] = aFormID then
+        Exit(lHeld[k]);
+    Result := GetOwnRecordByLoadOrderFormID(aFormID);
+  end;
+
+  procedure Hold(const aFormID: TwbFormID; const aRecord: IwbMainRecord);
+  begin
+    lHeldIDs := lHeldIDs + [aFormID];
+    SetLength(lHeld, Length(lHeldIDs));
+    lHeld[High(lHeld)] := aRecord;
+  end;
+
+  procedure Split(const aText: string; aValues: TStrings);
+  var
+    lValue : string;
+    p      : Integer;
+  begin
+    aValues.Clear;
+    if Trim(aText) = '' then
+      Exit;
+    p := 1;
+    while True do begin
+      while (p <= Length(aText)) and (aText[p] <= ' ') do
+        Inc(p);
+      lValue := '';
+      if (p <= Length(aText)) and (aText[p] = '"') then begin
+        Inc(p);
+        while p <= Length(aText) do begin
+          if aText[p] = '"' then begin
+            Inc(p);
+            if (p > Length(aText)) or (aText[p] <> '"') then
+              Break;
+          end;
+          lValue := lValue + aText[p];
+          Inc(p);
+        end;
+      end;
+      while (p <= Length(aText)) and (aText[p] <> ',') do begin
+        lValue := lValue + aText[p];
+        Inc(p);
+      end;
+      aValues.Add(Trim(lValue));
+      if p > Length(aText) then
+        Break;
+      Inc(p);
+    end;
   end;
 
 begin
@@ -3063,13 +3129,13 @@ begin
   lLine := TStringList.Create;
   try
     for var i := 1 to Pred(aLines.Count) do begin
-      lLine.CommaText := aLines[i];
+      Split(aLines[i], lLine);
       if lLine.Count <> 7 then begin
         Report('Skipping line '+IntToStr(i+1)+': 7 values expected but '+IntToStr(lLine.Count)+' found.');
         Continue;
       end;
 
-      s := Trim(lLine[1]);
+      s := lLine[1];
       lOldMaster := flContextObj.FileByModuleName(s);
       if not Assigned(lOldMaster) then begin
         Report('Skipping line '+IntToStr(i+1)+': Old Master "'+s+'" is not loaded.');
@@ -3079,7 +3145,7 @@ begin
         Continue;
       end;
 
-      s := Trim(lLine[5]);
+      s := lLine[5];
       lNewMaster := flContextObj.FileByModuleName(s);
       if not Assigned(lNewMaster) then begin
         Report('Skipping line '+IntToStr(i+1)+': New Master "'+s+'" is not loaded.');
@@ -3089,7 +3155,7 @@ begin
         Continue;
       end;
 
-      s := Trim(lLine[2]);
+      s := lLine[2];
       j := StrToIntDef(s, -1);
       if (j < 0) or (j > $FFFFFF) then begin
         Report('Skipping line '+IntToStr(i+1)+': Old FormID "'+s+'" is not in the valid range.');
@@ -3101,7 +3167,7 @@ begin
         Continue;
       end;
 
-      s := Trim(lLine[6]);
+      s := lLine[6];
       j := StrToIntDef(s, -1);
       if (j < 0) or (j > $FFFFFF) then begin
         Report('Skipping line '+IntToStr(i+1)+': New FormID "'+s+'" is not in the valid range.');
@@ -3118,17 +3184,17 @@ begin
         Continue;
       end;
 
-      s := Trim(lLine[0]);
+      s := lLine[0];
       if not SameText(lOldRecord.Signature, s) then
         Report('Warning line '+IntToStr(i+1)+': Old Record do not have expected Signature ("'+lOldRecord.Signature+'" vs. "'+s+'")".');
       if not SameText(lNewRecord.Signature, s) then
         Report('Warning line '+IntToStr(i+1)+': New Record do not have expected Signature ("'+lNewRecord.Signature+'" vs. "'+s+'")".');
 
-      s := Trim(lLine[3]);
+      s := lLine[3];
       if not SameText(lOldRecord.EditorID, s) then
         Report('Warning line '+IntToStr(i+1)+': Old Record does not have expected EditorID ("'+lOldRecord.EditorID+'" vs. "'+s+'")".');
 
-      s := Trim(lLine[4]);
+      s := lLine[4];
       if not SameText(lNewRecord.EditorID, s) then
         Report('Warning line '+IntToStr(i+1)+': New Record does not have expected EditorID ("'+lNewRecord.EditorID+'" vs. "'+s+'")".');
 
@@ -3136,6 +3202,22 @@ begin
       if Length(lUpdate.Items) < 1 then begin
         Report('Skipping line '+IntToStr(i+1)+': Old Record "'+lOldRecord.Name+'" is not referenced by any record in file "'+lSelfRef.Name+'".');
         Continue;
+      end;
+
+      lOldID := FormIDOf(lOldRecord);
+      lNewID := FormIDOf(lNewRecord);
+      if lOldID <> lNewID then begin
+        lOwn := OwnRecord(lOldID);
+        if Assigned(lOwn) then begin
+          if Assigned(OwnRecord(lNewID)) then begin
+            Report('Skipping line '+IntToStr(i+1)+': File "'+lSelfRef.Name+'" already holds a record with FormID ['+lNewID.ToDisplayString(lLayout)+'].');
+            Continue;
+          end;
+          Hold(lOldID, nil);
+          Hold(lNewID, lOwn);
+          lMoved := lMoved + [lOwn];
+          lMovedIDs := lMovedIDs + [lNewID];
+        end;
       end;
 
       SetLength(Result.Entries, Succ(Length(Result.Entries)));
