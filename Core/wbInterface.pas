@@ -1748,6 +1748,7 @@ type
   TwbLocalizationPlan = record
     Target          : IwbFile;
     Elements        : TDynElements;
+    Unresolved      : TArray<IwbMainRecord>;
     TranslatedCount : Integer;
     procedure Apply(const aVocabulary: TwbLocalizationVocabulary; const aStep: TProc);
   end;
@@ -25509,6 +25510,8 @@ var
   lText     : string;
   lID       : Cardinal;
 begin
+  if Length(Unresolved) > 0 then
+    Exit;
   lHandler := Target.ContextObj.LocalizationHandler;
   lLocalize := not Target.IsLocalized;
   for var lElement in Elements do begin

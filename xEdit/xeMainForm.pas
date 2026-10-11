@@ -11048,6 +11048,17 @@ begin
       PostAddMessage('[Processing] Collecting localizable values...');
       lPlan := _File.PlanLocalization;
 
+      if Length(lPlan.Unresolved) > 0 then begin
+        var lNames := '';
+        for var lRecord in lPlan.Unresolved do begin
+          if lNames <> '' then
+            lNames := lNames + '; ';
+          lNames := lNames + lRecord.Name;
+        end;
+        PostAddMessage('[Error] Localized strings that can not be resolved, nothing was changed: ' + lNames);
+        Exit;
+      end;
+
       PostAddMessage('[Processing] Performing operation...');
       lPlan.Apply(lVocabulary,
         procedure

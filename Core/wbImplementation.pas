@@ -3270,11 +3270,33 @@ function TwbFile.PlanLocalization: TwbLocalizationPlan;
 
 var
   lSelfRef : IwbFile;
+  lHandler : TwbLocalizationHandler;
+  lRecord  : IwbMainRecord;
+  lText    : string;
+  lID      : Cardinal;
+  lKnown   : Boolean;
 begin
   lSelfRef := Self;
   Result := Default(TwbLocalizationPlan);
   Result.Target := lSelfRef;
   Gather(lSelfRef, Result.Elements);
+  if not lSelfRef.IsLocalized then
+    Exit;
+  lHandler := flContextObj.LocalizationHandler;
+  for var lElement in Result.Elements do begin
+    lID := lElement.StringID;
+    if (lID = 0) or lHandler.GetValue(lID, lElement, lText) then
+      Continue;
+    lRecord := lElement.ContainingMainRecord;
+    lKnown := not Assigned(lRecord);
+    for var lListed in Result.Unresolved do
+      if lListed.Equals(lRecord) then begin
+        lKnown := True;
+        Break;
+      end;
+    if not lKnown then
+      Result.Unresolved := Result.Unresolved + [lRecord];
+  end;
 end;
 
 function TwbFile.AddCopy(const aSource: IwbElement; aFlags: TwbCopyFlags; const aRules: TwbCopyRules): IwbElement;
