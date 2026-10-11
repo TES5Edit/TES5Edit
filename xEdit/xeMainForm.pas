@@ -4399,10 +4399,11 @@ begin
 
           if (xeToolMode in [tmMasterUpdate, tmMasterRestore]) and (Length(Modules)>1) and lGameDef.IsFallout3 then begin
             AgeDateTime := Modules[0].miDateTime;
-            for i := 1 to High(Modules) do begin
-              AgeDateTime := AgeDateTime + (1/24/60);
-              TFile.SetLastWriteTime(xeContext.Settings.DataPath + Modules[i].miOriginalName, AgeDateTime);
-            end;
+            for i := 1 to High(Modules) do
+              if not (mfIsHardcoded in Modules[i].miFlags) then begin
+                AgeDateTime := AgeDateTime + (1/24/60);
+                TFile.SetLastWriteTime(xeContext.Settings.DataPath + Modules[i].miOriginalName, AgeDateTime);
+              end;
           end;
         end;
 
