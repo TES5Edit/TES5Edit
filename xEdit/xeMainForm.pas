@@ -5382,15 +5382,21 @@ begin
   if Assigned(CheckGitHubReleaseThread) then begin
     if CheckGitHubReleaseThread.Finished then
       FreeAndNil(CheckGitHubReleaseThread)
-    else
-      TerminateThread(CheckGitHubReleaseThread.Handle, 0);
+    else begin
+      CheckGitHubReleaseThread.FreeOnTerminate := True;
+      CheckGitHubReleaseThread.Terminate;
+      CheckGitHubReleaseThread := nil;
+    end;
   end;
 
   if Assigned(CheckNexusModsReleaseThread) then begin
     if CheckNexusModsReleaseThread.Finished then
       FreeAndNil(CheckNexusModsReleaseThread)
-    else
-      TerminateThread(CheckNexusModsReleaseThread.Handle, 0);
+    else begin
+      CheckNexusModsReleaseThread.FreeOnTerminate := True;
+      CheckNexusModsReleaseThread.Terminate;
+      CheckNexusModsReleaseThread := nil;
+    end;
   end;
 
   if not QuickCleanSaveFailed and (SaveChanged >= srAbort) then begin
@@ -20386,8 +20392,10 @@ begin
       J.Free;
     end;
   except end;
+  if Terminated then
+    Exit;
   Synchronize(procedure begin
-    if Assigned(frmMain) then begin
+    if Assigned(frmMain) and not Terminated then begin
       frmMain.GitHubVersion := vmax;
       frmMain.ShowGitHubHint := Now + (1/24/60/6); // 10 seconds
     end;
@@ -20425,8 +20433,10 @@ begin
       end;
     end;
   except end;
+  if Terminated then
+    Exit;
   Synchronize(procedure begin
-    if Assigned(frmMain) then begin
+    if Assigned(frmMain) and not Terminated then begin
       frmMain.NexusModsVersion := vmax;
       frmMain.ShowNexusModsHint := Now + (1/24/60/6); // 10 seconds
     end;
