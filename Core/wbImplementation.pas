@@ -1292,6 +1292,7 @@ type
     function mrStruct: PwbMainRecordStruct; inline;
 
     procedure mrInvalidateNameCache;
+    procedure SortOverrides;
 
     procedure ElementChanged(const aElement: IwbElement; aContainer: Pointer); override; final;
     function RemoveElement(aPos: Integer; aMarkModified: Boolean = False): IwbElement; overload; override; final;
@@ -15040,8 +15041,7 @@ begin
       lMasters.Sorted := True;
       lMasters.Duplicates := dupIgnore;
       try
-        if not (mrsOverridesSorted in mrStates) then
-          GetOverride(0); {forces sorting of overrides}
+        SortOverrides;
 
         for i := Low(mrOverrides) to High(mrOverrides) do begin
           _File := mrOverrides[i]._File;
@@ -15194,11 +15194,7 @@ begin
   if (aIndex < 0) or (aIndex >= Length(mrOverrides)) then
     Exit(nil);
 
-  if not (mrsOverridesSorted in mrStates) then begin
-    wbMergeSortPtr(@mrOverrides[0], Length(mrOverrides), CompareOverrides);
-    Include(mrStates, mrsOverridesSorted);
-  end;
-
+  SortOverrides;
   Result := mrOverrides[aIndex];
 end;
 
@@ -15535,6 +15531,7 @@ begin
 
   var lRefHold: TRefGuard;
   RefShortHold(lRefHold, Self);
+  SortOverrides;
   for var lIndex := High(mrOverrides) downto Low(mrOverrides) do begin
     var lOverride := mrOverrides[lIndex];
     if not lOverride.IsPartialForm then
@@ -17057,6 +17054,7 @@ begin
     (lMaster as IwbMainRecordInternal).RemoveOverride(Self)
   else
     if Length(mrOverrides) > 0 then begin
+      SortOverrides;
       lMaster := mrOverrides[0];
       (lMaster as IwbMainRecordInternal).YouAreTheMaster(mrOverrides, mrReferencedBy, mrReferencedByCount);
     end;
@@ -17834,8 +17832,10 @@ begin
     if Assigned(mrMaster) then
       (IwbMainRecord(mrMaster) as IwbMainRecordInternal).RemoveOverride(Self)
     else
-      if Length(mrOverrides) > 0 then
+      if Length(mrOverrides) > 0 then begin
+        SortOverrides;
         (mrOverrides[0] as IwbMainRecordInternal).YouAreTheMaster(mrOverrides, mrReferencedBy, mrReferencedByCount);
+      end;
 
     mrMaster := nil;
     mrOverrides := nil;
@@ -17988,6 +17988,15 @@ begin
   Result := TwbFormID.Compare(IwbMainRecord(Item1).LoadOrderFormID , IwbMainRecord(Item2).LoadOrderFormID);
   if Result = 0 then
     Result := CompareReferencedByFile(Item1, Item2);
+end;
+
+procedure TwbMainRecord.SortOverrides;
+begin
+  if mrsOverridesSorted in mrStates then
+    Exit;
+  if Length(mrOverrides) > 1 then
+    wbMergeSortPtr(@mrOverrides[0], Length(mrOverrides), CompareOverrides);
+  Include(mrStates, mrsOverridesSorted);
 end;
 
 procedure TwbMainRecord.SortReferencedBy;
