@@ -445,6 +445,8 @@ type
 
     function GetLocalized: TwbTriBool;
     procedure SetLocalized(const aValue: TwbTriBool);
+    procedure Delocalize; virtual;
+    function GetStringID: Cardinal; virtual;
 
     function CopyInto(const aFile: IwbFile; aFlags: TwbCopyFlags; const aRules: TwbCopyRules): IwbElement;
 
@@ -1068,6 +1070,8 @@ type
 
     {---IwbElement---}
     function GetRawDataAsString: string; override; final;
+    procedure Delocalize; override; final;
+    function GetStringID: Cardinal; override; final;
 
     {---IwbContainerElementRef---}
     procedure PrepareSave; override;
@@ -23936,6 +23940,15 @@ begin
   end;
 end;
 
+procedure TwbElement.Delocalize;
+begin
+end;
+
+function TwbElement.GetStringID: Cardinal;
+begin
+  Result := 0;
+end;
+
 procedure TwbElement.SetMastersUpdated(aValue: Boolean);
 begin
   if aValue then
@@ -28169,6 +28182,59 @@ begin
     if Assigned(MainRecord) and ((MainRecord.Signature = 'GMST') or (MainRecord.Signature = 'DFOB')) then
       Result := cpBenign;
   end;
+end;
+
+procedure TwbDataContainer.Delocalize;
+var
+  SelfRef    : IwbContainerElementRef;
+  lStringDef : IwbLStringDef;
+  lID        : Cardinal;
+  lText      : string;
+  lLocalized : TwbTriBool;
+  OldValue, NewValue: Variant;
+begin
+  if not Supports(GetValueDef, IwbLStringDef, lStringDef) then
+    Exit;
+
+  if not wbIsInternalEdit then begin
+    if not ContextObj.Settings.EditAllowed then
+      raise Exception.Create(GetName + ' can not be edited.');
+  end;
+
+  SelfRef := Self as IwbContainerElementRef;
+  DoInit(False);
+
+  if not lStringDef.TryGetStringID(GetDataBasePtr, dcDataEndPtr, Self, lID) then
+    Exit;
+
+  BeginUpdate;
+  try
+    lText := GetEditValue;
+    OldValue := GetNativeValue;
+    lLocalized := GetLocalized;
+    SetLocalized(tbFalse);
+    try
+      lStringDef.EditValue[GetDataBasePtr, dcDataEndPtr, Self] := lText;
+    except
+      SetLocalized(lLocalized);
+      raise;
+    end;
+    SetModified(True);
+    NewValue := GetNativeValue;
+    DoAfterSet(OldValue, NewValue);
+    NotifyChanged(eContainer);
+  finally
+    EndUpdate;
+  end;
+end;
+
+function TwbDataContainer.GetStringID: Cardinal;
+var
+  lStringDef : IwbLStringDef;
+begin
+  if not Supports(GetValueDef, IwbLStringDef, lStringDef) or
+     not lStringDef.TryGetStringID(GetDataBasePtr, dcDataEndPtr, Self, Result) then
+    Result := 0;
 end;
 
 function TwbDataContainer.GetDataBasePtr: Pointer;

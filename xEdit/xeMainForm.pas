@@ -8751,13 +8751,10 @@ begin
       // localization editor
       else if Element._File.IsLocalized and Assigned(Element.ValueDef) and (Element.ValueDef.DefType = dtLString) then begin
         with TfrmLocalization.Create(Self) do try
-          xeContext.LocalizationHandler.NoTranslate := true;
-          StringID := StrToInt64Def('$' + Element.Value, 0);
-          xeContext.LocalizationHandler.NoTranslate := false;
+          StringID := Element.StringID;
           EditValue(Element._File.FileName, StringID);
           ShowModal;
         finally
-          xeContext.LocalizationHandler.NoTranslate := false;
           Free;
         end;
         vstView.Invalidate;

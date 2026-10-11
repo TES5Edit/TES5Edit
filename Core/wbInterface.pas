@@ -1296,6 +1296,8 @@ type
 
     function GetLocalized: TwbTriBool;
     procedure SetLocalized(const aValue: TwbTriBool);
+    procedure Delocalize;
+    function GetStringID: Cardinal;
 
     property Found: Boolean
       read GetFound
@@ -1452,6 +1454,9 @@ type
     property Localized: TwbTriBool
       read GetLocalized
       write SetLocalized;
+
+    property StringID: Cardinal
+      read GetStringID;
 
     property MastersUpdated: Boolean
       read GetMastersUpdated;
@@ -3147,6 +3152,11 @@ type
     function SetFormater(const aFormater: IwbStringDefFormater): IwbLenStringDef;
   end;
 
+  IwbLStringDef = interface(IwbStringDef)
+    ['{2BA84994-4616-4874-BC81-BC4275549E23}']
+    function TryGetStringID(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; out aID: Cardinal): Boolean;
+  end;
+
   IwbByteArrayDef = interface(IwbValueDef)
     ['{3069E1AC-4307-421B-93E4-797E18075EF9}']
   end;
@@ -4529,7 +4539,6 @@ type
     function GetStringsPath: string;
   public
     Generation: Integer;
-    NoTranslate: Boolean;
     property _Files[Index: Integer]: TwbLocalizationFile read Get; default;
     property StringsPath: string read GetStringsPath;
     property ReuseDup: Boolean read fReuseDup write fReuseDup;
@@ -9070,7 +9079,9 @@ type
     procedure AfterConstruction; override; final;
   end;
 
-  TwbLStringDef = class(TwbStringDef)
+  TwbLStringDef = class(TwbStringDef, IwbLStringDef)
+  private
+    function IsStoredLocalized(const aElement: IwbElement): Boolean;
   protected
     constructor Create(aPriority   : TwbConflictPriority;
                        aRequired   : Boolean;
@@ -9084,6 +9095,9 @@ type
     procedure FromStringNative(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aValue: string; aTransformType: TwbStringTransformType); override; final;
     function GetSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer; override; final;
     function GetDefaultSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer; override; final;
+
+    {---IwbLStringDef---}
+    function TryGetStringID(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; out aID: Cardinal): Boolean;
   end;
 
   TwbLStringKCDef = class(TwbLStringDef)
@@ -23615,60 +23629,53 @@ begin
     Exit;
   end;
 
-  if aElement._File.IsLocalized then
-    if aElement.ContextObj.LocalizationHandler.NoTranslate then begin
-      // assign a string when delocalizing and NoTranslate is true
-      inherited FromStringNative(aBasePtr, aEndPtr, aElement, aValue, aTransformType);
-      aElement.Localized := tbFalse;
-    end else begin
-      // set localized string's value
-      ID := aElement.ContextObj.LocalizationHandler.SetValue(PCardinal(aBasePtr)^, aElement, aValue);
-      aElement.RequestStorageChange(aBasePtr, aEndPtr, SizeOf(Cardinal));
-      PCardinal(aBasePtr)^ := ID;
-      aElement.Localized := tbTrue;
-      //raise Exception.Create('Can not assign to a localized string')
-    end
-  else begin
+  if aElement._File.IsLocalized and (aElement.Localized <> tbFalse) then begin
+    // set localized string's value
+    ID := aElement.ContextObj.LocalizationHandler.SetValue(PCardinal(aBasePtr)^, aElement, aValue);
+    aElement.RequestStorageChange(aBasePtr, aEndPtr, SizeOf(Cardinal));
+    PCardinal(aBasePtr)^ := ID;
+    aElement.Localized := tbTrue;
+    //raise Exception.Create('Can not assign to a localized string')
+  end else begin
     inherited FromStringNative(aBasePtr, aEndPtr, aElement, aValue, aTransformType);
     aElement.Localized := tbFalse;
   end;
 end;
 
-function TwbLStringDef.GetSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer;
+function TwbLStringDef.IsStoredLocalized(const aElement: IwbElement): Boolean;
 var
-  Localized : Boolean;
-  _File     : IwbFile;
+  _File : IwbFile;
 begin
   case aElement.Localized of
-    tbFalse: Localized := False;
-    tbTrue: Localized := True;
+    tbFalse: Result := False;
+    tbTrue: Result := True;
   else
     _File := aElement._File;
-    Localized := Assigned(_File) and _File.IsLocalized;
+    Result := Assigned(_File) and _File.IsLocalized;
   end;
+end;
 
+function TwbLStringDef.TryGetStringID(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; out aID: Cardinal): Boolean;
+begin
+  aID := 0;
+  Result := Assigned(aBasePtr) and (NativeUInt(aEndPtr) - NativeUInt(aBasePtr) = SizeOf(Cardinal)) and IsStoredLocalized(aElement);
+  if Result then
+    aID := PCardinal(aBasePtr)^;
+end;
+
+function TwbLStringDef.GetSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
   if Assigned(aBasePtr) and Assigned(aEndPtr) and (NativeUInt(aBasePtr) >= NativeUInt(aEndPtr)) then
     Result := 0
-  else if Assigned(aBasePtr) and Assigned(aEndPtr) and Localized then
+  else if Assigned(aBasePtr) and Assigned(aEndPtr) and IsStoredLocalized(aElement) then
     Result := Min(4, NativeUInt(aEndPtr) - NativeUInt(aBasePtr))
   else
     Result := inherited GetSize(aBasePtr, aEndPtr, aElement);
 end;
 
 function TwbLStringDef.GetDefaultSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer;
-var
-  Localized : Boolean;
-  _File     : IwbFile;
 begin
-  case aElement.Localized of
-    tbFalse: Localized := False;
-    tbTrue: Localized := True;
-  else
-    _File := aElement._File;
-    Localized := Assigned(_File) and _File.IsLocalized;
-  end;
-
-  if Localized then
+  if IsStoredLocalized(aElement) then
     Result := 4
   else
     Result := inherited GetDefaultSize(aBasePtr, aEndPtr, aElement);
@@ -23676,19 +23683,9 @@ end;
 
 function TwbLStringDef.ToStringNative(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aTransformType: TwbStringTransformType): string;
 var
-  Localized : Boolean;
-  _File     : IwbFile;
-  Found     : Boolean;
+  Found : Boolean;
 begin
-  case aElement.Localized of
-    tbFalse: Localized := False;
-    tbTrue: Localized := True;
-  else
-    _File := aElement._File;
-    Localized := Assigned(_File) and _File.IsLocalized;
-  end;
-
-  if Localized then begin
+  if IsStoredLocalized(aElement) then begin
     if (NativeUInt(aEndPtr) - NativeUInt(aBasePtr)) <> 4 then begin
       if aTransformType = ttCheck then
         Result := 'lstring ID is not Int32'
@@ -25514,26 +25511,19 @@ var
 begin
   lHandler := Target.ContextObj.LocalizationHandler;
   lLocalize := not Target.IsLocalized;
-  try
-    for var lElement in Elements do begin
+  for var lElement in Elements do begin
+    if lLocalize then begin
       lText := lElement.EditValue;
-      if lLocalize then begin
-        if Assigned(aVocabulary) and aVocabulary.TryTranslate(lText) then
-          Inc(TranslatedCount);
-        lID := lHandler.AddValue(lText, lElement);
-        lElement.EditValue := sStringID + IntToHex(lID, 8);
-      end else begin
-        lHandler.NoTranslate := True;
-        lElement.EditValue := lText;
-        lHandler.NoTranslate := False;
-      end;
-      if Assigned(aStep) then
-        aStep();
-    end;
-    Target.IsLocalized := not Target.IsLocalized;
-  finally
-    lHandler.NoTranslate := False;
+      if Assigned(aVocabulary) and aVocabulary.TryTranslate(lText) then
+        Inc(TranslatedCount);
+      lID := lHandler.AddValue(lText, lElement);
+      lElement.EditValue := sStringID + IntToHex(lID, 8);
+    end else
+      lElement.Delocalize;
+    if Assigned(aStep) then
+      aStep();
   end;
+  Target.IsLocalized := not Target.IsLocalized;
 end;
 
 
@@ -27603,7 +27593,6 @@ begin
   lhContext := aContext;
   lFiles := TwbFastStringListIC.CreateSorted;
   fReuseDup := false;
-  NoTranslate := false;
 end;
 
 destructor TwbLocalizationHandler.Destroy;
@@ -27944,11 +27933,6 @@ var
   idx: integer;
 begin
   aValue := '';
-
-  if NoTranslate then begin
-    aValue := IntToHex(ID, 8);
-    Exit(True);
-  end;
 
   if ID = 0 then
     Exit(True);
