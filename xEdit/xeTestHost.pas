@@ -593,11 +593,14 @@ begin
        not (SameText(ChangeFormIDOp, 'changeformid') or SameText(ChangeFormIDOp, 'changerefs') or
             SameText(ChangeFormIDOp, 'batchrefs') or SameText(ChangeFormIDOp, 'cleanupinjected') or
             SameText(ChangeFormIDOp, 'localize') or SameText(ChangeFormIDOp, 'locview') or
-            SameText(ChangeFormIDOp, 'setvwd') or SameText(ChangeFormIDOp, 'setvwdinto')) or
+            SameText(ChangeFormIDOp, 'setvwd') or SameText(ChangeFormIDOp, 'setvwdinto') or
+            SameText(ChangeFormIDOp, 'copyidle')) or
        ((SameText(ChangeFormIDOp, 'batchrefs') or SameText(ChangeFormIDOp, 'localize')) and (ChangeFormIDTarget = '')) then begin
       ShowMessage('testchangeformid requires -testchangeformid:<filename> -testchangeformidrecords:<EditorID>@<module>[,...] ' +
         '(setvwd, setvwdinto: also @<module>, the file''s node) -testchangeformidout:<folder> ' +
-        '[-testchangeformidop:<changeformid|changerefs|batchrefs|cleanupinjected|localize|locview|setvwd|setvwdinto>] ' +
+        '[-testchangeformidop:<changeformid|changerefs|batchrefs|cleanupinjected|localize|locview|setvwd|setvwdinto|copyidle>] ' +
+        '(copyidle: the idle list answered with the next of -testchangeformidrefs, a listed folder, none or cancel; the model ' +
+        'prefix prompt with the next of -testchangeformidids) ' +
         '[-testchangeformidshift] [-testchangeformidtarget:<module>] (batchrefs, localize: the file focused) ' +
         '[-testchangeformidids:<hex|empty|offered|cancel>[,...]] ' +
         '[-testchangeformidanswers:<yes|no|yesall|cancel|ok|translate:<from>:<to>>[,...]] ' +

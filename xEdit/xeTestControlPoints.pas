@@ -4714,6 +4714,8 @@ begin
       lMenuItem := mniNavSetVWDAuto
     else if SameText(xeTestSwitches.ChangeFormIDOp, 'setvwdinto') then
       lMenuItem := mniNavSetVWDAutoInto
+    else if SameText(xeTestSwitches.ChangeFormIDOp, 'copyidle') then
+      lMenuItem := mniNavCopyIdle
     else
       lMenuItem := mniNavChangeFormID;
     if Assigned(lMenuItem) then
@@ -4764,6 +4766,8 @@ begin
           mniNavSetVWDAutoClick(lMenuItem)
         else if lMenuItem = mniNavSetVWDAutoInto then
           mniNavSetVWDAutoIntoClick(lMenuItem)
+        else if lMenuItem = mniNavCopyIdle then
+          mniNavCopyIdleClick(lMenuItem)
         else if not Assigned(lMenuItem) then
           TestChangeFormIDLocView(lLines)
         else
@@ -5046,6 +5050,28 @@ begin
         lExtra := lExtra + ' listed answer ' + lToken;
         lResult := mrOk;
       end;
+    end else if SameText(lForm.Caption, 'Which Idles do you want to copy?') then begin
+      lExtra := 'items ' + IntToStr(lList.Count);
+      lToken := NextToken(xeTestSwitches.ChangeFormIDRefs, TestHost.TestChangeFormIDRefIndex);
+      if lToken = '' then begin
+        lResult := mrCancel;
+        lExtra := lExtra + ' fallback';
+        TestHost.TestChangeFormIDFallback := True;
+      end else if lToken = 'cancel' then begin
+        lResult := mrCancel;
+        lExtra := lExtra + ' listed answer cancel';
+      end else begin
+        lList.ItemIndex := -1;
+        if lToken <> 'none' then begin
+          for var i := 0 to Pred(lList.Count) do
+            if SameText(lList.Items[i], lToken) then
+              lList.Selected[i] := True;
+          if lList.ItemIndex < 0 then
+            lExtra := lExtra + ' ' + lToken + ' not listed';
+        end;
+        lExtra := lExtra + ' listed answer ' + lToken + ' selected ' + IntToStr(lList.ItemIndex);
+        lResult := mrOk;
+      end;
     end else begin
       lExtra := ListItems;
       lResult := mrOk;
@@ -5083,6 +5109,44 @@ begin
     else
       lExtra := 'focused none';
     lResult := mrOk;
+  end else if SameText(lForm.Caption, 'Model Prefix') then begin
+    lEdit := FindEdit(lForm);
+    if Assigned(lEdit) then
+      lExtra := 'offered: ' + lEdit.Text;
+    lToken := NextToken(xeTestSwitches.ChangeFormIDIds, TestHost.TestChangeFormIDIdIndex);
+    if lToken = '' then begin
+      lResult := mrCancel;
+      lExtra := (lExtra + ' fallback').Trim;
+      TestHost.TestChangeFormIDFallback := True;
+    end else if lToken = 'cancel' then begin
+      lResult := mrCancel;
+      lExtra := (lExtra + ' listed answer cancel').Trim;
+    end else begin
+      if Assigned(lEdit) and (lToken <> 'offered') then
+        lEdit.Text := lToken;
+      if Assigned(lEdit) then
+        lExtra := lExtra + ' entered: ' + lEdit.Text;
+      lResult := mrOk;
+    end;
+  end else if SameText(xeTestSwitches.ChangeFormIDOp, 'copyidle') and string(lForm.Caption).StartsWith('EditorID ') then begin
+    lEdit := FindEdit(lForm);
+    if Assigned(lEdit) then
+      lExtra := 'offered: ' + lEdit.Text;
+    lToken := NextToken(xeTestSwitches.ChangeFormIDAnswers, TestHost.TestChangeFormIDAnswerIndex);
+    if lToken = '' then begin
+      lResult := mrCancel;
+      lExtra := (lExtra + ' fallback').Trim;
+      TestHost.TestChangeFormIDFallback := True;
+    end else if lToken = 'cancel' then begin
+      lResult := mrCancel;
+      lExtra := (lExtra + ' listed answer cancel').Trim;
+    end else begin
+      if Assigned(lEdit) and (lToken <> 'ok') then
+        lEdit.Text := lToken;
+      if Assigned(lEdit) then
+        lExtra := lExtra + ' entered: ' + lEdit.Text;
+      lResult := mrOk;
+    end;
   end else if string(lForm.Caption).StartsWith('New FormID') then begin
     lEdit := FindEdit(lForm);
     if Assigned(lEdit) then
