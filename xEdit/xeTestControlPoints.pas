@@ -92,6 +92,7 @@ type
     procedure TestChangeFormIDReportTimer(Sender: TObject);
     procedure TestChangeFormIDAfter(aLines: TStrings);
     procedure TestChangeFormIDNodes(aLines: TStrings);
+    procedure TestChangeFormIDLocView(aLines: TStrings);
     procedure TestChangeFormIDSave;
     procedure TestChangeFormIDWrite;
     procedure TestChangeFormIDOnClose;
@@ -4683,10 +4684,13 @@ begin
       lMenuItem := mniNavCleanupInjected
     else if SameText(xeTestSwitches.ChangeFormIDOp, 'localize') then
       lMenuItem := mniNavLocalizationSwitch
+    else if SameText(xeTestSwitches.ChangeFormIDOp, 'locview') then
+      lMenuItem := nil
     else
       lMenuItem := mniNavChangeFormID;
-    lLines.Add('menu' + #9 + LowerCase(xeTestSwitches.ChangeFormIDOp) + ' ' + BoolToStr(lMenuItem.Visible, True) + #9 + 'selected ' +
-      IntToStr(vstNav.SelectedCount) + #9 + 'focused first ' + BoolToStr(vstNav.FocusedNode = lFirst, True));
+    if Assigned(lMenuItem) then
+      lLines.Add('menu' + #9 + LowerCase(xeTestSwitches.ChangeFormIDOp) + ' ' + BoolToStr(lMenuItem.Visible, True) + #9 + 'selected ' +
+        IntToStr(vstNav.SelectedCount) + #9 + 'focused first ' + BoolToStr(vstNav.FocusedNode = lFirst, True));
     if lMenuItem = mniNavLocalizationSwitch then begin
       lLines.Add('caption' + #9 + StripHotkey(lMenuItem.Caption) + #9 + 'submenu ' + BoolToStr(mniNavLocalization.Visible, True));
       TestChangeFormIDLocalization(lLines, 'before', TestHost.TestChangeFormIDTarget);
@@ -4728,6 +4732,8 @@ begin
           mniNavCleanupInjectedClick(lMenuItem)
         else if lMenuItem = mniNavLocalizationSwitch then
           mniNavLocalizationSwitchClick(lMenuItem)
+        else if not Assigned(lMenuItem) then
+          TestChangeFormIDLocView(lLines)
         else
           mniNavChangeFormIDClick(lMenuItem);
         lLines.Add('returned');
@@ -4801,6 +4807,46 @@ begin
     aLines.Add('node' + #9 + IntToStr(i) + #9 + GetEnumName(TypeInfo(TConflictAll), Ord(lNodeData.ConflictAll)) + #9 +
       GetEnumName(TypeInfo(TConflictThis), Ord(lNodeData.ConflictThis)) + #9 + 'flags' + lFlags + #9 +
       'focused ' + BoolToStr(lNode = vstNav.FocusedNode, True) + #9 + 'selected ' + BoolToStr(vstNav.Selected[lNode], True));
+  end;
+end;
+
+procedure TxeTestFormHelper.TestChangeFormIDLocView(aLines: TStrings);
+var
+  lRows    : TArray<PVirtualNode>;
+  lColumn  : Integer;
+  lElement : IwbElement;
+begin
+  for var lRecord in TestHost.TestChangeFormIDRecords do begin
+    DoSetActiveRecord(IwbMainRecord(nil));
+    DoSetActiveRecord(lRecord, True);
+    vstView.FullExpand;
+    lColumn := -1;
+    for var c := Low(ActiveRecords) to High(ActiveRecords) do
+      if Assigned(ActiveRecords[c].Element) and ActiveRecords[c].Element.Equals(lRecord) then
+        lColumn := c;
+    if lColumn < 0 then begin
+      aLines.Add('locview' + #9 + lRecord.EditorID + #9 + 'no column');
+      Continue;
+    end;
+    lRows := nil;
+    for var lNode in vstView.Nodes(False) do begin
+      lElement := ViewCells(lNode)[lColumn].Element;
+      if Assigned(lElement) and Assigned(lElement.ValueDef) and (lElement.ValueDef.DefType = dtLString) then
+        lRows := lRows + [lNode];
+    end;
+    for var lRow in lRows do begin
+      lElement := ViewCells(lRow)[lColumn].Element;
+      aLines.Add('locview' + #9 + lRecord.EditorID + #9 + lElement.Name + #9 + 'value ' + lElement.EditValue);
+      vstViewFocusedNode := lRow;
+      vstView.FocusedColumn := Succ(lColumn);
+      try
+        mniViewEditClick(nil);
+        aLines.Add('locview' + #9 + lRecord.EditorID + #9 + lElement.Name + #9 + 'returned');
+      except
+        on E: Exception do
+          aLines.Add('locview' + #9 + lRecord.EditorID + #9 + lElement.Name + #9 + 'raised' + #9 + E.ClassName + #9 + E.Message);
+      end;
+    end;
   end;
 end;
 
@@ -4996,6 +5042,15 @@ begin
       lExtra := lExtra + ' fallback';
       TestHost.TestChangeFormIDFallback := True;
     end;
+  end else if lForm is TfrmLocalization then begin
+    var lStrings := TfrmLocalization(lForm).vetStrings;
+    var lFocused := lStrings.FocusedNode;
+    if Assigned(lFocused) and (lFocused.Parent <> lStrings.RootNode) then
+      lExtra := 'focused ' + lStrings.Text[lFocused, 0, False] + ' | ' + lStrings.Text[lFocused, 1, False] + ' | file ' +
+        lStrings.Text[lFocused.Parent, 0, False]
+    else
+      lExtra := 'focused none';
+    lResult := mrOk;
   end else if string(lForm.Caption).StartsWith('New FormID') then begin
     lEdit := FindEdit(lForm);
     if Assigned(lEdit) then
