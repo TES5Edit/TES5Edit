@@ -61,7 +61,7 @@ type
   public
     Settings: TMemIniFile;
     { Public declarations }
-    procedure EditValue(const aFileName: string; ID: integer);
+    procedure EditValue(const aStringsFileName: string; aID: Cardinal);
   end;
 
 var
@@ -222,18 +222,16 @@ begin
   vetStrings.Invalidate;
 end;
 
-procedure TfrmLocalization.EditValue(const aFileName: string; ID: integer);
+procedure TfrmLocalization.EditValue(const aStringsFileName: string; aID: Cardinal);
 var
   Data: PTreeData;
   Node: PVirtualNode;
-  s: string;
 begin
-  s := ChangeFileExt(aFileName, '') + '_';
   Node := vetStrings.GetFirst;
   while Assigned(Node) do begin
     Data := vetStrings.GetNodeData(Node);
-    if Int64(Data.ID) = ID then
-      if s = Copy(Data.lFile.Name , 0, length(s)) then begin
+    if Data.ID = aID then
+      if SameText(Data.lFile.Name, aStringsFileName) then begin
         vetStrings.FocusedNode := Node;
         vetStrings.Selected[vetStrings.FocusedNode] := True;
         vetStrings.ScrollIntoView(Node, True);

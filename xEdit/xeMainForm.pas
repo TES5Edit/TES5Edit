@@ -883,7 +883,7 @@ type
 
     function NodeDatasForMainRecord(const aMainRecord: IwbMainRecord): TDynViewNodeDatas;
 
-    procedure ShowChangeReferencedBy(const OldFormID, NewFormID: TwbFormID; const ReferencedBy: TDynMainRecords; aSilent: Boolean);
+    procedure ShowChangeReferencedBy(const OldFormID, NewFormID: TwbFormID; const aUpdate: TwbReferenceUpdate; aSilent: Boolean);
     function GetTargetElement(Target: TBaseVirtualTree; var TargetNode: PVirtualNode; TargetColumn: Integer; out TargetIndex: Integer; out TargetElement: IwbElement; out aAlignedMemoryIndex: Integer): Boolean;
     function PerformDrop(TargetTree: TBaseVirtualTree; TargetNode: PVirtualNode; TargetColumn: Integer; const SourceElement: IwbElement): Boolean; overload;
     function PerformDrop(const TargetElement: IwbElement; TargetIndex, AlignedMemoryIndex: Integer; TargetCell: TViewNodeData; const SourceElement: IwbElement): Boolean; overload;
@@ -947,9 +947,6 @@ type
     procedure UpdateColumnWidths;
     procedure SetDefaultNodeHeight(aHeight: Integer);
 
-    function SetAllToMaster: Boolean;
-    function UpdateAllOnam: Boolean;
-    function RestorePluginsFromMaster: Boolean;
     function ScriptProcessSingleElement(const aElement: IwbElement; var aCount: Cardinal; const abShowMessages: boolean): Variant;
     function ScriptCanProcessElement(const aElement: IwbElement): Boolean;
     procedure ApplyScriptToSelection(const aSelection: TNodeArray; aCount: Cardinal; const abShowMessages: boolean); overload;
@@ -1947,18 +1944,6 @@ begin
 end;
 
 
-function CompareLoadOrder(List: TStringList; Index1, Index2: Integer): Integer;
-begin
-  if Index1 = Index2 then begin
-    Result := 0;
-    Exit;
-  end;
-
-  Result := CmpI32(
-    IwbFile(Pointer(List.Objects[Index1])).LoadOrder,
-    IwbFile(Pointer(List.Objects[Index2])).LoadOrder);
-end;
-
 function TfrmMain.AddRequiredMaster(const aMasterFile: IwbFile; const aTargetFile: IwbFile): Boolean;
 var
   sl: TStringList;
@@ -1978,78 +1963,67 @@ end;
 function TfrmMain.AddRequiredMasters(aMasters: TStrings; const aTargetFile: IwbFile; aSilent: Boolean = False): Boolean;
 var
   sl                          : TStringList;
-  i, j                        : Integer;
+  i                           : Integer;
   WasEnabled                  : Boolean;
   PrevAction                  : string;
+  lMasters                    : TwbFilesSet;
+  lPlanned                    : TwbFiles;
 begin
+  lMasters := TwbFilesSet.Create;
+  try
+    for i := 0 to Pred(aMasters.Count) do begin
+      if not Assigned(aMasters.Objects[i]) then
+        raise Exception.Create('The required master "' + aMasters[i] + '" is not a loaded file');
+      lMasters.Add(IwbFile(Pointer(aMasters.Objects[i])));
+    end;
+    lPlanned := aTargetFile.RequiredMastersFor(lMasters);
+  finally
+    lMasters.Free;
+  end;
+
+  if Length(lPlanned) = 0 then
+    Exit(True);
+
   sl := TStringList.Create;
   sl.Sorted := True;
   sl.Duplicates := dupIgnore;
   try
-    sl.AddStrings(aMasters);
+    for var lFile in lPlanned do
+      sl.AddObject(lFile.FileName, Pointer(lFile));
 
-    // add masters of masters
-    // only for games that need it
-    if xeContext.Settings.EnforceAllMasters then
-      for i := 0 to Pred(aMasters.Count) do
-      begin
-        var lFile := Files.Find(aMasters[i]);
-        var lFileMasters := lFile.AllMasters;
-        lFileMasters.SortByReverseLoadOrder;
-        for j := low(lFileMasters) to High(lFileMasters) do
-          sl.AddObject(lFileMasters[j].FileName, Pointer(lFileMasters[j]));
-      end;
+    Result := aSilent;
+    if not Result then
+      Result := MessageDlg('To continue the following files need to be added to "' +
+        aTargetFile.FileName + '" as masters:'#13#13 + sl.Text +
+        #13'Do you want to continue?', mtConfirmation, [mbYes, mbNo], 0) = mrYes;
 
-    for i := 0 to Pred(aTargetFile.MasterCount[True]) do
-      if sl.Find(aTargetFile.Masters[i, True].FileName, j) then
-        sl.Delete(j);
-    if sl.Find(aTargetFile.FileName, j) then
-      sl.Delete(j);
-
-    if sl.Count > 0 then begin
-
-      for i := 0 to Pred(sl.Count) do
-        if IwbFile(Pointer(sl.Objects[i])).LoadOrder >= aTargetFile.LoadOrder then
-          raise Exception.Create('The required master "' + sl[i] + '" can not be added to "' + aTargetFile.FileName + '" as it has a higher load order');
-
-      Result := aSilent;
-      if not Result then
-        Result := MessageDlg('To continue the following files need to be added to "' +
-          aTargetFile.FileName + '" as masters:'#13#13 + sl.Text +
-          #13'Do you want to continue?', mtConfirmation, [mbYes, mbNo], 0) = mrYes;
-
-      sl.Sorted := False;
-      sl.CustomSort(CompareLoadOrder);
-
-      if Result then begin
-        WasEnabled := pnlClient.Enabled;
-        pnlClient.Enabled := False;
+    if Result then begin
+      WasEnabled := pnlClient.Enabled;
+      pnlClient.Enabled := False;
+      UpdatePnlCancelVisible;
+      try
+        if WasEnabled then
+          wbStartTime := Now;
+        PrevAction := wbCurrentAction;
+        if sl.Count = 1 then
+          wbCurrentAction := 'Adding '+lPlanned[0].Name+' as new master to ' + aTargetFile.Name
+        else
+          wbCurrentAction := 'Adding '+sl.Count.ToString+' new masters to ' + aTargetFile.Name;
+        AddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] ' + wbCurrentAction);
+        DoProcessMessages;
+        aTargetFile.AddMastersIfMissing(sl);
+        wbCurrentAction := 'Sorting masters for ' + aTargetFile.Name;
+        DoProcessMessages;
+        aTargetFile.SortMasters;
+        AddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] Done adding and sorting masters.');
+      finally
+        wbCurrentAction := PrevAction;
+        if WasEnabled then
+          Caption := Application.Title;
+        pnlClient.Enabled := WasEnabled;
         UpdatePnlCancelVisible;
-        try
-          if WasEnabled then
-            wbStartTime := Now;
-          PrevAction := wbCurrentAction;
-          if sl.Count = 1 then
-            wbCurrentAction := 'Adding '+IwbFile(Pointer(sl.Objects[0])).Name+' as new master to ' + aTargetFile.Name
-          else
-            wbCurrentAction := 'Adding '+sl.Count.ToString+' new masters to ' + aTargetFile.Name;
-          AddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] ' + wbCurrentAction);
-          DoProcessMessages;
-          aTargetFile.AddMastersIfMissing(sl);
-          wbCurrentAction := 'Sorting masters for ' + aTargetFile.Name;
-          DoProcessMessages;
-          aTargetFile.SortMasters;
-          AddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] Done adding and sorting masters.');
-        finally
-          wbCurrentAction := PrevAction;
-          if WasEnabled then
-            Caption := Application.Title;
-          pnlClient.Enabled := WasEnabled;
-          UpdatePnlCancelVisible;
-        end;
       end;
-    end else
-      Result := True;
+    end;
   finally
     sl.Free;
   end;
@@ -2057,63 +2031,32 @@ end;
 
 function TfrmMain.AddRequiredMasters(const aSourceElement: IwbElement; const aTargetFile: IwbFile; aAsNew: Boolean; aSilent: Boolean = False): Boolean;
 var
-  i, j : Integer;
+  lPlanned : TwbFiles;
 begin
+  var lMasters := TwbFilesSet.Create;
+  try
+    aSourceElement.ReportRequiredMasters(lMasters, aAsNew);
+    lPlanned := aTargetFile.RequiredMastersFor(lMasters);
+  finally
+    lMasters.Free;
+  end;
+
+  if Length(lPlanned) = 0 then
+    Exit(True);
+
   var lRequiredMasters := TStringList.Create;
   try
     lRequiredMasters.Sorted := True;
     lRequiredMasters.Duplicates := dupIgnore;
+    for var lFile in lPlanned do
+      lRequiredMasters.AddObject(lFile.FileName, Pointer(lFile));
 
-    var lMasters := TwbFilesSet.Create;
-    try
-      aSourceElement.ReportRequiredMasters(lMasters, aAsNew);
-      for var lFile in lMasters do
-      begin
-        // add masters of masters
-        // only for games that need it
-        if xeContext.Settings.EnforceAllMasters then
-        begin
-          var lFileMasters := lFile.AllMasters;
-          for j := low(lFileMasters) to High(lFileMasters) do
-            lRequiredMasters.AddObject(lFileMasters[j].FileName, Pointer(lFileMasters[j]));
-        end;
+    Result := aSilent or (MessageDlg('To continue the following files need to be added to "' +
+      aTargetFile.FileName + '" as masters:'#13#13 + lRequiredMasters.Text +
+      #13'Do you want to continue?', mtConfirmation, [mbYes, mbNo], 0) = mrYes);
 
-        lRequiredMasters.AddObject(lFile.FileName, Pointer(lFile));
-      end;
-
-      for i := 0 to Pred(aTargetFile.MasterCount[True]) do
-        if lRequiredMasters.Find(aTargetFile.Masters[i, True].FileName, j) then
-          lRequiredMasters.Delete(j);
-      if lRequiredMasters.Find(aTargetFile.FileName, j) then
-        lRequiredMasters.Delete(j);
-    finally
-      lMasters.Free;
-    end;
-
-    var lFindIdx: Integer;
-    for var lTargetMasterIdx := 0 to Pred(aTargetFile.MasterCount[True]) do
-      if lRequiredMasters.Find(aTargetFile.Masters[lTargetMasterIdx, True].FileName, lFindIdx) then
-        lRequiredMasters.Delete(lFindIdx);
-    if lRequiredMasters.Find(aTargetFile.FileName, lFindIdx) then
-      lRequiredMasters.Delete(lFindIdx);
-
-    if lRequiredMasters.Count > 0 then begin
-
-      for var lRequiredMasterIdx := 0 to Pred(lRequiredMasters.Count) do
-        if IwbFile(Pointer(lRequiredMasters.Objects[lRequiredMasterIdx])).LoadOrder >= aTargetFile.LoadOrder then
-          raise Exception.Create('The required master "' + lRequiredMasters[lRequiredMasterIdx] + '" can not be added to "' + aTargetFile.FileName + '" as it has a higher load order');
-
-      Result := aSilent or (MessageDlg('To continue the following files need to be added to "' +
-        aTargetFile.FileName + '" as masters:'#13#13 + lRequiredMasters.Text +
-        #13'Do you want to continue?', mtConfirmation, [mbYes, mbNo], 0) = mrYes);
-
-      lRequiredMasters.Sorted := False;
-      lRequiredMasters.CustomSort(CompareLoadOrder);
-
-      if Result then
-        aTargetFile.AddMastersIfMissing(lRequiredMasters);
-    end else
-      Result := True;
+    if Result then
+      aTargetFile.AddMastersIfMissing(lRequiredMasters);
   finally
     lRequiredMasters.Free;
   end;
@@ -2453,7 +2396,6 @@ var
   Elements             : TDynElements;
   MainRecord           : IwbMainRecord;
   Master               : IwbMainRecord;
-  GroupRecord          : IwbGroupRecord;
   TargetFile           : IwbFile;
   sl                   : TStringList;
   i, j                 : Integer;
@@ -2463,12 +2405,13 @@ var
   EditorIDPrefix       : string;
   EditorIDSuffix       : string;
   Multiple             : Boolean;
-  Container            : IwbContainer;
   PrevOverwriteResult  : TModalResult;
   PrevDeleteResult     : TModalResult;
   lResult              : TDynElements;
   Operation            : string;
   lOptions             : TwbCopyOptions;
+  lConfirmOverwrite    : TwbCopyDecision;
+  lConfirmRemove       : TwbCopyDecision;
 begin
   Result := nil;
   lResult := nil;
@@ -2504,22 +2447,7 @@ begin
               j := i;
             end;
           end else begin
-            Elements[i].ReportRequiredMasters(lMasters, AsNew);
-            if DeepCopy then
-              if Supports(Elements[i], IwbMainRecord, MainRecord) and Supports(MainRecord.ChildGroup, IwbGroupRecord, GroupRecord) then
-                GroupRecord.ReportRequiredMasters(lMasters, AsNew);
-            Container := Elements[i].Container;
-            while Assigned(Container) do begin
-              Container.ReportRequiredMasters(lMasters, AsNew, False, True);
-              if Container.ElementType = etGroupRecord then
-                with Container as IwbGroupRecord do begin
-                  MainRecord := ChildrenOf;
-                  if Assigned(MainRecord) then
-                    MainRecord.ReportRequiredMasters(lMasters, AsNew);
-                end;
-
-              Container := Container.Container;
-            end;
+            Elements[i].ReportRequiredMastersForCopy(lMasters, AsNew, DeepCopy);
             if j >= 0 then begin
               Elements[j] := Elements[i];
               Inc(j);
@@ -2551,66 +2479,56 @@ begin
     PrevDeleteResult := mrNone;
 
     lOptions := Default(TwbCopyOptions);
-    if AllowOverwrite then
-      lOptions.CanOverwrite := function (const aTarget, aSource: IwbElement): TwbCanOverwriteAction
+    if AllowOverwrite then begin
+      lConfirmOverwrite := function(const aTarget, aSource: IwbElement): Boolean
+      begin
+        case PrevOverwriteResult of
+          mrYesToAll: Result := True;
+          mrNoToAll: Result := False;
+        else
+          PrevOverwriteResult := MessageDlg('Do you want to overwrite:' + CRLF + CRLF +
+            aTarget.FullPath + CRLF + CRLF +
+            'with' + CRLF + CRLF +
+            aSource.FullPath + '?',
+            mtConfirmation, mbYesNo + mbYesAllNoAllCancel, 0, mbNo);
+          Result := PrevOverwriteResult in [mrYes, mrYesToAll];
+          if PrevOverwriteResult = mrCancel then begin
+            wbProgress('Aborting...');
+            Abort;
+          end;
+        end;
+      end;
+      lConfirmRemove := function(const aTarget, aSource: IwbElement): Boolean
       var
-        MainRecord: IwbMainRecord;
         s: string;
       begin
-        if Assigned(aTarget) then begin
-          case PrevOverwriteResult of
-            mrYesToAll: Result := coCopy;
-            mrNoToAll: Result := coSkip;
-          else
-            PrevOverwriteResult := MessageDlg('Do you want to overwrite:' + CRLF + CRLF +
+        case PrevDeleteResult of
+          mrYesToAll: Result := True;
+          mrNoToAll: Result := False;
+        else
+          if Assigned(aTarget) then
+            s := 'The source' + CRLF + CRLF +
+              aSource.FullPath + CRLF + CRLF +
+             'is flagged as deleted. Do you want to remove the target ' + CRLF + CRLF +
               aTarget.FullPath + CRLF + CRLF +
-              'with' + CRLF + CRLF +
-              aSource.FullPath + '?',
-              mtConfirmation, mbYesNo + mbYesAllNoAllCancel, 0, mbNo);
-            if PrevOverwriteResult in [mrYes, mrYesToAll] then
-              Result := coCopy
-            else
-              Result := coSkip;
-            if PrevOverwriteResult = mrCancel then begin
-              wbProgress('Aborting...');
-              Abort;
-            end;
+              'instead of copying the deleted record?'
+          else
+            s := 'The source' + CRLF + CRLF +
+              aSource.FullPath + CRLF + CRLF +
+             'is flagged as deleted, and the target doesn''t exist.' + CRLF + CRLF +
+             'Do you want to skip copying this record?';
+          PrevDeleteResult := MessageDlg(s,
+            mtConfirmation, mbYesNo + mbYesAllNoAllCancel, 0, mbNo);
+          Result := PrevDeleteResult in [mrYes, mrYesToAll];
+          if PrevDeleteResult = mrCancel then begin
+            wbProgress('Aborting...');
+            Abort;
           end;
-        end else
-          Result := coCopy;
-
-        if Result = coCopy then begin
-          if Supports(aSource, IwbMainRecord, MainRecord) then
-            if MainRecord.IsDeleted then begin
-              case PrevDeleteResult of
-                mrYesToAll: Result := coDelete;
-                mrNoToAll: Result := coCopy;
-              else
-                if Assigned(aTarget) then
-                  s := 'The source' + CRLF + CRLF +
-                    aSource.FullPath + CRLF + CRLF +
-                   'is flagged as deleted. Do you want to remove the target ' + CRLF + CRLF +
-                    aTarget.FullPath + CRLF + CRLF +
-                    'instead of copying the deleted record?'
-                else
-                  s := 'The source' + CRLF + CRLF +
-                    aSource.FullPath + CRLF + CRLF +
-                   'is flagged as deleted, and the target doesn''t exist.' + CRLF + CRLF +
-                   'Do you want to skip copying this record?';
-                PrevDeleteResult := MessageDlg(s,
-                  mtConfirmation, mbYesNo + mbYesAllNoAllCancel, 0, mbNo);
-                if PrevDeleteResult in [mrYes, mrYesToAll] then
-                  Result := coDelete;
-                if PrevDeleteResult = mrCancel then begin
-                  wbProgress('Aborting...');
-                  Abort;
-                end;
-              end;
-            end;
         end;
-
-        if (Result = coDelete) and not Assigned(aTarget) then
-          Result := coSkip;
+      end;
+      lOptions.Rules.CanOverwrite := function (const aTarget, aSource: IwbElement): TwbCanOverwriteAction
+      begin
+        Result := TwbCopyOptions.OverwriteAction(aTarget, aSource, lConfirmOverwrite, lConfirmRemove);
 
         case Result of
           coCopy:
@@ -2624,17 +2542,15 @@ begin
         end;
 
       end;
+    end;
     try
       with TfrmModuleSelect.Create(Self) do try
 
         AllModules := xeContext.ModuleList.ModulesByLoadOrder(True).FilteredByFlag(mfValid).FilteredBy(function(a: PwbModuleInfo): Boolean
           begin
             Result := mfTemplate in a.miFlags;
-            if not Result then begin
-              Result := Assigned(a.miFile) and a._File.IsEditable;
-              if Result then
-                Result := a._File.LoadOrder >= j;
-            end;
+            if not Result then
+              Result := Assigned(a.miFile) and a._File.AcceptsCopiesOf(Elements, AsNew, AsWrapper, j);
             if Result and AsNew then begin
               if mfHasUpdateFlag in a.miFlags then
                 Exit(False);
@@ -2649,18 +2565,6 @@ begin
         EditorIDSuffixRemove := '';
         EditorIDPrefix := '';
         EditorIDSuffix := '';
-
-        if not (AsNew or AsWrapper) then
-          AllModules := AllModules.FilteredBy(function(a: PwbModuleInfo): Boolean
-            begin
-              Result := mfTemplate in a.miFlags;
-              if not Result then
-                for var lElementIdx := Low(Elements) to High(Elements) do begin
-                  Result := not a._File.Equals(Elements[lElementIdx]._File);
-                  if not Result then
-                    Exit;
-                end;
-            end);
 
         if not Multiple then begin
           MainRecord := (Elements[0] as IwbMainRecord);
@@ -2781,10 +2685,10 @@ begin
         lOptions.DeepCopy := DeepCopy;
         lOptions.AllowOverwrite := AllowOverwrite;
         lOptions.EditorID := EditorID;
-        lOptions.PrefixRemove := EditorIDPrefixRemove;
-        lOptions.SuffixRemove := EditorIDSuffixRemove;
-        lOptions.Prefix := EditorIDPrefix;
-        lOptions.Suffix := EditorIDSuffix;
+        lOptions.Rules.PrefixRemove := EditorIDPrefixRemove;
+        lOptions.Rules.SuffixRemove := EditorIDSuffixRemove;
+        lOptions.Rules.Prefix := EditorIDPrefix;
+        lOptions.Rules.Suffix := EditorIDSuffix;
         lOptions.Operation := Operation;
         lOptions.AfterCopy := aAfterCopyCallback;
 
@@ -2808,26 +2712,8 @@ begin
                 sl.Clear;
                 var lMasters2 := TwbFilesSet.Create;
                 try
-                  for j := Low(Elements) to High(Elements) do begin
-                    Elements[j].ReportRequiredMasters(lMasters2, AsNew);
-                    if DeepCopy then
-                      if Supports(Elements[j], IwbMainRecord, MainRecord) and Supports(MainRecord.ChildGroup, IwbGroupRecord, GroupRecord) then
-                        GroupRecord.ReportRequiredMasters(lMasters2, AsNew);
-                    Container := Elements[j].Container;
-                    while Assigned(Container) do begin
-                      Container.ReportRequiredMasters(lMasters2, AsNew, False, True);
-                      if Container.ElementType = etGroupRecord then
-                        with Container as IwbGroupRecord do begin
-                          MainRecord := ChildrenOf;
-                          if Assigned(MainRecord) then begin
-                            MainRecord := MainRecord.HighestOverrideVisibleForFile[TargetFile];
-                            MainRecord.ReportRequiredMasters(lMasters2, AsNew);
-                          end;
-                        end;
-
-                      Container := Container.Container;
-                    end;
-                  end;
+                  for j := Low(Elements) to High(Elements) do
+                    Elements[j].ReportRequiredMastersForCopy(lMasters2, AsNew, DeepCopy, TargetFile);
                   for var lFile in lMasters2 do
                     sl.AddObject(lFile.FileName, Pointer(lFile));
                 finally
@@ -2846,7 +2732,9 @@ begin
         Free;
       end;
     finally
-      lOptions.CanOverwrite := nil;
+      lOptions.Rules.CanOverwrite := nil;
+      lConfirmOverwrite := nil;
+      lConfirmRemove := nil;
     end;
   finally
     sl.Free;
@@ -2885,12 +2773,10 @@ end;
 procedure TfrmMain.mniNavChangeReferencingRecordsClick(Sender: TObject);
 var
   s                           : string;
-  i                           : Integer;
   NewFormID                   : TwbFormID;
   OldFormID                   : TwbFormID;
   NodeData                    : PNavNodeData;
   MainRecord                  : IwbMainRecord;
-  ReferencedBy                : TDynMainRecords;
 begin
   if not xeContext.Settings.EditAllowed then
     Exit;
@@ -2903,9 +2789,7 @@ begin
   if not EditWarn then
     Exit;
 
-  SetLength(ReferencedBy, ActiveMaster.ReferencedByCount);
-  for i := 0 to Pred(ActiveMaster.ReferencedByCount) do
-    ReferencedBy[i] := ActiveMaster.ReferencedBy[i];
+  var lUpdate := MainRecord.MasterOrSelf.PlanReferenceUpdate;
 
   if InputQuery('New FormID', 'Please enter the new FormID in hex. e.g. 0404CC43. The FormID needs to be a load order corrected form ID.', s) then try
     NewFormID := TwbFormID.FromStr(s);
@@ -2920,8 +2804,8 @@ begin
       Exit;
     end;
 
-    if Length(ReferencedBy) > 0 then
-      ShowChangeReferencedBy(OldFormID, NewFormID, ReferencedBy, False)
+    if Length(lUpdate.Items) > 0 then
+      ShowChangeReferencedBy(OldFormID, NewFormID, lUpdate, False)
     else
       raise Exception.Create('No other records reference this record');
   except
@@ -3425,251 +3309,10 @@ end;
 
 procedure TfrmMain.mniNavCreateMergedPatchClick(Sender: TObject);
 var
-  KeepAlive       : array of IwbContainerElementRef;
-  TargetFile      : IwbFile;
-
-  procedure UpdateOrderedTargetList(LeftList, RightList, TargetList: TStringList);
-  var
-    i: Integer;
-  begin
-    for i := LeftList.Count to Pred(RightList.Count) do
-      TargetList.AddObject(RightList[i], RightList.Objects[i]);
-  end;
-
-  procedure UpdateTargetList(LeftList, RightList, TargetList: TStringList);
-  var
-    Left, Right : Integer;
-    Index       : Integer;
-  begin
-    Left := 0;
-    Right := 0;
-
-    while (Left < LeftList.Count) and (Right < RightList.Count) do
-      case CompareText(LeftList[Left], RightList[Right]) of
-        Low(Integer)..-1: begin
-          if TargetList.Find(LeftList[Left], Index) then
-            TargetList.Delete(Index);
-          Inc(Left);
-        end;
-        0: begin
-          if TargetList.Find(LeftList[Left], Index) then
-            TargetList.Objects[Index] := RightList.Objects[Right];
-          Inc(Left);
-          Inc(Right);
-        end;
-        1..High(Integer): begin
-          if not TargetList.Find(RightList[Right], Index) then
-            TargetList.AddObject(RightList[Right], RightList.Objects[Right]);
-          Inc(Right);
-        end;
-      end;
-
-    while (Left < LeftList.Count) do begin
-      if TargetList.Find(LeftList[Left], Index) then
-        TargetList.Delete(Index);
-      Inc(Left);
-    end;
-
-    while (Right < RightList.Count) do begin
-      if not TargetList.Find(RightList[Right], Index) then
-        TargetList.AddObject(RightList[Right], RightList.Objects[Right]);
-      Inc(Right);
-    end;
-  end;
-
-  function ListsEqual(Left, Right: TStringList; ForOrderedList: Boolean = False): Boolean;
-  var
-    i: Integer;
-  begin
-    if ForOrderedList then
-      Result := Left.Count <= Right.Count
-    else
-      Result := Left.Count = Right.Count;
-
-    if Result then
-      for i := 0 to Pred(Left.Count) do
-        if not SameText(Left[i], Right[i]) then begin
-          Result := False;
-          Exit;
-        end;
-  end;
-
-  procedure CheckGroup(const aGroup: IwbGroupRecord; const aListNames: array of string;
-                       const aCntNames: array of string; aAsSet: Boolean = False);
-  var
-    IsOrderedList: Boolean;
-
-    function BuildList(const aEntries: IwbElement): TStringList;
-    var
-      i       : Integer;
-      Entries : IwbContainerElementRef;
-      Entry   : IwbContainerElementRef;
-      Last    : string;
-      Count   : Integer;
-    begin
-      Result := TStringList.Create;
-      try
-        if aAsSet and not IsOrderedList then begin
-          Result.Sorted := True;
-          Result.Duplicates := dupIgnore;
-        end;
-        if not Supports(aEntries, IwbContainerElementRef, Entries) then
-          Exit;
-        for i := 0 to Pred(Entries.ElementCount) do
-          if Supports(Entries.Elements[i], IwbContainerElementRef, Entry) then begin
-            SetLength(KeepAlive, Succ(Length(KeepAlive)));
-            KeepAlive[High(KeepAlive)] := Entry;
-            Result.AddObject(Entry.DisplaySortKey[True], Pointer(Entry));
-          end;
-        if not aAsSet then begin
-          Result.Sort;
-          Last := '';
-          Count := 0;
-          for i := 0 to Pred(Result.Count) do begin
-            if Result[i] = Last then
-              Inc(Count)
-            else begin
-              Count := 0;
-              Last := Result[i];
-            end;
-            Result[i] := Result[i] + '#' + IntToHex64(Count, 4);
-          end;
-          Result.Sorted := True;
-        end;
-      except
-        FreeAndNil(Result);
-        raise;
-      end;
-    end;
-
-  var
-    i, j, k, l         : Integer;
-    MainRecord         : IwbMainRecord;
-    TargetRecord       : IwbMainRecord;
-    Master             : IwbMainRecord;
-    TargetLists        : array of TStringList;
-    WinningLists       : array of TStringList;
-    CurrentList        : TStringList;
-    CurrentMasterList  : TStringList;
-    CurrentMasters     : TDynMainRecords;
-    CurrentMaster      : IwbMainRecord;
-    EditorID           : string;
-    SortableContainer  : IwbSortableContainer;
-    IsFaultyOrderedList: Boolean;
-    CountElement       : IwbElement;
-    Entries            : IwbContainerElementRef;
-  const
-    OrderedList = 'OrderedList';
-  begin
-    if not Assigned(aGroup) then
-      Exit;
-    for i := 0 to Pred(aGroup.ElementCount) do
-      if Supports(aGroup.Elements[i], IwbMainRecord, MainRecord) then try
-        IsFaultyOrderedList := False;
-        Master := MainRecord.MasterOrSelf;
-        if Master.IsTagged then
-          Continue;
-        Master.Tag;
-        if Master.OverrideCount < 2 then
-          Continue;
-
-        SetLength(TargetLists, Length(aListNames));
-        SetLength(WinningLists, Length(aListNames));
-
-        for l := Low(aListNames) to High(aListNames) do begin
-          IsOrderedList := False;
-          if Supports(Master.ElementByName[aListNames[l]], IwbSortableContainer, SortableContainer) then
-            if not SortableContainer.Sorted then begin
-              EditorID := Master.EditorID;
-              if Length(EditorID) > Length(OrderedList) then
-                Delete(EditorID, 1, Length(EditorID)-Length(OrderedList));
-              IsOrderedList := SameText(EditorID, OrderedList);
-              if not IsOrderedList then
-                Continue;
-            end;
-
-          TargetLists[l] := BuildList(Master.ElementByName[aListNames[l]]);
-          for j := 0 to Pred(Master.OverrideCount) do begin
-            MainRecord := Master.Overrides[j];
-            CurrentList := BuildList(MainRecord.ElementByName[aListNames[l]]);
-            CurrentMasters := MainRecord.MasterRecordsFromMasterFilesAndSelf;
-            CurrentMaster := nil;
-            for k := High(CurrentMasters) downto Low(CurrentMasters) do
-              if not MainRecord.Equals(CurrentMasters[k]) then begin
-                CurrentMaster := CurrentMasters[k];
-                Break;
-              end;
-            if not Assigned(CurrentMaster) then
-              Continue;
-            CurrentMasterList := BuildList(CurrentMaster.ElementByName[aListNames[l]]);
-
-            if IsOrderedList then begin
-              if not ListsEqual(CurrentMasterList, CurrentList, True) then begin
-                ListsEqual(CurrentMasterList, CurrentList, True);
-                IsFaultyOrderedList := True
-              end else
-                UpdateOrderedTargetList(CurrentMasterList, CurrentList, TargetLists[l]);
-            end else
-              UpdateTargetList(CurrentMasterList, CurrentList, TargetLists[l]);
-
-            CurrentList.Free;
-            CurrentMasterList.Free;
-            if IsFaultyOrderedList then
-              Break;
-          end;
-          if IsFaultyOrderedList then
-            Break;
-          MainRecord := Master.WinningOverride;
-          WinningLists[l] := BuildList(MainRecord.ElementByName[aListNames[l]]);
-        end;
-
-        if IsFaultyOrderedList then begin
-          PostAddMessage('Error: Can''t merge faulty ordered list ' + Master.Name);
-        end else begin
-          TargetRecord := nil;
-          for l := Low(aListNames) to High(aListNames) do
-            if Assigned(TargetLists[l]) and Assigned(WinningLists[l]) then
-              if not ListsEqual(TargetLists[l], WinningLists[l]) then begin
-                if not Assigned(TargetRecord) then
-                  TargetRecord := wbCopyElementToFile(MainRecord, TargetFile, False, True, '', '', '', '', False) as IwbMainRecord;
-
-                TargetRecord.RemoveElement(aListNames[l]);
-                for j := 0 to Pred(TargetLists[l].Count) do
-                  wbCopyElementToRecord(IwbElement(Pointer(TargetLists[l].Objects[j])), TargetRecord, True, True);
-
-                // update counts
-                if (l <= High(aCntNames)) and (aCntNames[l] <> '') then begin
-                  TargetRecord.Add(aCntNames[l], True);
-                  CountElement := TargetRecord.ElementByPath[aCntNames[l]];
-                  if Assigned(CountElement) then
-                    if Supports(TargetRecord.ElementByName[aListNames[l]], IwbContainerElementRef, Entries) then
-                      CountElement.NativeValue := Entries.ElementCount
-                    else
-                      CountElement.Remove;
-                end;
-
-              end;
-        end;
-
-        for l := Low(aListNames) to High(aListNames) do begin
-          FreeAndNil(WinningLists[l]);
-          FreeAndNil(TargetLists[l]);
-        end;
-        KeepAlive := nil;
-      except
-        on e: Exception do
-          PostAddMessage(E.Message);
-      end;
-  end;
-
-var
-  sl              : TStringList;
-  LastLoadOrder   : Integer;
-  i               : Integer;
-  EditState       : Boolean;
+  TargetFile : IwbFile;
 begin
   var lGameDef := xeContext.GameDefObj;
-  if lGameDef.IsSkyrim or lGameDef.IsFallout4 or lGameDef.IsFallout76 or lGameDef.IsStarfield then begin
+  if not lGameDef.MergedPatchSupported then begin
     if MessageDlg('Merged patch is unsupported for ' + lGameDef.Identity.GameName2 +
       '. Create it only if you know what you are doing and can troubleshoot possible issues yourself. ' +
       'Do you want to continue?',
@@ -3678,74 +3321,15 @@ begin
       Exit;
   end;
 
-  TargetFile := nil;
+  if not AddNewFile(TargetFile, False, False) then
+    Exit;
 
-  while not Assigned(TargetFile) do
-    if not AddNewFile(TargetFile, False, False) then
-      Exit;
-
-  sl := TStringList.Create;
-  try
-    LastLoadOrder := -1;
-    for i := Low(Files) to Pred(High(Files)) do
-      with Files[i] do
-        if LoadOrder > LastLoadOrder then begin
-          LastLoadOrder := LoadOrder;
-          sl.Add(FileName);
-        end;
-    TargetFile.AddMasters(sl);
-  finally
-    FreeAndNil(sl);
-  end;
-
-  ResetAllTags;
-
-  EditState := xeContext.Settings.AllowInternalEdit;
-  try
-    // do not dynamically update counter fields, they are set by merging code
-    xeContext.Settings.AllowInternalEdit := False;
-
-    for i := Succ(Low(Files)) to Pred(High(Files)) do with Files[i] do begin
-      CheckGroup(GroupBySignature['LVLI'], ['Leveled List Entries'], ['LLCT']);
-      CheckGroup(GroupBySignature['LVLC'], ['Leveled List Entries'], ['LLCT']);
-      CheckGroup(GroupBySignature['LVLN'], ['Leveled List Entries'], ['LLCT']);
-      CheckGroup(GroupBySignature['LVSP'], ['Leveled List Entries'], ['LLCT']);
-      CheckGroup(GroupBySignature['CONT'], ['Items'], ['COCT']);
-      CheckGroup(GroupBySignature['FACT'], ['Relations'], []);
-      CheckGroup(GroupBySignature['RACE'], ['HNAM - Hairs', 'ENAM - Eyes', 'Actor Effects'], ['', '', 'SPCT']);
-      CheckGroup(GroupBySignature['FLST'], ['FormIDs'], [], True);
-      CheckGroup(GroupBySignature['CREA'], ['Items', 'Factions'], ['COCT']);
-      // FNV doesn't merge DIAL quests properly at runtime
-      if lGameDef.GameMode in [gmFNV] then
-        CheckGroup(GroupBySignature['DIAL'], ['Added Quests'], []);
-      // exclude Head Parts for Skyrim, causes issues
-      if lGameDef.GameMode >= gmTES5 then
-        CheckGroup(GroupBySignature['NPC_'], ['Items', 'Factions', 'Actor Effects', 'Perks', 'KWDA - Keywords'], ['COCT', '', 'SPCT', 'PRKZ', 'KSIZ'])
-      else
-        CheckGroup(GroupBySignature['NPC_'], ['Items', 'Factions', 'Head Parts', 'Actor Effects'], []);
-      // keywords
-      if lGameDef.GameMode >= gmTES5 then begin
-        CheckGroup(GroupBySignature['ALCH'], ['KWDA - Keywords'], ['KSIZ']);
-        CheckGroup(GroupBySignature['ARMO'], ['KWDA - Keywords'], ['KSIZ']);
-        CheckGroup(GroupBySignature['AMMO'], ['KWDA - Keywords'], ['KSIZ']);
-        CheckGroup(GroupBySignature['BOOK'], ['KWDA - Keywords'], ['KSIZ']);
-        CheckGroup(GroupBySignature['FLOR'], ['KWDA - Keywords'], ['KSIZ']);
-        CheckGroup(GroupBySignature['FURN'], ['KWDA - Keywords'], ['KSIZ']);
-        CheckGroup(GroupBySignature['INGR'], ['KWDA - Keywords'], ['KSIZ']);
-        CheckGroup(GroupBySignature['MGEF'], ['KWDA - Keywords'], ['KSIZ']);
-        CheckGroup(GroupBySignature['MISC'], ['KWDA - Keywords'], ['KSIZ']);
-        CheckGroup(GroupBySignature['SCRL'], ['KWDA - Keywords'], ['KSIZ']);
-        CheckGroup(GroupBySignature['SLGM'], ['KWDA - Keywords'], ['KSIZ']);
-        CheckGroup(GroupBySignature['SPEL'], ['KWDA - Keywords'], ['KSIZ']);
-        CheckGroup(GroupBySignature['WEAP'], ['KWDA - Keywords'], ['KSIZ']);
-      end;
-    end;
-
-  finally
-    xeContext.Settings.AllowInternalEdit := EditState;
-  end;
-
-  TargetFile.CleanMasters;
+  wbStartTime := Now;
+  TargetFile.BuildMergedPatch(Copy(Files, 0, High(Files)),
+    procedure(aMessage: string)
+    begin
+      PostAddMessage(aMessage);
+    end);
 end;
 
 procedure TfrmMain.mniNavCreateModGroupClick(Sender: TObject);
@@ -4073,14 +3657,12 @@ end;
 
 procedure TfrmMain.mniNavCleanupInjectedClick(Sender: TObject);
 var
-  SelectedNodes               : TNodeArray;
-  NodeData                    : PNavNodeData;
-  Elements                    : array of IwbElement;
-  ReferenceFile               : IwbFile;
-  Container                   : IwbContainer;
-  InjectionSourceFiles        : TwbFiles;
-  sl                          : TStringList;
-  i, j                        : Integer;
+  SelectedNodes : TNodeArray;
+  NodeData      : PNavNodeData;
+  Elements      : TDynElements;
+  lPlan         : TwbCleanupInjectedPlan;
+  sl            : TStringList;
+  i             : Integer;
 begin
   if not xeContext.Settings.EditAllowed then
     Exit;
@@ -4091,58 +3673,30 @@ begin
     Exit;
 
   SelectedNodes := vstNav.GetSortedSelection(True);
-  if Length(SelectedNodes) < 1 then
-    Exit;
-
-  j := 0;
   SetLength(Elements, Length(SelectedNodes));
   for i := Low(SelectedNodes) to High(SelectedNodes) do begin
     NodeData := vstNav.GetNodeData(SelectedNodes[i]);
-    if Assigned(NodeData.Element) and (NodeData.Element.ElementType = etMainRecord) then begin
-      InjectionSourceFiles := NodeData.Element.InjectionSourceFiles;
-      if Length(InjectionSourceFiles) = 1 then begin
-        if not Assigned(ReferenceFile) then
-          ReferenceFile := InjectionSourceFiles[0]
-        else
-          if not ReferenceFile.Equals(InjectionSourceFiles[0]) then
-            Continue;
-        Elements[j] := NodeData.Element;
-        Inc(j);
-      end;
-    end;
+    Elements[i] := NodeData.Element;
   end;
-  if j < 1 then
+  lPlan := TwbCleanupInjectedPlan.Plan(Elements);
+  Elements := nil;
+  if Length(lPlan.Records) < 1 then
     Exit;
-  SetLength(Elements, j);
 
   sl := TStringList.Create;
   sl.Sorted := True;
   sl.Duplicates := dupIgnore;
   try
-    var lMasters := TwbFilesSet.Create;
-    try
-      for i := Low(Elements) to High(Elements) do begin
-        Elements[i].ReportRequiredMasters(lMasters, False);
-        Container := Elements[i].Container;
-        while Assigned(Container) do begin
-          Container.ReportRequiredMasters(lMasters, False, False);
-          Container := Container.Container;
-        end;
-      end;
-      for var lFile in lMasters do
-        sl.AddObject(lFile.FileName, Pointer(lFile));
-    finally
-      FreeAndNil(lMasters);
-    end;
+    for var lFile in lPlan.NewMasters do
+      sl.AddObject(lFile.FileName, Pointer(lFile));
 
-    if AddRequiredMasters(sl, ReferenceFile) then
-      for j := Low(Elements) to High(Elements) do begin
-        wbCopyElementToFile(Elements[j], ReferenceFile, False, True, '', '', '', '', False);
-        if Elements[j].RemoveInjected(False) then begin
+    if AddRequiredMasters(sl, lPlan.Target) then
+      lPlan.Apply(
+        procedure(aMessage: string)
+        begin
           pgMain.ActivePage := tbsMessages;
-          AddMessage('Injected references in '+Elements[j].Name+' could not all be removed automatically.');
-        end;
-      end;
+          AddMessage(aMessage);
+        end);
   finally
     sl.Free;
   end;
@@ -4793,7 +4347,7 @@ begin
     wbPatron := Settings.ReadBool('Options', 'Patron', wbPatron);
     if (not wbPatron or not xeAutoLoad)
 {$IFDEF XE_TEST_CONTROL_POINTS}
-      and not (xeTestSwitches.Conflicts or xeTestSwitches.NavCopy or xeTestSwitches.ViewText or xeTestSwitches.ViewTree or xeTestSwitches.Options or xeTestSwitches.CopyIntoGap or xeTestSwitches.DropMaster or xeTestSwitches.DeltaPatch or xeTestSwitches.Merge or xeTestSwitches.CopyInto or xeTestSwitches.Renumber or xeTestSwitches.Hide or xeTestSwitches.Filter or xeTestSwitches.SaveContexts or (xeTestSwitches.PumpDuringLoad <> ''))
+      and not (xeTestSwitches.Conflicts or xeTestSwitches.NavCopy or xeTestSwitches.ViewText or xeTestSwitches.ViewTree or xeTestSwitches.Options or xeTestSwitches.CopyIntoGap or xeTestSwitches.DropMaster or xeTestSwitches.DeltaPatch or xeTestSwitches.Merge or xeTestSwitches.MergedPatch or xeTestSwitches.CopyInto or xeTestSwitches.Renumber or xeTestSwitches.ChangeFormID or xeTestSwitches.Hide or xeTestSwitches.Filter or xeTestSwitches.SaveContexts or (xeTestSwitches.PumpDuringLoad <> ''))
 {$ENDIF}
     then
       ShowDeveloperMessage;
@@ -4844,10 +4398,11 @@ begin
 
           if (xeToolMode in [tmMasterUpdate, tmMasterRestore]) and (Length(Modules)>1) and lGameDef.IsFallout3 then begin
             AgeDateTime := Modules[0].miDateTime;
-            for i := 1 to High(Modules) do begin
-              AgeDateTime := AgeDateTime + (1/24/60);
-              TFile.SetLastWriteTime(xeContext.Settings.DataPath + Modules[i].miOriginalName, AgeDateTime);
-            end;
+            for i := 1 to High(Modules) do
+              if not (mfIsHardcoded in Modules[i].miFlags) then begin
+                AgeDateTime := AgeDateTime + (1/24/60);
+                TFile.SetLastWriteTime(xeContext.Settings.DataPath + Modules[i].miOriginalName, AgeDateTime);
+              end;
           end;
         end;
 
@@ -5868,6 +5423,16 @@ begin
     TestPumpNote('FormClose entered: inside ' + IfThen(xeTestSwitches.PumpModal, 'a modal loop ', 'a nested pump ') + BoolToStr(TestPumpInside, True) +
       ', client panel enabled ' + BoolToStr(pnlClient.Enabled, True) + ', action "' + wbCurrentAction + '"' + lShown);
   end;
+  if Assigned(TestHost) and Assigned(TestHost.TestChangeFormIDLines) then begin
+    var lMsg: TMsg;
+    while PeekMessage(lMsg, Handle, WM_USER, WM_USER, PM_REMOVE) do
+      DispatchMessage(lMsg);
+    if Assigned(NewMessages) and (NewMessages.Count > 0) then begin
+      mmoMessages.Lines.AddStrings(NewMessages);
+      NewMessages.Clear;
+    end;
+    TestChangeFormIDOnClose;
+  end;
 {$ENDIF}
   Action := caFree;
   if LoaderStarted and not xeContext.LoaderDone then begin
@@ -6150,7 +5715,8 @@ begin
     TestHost.TestNavCopyAnswer.OnTimer := TestNavCopyAnswerTimer;
     TestHost.TestNavCopyAnswer.Enabled := True;
   end;
-  if xeTestSwitches.Merge or xeTestSwitches.CopyInto or xeTestSwitches.Renumber or (xeTestSwitches.FilterRemove <> '') then
+  if xeTestSwitches.Merge or xeTestSwitches.MergedPatch or xeTestSwitches.CopyInto or xeTestSwitches.Renumber or
+     xeTestSwitches.ChangeFormID or (xeTestSwitches.FilterRemove <> '') then
     UseLatestCommonDialogs := False;
 {$ENDIF}
 
@@ -7466,7 +7032,7 @@ begin
               if not EditWarn then
                 Exit;
 
-              wbCopyElementToRecord(Element, MainRecords[i], False, True)
+              MainRecords[i].AddCopy(Element, [cfDeepCopy])
             end;
           end;
         end else begin
@@ -8714,41 +8280,13 @@ begin
 end;
 
 procedure TfrmMain.mniNavBatchChangeReferencingRecordsClick(Sender: TObject);
-
-  function FindFile(const s: String): IwbFile;
-  var
-    i: Integer;
-  begin
-    for i := Low(Files) to High(Files) do
-      if AnsiSameText(Files[i].FileName, s) then begin
-        Result := Files[i];
-        Exit;
-      end;
-    Result := nil;
-  end;
-
 var
-  _File                       : IwbFile;
-  NodeData                    : PNavNodeData;
-  CSV, Line                   : TStringList;
-  i, j, k, l                  : Integer;
-  s                           : string;
-  OldMaster                   : IwbFile;
-  NewMaster                   : IwbFile;
-  OldRecord                   : IwbMainRecord;
-  NewRecord                   : IwbMainRecord;
-  RefRecord                   : IwbMainRecord;
-  ReferencedBy                : TDynMainRecords;
-  NewMasters                  : TStringList;
-  ReplaceList                 : array of record
-    rlOldRecord: IwbMainRecord;
-    rlNewRecord: IwbMainRecord;
-    rlReferencedBy : TDynMainRecords;
-  end;
+  _File      : IwbFile;
+  NodeData   : PNavNodeData;
+  CSV        : TStringList;
+  lPlan      : TwbReferenceReplacementPlan;
+  NewMasters : TStringList;
 begin
-  ReplaceList := nil;
-  l := 0;
-
   if not xeContext.Settings.EditAllowed then
     Exit;
   if xeContext.Settings.TranslationMode then
@@ -8759,6 +8297,8 @@ begin
     Exit;
   if not Supports(NodeData.Element, IwbFile, _File) then
     Exit;
+  if not _File.IsEditable then
+    Exit;
 
   with odCSV do begin
     FileName := '';
@@ -8767,141 +8307,35 @@ begin
       Exit;
   end;
 
+  CSV := TStringList.Create;
+  try
+    CSV.LoadFromFile(odCSV.FileName);
+    lPlan := _File.PlanReferenceReplacement(CSV,
+      procedure(aMessage: string)
+      begin
+        AddMessage(aMessage);
+      end);
+  finally
+    CSV.Free;
+  end;
+
+  if Length(lPlan.Entries) > 0 then
+    if not EditWarn then
+      Exit;
+
   NewMasters := TStringList.Create;
   try
-    NewMasters.Sorted := True;
-    NewMasters.Duplicates := dupError;
-
-    CSV := TStringList.Create;
-    try
-      CSV.LoadFromFile(odCSV.FileName);
-      Line := TStringList.Create;
-      try
-        SetLength(ReplaceList, CSV.Count);
-        for i := 1 to Pred(CSV.Count) do begin //ignore first line
-          Line.CommaText := CSV[i];
-          if Line.Count <> 7 then begin
-            AddMessage('Skipping line '+IntToStr(i+1)+': 7 values expected but '+IntToStr(Line.Count)+' found.');
-            Continue;
-          end;
-
-          s := Trim(Line[1]);
-          OldMaster := FindFile(s);
-          if not Assigned(OldMaster) then begin
-            AddMessage('Skipping line '+IntToStr(i+1)+': Old Master "'+s+'" is not loaded.');
-            Continue;
-          end else if OldMaster.LoadOrder < 0 then begin
-            AddMessage('Skipping line '+IntToStr(i+1)+': Old Master "'+s+'" does not have a load order assigned.');
-            Continue;
-          end;
-
-          s := Trim(Line[5]);
-          NewMaster := FindFile(s);
-          if not Assigned(NewMaster) then begin
-            AddMessage('Skipping line '+IntToStr(i+1)+': New Master "'+s+'" is not loaded.');
-            Continue;
-          end else if NewMaster.LoadOrder < 0 then begin
-            AddMessage('Skipping line '+IntToStr(i+1)+': New Master "'+s+'" does not have a load order assigned.');
-            Continue;
-          end;
-
-          s := Trim(Line[2]);
-          j := StrToIntDef(s, -1);
-          if (j < 0) or (j > $FFFFFF) then begin
-            AddMessage('Skipping line '+IntToStr(i+1)+': Old FormID "'+s+'" is not in the valid range.');
-            Continue;
-          end;
-          OldRecord := OldMaster.RecordByFormID[TwbFormID.FromCardinal(j).ChangeFileID(xeContext.SlotLayout, OldMaster.FileFileID[True]), True, True];
-          if not Assigned(OldRecord) then begin
-            AddMessage('Skipping line '+IntToStr(i+1)+': Old Record with FormID "'+s+'" was not found in old Master "'+OldMaster.FileName+'".');
-            Continue;
-          end;
-
-          s := Trim(Line[6]);
-          j := StrToIntDef(s, -1);
-          if (j < 0) or (j > $FFFFFF) then begin
-            AddMessage('Skipping line '+IntToStr(i+1)+': New FormID "'+s+'" is not in the valid range.');
-            Continue;
-          end;
-          NewRecord := NewMaster.RecordByFormID[TwbFormID.FromCardinal(j).ChangeFileID(xeContext.SlotLayout, NewMaster.FileFileID[True]), True, True];
-          if not Assigned(NewRecord) then begin
-            AddMessage('Skipping line '+IntToStr(i+1)+': New Record with FormID "'+s+'" was not found in new Master "'+NewMaster.FileName+'".');
-            Continue;
-          end;
-
-          if OldRecord.Equals(NewRecord) then begin
-            AddMessage('Skipping line '+IntToStr(i+1)+': Old and new Record are identical".');
-            Continue;
-          end;
-
-          s := Trim(Line[0]);
-          if not SameText(OldRecord.Signature, s) then
-            AddMessage('Warning line '+IntToStr(i+1)+': Old Record do not have expected Signature ("'+OldRecord.Signature+'" vs. "'+s+'")".');
-          if not SameText(NewRecord.Signature, s) then
-            AddMessage('Warning line '+IntToStr(i+1)+': New Record do not have expected Signature ("'+NewRecord.Signature+'" vs. "'+s+'")".');
-
-          s := Trim(Line[3]);
-          if not SameText(OldRecord.EditorID, s) then
-            AddMessage('Warning line '+IntToStr(i+1)+': Old Record does not have expected EditorID ("'+OldRecord.EditorID+'" vs. "'+s+'")".');
-
-          s := Trim(Line[4]);
-          if not SameText(NewRecord.EditorID, s) then
-            AddMessage('Warning line '+IntToStr(i+1)+': New Record does not have expected EditorID ("'+NewRecord.EditorID+'" vs. "'+s+'")".');
-
-          ReferencedBy := nil;
-          SetLength(ReferencedBy, OldRecord.ReferencedByCount);
-          k := 0;
-
-          for j := 0 to Pred(OldRecord.ReferencedByCount) do begin
-            RefRecord := OldRecord.ReferencedBy[j];
-            if _File.Equals(RefRecord._File) then begin
-              ReferencedBy[k] := RefRecord;
-              Inc(k);
-            end;
-          end;
-
-          SetLength(ReferencedBy, k);
-
-          if k < 1 then begin
-            AddMessage('Skipping line '+IntToStr(i+1)+': Old Record "'+OldRecord.Name+'" is not referenced by any record in file "'+_File.Name+'".');
-            Continue;
-          end;
-
-          with ReplaceList[l] do begin
-            rlOldRecord := OldRecord;
-            rlNewRecord := NewRecord;
-            rlReferencedBy := ReferencedBy;
-            OldRecord := nil;
-            NewRecord := nil;
-            RefRecord := nil;
-            ReferencedBy := nil;
-          end;
-          Inc(l);
-
-          if not NewMaster.Equals(_File) then
-            if not NewMasters.Find(NewMaster._File.FileName, k) then
-              NewMasters.AddObject(NewMaster._File.FileName, Pointer(NewMaster._File));
-        end;
-      finally
-        FreeAndNil(Line);
-      end;
-    finally
-      FreeAndNil(CSV);
-    end;
-    SetLength(ReplaceList, l);
-
-    if l > 0 then
-      if not EditWarn then
-        Exit;
+    for var lMaster in lPlan.NewMasters do
+      NewMasters.AddObject(lMaster.FileName, Pointer(lMaster));
 
     if AddRequiredMasters(NewMasters, _File) then
-      for i := 0 to Pred(l) do with ReplaceList[i] do begin
-        ShowChangeReferencedBy(rlOldRecord.LoadOrderFormID, rlNewRecord.LoadOrderFormID, rlReferencedBy, True);
-        RefRecord := _File.RecordByFormID[rlOldRecord.LoadOrderFormID, False, True];
-        if Assigned(RefRecord) and _File.Equals(RefRecord._File) then begin
-          AddMessage('Changing FormID ['+RefRecord.LoadOrderFormID.ToDisplayString(xeContext.SlotLayout)+'] to ['+rlNewRecord.LoadOrderFormID.ToDisplayString(xeContext.SlotLayout)+']');
-          RefRecord.LoadOrderFormID := rlNewRecord.LoadOrderFormID;
-        end;
+      for var lEntry in lPlan.Entries do begin
+        ShowChangeReferencedBy(lEntry.OldRecord.LoadOrderFormID, lEntry.NewRecord.LoadOrderFormID, lEntry.Update, True);
+        _File.SetOwnRecordFormID(lEntry.OldRecord.LoadOrderFormID, lEntry.NewRecord.LoadOrderFormID,
+          procedure(aMessage: string)
+          begin
+            AddMessage(aMessage);
+          end);
       end;
   finally
     NewMasters.Free;
@@ -9095,20 +8529,17 @@ end;
 procedure TfrmMain.mniNavChangeFormIDClick(Sender: TObject);
 var
   s                           : string;
-  i, j, k                     : Integer;
+  j                           : Integer;
   NewFormID                   : TwbFormID;
   OldFormID                   : TwbFormID;
   NodeData                    : PNavNodeData;
   MainRecord                  : IwbMainRecord;
-  ReferencedBy, Overrides     : TDynMainRecords;
+  lUpdate                     : TwbReferenceUpdate;
   Nodes                       : TNodeArray;
   OldFileID                   : TwbFileID;
-  NewFileID                   : TwbFileID;
   AnyErrors                   : Boolean;
   Master                      : IwbMainRecord;
   _File                       : IwbFile;
-  _OldFile                    : IwbFile;
-  _NewMasterFile              : IwbFile;
 begin
   if not xeContext.Settings.EditAllowed then
     Exit;
@@ -9164,6 +8595,8 @@ begin
       Continue;
     if not Supports(NodeData.Element, IwbMainRecord, MainRecord) then
       Continue;
+    if not MainRecord.IsEditable then
+      Continue;
 
     OldFormID := MainRecord.LoadOrderFormID;
     if not Assigned(_File) then begin
@@ -9172,15 +8605,15 @@ begin
       if InputQuery('New FormID', 'Please enter the new FormID in hex. e.g. 0404CC43. The FormID needs to be a load order corrected form ID.', s) then begin
 
         if s = '' then begin
+          var lNextObjectID := MainRecord._File.NextObjectID;
           s := MainRecord._File.FileFormIDtoLoadOrderFormID(MainRecord._File.NewFormID, True).ToString;
-          if not InputQuery('New FormID generated', 'Please verify the newly generated FormID. The FormID needs to be a load order corrected form ID.', s) then
+          if not InputQuery('New FormID generated', 'Please verify the newly generated FormID. The FormID needs to be a load order corrected form ID.', s) then begin
+            MainRecord._File.NextObjectID := lNextObjectID;
             Exit;
+          end;
         end;
         NewFormID := TwbFormID.FromStr(s);
-        if NewFormID.IsNull then
-          raise Exception.Create('00000000 is not a valid FormID');
-        if NewFormID.IsPlayer then
-          raise Exception.Create('00000014 is not a valid FormID');
+        NewFormID.CheckAssignable;
       end else
         Exit;
 
@@ -9200,87 +8633,44 @@ begin
 
     AddMessage('Changing FormID ['+OldFormID.ToDisplayString(xeContext.SlotLayout)+'] in file "'+MainRecord._File.FileName+'" to ['+NewFormID.ToDisplayString(xeContext.SlotLayout)+']');
 
-    try
-      MainRecord._File.LoadOrderFormIDtoFileFormID(NewFormID, True);
-    except
-      NewFileID := NewFormID.FileID[xeContext.SlotLayout];
-      _OldFile := MainRecord._File;
-      _NewMasterFile := nil;
-      for i := Low(Files) to High(Files) do begin
-        if Files[i].LoadOrder >= _OldFile.LoadOrder then
-          Break;
-        if Files[i].LoadOrderFileID = NewFileID then begin
-          _NewMasterFile := Files[i];
-          Break;
-        end;
-      end;
-      if not Assigned(_NewMasterFile) then
-        raise;
-      if not AddRequiredMaster(_NewMasterFile, _OldFile) then
-        raise;
-    end;
+    MainRecord._File.RequireMasterFor(NewFormID,
+      function(aMaster: IwbFile): Boolean
+      begin
+        Result := AddRequiredMaster(aMaster, MainRecord._File);
+      end);
 
     Master := MainRecord.MasterOrSelf;
-    SetLength(ReferencedBy, Master.ReferencedByCount);
-    for i := 0 to Pred(Master.ReferencedByCount) do
-      ReferencedBy[i] := Master.ReferencedBy[i];
+    lUpdate := Master.PlanReferenceUpdate;
 
-    k := -1;
-    AddMessage('Record is referenced by '+IntToStr(Length(ReferencedBy))+' other record(s)');
+    AddMessage('Record is referenced by '+IntToStr(Length(lUpdate.Items))+' other record(s)');
     try
-      if Master.OverrideCount <> 0 then begin
-        // store overrides since they change on the go when renumbering FormIDs
-        SetLength(Overrides, Master.OverrideCount);
-        for i := 0 to Pred(Master.OverrideCount) do begin
-          Overrides[i] := Master.Overrides[i];
-          // index of the focused record in overrides list
-          if Overrides[i].Equals(MainRecord) then k := i;
-        end;
-        // if it is not the last override and user confirms
-        if (k < Pred(Length(Overrides))) then begin
-          var lYes := lYesToAll;
-          if not lYes then
+      if MainRecord.ChangeFormID(NewFormID,
+        function: Boolean
+        begin
+          Result := lYesToAll;
+          if not Result then
             case MessageDlg('Record '+MainRecord.Name+' has later overrides, update them too?', mtConfirmation, [mbYesToAll, mbYes, mbNo], 0) of
               mrYes:
-                lYes := True;
+                Result := True;
               mrYesToAll: begin
-                lYes := True;
+                Result := True;
                 lYesToAll := True;
               end;
             end;
-          // happens when master record is selected which is not in the list of overrides, renumber all overrides
-          if lYes then begin
-            if k = -1 then
-              k := 0;
-          end else
-            k := -1;
-        end else
-          k := -1;
-      end;
-
-      if MainRecord.LoadOrderFormID <> NewFormID then begin
-        MainRecord.LoadOrderFormID := NewFormID;
-        AddMessage('Renumbered ' + MainRecord.FullPath);
-
-        if k >= 0 then
-          for i := k to Pred(Length(Overrides)) do try
-             Overrides[i].LoadOrderFormID := NewFormID;
-             AddMessage('Renumbered ' + Overrides[i].FullPath);
-          except
-            on E: Exception do begin
-              AddMessage('Error renumbering ' + Overrides[i].FullPath + ': ' + E.Message);
-              AnyErrors := True;
-            end;
-          end;
-      end;
+        end,
+        procedure(aMessage: string)
+        begin
+          AddMessage(aMessage);
+        end) > 0 then
+        AnyErrors := True;
 
       NodeData.ConflictAll := caUnknown;
       NodeData.ConflictThis := ctUnknown;
       NodeData.Flags := [];
       vstNav.InvalidateNode(vstNav.FocusedNode);
 
-      if Length(ReferencedBy) > 0 then
-        ShowChangeReferencedBy(OldFormID, NewFormID, ReferencedBy, Assigned(_File) );
+      if Length(lUpdate.Items) > 0 then
+        ShowChangeReferencedBy(OldFormID, NewFormID, lUpdate, Assigned(_File) );
     except
       on E: Exception do begin
         AddMessage('Error: ' + E.Message);
@@ -9302,7 +8692,7 @@ var
   NamedDef                    : IwbNamedDef;
   IntegerDef                  : IwbIntegerDef;
   Flags                       : IwbFlagsDef;
-  i, StringID                 : Integer;
+  i                           : Integer;
 begin
   if not xeContext.Settings.EditAllowed then
     Exit;
@@ -9361,13 +8751,9 @@ begin
       // localization editor
       else if Element._File.IsLocalized and Assigned(Element.ValueDef) and (Element.ValueDef.DefType = dtLString) then begin
         with TfrmLocalization.Create(Self) do try
-          xeContext.LocalizationHandler.NoTranslate := true;
-          StringID := StrToInt64Def('$' + Element.Value, 0);
-          xeContext.LocalizationHandler.NoTranslate := false;
-          EditValue(Element._File.FileName, StringID);
+          EditValue(ExtractFileName(xeContext.LocalizationHandler.GetLocalizationFileNameByElement(Element)), Element.StringID);
           ShowModal;
         finally
-          xeContext.LocalizationHandler.NoTranslate := false;
           Free;
         end;
         vstView.Invalidate;
@@ -11583,36 +10969,18 @@ begin
 end;
 
 procedure TfrmMain.mniNavLocalizationSwitchClick(Sender: TObject);
-
-  procedure GatherLStrings(const aElement: IwbElement; var lst: TDynElements);
-  var
-    Container  : IwbContainerElementRef;
-    i          : Integer;
-  begin
-    if Assigned(aElement.ValueDef) and (aElement.ValueDef.DefType = dtLString) then begin
-      SetLength(lst, Succ(Length(lst)));
-      lst[High(lst)] := aElement;
-      //wbProgress('LString found in : ' + aElement.FullPath);
-    end;
-    if Supports(aElement, IwbContainerElementRef, Container) then
-      for i := Pred(Container.ElementCount) downto 0 do
-        GatherLStrings(Container.Elements[i], lst);
-  end;
-
 var
   NodeData            : PNavNodeData;
   _File               : IwbFile;
-  i, j, Translated    : integer;
-  ID                  : Cardinal;
+  i                   : integer;
   StartTick           : UInt64;
-  Element             : IwbElement;
-  lstrings            : TDynElements;
   fLocalize, ok       : boolean;
   fTranslate          : boolean;
-  s                   : string;
   lFiles              : TStringList;
-  lFrom, lTo          : TwbFastStringList;
-  wblf                : TwbLocalizationFile;
+  lFromNames          : TArray<string>;
+  lToNames            : TArray<string>;
+  lVocabulary         : TwbLocalizationVocabulary;
+  lPlan               : TwbLocalizationPlan;
 begin
   if not xeContext.Settings.EditAllowed then
     Exit;
@@ -11629,7 +10997,8 @@ begin
   try
     fLocalize := not _File.IsLocalized;
     fTranslate := false;
-    Translated := 0;
+    lVocabulary := nil;
+    lPlan := Default(TwbLocalizationPlan);
 
     if fLocalize then begin
 
@@ -11646,10 +11015,10 @@ begin
 
         if fTranslate then
           for i := 0 to Pred(lFiles.Count) do begin
-            j := 0;
-            if clbFrom.Checked[i] then j := j or 1;
-            if clbTo.Checked[i] then j := j or 2;
-            lFiles.Objects[i] := Pointer(j);
+            if clbFrom.Checked[i] then
+              lFromNames := lFromNames + [lFiles[i]];
+            if clbTo.Checked[i] then
+              lToNames := lToNames + [lFiles[i]];
           end;
 
       finally
@@ -11678,81 +11047,49 @@ begin
       if fTranslate then begin
         PostAddMessage('[Processing] Building translation index...');
 
-        lFrom := TwbFastStringList.Create;
-        lTo := TwbFastStringList.Create;
+        lVocabulary := TwbLocalizationVocabulary.Create(xeContext.LocalizationHandler, lFromNames, lToNames);
 
-        for i := 0 to Pred(lFiles.Count) do begin
-          if Integer(lFiles.Objects[i]) and 1 > 0 then begin
-            wblf := TwbLocalizationFile.Create(xeContext, xeContext.LocalizationHandler.StringsPath + lFiles[i]);
-            for j := 0 to Pred(wblf.Count) do
-              lFrom.Add(AnsiLowerCase(wblf.Items[j]));
-            wblf.Destroy;
-          end;
-
-          if Integer(lFiles.Objects[i]) and 2 > 0 then begin
-            wblf := TwbLocalizationFile.Create(xeContext, xeContext.LocalizationHandler.StringsPath + lFiles[i]);
-            lTo.AddStrings(wblf.Items);
-            wblf.Destroy;
-          end;
-        end;
-
-        if lFrom.Count <> lTo.Count then begin
+        if not lVocabulary.CountsMatch then begin
           PostAddMessage('[Error] Number of strings in vocabulary does not match. Check parameters and run again.');
           Exit;
         end;
       end;
 
       PostAddMessage('[Processing] Collecting localizable values...');
-      GatherLStrings(_File, lstrings);
+      lPlan := _File.PlanLocalization;
 
-      PostAddMessage('[Processing] Performing operation...');
-      for i := Low(lstrings) to High(lstrings) do begin
-
-        Element := lstrings[i];
-        if fLocalize then begin
-          s := Element.EditValue;
-          if fTranslate then begin
-            j := lFrom.IndexOf(AnsiLowerCase(s));
-            if j <> -1 then begin
-              s := lTo[j];
-              Inc(Translated);
-            end else
-              // count empty strings as translated too
-              if s = '' then Inc(Translated);
-          end;
-          ID := xeContext.LocalizationHandler.AddValue(s, Element);
-          Element.EditValue := sStringID + IntToHex(ID, 8);
-        end else begin
-          s := Element.EditValue;
-          xeContext.LocalizationHandler.NoTranslate := true;
-          Element.EditValue := s;
-          xeContext.LocalizationHandler.NoTranslate := false;
+      if Length(lPlan.Unresolved) > 0 then begin
+        var lNames := '';
+        for var lRecord in lPlan.Unresolved do begin
+          if lNames <> '' then
+            lNames := lNames + '; ';
+          lNames := lNames + lRecord.Name;
         end;
-
-        if StartTick + 500 < GetTickCount64 then begin
-          DoProcessMessages;
-          StartTick := GetTickCount64;
-        end;
-
+        PostAddMessage('[Error] Localized strings that can not be resolved, nothing was changed: ' + lNames);
+        Exit;
       end;
 
-      _File.IsLocalized := not _File.IsLocalized;
+      PostAddMessage('[Processing] Performing operation...');
+      lPlan.Apply(lVocabulary,
+        procedure
+        begin
+          if StartTick + 500 < GetTickCount64 then begin
+            DoProcessMessages;
+            StartTick := GetTickCount64;
+          end;
+        end);
 
       vstNav.Invalidate;
       ok := true;
 
     finally
-      if fLocalize and fTranslate then begin
-        FreeAndNil(lFrom);
-        FreeAndNil(lTo);
-      end;
+      FreeAndNil(lVocabulary);
 
-      xeContext.LocalizationHandler.NoTranslate := false;
       pnlClient.Enabled := true;
       UpdatePnlCancelVisible;
       PostAddMessage('[Processing done] ' +
-        ' Localizable Strings: ' + IntToStr(Length(lstrings)) +
-        ' Translated: ' + IntToStr(Translated) +
+        ' Localizable Strings: ' + IntToStr(Length(lPlan.Elements)) +
+        ' Translated: ' + IntToStr(lPlan.TranslatedCount) +
         ' Elapsed Time: ' + wbFormatElapsedTime( Now - wbStartTime));
       Caption := Application.Title;
 
@@ -14765,19 +14102,6 @@ begin
   end;
 end;
 
-function TfrmMain.RestorePluginsFromMaster: Boolean;
-var
-  i: Integer;
-begin
-  Result := False;
-  for i := Low(Files) to High(Files) do with Files[i] do
-    if IsESM and (not (fsIsHardcoded in FileStates)) and SameText(ExtractFileExt(FileName), '.esp') then begin
-      AddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] Removing ESM Flag: ' + FileName);
-      IsESM := False;
-      Result := True;
-    end;
-end;
-
 procedure TfrmMain.mniMainSaveClick(Sender: TObject);
 begin
   jbhSave.CancelHint;
@@ -15407,37 +14731,6 @@ begin
     DoSetActiveRecord(aMainRecords);
 end;
 
-function TfrmMain.SetAllToMaster: Boolean;
-var
-  i: Integer;
-begin
-  Result := False;
-  for i := Low(Files) to High(Files) do with Files[i] do
-    if (not IsESM) and (not (fsIsHardcoded in FileStates)) then begin
-      AddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] Setting ESM Flag: ' + FileName);
-      IsESM := True;
-      Result := True;
-    end else begin
-      if xeContext.Settings.MasterUpdateFilterONAM and (MasterCount[True] > 0) then
-        Elements[0].MarkModifiedRecursive(AllElementTypes);
-    end;
-end;
-
-function TfrmMain.UpdateAllOnam: Boolean;
-var
-  i: Integer;
-begin
-  Result := False;
-  for i := Low(Files) to High(Files) do with Files[i] do
-    if IsEditable and (FileStates * [fsIsGameMaster, fsIsHardcoded, fsIsOfficial] = []) then begin
-      if MasterCount[True] > 0 then begin
-        Elements[0].MarkModifiedRecursive(AllElementTypes);
-        AddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] Updating ONAM in: ' + FileName);
-        Result := True;
-      end;
-    end;
-end;
-
 procedure TfrmMain.SetDoubleBuffered(aWinControl: TWinControl);
 var
   i                           : Integer;
@@ -15734,20 +15027,42 @@ begin
     pgMain.ActivePage.Visible := True;
 end;
 
-procedure TfrmMain.ShowChangeReferencedBy(const OldFormID, NewFormID: TwbFormID; const ReferencedBy: TDynMainRecords; aSilent: Boolean);
+procedure TfrmMain.ShowChangeReferencedBy(const OldFormID, NewFormID: TwbFormID; const aUpdate: TwbReferenceUpdate; aSilent: Boolean);
 var
   Counter    : Integer;
   i          : Integer;
-  Error      : Boolean;
   s          : string;
+  lUpdate    : TwbReferenceUpdate;
 begin
+  lUpdate.Items := Copy(aUpdate.Items);
+
+  if aSilent then begin
+    Counter := 0;
+    for i := Low(lUpdate.Items) to High(lUpdate.Items) do
+      if lUpdate.Items[i].Rec.IsEditable then
+        Inc(Counter);
+    if Counter <= 0 then
+      Exit;
+
+    if wbCurrentAction = '' then
+      s := 'Updating referencing records'
+    else
+      s := '';
+
+    PerformLongAction(s, '', procedure
+    begin
+      lUpdate.Apply(OldFormID, NewFormID);
+    end);
+    Exit;
+  end;
+
   with TfrmFileSelect.Create(nil) do try
     Caption := 'Please select records to update';
 
     Counter := 0;
-    for i := Low(ReferencedBy) to High(ReferencedBy) do begin
-      CheckListBox1.AddItem(ReferencedBy[i].Name + ' - ' + ReferencedBy[i]._File.Name, Pointer(ReferencedBy[i]));
-      if ReferencedBy[i].IsEditable then begin
+    for i := Low(lUpdate.Items) to High(lUpdate.Items) do begin
+      CheckListBox1.AddItem(lUpdate.Items[i].Rec.Name + ' - ' + lUpdate.Items[i].Rec._File.Name, nil);
+      if lUpdate.Items[i].Rec.IsEditable then begin
         CheckListBox1.ItemEnabled[i] := True;
         Inc(Counter)
       end else
@@ -15755,61 +15070,44 @@ begin
     end;
 
     if Counter <= 0 then begin
-      if not aSilent then
-        ShowMessage('There are ' + IntToStr(Length(ReferencedBy)) + ' records referencing FormID ' + OldFormID.ToDisplayString(xeContext.SlotLayout) + ' but none of them are in editable files.');
+      ShowMessage('There are ' + IntToStr(Length(lUpdate.Items)) + ' records referencing FormID ' + OldFormID.ToDisplayString(xeContext.SlotLayout) + ' but none of them are in editable files.');
       Exit;
     end;
 
-    if not aSilent then begin
-      if ShowModal <> mrOk then
-        Exit;
+    if ShowModal <> mrOk then
+      Exit;
 
-      for i := Pred(CheckListBox1.Count) downto 0 do
-        if not CheckListBox1.Checked[i] then
-          CheckListBox1.Items.Delete(i)
-        else
-          CheckListBox1.Checked[i] := False;
+    Counter := 0;
+    for i := Low(lUpdate.Items) to High(lUpdate.Items) do begin
+      lUpdate.Items[i].Selected := CheckListBox1.Checked[i];
+      if lUpdate.Items[i].Selected then
+        Inc(Counter);
     end;
+    if Counter <= 0 then
+      Exit;
 
-    if CheckListBox1.Count > 0 then begin
+    if wbCurrentAction = '' then
+      s := 'Updating referencing records'
+    else
+      s := '';
 
-      if wbCurrentAction = '' then
-        s := 'Updating referencing records'
+    PerformLongAction(s, '', procedure
+    begin
+      lUpdate.Apply(OldFormID, NewFormID);
+    end);
+
+    if lUpdate.AnyFailed then
+      ShowMessage('At least one record could not be updated. Check the message log for detailed error messages');
+
+    for i := Pred(CheckListBox1.Count) downto 0 do
+      if lUpdate.Items[i].Selected then
+        CheckListBox1.Checked[i] := lUpdate.Items[i].Outcome = ruoUpdated
       else
-        s := '';
+        CheckListBox1.Items.Delete(i);
 
-      PerformLongAction(s, '', procedure
-      var
-        i       : Integer;
-        Counter : Integer;
-      begin
-        Counter := 0;
-        Error := False;
-        for i := 0 to Pred(CheckListBox1.Count) do try
-          CheckListBox1.Checked[i] := IwbMainRecord(Pointer(CheckListBox1.Items.Objects[i])).CompareExchangeFormID(OldFormID, NewFormID);
-          if CheckListBox1.Checked[i] then
-            Inc(Counter);
-          wbTick;
-        except
-          on E: Exception do begin
-            wbProgress('Error updating FormID for ' + CheckListBox1.Items[i] + ': ' + E.Message);
-            Error := True;
-          end;
-        end;
+    Caption := 'These records have been successfully updated:';
 
-        wbProgress(IntToStr(Counter) + ' records out of '+IntToStr(Length(ReferencedBy))+' total records which reference FormID [' + OldFormID.ToDisplayString(xeContext.SlotLayout) + '] have been updated to [' + NewFormID.ToDisplayString(xeContext.SlotLayout) + ']');
-      end);
-
-      if not aSilent then begin
-        if Error then
-          ShowMessage('At least one record could not be updated. Check the message log for detailed error messages');
-
-        Caption := 'These records have been successfully updated:';
-
-        ShowModal;
-      end;
-
-    end;
+    ShowModal;
 
   finally
     Free;
@@ -16509,7 +15807,6 @@ end;
 procedure TfrmMain.tmrMessagesTimer(Sender: TObject);
 var
   ChangesMade : Boolean;
-  i, dummy: Integer;
 begin
   if (ShowNexusModsHint <> 0) and (ShowNexusModsHint < Now) then
     if NexusModsVersion > VersionString then begin
@@ -16601,15 +15898,18 @@ begin
       PostAddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] a working version. But it is recommended to contact the author of the module');
       PostAddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] to get the original fixed.');
     end else try
-      if (xeToolMode = tmSortAndCleanMasters) then begin
-        for i := Low(Files) to High(Files) do
-          if xeModulesToUse.Find(Files[i].FileName, dummy) and Files[i].IsEditable then begin
-            Files[i].SortMasters;
-            Files[i].CleanMasters;
-            ChangesMade := ChangesMade or Files[i].Modified;
-          end
-      end else if (xeToolMode in [tmMasterRestore, tmESPify]) then
-        ChangesMade := RestorePluginsFromMaster
+{$IFDEF XE_TEST_CONTROL_POINTS}
+      if xeTestSwitches.FileLists <> '' then
+        TestWriteFileLists;
+{$ENDIF}
+      var lReport: TProc<string> := procedure(aText: string)
+        begin
+          AddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] ' + aText);
+        end;
+      if (xeToolMode = tmSortAndCleanMasters) then
+        ChangesMade := xeContext.SortAndCleanMasters(xeModulesToUse)
+      else if (xeToolMode in [tmMasterRestore, tmESPify]) then
+        ChangesMade := xeContext.ClearEspESMFlags(lReport)
       else if (xeToolMode in [tmCheckForErrors, tmCheckForITM, tmCheckForDR]) then begin
 {$IFDEF XE_TEST_CONTROL_POINTS}
         if (xeToolMode in [tmCheckForITM, tmCheckForDR]) and (xeTestSwitches.StateManifest <> '') then
@@ -16664,10 +15964,12 @@ begin
 {$ENDIF}
           xeContext.Settings.DontSave := True;
         end;
-      end else if xeToolMode = tmMasterUpdate then
-        ChangesMade := SetAllToMaster
-      else if xeToolMode = tmOnamUpdate then begin
-        ChangesMade := UpdateAllOnam;
+      end else if xeToolMode in [tmMasterUpdate, tmESMify] then begin
+        if xeContext.Settings.MasterUpdateFilterONAM then
+          xeContext.MarkMasterOnamsForRebuild;
+        ChangesMade := xeContext.FlagPluginsESM(lReport);
+      end else if xeToolMode = tmOnamUpdate then begin
+        ChangesMade := xeContext.MarkPluginOnamsForRebuild(lReport);
         if ChangesMade then begin
           Settings.WriteBool('Options', 'AlwaysSaveOnam', True);
           Settings.UpdateFile;
@@ -16690,6 +15992,10 @@ begin
       end else
         if (xeToolMode in wbPluginModes) then
           AutoDone := true;
+{$IFDEF XE_TEST_CONTROL_POINTS}
+      if xeTestSwitches.ToolModeAuto then
+        AutoDone := True;
+{$ENDIF}
 
     except
       xeContext.Settings.DontSave := True;
@@ -19743,7 +19049,8 @@ begin
 
         if xeContext.LoaderError then begin
 {$IFDEF XE_TEST_CONTROL_POINTS}
-          if xeTestSwitches.Conflicts or xeTestSwitches.NavCopy or xeTestSwitches.Merge or xeTestSwitches.CopyInto or xeTestSwitches.Renumber then begin
+          if xeTestSwitches.Conflicts or xeTestSwitches.NavCopy or xeTestSwitches.Merge or xeTestSwitches.MergedPatch or
+             xeTestSwitches.CopyInto or xeTestSwitches.Renumber or xeTestSwitches.ChangeFormID then begin
             wbProgress('Test mode FAILED: an error occured while loading modules');
             CheckResult := 255;
             if xeAutoExit then
@@ -19986,6 +19293,9 @@ begin
         if xeTestSwitches.Merge then
           DoTestMerge;
 
+        if xeTestSwitches.MergedPatch then
+          DoTestMergedPatch;
+
         if xeTestSwitches.CopyInto then
           DoTestCopyInto;
 
@@ -19994,6 +19304,12 @@ begin
             TLoaderThread.Create(xeTestSwitches.RenumberCompareTo, Files[High(Files)])
           else
             DoTestRenumber;
+
+        if xeTestSwitches.ChangeFormID then
+          if xeTestSwitches.ChangeFormIDCompareTo <> '' then
+            TLoaderThread.Create(xeTestSwitches.ChangeFormIDCompareTo, Files[High(Files)])
+          else
+            DoTestChangeFormID;
 
         if xeTestSwitches.Hide then
           DoTestHide;
@@ -20088,6 +19404,15 @@ begin
             tmrShutdown.Enabled := True;
         end else
           DoTestRenumber;
+
+      if xeTestSwitches.ChangeFormID then
+        if xeContext.LoaderError then begin
+          wbProgress('Test Change FormID mode FAILED: an error occured while loading the compare to module');
+          CheckResult := 255;
+          if xeAutoExit then
+            tmrShutdown.Enabled := True;
+        end else
+          DoTestChangeFormID;
 
       if xeTestSwitches.SaveContexts then begin
         if xeContext.LoaderError then begin

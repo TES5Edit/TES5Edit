@@ -921,6 +921,7 @@ type
   TwbSaveContextClass = class of TwbSaveContext;
   TwbLocalizationHandler = class;
   TwbLocalizationFile = class;
+  TwbLocalizationVocabulary = class;
   TwbHiddenSet = class;
   IwbFile = interface;
   IwbSaveTables = interface;
@@ -1096,6 +1097,7 @@ type
     function IsNone   : Boolean; inline;
 
     function IsHardcoded: Boolean; inline;
+    procedure CheckAssignable;
 
     procedure SetObjectID(aLayout: TwbSlotLayout; const Value: Cardinal; aSilent: Boolean); overload;
 
@@ -1153,6 +1155,20 @@ type
   );
 
   TwbTemplateElements = TArray<IwbTemplateElement>;
+
+  TwbCanOverwriteAction = (coCopy, coDelete, coSkip);
+  TwbCanOverwriteCallback = reference to function(const aTarget, aSource: IwbElement) : TwbCanOverwriteAction;
+
+  TwbCopyFlag = (cfAsNew, cfDeepCopy, cfAllowOverwrite);
+  TwbCopyFlags = set of TwbCopyFlag;
+
+  TwbCopyRules = record
+    PrefixRemove : string;
+    SuffixRemove : string;
+    Prefix       : string;
+    Suffix       : string;
+    CanOverwrite : TwbCanOverwriteCallback;
+  end;
 
   IwbElement = interface(IwbInterface)
     ['{F4B4637D-C794-415F-B5C7-587EAA4095B3}']
@@ -1229,7 +1245,8 @@ type
     function GetSummaryLinksTo: IwbElement;
     function GetNoReach: Boolean;
     procedure ReportRequiredMasters(aMasters: TwbFilesSet; aAsNew: Boolean; recursive: Boolean = True; initial: Boolean = False);
-    function AddIfMissing(const aElement: IwbElement; aAsNew, aDeepCopy : Boolean; const aPrefixRemove, aSuffixRemove, aPrefix, aSuffix: string; aAllowOverwrite: Boolean): IwbElement;
+    procedure ReportRequiredMastersForCopy(aMasters: TwbFilesSet; aAsNew, aDeepCopy: Boolean; const aTarget: IwbFile = nil);
+    function AddIfMissing(const aElement: IwbElement; aFlags: TwbCopyFlags; const aRules: TwbCopyRules): IwbElement;
     procedure ResetConflict;
     procedure ResetReachable;
     function RemoveInjected(aCanRemove: Boolean): Boolean;
@@ -1278,6 +1295,8 @@ type
 
     function GetLocalized: TwbTriBool;
     procedure SetLocalized(const aValue: TwbTriBool);
+    procedure Delocalize;
+    function GetStringID: Cardinal;
 
     property Found: Boolean
       read GetFound
@@ -1285,7 +1304,7 @@ type
 
     procedure WriteToStream(aStream: TStream; aResetModified: TwbResetModified);
 
-    function CopyInto(const aFile: IwbFile; AsNew, DeepCopy: Boolean; const aPrefixRemove, aSuffixRemove, aPrefix, aSuffix: string): IwbElement;
+    function CopyInto(const aFile: IwbFile; aFlags: TwbCopyFlags; const aRules: TwbCopyRules): IwbElement;
 
     function GetTreeHead: Boolean;              // Is the element expected to be a "header record" in the tree navigator
     function GetTreeBranch: Boolean;            // Is the element expected to show in the tree navigator
@@ -1434,6 +1453,9 @@ type
     property Localized: TwbTriBool
       read GetLocalized
       write SetLocalized;
+
+    property StringID: Cardinal
+      read GetStringID;
 
     property MastersUpdated: Boolean
       read GetMastersUpdated;
@@ -1649,8 +1671,7 @@ type
 
   TDynElements = array of IwbElement;
 
-  TwbCanOverwriteAction = (coCopy, coDelete, coSkip);
-  TwbCanOverwriteCallback = reference to function(const aTarget, aSource: IwbElement) : TwbCanOverwriteAction;
+  TwbCopyDecision = reference to function(const aTarget, aSource: IwbElement): Boolean;
 
   TwbAfterCopyCallback = procedure(const aElement: IwbElement);
 
@@ -1661,14 +1682,11 @@ type
     DeepCopy       : Boolean;
     AllowOverwrite : Boolean;
     EditorID       : string;
-    PrefixRemove   : string;
-    SuffixRemove   : string;
-    Prefix         : string;
-    Suffix         : string;
+    Rules          : TwbCopyRules;
     Operation      : string;
     AfterCopy      : TwbAfterCopyCallback;
-    CanOverwrite   : TwbCanOverwriteCallback;
     class function IsMultiple(const aElements: TDynElements): Boolean; static;
+    class function OverwriteAction(const aTarget, aSource: IwbElement; const aConfirmOverwrite, aConfirmRemove: TwbCopyDecision): TwbCanOverwriteAction; static;
   end;
 
   TwbFormIDChangeKind = (fckRenumber, fckInject, fckCompact);
@@ -1691,6 +1709,71 @@ type
     RefusedRecord  : IwbMainRecord;
     InUseFormID    : TwbFormID;
     InUseHolder    : IwbMainRecord;
+  end;
+
+  TwbReferenceUpdateOutcome = (ruoNotTried, ruoUnchanged, ruoUpdated, ruoFailed);
+
+  TwbReferenceUpdateItem = record
+    Rec      : IwbMainRecord;
+    Selected : Boolean;
+    Outcome  : TwbReferenceUpdateOutcome;
+  end;
+
+  TwbReferenceUpdate = record
+    Items : TArray<TwbReferenceUpdateItem>;
+    procedure Apply(const aOldFormID, aNewFormID: TwbFormID);
+    function AnyFailed: Boolean;
+  end;
+
+  TwbReferenceReplacement = record
+    OldRecord : IwbMainRecord;
+    NewRecord : IwbMainRecord;
+    Update    : TwbReferenceUpdate;
+  end;
+
+  TwbReferenceReplacementPlan = record
+    Entries    : TArray<TwbReferenceReplacement>;
+    NewMasters : TwbFiles;
+  end;
+
+  TwbCleanupInjectedPlan = record
+    Target     : IwbFile;
+    Records    : TArray<IwbMainRecord>;
+    NewMasters : TwbFiles;
+    class function Plan(const aElements: TDynElements): TwbCleanupInjectedPlan; static;
+    procedure Apply(const aReport: TProc<string>);
+  end;
+
+  TwbLocalizationPlan = record
+    Target          : IwbFile;
+    Elements        : TDynElements;
+    Unresolved      : TArray<IwbMainRecord>;
+    TranslatedCount : Integer;
+    procedure Apply(const aVocabulary: TwbLocalizationVocabulary; const aStep: TProc);
+  end;
+
+  TwbMergeIntoMasterResult = record
+    Plan                : TwbFormIDChangePlan;
+    InjectSkippedUpdate : Boolean;
+    ApplyErrors         : Boolean;
+    Masters             : TwbFiles;
+    Groups              : TDynElements;
+    Copied              : TDynElements;
+  end;
+
+  TwbMergedPatchList = record
+    Signature : TwbSignature;
+    Lists     : TArray<string>;
+    Counts    : TArray<string>;
+    AsSet     : Boolean;
+  end;
+
+  TwbMergedPatchLists = TArray<TwbMergedPatchList>;
+
+  TwbMergedPatchResult = record
+    Merged : TArray<IwbMainRecord>;
+    Faulty : TArray<IwbMainRecord>;
+    Failed : TArray<IwbMainRecord>;
   end;
 
   IwbFile = interface(IwbContainer)
@@ -1745,6 +1828,7 @@ type
     procedure AddMasters(aMasters: TStrings; aSilent: Boolean = False);
     procedure AddMasterIfMissing(const aMaster: string; aSortMasters: Boolean = True; aSilent: Boolean = False);
     procedure AddMastersIfMissing(const aMasters: TStrings; aSortMasters: Boolean = True; aSilent: Boolean = False);
+    function RequiredMastersFor(const aMasters: TwbFilesSet): TwbFiles;
     procedure SortMasters;
     procedure CleanMasters;
 
@@ -1803,7 +1887,11 @@ type
 
     procedure RemoveIdenticalDeltaFast;
 
+    function AddCopy(const aSource: IwbElement; aFlags: TwbCopyFlags; const aRules: TwbCopyRules): IwbElement;
     procedure AddCopies(const aElements: TDynElements; var aResult: TDynElements; var aOptions: TwbCopyOptions);
+    function AcceptsCopiesOf(const aElements: TDynElements; aAsNew, aAsWrapper: Boolean; aRequiredLoadOrder: Integer): Boolean;
+    function MergeIntoMaster(const aTarget: IwbFile): TwbMergeIntoMasterResult;
+    function BuildMergedPatch(const aFiles: TwbFiles; const aReport: TProc<string>): TwbMergedPatchResult;
 
     function GetObjectIDFloor: Cardinal;
     function GetTakesLightObjectIDs: Boolean;
@@ -1811,6 +1899,10 @@ type
     function ApplyFormIDChange(const aPlan: TwbFormIDChangePlan): Boolean;
     procedure FinishFormIDChange(const aPlan: TwbFormIDChangePlan);
     procedure BuildOrLoadRefOfDependents;
+    procedure RequireMasterFor(const aLoadOrderFormID: TwbFormID; const aAddMaster: TFunc<IwbFile, Boolean>);
+    function PlanReferenceReplacement(const aLines: TStrings; const aReport: TProc<string>): TwbReferenceReplacementPlan;
+    procedure SetOwnRecordFormID(const aOldFormID, aNewFormID: TwbFormID; const aReport: TProc<string>);
+    function PlanLocalization: TwbLocalizationPlan;
 
     function IsNewRecord(const aFileID: TwbFileID; aNew: Boolean): Boolean; overload;
     function IsNewRecord(const aFormID: TwbFormID; aNew: Boolean): Boolean; overload;
@@ -2203,6 +2295,9 @@ type
 
     procedure Delete;
     procedure DeleteInto(const aFile: IwbFile);
+    function AddCopy(const aSource: IwbElement; aFlags: TwbCopyFlags): IwbElement;
+    function ChangeFormID(const aNewFormID: TwbFormID; const aUpdateLaterOverrides: TFunc<Boolean>; const aReport: TProc<string>): Integer;
+    function PlanReferenceUpdate(const aInFile: IwbFile = nil): TwbReferenceUpdate;
 
     procedure MakePartialForm;
 
@@ -3057,6 +3152,11 @@ type
     function SetFormater(const aFormater: IwbStringDefFormater): IwbLenStringDef;
   end;
 
+  IwbLStringDef = interface(IwbStringDef)
+    ['{2BA84994-4616-4874-BC81-BC4275549E23}']
+    function TryGetStringID(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; out aID: Cardinal): Boolean;
+  end;
+
   IwbByteArrayDef = interface(IwbValueDef)
     ['{3069E1AC-4307-421B-93E4-797E18075EF9}']
   end;
@@ -3713,6 +3813,8 @@ type
     gdLightFlag                : Cardinal;
     gdUpdateFlag               : Cardinal;
     gdEslExtensionSupported    : Boolean;
+    gdMergedPatchLists         : TwbMergedPatchLists;
+    gdMergedPatchSupported     : Boolean;
 
     function GetKnownSubRecordSignature(aKind: TwbKnownSubRecord): TwbSignature;
 
@@ -3738,6 +3840,7 @@ type
     procedure Define; virtual;
     procedure CreateSaveDefs;
     class function ComputeCapabilities(aGameMode: TwbGameMode; const aInputs: TwbGameDefInputs): TwbGameCapabilities; static;
+    class function ComputeMergedPatchLists(aGameMode: TwbGameMode): TwbMergedPatchLists; static;
 
     function IsCS(const aDef1, aDef2: string): string; overload;
     function IsHNVSE(const aDef1, aDef2: TwbConflictPriority): TwbConflictPriority; overload;
@@ -3919,6 +4022,10 @@ type
       read gdUpdateFlag;
     property EslExtensionSupported: Boolean
       read gdEslExtensionSupported;
+    property MergedPatchLists: TwbMergedPatchLists
+      read gdMergedPatchLists;
+    property MergedPatchSupported: Boolean
+      read gdMergedPatchSupported;
     function NewLightFileExtension: string;
 
     function FindRecordDef(const aSignature: TwbSignature; out aRecordDef: PwbMainRecordDef): Boolean; overload;
@@ -4242,6 +4349,11 @@ type
     function SlotLayout: TwbSlotLayout;
     function FormIDFromIdentity(aFormIDBase, aFormIDNameBase: Byte; aIdentity: string): TwbFormID;
     function ExpandFileName(const aFileName: string): string;
+    function FlagPluginsESM(const aReport: TProc<string>): Boolean;
+    procedure MarkMasterOnamsForRebuild;
+    function MarkPluginOnamsForRebuild(const aReport: TProc<string>): Boolean;
+    function ClearEspESMFlags(const aReport: TProc<string>): Boolean;
+    function SortAndCleanMasters(const aModuleNames: TStrings): Boolean;
 
     function LoadFile(const aFileName: string; aLoadOrder: Integer = -1; const aCompareTo: string = ''; aStates: TwbFileStates = []; const aData: TBytes = nil): IwbFile; virtual; abstract;
     function NewFile(const aFileName: string; aLoadOrder: Integer; aIsLight, aIsMedium: Boolean): IwbFile; overload; virtual; abstract;
@@ -4432,7 +4544,6 @@ type
     function GetStringsPath: string;
   public
     Generation: Integer;
-    NoTranslate: Boolean;
     property _Files[Index: Integer]: TwbLocalizationFile read Get; default;
     property StringsPath: string read GetStringsPath;
     property ReuseDup: Boolean read fReuseDup write fReuseDup;
@@ -4452,6 +4563,17 @@ type
     function GetLocalizationFileNameByElement(aElement: IwbElement): string;
     function GetLocalizationFileNameByType(const aPluginFile: string; ls: TwbLStringType): string;
     procedure GetStringsFromFile(const aFileName: string; const aList: TStrings);
+    procedure ReadStringsFile(const aFileName: string; const aList: TStrings);
+  end;
+
+  TwbLocalizationVocabulary = class
+  public
+    FromStrings : TStringList;
+    ToStrings   : TStringList;
+    constructor Create(const aHandler: TwbLocalizationHandler; const aFrom, aTo: array of string);
+    destructor Destroy; override;
+    function CountsMatch: Boolean;
+    function TryTranslate(var aText: string): Boolean;
   end;
 
   TwbHiddenSet = class
@@ -4472,6 +4594,8 @@ type
 
 const
   sStringID = 'STRINGID:';
+
+  wbNoCopyRules: TwbCopyRules = ();
 
   wbLocalizationExtension: array [TwbLStringType] of string = (
     '.DLSTRINGS',
@@ -5743,11 +5867,6 @@ function wbLighter(Color: TColor; Amount: Double = 0.5): TColor;
 function wbDarker(Color: TColor; Amount: Double = 0.25): TColor;
 function wbIsDarkMode: Boolean;
 
-threadvar
-  _wbCanOverwriteCallback : TwbCanOverwriteCallback;
-
-function wbCanOverwrite(const aTarget, aSource: IwbElement): TwbCanOverwriteAction;
-
 var
   wbVarPointer: TVarType = $7FF;
 
@@ -5824,14 +5943,6 @@ type
   IwbMainRecordDefInternal = interface(IwbMainRecordDef)
     ['{4EC86F13-A1B7-4FDF-B073-84DC6FA00158}']
   end;
-
-function wbCanOverwrite(const aTarget, aSource: IwbElement): TwbCanOverwriteAction;
-begin
-  if Assigned(_wbCanOverwriteCallback) then
-    Result := _wbCanOverwriteCallback(aTarget, aSource)
-  else
-    Result := coCopy;
-end;
 
 function RGBTripleToCol(const aCol: TRGBTriple ): TColor;
 begin
@@ -6343,6 +6454,50 @@ begin
   end;
   gdHardcodedRangeAdmitted := aInputs.HardcodedRange;
   gdEslExtensionSupported := aInputs.EslExtension or (gcLightPlugins in ComputeCapabilities(aGameMode, Default(TwbGameDefInputs)));
+  gdMergedPatchLists := ComputeMergedPatchLists(aGameMode);
+  gdMergedPatchSupported := aGameMode in [gmTES3, gmTES4, gmTES4R, gmFO3, gmFNV];
+end;
+
+class function TwbGameDef.ComputeMergedPatchLists(aGameMode: TwbGameMode): TwbMergedPatchLists;
+var
+  lLists : TwbMergedPatchLists;
+
+  procedure Add(const aSignature: TwbSignature; const aListNames, aCountNames: array of string; aAsSet: Boolean = False);
+  var
+    lRow : TwbMergedPatchList;
+  begin
+    lRow.Signature := aSignature;
+    SetLength(lRow.Lists, Length(aListNames));
+    for var i := Low(aListNames) to High(aListNames) do
+      lRow.Lists[i] := aListNames[i];
+    SetLength(lRow.Counts, Length(aCountNames));
+    for var i := Low(aCountNames) to High(aCountNames) do
+      lRow.Counts[i] := aCountNames[i];
+    lRow.AsSet := aAsSet;
+    SetLength(lLists, Succ(Length(lLists)));
+    lLists[High(lLists)] := lRow;
+  end;
+
+begin
+  lLists := nil;
+  Add('LVLI', ['Leveled List Entries'], ['LLCT']);
+  Add('LVLC', ['Leveled List Entries'], ['LLCT']);
+  Add('LVLN', ['Leveled List Entries'], ['LLCT']);
+  Add('LVSP', ['Leveled List Entries'], ['LLCT']);
+  Add('CONT', ['Items'], ['COCT']);
+  Add('FACT', ['Relations'], []);
+  Add('RACE', ['HNAM - Hairs', 'ENAM - Eyes', 'Actor Effects'], ['', '', 'SPCT']);
+  Add('FLST', ['FormIDs'], [], True);
+  Add('CREA', ['Items', 'Factions'], ['COCT']);
+  // FNV doesn't merge DIAL quests properly at runtime
+  if aGameMode in [gmFNV] then
+    Add('DIAL', ['Added Quests'], []);
+  // exclude Head Parts for Skyrim, causes issues
+  if aGameMode >= gmTES5 then
+    Add('NPC_', ['Items', 'Factions', 'Actor Effects', 'Perks'], ['COCT', '', 'SPCT', 'PRKZ'])
+  else
+    Add('NPC_', ['Items', 'Factions', 'Head Parts', 'Actor Effects'], []);
+  Result := lLists;
 end;
 
 constructor TwbSaveDef.Create(aGameDef: TwbGameDef);
@@ -7602,6 +7757,61 @@ begin
     if SameText(gcFiles[lIdx].FileName, aModuleName) then
       Exit(gcFiles[lIdx]);
   Result := nil;
+end;
+
+function TwbGameContext.FlagPluginsESM(const aReport: TProc<string>): Boolean;
+begin
+  Result := False;
+  for var lFile in gcFiles do
+    if not lFile.IsESM and not (fsIsHardcoded in lFile.FileStates) then begin
+      if Assigned(aReport) then
+        aReport('Setting ESM Flag: ' + lFile.FileName);
+      lFile.IsESM := True;
+      Result := True;
+    end;
+end;
+
+procedure TwbGameContext.MarkMasterOnamsForRebuild;
+begin
+  for var lFile in gcFiles do
+    if (lFile.IsESM or (fsIsHardcoded in lFile.FileStates)) and (lFile.MasterCount[True] > 0) then
+      lFile.Elements[0].MarkModifiedRecursive(AllElementTypes);
+end;
+
+function TwbGameContext.MarkPluginOnamsForRebuild(const aReport: TProc<string>): Boolean;
+begin
+  Result := False;
+  for var lFile in gcFiles do
+    if lFile.IsEditable and (lFile.FileStates * [fsIsGameMaster, fsIsHardcoded, fsIsOfficial] = []) and
+       (lFile.MasterCount[True] > 0) then begin
+      lFile.Elements[0].MarkModifiedRecursive(AllElementTypes);
+      if Assigned(aReport) then
+        aReport('Updating ONAM in: ' + lFile.FileName);
+      Result := True;
+    end;
+end;
+
+function TwbGameContext.ClearEspESMFlags(const aReport: TProc<string>): Boolean;
+begin
+  Result := False;
+  for var lFile in gcFiles do
+    if lFile.IsESM and not (fsIsHardcoded in lFile.FileStates) and SameText(ExtractFileExt(lFile.FileName), '.esp') then begin
+      if Assigned(aReport) then
+        aReport('Removing ESM Flag: ' + lFile.FileName);
+      lFile.IsESM := False;
+      Result := True;
+    end;
+end;
+
+function TwbGameContext.SortAndCleanMasters(const aModuleNames: TStrings): Boolean;
+begin
+  Result := False;
+  for var lFile in gcFiles do
+    if (aModuleNames.IndexOf(lFile.FileName) >= 0) and lFile.IsEditable then begin
+      lFile.SortMasters;
+      lFile.CleanMasters;
+      Result := Result or lFile.Modified;
+    end;
 end;
 
 function TwbGameContext.AllocateFullSlot: Integer;
@@ -8929,7 +9139,9 @@ type
     procedure AfterConstruction; override; final;
   end;
 
-  TwbLStringDef = class(TwbStringDef)
+  TwbLStringDef = class(TwbStringDef, IwbLStringDef)
+  private
+    function IsStoredLocalized(const aElement: IwbElement): Boolean;
   protected
     constructor Create(aPriority   : TwbConflictPriority;
                        aRequired   : Boolean;
@@ -8943,6 +9155,9 @@ type
     procedure FromStringNative(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aValue: string; aTransformType: TwbStringTransformType); override; final;
     function GetSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer; override; final;
     function GetDefaultSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer; override; final;
+
+    {---IwbLStringDef---}
+    function TryGetStringID(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; out aID: Cardinal): Boolean;
   end;
 
   TwbLStringKCDef = class(TwbLStringDef)
@@ -23474,60 +23689,53 @@ begin
     Exit;
   end;
 
-  if aElement._File.IsLocalized then
-    if aElement.ContextObj.LocalizationHandler.NoTranslate then begin
-      // assign a string when delocalizing and NoTranslate is true
-      inherited FromStringNative(aBasePtr, aEndPtr, aElement, aValue, aTransformType);
-      aElement.Localized := tbFalse;
-    end else begin
-      // set localized string's value
-      ID := aElement.ContextObj.LocalizationHandler.SetValue(PCardinal(aBasePtr)^, aElement, aValue);
-      aElement.RequestStorageChange(aBasePtr, aEndPtr, SizeOf(Cardinal));
-      PCardinal(aBasePtr)^ := ID;
-      aElement.Localized := tbTrue;
-      //raise Exception.Create('Can not assign to a localized string')
-    end
-  else begin
+  if aElement._File.IsLocalized and (aElement.Localized <> tbFalse) then begin
+    // set localized string's value
+    ID := aElement.ContextObj.LocalizationHandler.SetValue(PCardinal(aBasePtr)^, aElement, aValue);
+    aElement.RequestStorageChange(aBasePtr, aEndPtr, SizeOf(Cardinal));
+    PCardinal(aBasePtr)^ := ID;
+    aElement.Localized := tbTrue;
+    //raise Exception.Create('Can not assign to a localized string')
+  end else begin
     inherited FromStringNative(aBasePtr, aEndPtr, aElement, aValue, aTransformType);
     aElement.Localized := tbFalse;
   end;
 end;
 
-function TwbLStringDef.GetSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer;
+function TwbLStringDef.IsStoredLocalized(const aElement: IwbElement): Boolean;
 var
-  Localized : Boolean;
-  _File     : IwbFile;
+  _File : IwbFile;
 begin
   case aElement.Localized of
-    tbFalse: Localized := False;
-    tbTrue: Localized := True;
+    tbFalse: Result := False;
+    tbTrue: Result := True;
   else
     _File := aElement._File;
-    Localized := Assigned(_File) and _File.IsLocalized;
+    Result := Assigned(_File) and _File.IsLocalized;
   end;
+end;
 
+function TwbLStringDef.TryGetStringID(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; out aID: Cardinal): Boolean;
+begin
+  aID := 0;
+  Result := Assigned(aBasePtr) and (NativeUInt(aEndPtr) - NativeUInt(aBasePtr) = SizeOf(Cardinal)) and IsStoredLocalized(aElement);
+  if Result then
+    aID := PCardinal(aBasePtr)^;
+end;
+
+function TwbLStringDef.GetSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
   if Assigned(aBasePtr) and Assigned(aEndPtr) and (NativeUInt(aBasePtr) >= NativeUInt(aEndPtr)) then
     Result := 0
-  else if Assigned(aBasePtr) and Assigned(aEndPtr) and Localized then
+  else if Assigned(aBasePtr) and Assigned(aEndPtr) and IsStoredLocalized(aElement) then
     Result := Min(4, NativeUInt(aEndPtr) - NativeUInt(aBasePtr))
   else
     Result := inherited GetSize(aBasePtr, aEndPtr, aElement);
 end;
 
 function TwbLStringDef.GetDefaultSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer;
-var
-  Localized : Boolean;
-  _File     : IwbFile;
 begin
-  case aElement.Localized of
-    tbFalse: Localized := False;
-    tbTrue: Localized := True;
-  else
-    _File := aElement._File;
-    Localized := Assigned(_File) and _File.IsLocalized;
-  end;
-
-  if Localized then
+  if IsStoredLocalized(aElement) then
     Result := 4
   else
     Result := inherited GetDefaultSize(aBasePtr, aEndPtr, aElement);
@@ -23535,19 +23743,9 @@ end;
 
 function TwbLStringDef.ToStringNative(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aTransformType: TwbStringTransformType): string;
 var
-  Localized : Boolean;
-  _File     : IwbFile;
-  Found     : Boolean;
+  Found : Boolean;
 begin
-  case aElement.Localized of
-    tbFalse: Localized := False;
-    tbTrue: Localized := True;
-  else
-    _File := aElement._File;
-    Localized := Assigned(_File) and _File.IsLocalized;
-  end;
-
-  if Localized then begin
+  if IsStoredLocalized(aElement) then begin
     if (NativeUInt(aEndPtr) - NativeUInt(aBasePtr)) <> 4 then begin
       if aTransformType = ttCheck then
         Result := 'lstring ID is not Int32'
@@ -24760,6 +24958,14 @@ begin
   Result := _FormID = $00000014;
 end;
 
+procedure TwbFormID.CheckAssignable;
+begin
+  if IsNull then
+    raise Exception.Create('00000000 is not a valid FormID');
+  if IsPlayer then
+    raise Exception.Create('00000014 is not a valid FormID');
+end;
+
 class operator TwbFormID.LessThan(const A, B: TwbFormID): Boolean;
 begin
   Result := A._FormID < B._FormID;
@@ -25233,6 +25439,153 @@ end;
 class function TwbCopyOptions.IsMultiple(const aElements: TDynElements): Boolean;
 begin
   Result := (Length(aElements) > 1) or (aElements[0].ElementType <> etMainRecord);
+end;
+
+class function TwbCopyOptions.OverwriteAction(const aTarget, aSource: IwbElement; const aConfirmOverwrite, aConfirmRemove: TwbCopyDecision): TwbCanOverwriteAction;
+var
+  lMainRecord: IwbMainRecord;
+begin
+  if Assigned(aTarget) then begin
+    if aConfirmOverwrite(aTarget, aSource) then
+      Result := coCopy
+    else
+      Result := coSkip;
+  end else
+    Result := coCopy;
+
+  if (Result = coCopy) and Supports(aSource, IwbMainRecord, lMainRecord) and lMainRecord.IsDeleted then
+    if aConfirmRemove(aTarget, aSource) then
+      Result := coDelete;
+
+  if (Result = coDelete) and not Assigned(aTarget) then
+    Result := coSkip;
+end;
+
+{ TwbReferenceUpdate }
+
+procedure TwbReferenceUpdate.Apply(const aOldFormID, aNewFormID: TwbFormID);
+var
+  lTried   : TArray<Integer>;
+  lLabels  : TArray<string>;
+  lUpdated : Integer;
+  k        : Integer;
+begin
+  for var i := Low(Items) to High(Items) do
+    if Items[i].Selected and Items[i].Rec.IsEditable then begin
+      lTried := lTried + [i];
+      lLabels := lLabels + [Items[i].Rec.Name + ' - ' + Items[i].Rec._File.Name];
+    end;
+  if Length(lTried) = 0 then
+    Exit;
+
+  lUpdated := 0;
+  for var j := Low(lTried) to High(lTried) do begin
+    k := lTried[j];
+    try
+      if Items[k].Rec.CompareExchangeFormID(aOldFormID, aNewFormID) then begin
+        Items[k].Outcome := ruoUpdated;
+        Inc(lUpdated);
+      end else
+        Items[k].Outcome := ruoUnchanged;
+      wbTick;
+    except
+      on E: Exception do begin
+        Items[k].Outcome := ruoFailed;
+        wbProgress('Error updating FormID for ' + lLabels[j] + ': ' + E.Message);
+      end;
+    end;
+  end;
+
+  var lLayout := Items[lTried[0]].Rec.ContextObj.SlotLayout;
+  wbProgress(IntToStr(lUpdated) + ' records out of ' + IntToStr(Length(Items)) + ' total records which reference FormID [' +
+    aOldFormID.ToDisplayString(lLayout) + '] have been updated to [' + aNewFormID.ToDisplayString(lLayout) + ']');
+end;
+
+function TwbReferenceUpdate.AnyFailed: Boolean;
+begin
+  for var i := Low(Items) to High(Items) do
+    if Items[i].Outcome = ruoFailed then
+      Exit(True);
+  Result := False;
+end;
+
+{ TwbCleanupInjectedPlan }
+
+class function TwbCleanupInjectedPlan.Plan(const aElements: TDynElements): TwbCleanupInjectedPlan;
+var
+  lMainRecord : IwbMainRecord;
+  lSources    : TwbFiles;
+  lContainer  : IwbContainer;
+  lMasters    : TwbFilesSet;
+begin
+  Result := Default(TwbCleanupInjectedPlan);
+  for var lElement in aElements do
+    if Assigned(lElement) and (lElement.ElementType = etMainRecord) and Supports(lElement, IwbMainRecord, lMainRecord) then begin
+      lSources := lElement.InjectionSourceFiles;
+      if Length(lSources) = 1 then begin
+        if not Assigned(Result.Target) then
+          Result.Target := lSources[0]
+        else
+          if not Result.Target.Equals(lSources[0]) then
+            Continue;
+        Result.Records := Result.Records + [lMainRecord];
+      end;
+    end;
+  if Length(Result.Records) < 1 then
+    Exit;
+
+  lMasters := TwbFilesSet.Create;
+  try
+    for var lRecord in Result.Records do begin
+      lRecord.ReportRequiredMasters(lMasters, False);
+      lContainer := lRecord.Container;
+      while Assigned(lContainer) do begin
+        lContainer.ReportRequiredMasters(lMasters, False, False);
+        lContainer := lContainer.Container;
+      end;
+    end;
+    for var lFile in lMasters do
+      Result.NewMasters := Result.NewMasters + [lFile];
+  finally
+    lMasters.Free;
+  end;
+end;
+
+procedure TwbCleanupInjectedPlan.Apply(const aReport: TProc<string>);
+begin
+  for var lRecord in Records do begin
+    Target.AddCopy(lRecord, [cfDeepCopy], wbNoCopyRules);
+    if lRecord.RemoveInjected(False) and Assigned(aReport) then
+      aReport('Injected references in ' + lRecord.Name + ' could not all be removed automatically.');
+  end;
+end;
+
+{ TwbLocalizationPlan }
+
+procedure TwbLocalizationPlan.Apply(const aVocabulary: TwbLocalizationVocabulary; const aStep: TProc);
+var
+  lHandler  : TwbLocalizationHandler;
+  lLocalize : Boolean;
+  lText     : string;
+  lID       : Cardinal;
+begin
+  if Length(Unresolved) > 0 then
+    Exit;
+  lHandler := Target.ContextObj.LocalizationHandler;
+  lLocalize := not Target.IsLocalized;
+  for var lElement in Elements do begin
+    if lLocalize then begin
+      lText := lElement.EditValue;
+      if Assigned(aVocabulary) and aVocabulary.TryTranslate(lText) then
+        Inc(TranslatedCount);
+      lID := lHandler.AddValue(lText, lElement);
+      lElement.EditValue := sStringID + IntToHex(lID, 8);
+    end else
+      lElement.Delocalize;
+    if Assigned(aStep) then
+      aStep();
+  end;
+  Target.IsLocalized := not Target.IsLocalized;
 end;
 
 
@@ -27302,7 +27655,6 @@ begin
   lhContext := aContext;
   lFiles := TwbFastStringListIC.CreateSorted;
   fReuseDup := false;
-  NoTranslate := false;
 end;
 
 destructor TwbLocalizationHandler.Destroy;
@@ -27644,11 +27996,6 @@ var
 begin
   aValue := '';
 
-  if NoTranslate then begin
-    aValue := IntToHex(ID, 8);
-    Exit(True);
-  end;
-
   if ID = 0 then
     Exit(True);
 
@@ -27696,6 +28043,66 @@ begin
   finally
     TMonitor.Exit(Self);
   end;
+end;
+
+procedure TwbLocalizationHandler.ReadStringsFile(const aFileName: string; const aList: TStrings);
+var
+  lFile : TwbLocalizationFile;
+begin
+  lFile := TwbLocalizationFile.Create(lhContext, StringsPath + aFileName);
+  try
+    aList.AddStrings(lFile.Items);
+  finally
+    lFile.Free;
+  end;
+end;
+
+{ TwbLocalizationVocabulary }
+
+constructor TwbLocalizationVocabulary.Create(const aHandler: TwbLocalizationHandler; const aFrom, aTo: array of string);
+var
+  lItems : TStringList;
+begin
+  inherited Create;
+  FromStrings := TwbFastStringList.Create;
+  ToStrings := TwbFastStringList.Create;
+  lItems := TStringList.Create;
+  try
+    for var lName in aFrom do begin
+      lItems.Clear;
+      aHandler.ReadStringsFile(lName, lItems);
+      for var lItem in lItems do
+        FromStrings.Add(AnsiLowerCase(lItem));
+    end;
+  finally
+    lItems.Free;
+  end;
+  for var lName in aTo do
+    aHandler.ReadStringsFile(lName, ToStrings);
+end;
+
+destructor TwbLocalizationVocabulary.Destroy;
+begin
+  FromStrings.Free;
+  ToStrings.Free;
+  inherited;
+end;
+
+function TwbLocalizationVocabulary.CountsMatch: Boolean;
+begin
+  Result := FromStrings.Count = ToStrings.Count;
+end;
+
+function TwbLocalizationVocabulary.TryTranslate(var aText: string): Boolean;
+var
+  j : Integer;
+begin
+  j := FromStrings.IndexOf(AnsiLowerCase(aText));
+  Result := j <> -1;
+  if Result then
+    aText := ToStrings[j]
+  else
+    Result := aText = '';
 end;
 
 initialization

@@ -72,6 +72,12 @@ type
     TestMergeAnswer          : TTimer;
     TestMergeTarget          : IwbFile;
     TestMergeNotOffered      : Boolean;
+    TestMergedPatchLines     : TStringList;
+    TestMergedPatchTimer     : TTimer;
+    TestMergedPatchAnswer    : TTimer;
+    TestMergedPatchAnswers   : Integer;
+    TestMergedPatchMessages  : Integer;
+    TestMergedPatchFileCount : Integer;
     TestCopyIntoLines        : TStringList;
     TestCopyIntoTimer        : TTimer;
     TestCopyIntoAnswer       : TTimer;
@@ -89,6 +95,21 @@ type
     TestRenumberAnswerCount  : Integer;
     TestRenumberNotOffered   : Boolean;
     TestRenumberFallback     : Boolean;
+    TestChangeFormIDLines    : TStringList;
+    TestChangeFormIDTimer    : TTimer;
+    TestChangeFormIDAnswer   : TTimer;
+    TestChangeFormIDTarget   : IwbFile;
+    TestChangeFormIDRecords  : TDynMainRecords;
+    TestChangeFormIDBefore   : TArray<TwbFormID>;
+    TestChangeFormIDMessages : Integer;
+    TestChangeFormIDIdIndex  : Integer;
+    TestChangeFormIDAnswerIndex : Integer;
+    TestChangeFormIDRefIndex : Integer;
+    TestChangeFormIDAnswerCount : Integer;
+    TestChangeFormIDNotOffered  : Boolean;
+    TestChangeFormIDFallback    : Boolean;
+    TestChangeFormIDCsvAnswered : Boolean;
+    TestChangeFormIDClosed      : Boolean;
     TestFilterAnswer         : TTimer;
     TestFilterAnswered       : string;
     TestPumpTimer            : TTimer;
@@ -145,6 +166,8 @@ type
     ViewTextFile          : string;
     ViewTextRecord        : string;
     StateManifest         : string;
+    FileLists             : string;
+    ToolModeAuto          : Boolean;
     ViewTree              : Boolean;
     ViewTreeFile          : string;
     ViewTreeList          : string;
@@ -188,6 +211,11 @@ type
     MergeSource           : string;
     MergeTarget           : string;
     MergeOut              : string;
+    MergedPatch           : Boolean;
+    MergedPatchFile       : string;
+    MergedPatchName       : string;
+    MergedPatchOut        : string;
+    MergedPatchAnswer     : string;
     CopyInto              : Boolean;
     CopyIntoFile          : string;
     CopyIntoMode          : string;
@@ -209,6 +237,19 @@ type
     RenumberOut           : string;
     RenumberCompareTo     : string;
     RenumberFilter        : Boolean;
+    ChangeFormID          : Boolean;
+    ChangeFormIDFile      : string;
+    ChangeFormIDRecords   : string;
+    ChangeFormIDShift     : Boolean;
+    ChangeFormIDTarget    : string;
+    ChangeFormIDIds       : string;
+    ChangeFormIDAnswers   : string;
+    ChangeFormIDRefs      : string;
+    ChangeFormIDOut       : string;
+    ChangeFormIDCompareTo : string;
+    ChangeFormIDOp        : string;
+    ChangeFormIDCsv       : string;
+    ChangeFormIDView      : string;
     Hide                  : Boolean;
     HideFile              : string;
     HideRecord            : string;
@@ -238,6 +279,7 @@ type
 
     function ParsePump: Boolean;
     function ParseStateManifest: Boolean;
+    function ParseToolMode: Boolean;
     function ParseEdit: Boolean;
     function ParseSaveContexts: Boolean;
     function Any: Boolean;
@@ -303,6 +345,18 @@ begin
     ShowMessage('teststatemanifest requires an output file, as -teststatemanifest:<filename>');
     Exit(False);
   end;
+end;
+
+function TxeTestSwitches.ParseToolMode: Boolean;
+begin
+  Result := True;
+  if wbFindCmdLineParam('testfilelists', FileLists) and (FileLists = '') then begin
+    ShowMessage('testfilelists requires an output file, as -testfilelists:<filename>');
+    Exit(False);
+  end;
+  ToolModeAuto := FindCmdLineSwitch('testtoolmodeauto');
+  if ToolModeAuto then
+    xeAutoLoad := True;
 end;
 
 function TxeTestSwitches.ParseEdit: Boolean;
@@ -457,6 +511,20 @@ begin
     xeAutoLoad  := True;
   end;
 
+  if wbFindCmdLineParam('testmergedpatch', MergedPatchFile) then begin
+    wbFindCmdLineParam('testmergedpatchanswer', MergedPatchAnswer);
+    if (MergedPatchFile = '') or
+       not wbFindCmdLineParam('testmergedpatchname', MergedPatchName) or (MergedPatchName = '') or
+       not wbFindCmdLineParam('testmergedpatchout', MergedPatchOut) or (MergedPatchOut = '') or
+       not ((MergedPatchAnswer = '') or SameText(MergedPatchAnswer, 'yes') or SameText(MergedPatchAnswer, 'no')) then begin
+      ShowMessage('testmergedpatch requires -testmergedpatch:<filename> -testmergedpatchname:<module name without extension> ' +
+        '-testmergedpatchout:<file> [-testmergedpatchanswer:<yes|no>]');
+      Exit(False);
+    end;
+    MergedPatch := True;
+    xeAutoLoad := True;
+  end;
+
   if wbFindCmdLineParam('testcopyinto', CopyIntoFile) then begin
     wbFindCmdLineParam('testcopyintotargets', CopyIntoTargets);
     wbFindCmdLineParam('testcopyintotemplate', CopyIntoTemplate);
@@ -504,6 +572,39 @@ begin
       Exit(False);
     end;
     Renumber := True;
+    xeAutoLoad := True;
+  end;
+
+  if wbFindCmdLineParam('testchangeformid', ChangeFormIDFile) then begin
+    wbFindCmdLineParam('testchangeformidtarget', ChangeFormIDTarget);
+    wbFindCmdLineParam('testchangeformidids', ChangeFormIDIds);
+    wbFindCmdLineParam('testchangeformidanswers', ChangeFormIDAnswers);
+    wbFindCmdLineParam('testchangeformidrefs', ChangeFormIDRefs);
+    wbFindCmdLineParam('testchangeformidcompareto', ChangeFormIDCompareTo);
+    wbFindCmdLineParam('testchangeformidop', ChangeFormIDOp);
+    wbFindCmdLineParam('testchangeformidcsv', ChangeFormIDCsv);
+    wbFindCmdLineParam('testchangeformidview', ChangeFormIDView);
+    ChangeFormIDShift := FindCmdLineSwitch('testchangeformidshift');
+    if ChangeFormIDOp = '' then
+      ChangeFormIDOp := 'changeformid';
+    if (ChangeFormIDFile = '') or
+       not wbFindCmdLineParam('testchangeformidrecords', ChangeFormIDRecords) or (ChangeFormIDRecords = '') or
+       not wbFindCmdLineParam('testchangeformidout', ChangeFormIDOut) or (ChangeFormIDOut = '') or
+       not (SameText(ChangeFormIDOp, 'changeformid') or SameText(ChangeFormIDOp, 'changerefs') or
+            SameText(ChangeFormIDOp, 'batchrefs') or SameText(ChangeFormIDOp, 'cleanupinjected') or
+            SameText(ChangeFormIDOp, 'localize') or SameText(ChangeFormIDOp, 'locview')) or
+       ((SameText(ChangeFormIDOp, 'batchrefs') or SameText(ChangeFormIDOp, 'localize')) and (ChangeFormIDTarget = '')) then begin
+      ShowMessage('testchangeformid requires -testchangeformid:<filename> -testchangeformidrecords:<EditorID>@<module>[,...] ' +
+        '-testchangeformidout:<folder> [-testchangeformidop:<changeformid|changerefs|batchrefs|cleanupinjected|localize|locview>] ' +
+        '[-testchangeformidshift] [-testchangeformidtarget:<module>] (batchrefs, localize: the file focused) ' +
+        '[-testchangeformidids:<hex|empty|offered|cancel>[,...]] ' +
+        '[-testchangeformidanswers:<yes|no|yesall|cancel|ok|translate:<from>:<to>>[,...]] ' +
+        '[-testchangeformidrefs:<all|none|cancel|<index>[;<index>...]>[,...]] [-testchangeformidcsv:<file|cancel>] ' +
+        '[-testchangeformidview:<none|<EditorID>@<module>>] (changerefs: the view left empty, or showing that record) ' +
+        '[-testchangeformidcompareto:<file loaded to compare with the last module>]');
+      Exit(False);
+    end;
+    ChangeFormID := True;
     xeAutoLoad := True;
   end;
 
@@ -556,8 +657,8 @@ end;
 
 function TxeTestSwitches.Any: Boolean;
 begin
-  Result := Conflicts or NavCopy or ViewText or ViewTree or Options or CopyIntoGap or DropMaster or DeltaPatch or Merge or CopyInto or
-    Renumber or Hide or Filter or SaveContexts or (Pump <> '') or (StateManifest <> '');
+  Result := Conflicts or NavCopy or ViewText or ViewTree or Options or CopyIntoGap or DropMaster or DeltaPatch or Merge or MergedPatch or CopyInto or
+    Renumber or ChangeFormID or Hide or Filter or SaveContexts or (Pump <> '') or (StateManifest <> '');
 end;
 
 initialization
