@@ -959,6 +959,7 @@ type
     procedure RequireMasterFor(const aLoadOrderFormID: TwbFormID; const aAddMaster: TFunc<IwbFile, Boolean>);
     function PlanReferenceReplacement(const aLines: TStrings; const aReport: TProc<string>): TwbReferenceReplacementPlan;
     procedure SetOwnRecordFormID(const aOldFormID, aNewFormID: TwbFormID; const aReport: TProc<string>);
+    function PlanLocalization: TwbLocalizationPlan;
 
     function IsNewRecord(const aFileID: TwbFileID; aNew: Boolean): Boolean; overload;
     function IsNewRecord(const aFormID: TwbFormID; aNew: Boolean): Boolean; overload;
@@ -3164,6 +3165,30 @@ begin
   if Assigned(aReport) then
     aReport('Changing FormID ['+lRecord.LoadOrderFormID.ToDisplayString(flContextObj.SlotLayout)+'] to ['+aNewFormID.ToDisplayString(flContextObj.SlotLayout)+']');
   lRecord.LoadOrderFormID := aNewFormID;
+end;
+
+function TwbFile.PlanLocalization: TwbLocalizationPlan;
+
+  procedure Gather(const aElement: IwbElement; var aElements: TDynElements);
+  var
+    lContainer : IwbContainerElementRef;
+  begin
+    if Assigned(aElement.ValueDef) and (aElement.ValueDef.DefType = dtLString) then begin
+      SetLength(aElements, Succ(Length(aElements)));
+      aElements[High(aElements)] := aElement;
+    end;
+    if Supports(aElement, IwbContainerElementRef, lContainer) then
+      for var i := Pred(lContainer.ElementCount) downto 0 do
+        Gather(lContainer.Elements[i], aElements);
+  end;
+
+var
+  lSelfRef : IwbFile;
+begin
+  lSelfRef := Self;
+  Result := Default(TwbLocalizationPlan);
+  Result.Target := lSelfRef;
+  Gather(lSelfRef, Result.Elements);
 end;
 
 function TwbFile.AddCopy(const aSource: IwbElement; aFlags: TwbCopyFlags; const aRules: TwbCopyRules): IwbElement;

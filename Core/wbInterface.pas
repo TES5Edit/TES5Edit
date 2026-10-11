@@ -922,6 +922,7 @@ type
   TwbSaveContextClass = class of TwbSaveContext;
   TwbLocalizationHandler = class;
   TwbLocalizationFile = class;
+  TwbLocalizationVocabulary = class;
   TwbHiddenSet = class;
   IwbFile = interface;
   IwbSaveTables = interface;
@@ -1739,6 +1740,13 @@ type
     procedure Apply(const aReport: TProc<string>);
   end;
 
+  TwbLocalizationPlan = record
+    Target          : IwbFile;
+    Elements        : TDynElements;
+    TranslatedCount : Integer;
+    procedure Apply(const aVocabulary: TwbLocalizationVocabulary; const aStep: TProc);
+  end;
+
   TwbMergeIntoMasterResult = record
     Plan                : TwbFormIDChangePlan;
     InjectSkippedUpdate : Boolean;
@@ -1889,6 +1897,7 @@ type
     procedure RequireMasterFor(const aLoadOrderFormID: TwbFormID; const aAddMaster: TFunc<IwbFile, Boolean>);
     function PlanReferenceReplacement(const aLines: TStrings; const aReport: TProc<string>): TwbReferenceReplacementPlan;
     procedure SetOwnRecordFormID(const aOldFormID, aNewFormID: TwbFormID; const aReport: TProc<string>);
+    function PlanLocalization: TwbLocalizationPlan;
 
     function IsNewRecord(const aFileID: TwbFileID; aNew: Boolean): Boolean; overload;
     function IsNewRecord(const aFormID: TwbFormID; aNew: Boolean): Boolean; overload;
@@ -4540,6 +4549,17 @@ type
     function GetLocalizationFileNameByElement(aElement: IwbElement): string;
     function GetLocalizationFileNameByType(const aPluginFile: string; ls: TwbLStringType): string;
     procedure GetStringsFromFile(const aFileName: string; const aList: TStrings);
+    procedure ReadStringsFile(const aFileName: string; const aList: TStrings);
+  end;
+
+  TwbLocalizationVocabulary = class
+  public
+    FromStrings : TStringList;
+    ToStrings   : TStringList;
+    constructor Create(const aHandler: TwbLocalizationHandler; const aFrom, aTo: array of string);
+    destructor Destroy; override;
+    function CountsMatch: Boolean;
+    function TryTranslate(var aText: string): Boolean;
   end;
 
   TwbHiddenSet = class
@@ -25483,6 +25503,39 @@ begin
   end;
 end;
 
+{ TwbLocalizationPlan }
+
+procedure TwbLocalizationPlan.Apply(const aVocabulary: TwbLocalizationVocabulary; const aStep: TProc);
+var
+  lHandler  : TwbLocalizationHandler;
+  lLocalize : Boolean;
+  lText     : string;
+  lID       : Cardinal;
+begin
+  lHandler := Target.ContextObj.LocalizationHandler;
+  lLocalize := not Target.IsLocalized;
+  try
+    for var lElement in Elements do begin
+      lText := lElement.EditValue;
+      if lLocalize then begin
+        if Assigned(aVocabulary) and aVocabulary.TryTranslate(lText) then
+          Inc(TranslatedCount);
+        lID := lHandler.AddValue(lText, lElement);
+        lElement.EditValue := sStringID + IntToHex(lID, 8);
+      end else begin
+        lHandler.NoTranslate := True;
+        lElement.EditValue := lText;
+        lHandler.NoTranslate := False;
+      end;
+      if Assigned(aStep) then
+        aStep();
+    end;
+    Target.IsLocalized := not Target.IsLocalized;
+  finally
+    lHandler.NoTranslate := False;
+  end;
+end;
+
 
 { TwbRecursiveDef }
 
@@ -27944,6 +27997,66 @@ begin
   finally
     TMonitor.Exit(Self);
   end;
+end;
+
+procedure TwbLocalizationHandler.ReadStringsFile(const aFileName: string; const aList: TStrings);
+var
+  lFile : TwbLocalizationFile;
+begin
+  lFile := TwbLocalizationFile.Create(lhContext, StringsPath + aFileName);
+  try
+    aList.AddStrings(lFile.Items);
+  finally
+    lFile.Free;
+  end;
+end;
+
+{ TwbLocalizationVocabulary }
+
+constructor TwbLocalizationVocabulary.Create(const aHandler: TwbLocalizationHandler; const aFrom, aTo: array of string);
+var
+  lItems : TStringList;
+begin
+  inherited Create;
+  FromStrings := TwbFastStringList.Create;
+  ToStrings := TwbFastStringList.Create;
+  lItems := TStringList.Create;
+  try
+    for var lName in aFrom do begin
+      lItems.Clear;
+      aHandler.ReadStringsFile(lName, lItems);
+      for var lItem in lItems do
+        FromStrings.Add(AnsiLowerCase(lItem));
+    end;
+  finally
+    lItems.Free;
+  end;
+  for var lName in aTo do
+    aHandler.ReadStringsFile(lName, ToStrings);
+end;
+
+destructor TwbLocalizationVocabulary.Destroy;
+begin
+  FromStrings.Free;
+  ToStrings.Free;
+  inherited;
+end;
+
+function TwbLocalizationVocabulary.CountsMatch: Boolean;
+begin
+  Result := FromStrings.Count = ToStrings.Count;
+end;
+
+function TwbLocalizationVocabulary.TryTranslate(var aText: string): Boolean;
+var
+  j : Integer;
+begin
+  j := FromStrings.IndexOf(AnsiLowerCase(aText));
+  Result := j <> -1;
+  if Result then
+    aText := ToStrings[j]
+  else
+    Result := aText = '';
 end;
 
 initialization

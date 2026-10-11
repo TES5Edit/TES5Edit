@@ -10962,36 +10962,18 @@ begin
 end;
 
 procedure TfrmMain.mniNavLocalizationSwitchClick(Sender: TObject);
-
-  procedure GatherLStrings(const aElement: IwbElement; var lst: TDynElements);
-  var
-    Container  : IwbContainerElementRef;
-    i          : Integer;
-  begin
-    if Assigned(aElement.ValueDef) and (aElement.ValueDef.DefType = dtLString) then begin
-      SetLength(lst, Succ(Length(lst)));
-      lst[High(lst)] := aElement;
-      //wbProgress('LString found in : ' + aElement.FullPath);
-    end;
-    if Supports(aElement, IwbContainerElementRef, Container) then
-      for i := Pred(Container.ElementCount) downto 0 do
-        GatherLStrings(Container.Elements[i], lst);
-  end;
-
 var
   NodeData            : PNavNodeData;
   _File               : IwbFile;
-  i, j, Translated    : integer;
-  ID                  : Cardinal;
+  i                   : integer;
   StartTick           : UInt64;
-  Element             : IwbElement;
-  lstrings            : TDynElements;
   fLocalize, ok       : boolean;
   fTranslate          : boolean;
-  s                   : string;
   lFiles              : TStringList;
-  lFrom, lTo          : TwbFastStringList;
-  wblf                : TwbLocalizationFile;
+  lFromNames          : TArray<string>;
+  lToNames            : TArray<string>;
+  lVocabulary         : TwbLocalizationVocabulary;
+  lPlan               : TwbLocalizationPlan;
 begin
   if not xeContext.Settings.EditAllowed then
     Exit;
@@ -11008,7 +10990,8 @@ begin
   try
     fLocalize := not _File.IsLocalized;
     fTranslate := false;
-    Translated := 0;
+    lVocabulary := nil;
+    lPlan := Default(TwbLocalizationPlan);
 
     if fLocalize then begin
 
@@ -11025,10 +11008,10 @@ begin
 
         if fTranslate then
           for i := 0 to Pred(lFiles.Count) do begin
-            j := 0;
-            if clbFrom.Checked[i] then j := j or 1;
-            if clbTo.Checked[i] then j := j or 2;
-            lFiles.Objects[i] := Pointer(j);
+            if clbFrom.Checked[i] then
+              lFromNames := lFromNames + [lFiles[i]];
+            if clbTo.Checked[i] then
+              lToNames := lToNames + [lFiles[i]];
           end;
 
       finally
@@ -11057,81 +11040,38 @@ begin
       if fTranslate then begin
         PostAddMessage('[Processing] Building translation index...');
 
-        lFrom := TwbFastStringList.Create;
-        lTo := TwbFastStringList.Create;
+        lVocabulary := TwbLocalizationVocabulary.Create(xeContext.LocalizationHandler, lFromNames, lToNames);
 
-        for i := 0 to Pred(lFiles.Count) do begin
-          if Integer(lFiles.Objects[i]) and 1 > 0 then begin
-            wblf := TwbLocalizationFile.Create(xeContext, xeContext.LocalizationHandler.StringsPath + lFiles[i]);
-            for j := 0 to Pred(wblf.Count) do
-              lFrom.Add(AnsiLowerCase(wblf.Items[j]));
-            wblf.Destroy;
-          end;
-
-          if Integer(lFiles.Objects[i]) and 2 > 0 then begin
-            wblf := TwbLocalizationFile.Create(xeContext, xeContext.LocalizationHandler.StringsPath + lFiles[i]);
-            lTo.AddStrings(wblf.Items);
-            wblf.Destroy;
-          end;
-        end;
-
-        if lFrom.Count <> lTo.Count then begin
+        if not lVocabulary.CountsMatch then begin
           PostAddMessage('[Error] Number of strings in vocabulary does not match. Check parameters and run again.');
           Exit;
         end;
       end;
 
       PostAddMessage('[Processing] Collecting localizable values...');
-      GatherLStrings(_File, lstrings);
+      lPlan := _File.PlanLocalization;
 
       PostAddMessage('[Processing] Performing operation...');
-      for i := Low(lstrings) to High(lstrings) do begin
-
-        Element := lstrings[i];
-        if fLocalize then begin
-          s := Element.EditValue;
-          if fTranslate then begin
-            j := lFrom.IndexOf(AnsiLowerCase(s));
-            if j <> -1 then begin
-              s := lTo[j];
-              Inc(Translated);
-            end else
-              // count empty strings as translated too
-              if s = '' then Inc(Translated);
+      lPlan.Apply(lVocabulary,
+        procedure
+        begin
+          if StartTick + 500 < GetTickCount64 then begin
+            DoProcessMessages;
+            StartTick := GetTickCount64;
           end;
-          ID := xeContext.LocalizationHandler.AddValue(s, Element);
-          Element.EditValue := sStringID + IntToHex(ID, 8);
-        end else begin
-          s := Element.EditValue;
-          xeContext.LocalizationHandler.NoTranslate := true;
-          Element.EditValue := s;
-          xeContext.LocalizationHandler.NoTranslate := false;
-        end;
-
-        if StartTick + 500 < GetTickCount64 then begin
-          DoProcessMessages;
-          StartTick := GetTickCount64;
-        end;
-
-      end;
-
-      _File.IsLocalized := not _File.IsLocalized;
+        end);
 
       vstNav.Invalidate;
       ok := true;
 
     finally
-      if fLocalize and fTranslate then begin
-        FreeAndNil(lFrom);
-        FreeAndNil(lTo);
-      end;
+      FreeAndNil(lVocabulary);
 
-      xeContext.LocalizationHandler.NoTranslate := false;
       pnlClient.Enabled := true;
       UpdatePnlCancelVisible;
       PostAddMessage('[Processing done] ' +
-        ' Localizable Strings: ' + IntToStr(Length(lstrings)) +
-        ' Translated: ' + IntToStr(Translated) +
+        ' Localizable Strings: ' + IntToStr(Length(lPlan.Elements)) +
+        ' Translated: ' + IntToStr(lPlan.TranslatedCount) +
         ' Elapsed Time: ' + wbFormatElapsedTime( Now - wbStartTime));
       Caption := Application.Title;
 
