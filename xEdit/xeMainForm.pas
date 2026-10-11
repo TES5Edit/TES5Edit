@@ -6838,18 +6838,14 @@ end;
 
 procedure TfrmMain.mniViewCopyMultipleToSelectedRecordsClick(Sender: TObject);
 var
-  AllRows                     : array of TArray<IwbElement>;
-  NodeDatas                   : PViewNodeDatas;
+  lPlan                       : TwbRowCopyPlan;
   NodeData                    : PNavNodeData;
-  Element                     : IwbElement;
-  Names                       : array of string;
-  MainRecords                 : array of IwbMainRecord;
-  MainRecordIndices           : array of Integer;
-  SourceMainRecord            : IwbMainRecord;
-  TargetMainRecord            : IwbMainRecord;
+  MainRecord                  : IwbMainRecord;
+  MainRecords                 : TDynMainRecords;
+  CheckedTargets              : TDynMainRecords;
   SelectedNodes               : TNodeArray;
-  i, j, k                     : Integer;
-  Node                        : PVirtualNode;
+  AnySelected                 : Boolean;
+  i                           : Integer;
   Column                      : Integer;
 begin
   if not xeContext.Settings.EditAllowed then
@@ -6859,51 +6855,21 @@ begin
   if (Column < 0) or (Column > High(ActiveRecords)) then
     Exit;
 
-  SourceMainRecord := nil;
-  SetLength(AllRows, 0);
-  SetLength(Names, 0);
-  for Node in vstView.LevelNodes(0) do begin
-    NodeDatas := ViewCells(Node);
-    if Assigned(NodeDatas) then begin
-      Element := NodeDatas[Column].Element;
-      if Assigned(Element) and not Assigned(SourceMainRecord) then
-        SourceMainRecord := Element.ContainingMainRecord;
-      if not Assigned(Element) then
-        for i := Low(ActiveRecords) to High(ActiveRecords) do begin
-          Element := NodeDatas[i].Element;
-          if Assigned(Element) then
-            Break;
-        end;
-
-      if Assigned(Element) and (Element.Name <> 'Record Header') and not Element.Name.StartsWith('EDID') then begin
-        var lRow: TArray<IwbElement>;
-        SetLength(lRow, Length(ActiveRecords));
-        for i := Low(lRow) to High(lRow) do
-          lRow[i] := NodeDatas[i].Element;
-        AllRows := AllRows + [lRow];
-        Names := Names + [Element.Name];
-      end;
-    end;
-  end;
-  if Length(AllRows) < 1 then
+  if not Assigned(ViewTree) then
+    Exit;
+  lPlan := ViewTree.PlanRowCopy(Column);
+  if Length(lPlan.Rows) < 1 then
     Exit;
 
   SelectedNodes := vstNav.GetSortedSelection(True);
   if Length(SelectedNodes) < 2 then
     Exit;
-  SetLength(MainRecords, Length(SelectedNodes));
-  SetLength(MainRecordIndices, Length(SelectedNodes));
-  j := 0;
   for i := Low(SelectedNodes) to High(SelectedNodes) do begin
     NodeData := vstNav.GetNodeData(SelectedNodes[i]);
-    if Assigned(NodeData) and not SourceMainRecord.Equals(NodeData.Element) and
-      Supports(NodeData.Element, IwbMainRecord, MainRecords[j]) then begin
-        MainRecordIndices[j] := i;
-        Inc(j);
-      end;
+    if Assigned(NodeData) and Supports(NodeData.Element, IwbMainRecord, MainRecord) then
+      MainRecords := MainRecords + [MainRecord];
   end;
-  SetLength(MainRecords, j);
-  SetLength(MainRecordIndices, j);
+  MainRecords := lPlan.Targets(MainRecords);
   if Length(MainRecords) < 1 then
     Exit;
 
@@ -6911,27 +6877,23 @@ begin
 
     Caption := 'What subrecords do you want to copy?';
 
-    for i := Low(AllRows) to High(AllRows) do begin
-      CheckListBox1.AddItem(Names[i], nil);
+    for i := Low(lPlan.Rows) to High(lPlan.Rows) do begin
+      CheckListBox1.AddItem(lPlan.Rows[i].Name, nil);
       CheckListBox1.Checked[Pred(CheckListBox1.Items.Count)] := True;
     end;
 
     if ShowModal <> mrOk then
       Exit;
 
-    j := 0;
-    for i := 0 to Pred(CheckListBox1.Items.Count) do
-      if CheckListBox1.Checked[i] then begin
-        if j <> i then
-          AllRows[j] := AllRows[i];
-        Inc(j);
-      end;
-    SetLength(AllRows, j);
-    Names := nil; //not valid anymore
+    AnySelected := False;
+    for i := 0 to Pred(CheckListBox1.Items.Count) do begin
+      lPlan.Rows[i].Selected := CheckListBox1.Checked[i];
+      AnySelected := AnySelected or lPlan.Rows[i].Selected;
+    end;
   finally
     Free;
   end;
-  if Length(AllRows) < 1 then
+  if not AnySelected then
     Exit;
 
   with TfrmFileSelect.Create(Self) do try
@@ -6946,45 +6908,17 @@ begin
     if ShowModal <> mrOk then
       Exit;
 
+    for i := Low(MainRecords) to High(MainRecords) do
+      if CheckListBox1.Checked[i] then
+        CheckedTargets := CheckedTargets + [MainRecords[i]];
+
     LockProcessMessages;
     try
-      for j := Low(AllRows) to High(AllRows) do begin
-        Element := AllRows[j][Column];
-        if Assigned(Element) then begin
-          for i := Low(MainRecords) to High(MainRecords) do begin
-            if CheckListBox1.Checked[i] then begin
-              if not EditWarn then
-                Exit;
-
-              MainRecords[i].AddCopy(Element, [cfDeepCopy])
-            end;
-          end;
-        end else begin
-          for k := Low(MainRecords) to High(MainRecords) do begin
-            if CheckListBox1.Checked[k] then begin
-              for i := Low(AllRows[j]) to High(AllRows[j]) do begin
-                Element := AllRows[j][i];
-                if Assigned(Element) then begin
-                  TargetMainRecord := Element.ContainingMainRecord;
-                  if Assigned(TargetMainRecord) and MainRecords[k].Equals(TargetMainRecord) then begin
-                    if Element.IsRemovable then begin
-                      if not EditWarn then
-                        Exit;
-                      Element.Remove;
-                      Element := nil;
-                      AllRows[j][i] := nil;
-                    end;
-                    Break;
-                  end;
-                end;
-              end;
-            end;
-          end;
-        end;
-      end;
-      for i := Low(MainRecords) to High(MainRecords) do
-        if CheckListBox1.Checked[i] then
-          MainRecords[i].UpdateRefs;
+      lPlan.Apply(CheckedTargets,
+        function: Boolean
+        begin
+          Result := EditWarn;
+        end);
     finally
       for i := Low(SelectedNodes) to High(SelectedNodes) do
         vstNav.IterateSubtree(SelectedNodes[i], ClearConflict, nil);
