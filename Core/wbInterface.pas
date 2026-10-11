@@ -4350,6 +4350,11 @@ type
     function SlotLayout: TwbSlotLayout;
     function FormIDFromIdentity(aFormIDBase, aFormIDNameBase: Byte; aIdentity: string): TwbFormID;
     function ExpandFileName(const aFileName: string): string;
+    function FlagPluginsESM(const aReport: TProc<string>): Boolean;
+    procedure MarkMasterOnamsForRebuild;
+    function MarkPluginOnamsForRebuild(const aReport: TProc<string>): Boolean;
+    function ClearEspESMFlags(const aReport: TProc<string>): Boolean;
+    function SortAndCleanMasters(const aModuleNames: TStrings): Boolean;
 
     function LoadFile(const aFileName: string; aLoadOrder: Integer = -1; const aCompareTo: string = ''; aStates: TwbFileStates = []; const aData: TBytes = nil): IwbFile; virtual; abstract;
     function NewFile(const aFileName: string; aLoadOrder: Integer; aIsLight, aIsMedium: Boolean): IwbFile; overload; virtual; abstract;
@@ -7753,6 +7758,61 @@ begin
     if SameText(gcFiles[lIdx].FileName, aModuleName) then
       Exit(gcFiles[lIdx]);
   Result := nil;
+end;
+
+function TwbGameContext.FlagPluginsESM(const aReport: TProc<string>): Boolean;
+begin
+  Result := False;
+  for var lFile in gcFiles do
+    if not lFile.IsESM and not (fsIsHardcoded in lFile.FileStates) then begin
+      if Assigned(aReport) then
+        aReport('Setting ESM Flag: ' + lFile.FileName);
+      lFile.IsESM := True;
+      Result := True;
+    end;
+end;
+
+procedure TwbGameContext.MarkMasterOnamsForRebuild;
+begin
+  for var lFile in gcFiles do
+    if (lFile.IsESM or (fsIsHardcoded in lFile.FileStates)) and (lFile.MasterCount[True] > 0) then
+      lFile.Elements[0].MarkModifiedRecursive(AllElementTypes);
+end;
+
+function TwbGameContext.MarkPluginOnamsForRebuild(const aReport: TProc<string>): Boolean;
+begin
+  Result := False;
+  for var lFile in gcFiles do
+    if lFile.IsEditable and (lFile.FileStates * [fsIsGameMaster, fsIsHardcoded, fsIsOfficial] = []) and
+       (lFile.MasterCount[True] > 0) then begin
+      lFile.Elements[0].MarkModifiedRecursive(AllElementTypes);
+      if Assigned(aReport) then
+        aReport('Updating ONAM in: ' + lFile.FileName);
+      Result := True;
+    end;
+end;
+
+function TwbGameContext.ClearEspESMFlags(const aReport: TProc<string>): Boolean;
+begin
+  Result := False;
+  for var lFile in gcFiles do
+    if lFile.IsESM and not (fsIsHardcoded in lFile.FileStates) and SameText(ExtractFileExt(lFile.FileName), '.esp') then begin
+      if Assigned(aReport) then
+        aReport('Removing ESM Flag: ' + lFile.FileName);
+      lFile.IsESM := False;
+      Result := True;
+    end;
+end;
+
+function TwbGameContext.SortAndCleanMasters(const aModuleNames: TStrings): Boolean;
+begin
+  Result := False;
+  for var lFile in gcFiles do
+    if (aModuleNames.IndexOf(lFile.FileName) >= 0) and lFile.IsEditable then begin
+      lFile.SortMasters;
+      lFile.CleanMasters;
+      Result := Result or lFile.Modified;
+    end;
 end;
 
 function TwbGameContext.AllocateFullSlot: Integer;

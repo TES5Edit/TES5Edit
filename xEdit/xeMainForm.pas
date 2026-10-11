@@ -945,9 +945,6 @@ type
     procedure UpdateColumnWidths;
     procedure SetDefaultNodeHeight(aHeight: Integer);
 
-    function SetAllToMaster: Boolean;
-    function UpdateAllOnam: Boolean;
-    function RestorePluginsFromMaster: Boolean;
     function ScriptProcessSingleElement(const aElement: IwbElement; var aCount: Cardinal; const abShowMessages: boolean): Variant;
     function ScriptCanProcessElement(const aElement: IwbElement): Boolean;
     procedure ApplyScriptToSelection(const aSelection: TNodeArray; aCount: Cardinal; const abShowMessages: boolean); overload;
@@ -14092,19 +14089,6 @@ begin
   end;
 end;
 
-function TfrmMain.RestorePluginsFromMaster: Boolean;
-var
-  i: Integer;
-begin
-  Result := False;
-  for i := Low(Files) to High(Files) do with Files[i] do
-    if IsESM and (not (fsIsHardcoded in FileStates)) and SameText(ExtractFileExt(FileName), '.esp') then begin
-      AddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] Removing ESM Flag: ' + FileName);
-      IsESM := False;
-      Result := True;
-    end;
-end;
-
 procedure TfrmMain.mniMainSaveClick(Sender: TObject);
 begin
   jbhSave.CancelHint;
@@ -14732,37 +14716,6 @@ begin
     tmrPendingSetActive.Enabled := True;
   end else
     DoSetActiveRecord(aMainRecords);
-end;
-
-function TfrmMain.SetAllToMaster: Boolean;
-var
-  i: Integer;
-begin
-  Result := False;
-  for i := Low(Files) to High(Files) do with Files[i] do
-    if (not IsESM) and (not (fsIsHardcoded in FileStates)) then begin
-      AddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] Setting ESM Flag: ' + FileName);
-      IsESM := True;
-      Result := True;
-    end else begin
-      if xeContext.Settings.MasterUpdateFilterONAM and (MasterCount[True] > 0) then
-        Elements[0].MarkModifiedRecursive(AllElementTypes);
-    end;
-end;
-
-function TfrmMain.UpdateAllOnam: Boolean;
-var
-  i: Integer;
-begin
-  Result := False;
-  for i := Low(Files) to High(Files) do with Files[i] do
-    if IsEditable and (FileStates * [fsIsGameMaster, fsIsHardcoded, fsIsOfficial] = []) then begin
-      if MasterCount[True] > 0 then begin
-        Elements[0].MarkModifiedRecursive(AllElementTypes);
-        AddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] Updating ONAM in: ' + FileName);
-        Result := True;
-      end;
-    end;
 end;
 
 procedure TfrmMain.SetDoubleBuffered(aWinControl: TWinControl);
@@ -15841,7 +15794,6 @@ end;
 procedure TfrmMain.tmrMessagesTimer(Sender: TObject);
 var
   ChangesMade : Boolean;
-  i: Integer;
 begin
   if (ShowNexusModsHint <> 0) and (ShowNexusModsHint < Now) then
     if NexusModsVersion > VersionString then begin
@@ -15937,15 +15889,14 @@ begin
       if xeTestSwitches.FileLists <> '' then
         TestWriteFileLists;
 {$ENDIF}
-      if (xeToolMode = tmSortAndCleanMasters) then begin
-        for i := Low(Files) to High(Files) do
-          if (xeModulesToUse.IndexOf(Files[i].FileName) >= 0) and Files[i].IsEditable then begin
-            Files[i].SortMasters;
-            Files[i].CleanMasters;
-            ChangesMade := ChangesMade or Files[i].Modified;
-          end
-      end else if (xeToolMode in [tmMasterRestore, tmESPify]) then
-        ChangesMade := RestorePluginsFromMaster
+      var lReport: TProc<string> := procedure(aText: string)
+        begin
+          AddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] ' + aText);
+        end;
+      if (xeToolMode = tmSortAndCleanMasters) then
+        ChangesMade := xeContext.SortAndCleanMasters(xeModulesToUse)
+      else if (xeToolMode in [tmMasterRestore, tmESPify]) then
+        ChangesMade := xeContext.ClearEspESMFlags(lReport)
       else if (xeToolMode in [tmCheckForErrors, tmCheckForITM, tmCheckForDR]) then begin
 {$IFDEF XE_TEST_CONTROL_POINTS}
         if (xeToolMode in [tmCheckForITM, tmCheckForDR]) and (xeTestSwitches.StateManifest <> '') then
@@ -16000,10 +15951,12 @@ begin
 {$ENDIF}
           xeContext.Settings.DontSave := True;
         end;
-      end else if xeToolMode in [tmMasterUpdate, tmESMify] then
-        ChangesMade := SetAllToMaster
-      else if xeToolMode = tmOnamUpdate then begin
-        ChangesMade := UpdateAllOnam;
+      end else if xeToolMode in [tmMasterUpdate, tmESMify] then begin
+        if xeContext.Settings.MasterUpdateFilterONAM then
+          xeContext.MarkMasterOnamsForRebuild;
+        ChangesMade := xeContext.FlagPluginsESM(lReport);
+      end else if xeToolMode = tmOnamUpdate then begin
+        ChangesMade := xeContext.MarkPluginOnamsForRebuild(lReport);
         if ChangesMade then begin
           Settings.WriteBool('Options', 'AlwaysSaveOnam', True);
           Settings.UpdateFile;
