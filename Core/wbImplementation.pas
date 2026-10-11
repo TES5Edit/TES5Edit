@@ -11892,6 +11892,9 @@ begin
             if Assigned(Element.Def) and (dfNoCopyAsOverride in Element.Def.DefFlags) then
               if GetMasterOrSelf.Equals(Element.ContainingMainRecord.MasterOrSelf) then
                 Continue;
+            if (TObject(Element.ElementID) is TwbContainedInElement) and
+               not GetMasterOrSelf.Equals(Element.ContainingMainRecord.MasterOrSelf) then
+              Continue;
             Assign(Element.SortOrder, Element, aOnlySK);
           end;
         end else begin
