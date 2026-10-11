@@ -4700,6 +4700,21 @@ begin
       vstNav.Selected[lNode] := True;
     end;
     pmuNavPopup(nil);
+    if SameText(xeTestSwitches.ChangeFormIDOp, 'copyrows') then begin
+      SetActiveRecord(TestHost.TestChangeFormIDRecords);
+      if tmrPendingSetActive.Enabled then
+        tmrPendingSetActiveTimer(tmrPendingSetActive);
+      var lSource := FindRecord(xeTestSwitches.ChangeFormIDView);
+      var lColumn := -1;
+      for var i := Low(ActiveRecords) to High(ActiveRecords) do
+        if Assigned(ActiveRecords[i].Element) and ActiveRecords[i].Element.Equals(lSource) then
+          lColumn := i;
+      vstView.FocusedColumn := Succ(lColumn);
+      vstViewFocusedNode := vstView.GetFirst;
+      pmuViewPopup(nil);
+      lLines.Add('view' + #9 + 'columns ' + IntToStr(Length(ActiveRecords)) + #9 + 'source ' + lSource.EditorID + ' column ' +
+        IntToStr(lColumn));
+    end;
     if SameText(xeTestSwitches.ChangeFormIDOp, 'changerefs') then
       lMenuItem := mniNavChangeReferencingRecords
     else if SameText(xeTestSwitches.ChangeFormIDOp, 'batchrefs') then
@@ -4716,6 +4731,8 @@ begin
       lMenuItem := mniNavSetVWDAutoInto
     else if SameText(xeTestSwitches.ChangeFormIDOp, 'copyidle') then
       lMenuItem := mniNavCopyIdle
+    else if SameText(xeTestSwitches.ChangeFormIDOp, 'copyrows') then
+      lMenuItem := mniViewCopyMultipleToSelectedRecords
     else
       lMenuItem := mniNavChangeFormID;
     if Assigned(lMenuItem) then
@@ -4770,6 +4787,8 @@ begin
           mniNavSetVWDAutoIntoClick(lMenuItem)
         else if lMenuItem = mniNavCopyIdle then
           mniNavCopyIdleClick(lMenuItem)
+        else if lMenuItem = mniViewCopyMultipleToSelectedRecords then
+          mniViewCopyMultipleToSelectedRecordsClick(lMenuItem)
         else if not Assigned(lMenuItem) then
           TestChangeFormIDLocView(lLines)
         else
@@ -5026,7 +5045,8 @@ begin
     end;
   end else if lForm is TfrmFileSelect then begin
     lList := TfrmFileSelect(lForm).CheckListBox1;
-    if SameText(lForm.Caption, 'Please select records to update') then begin
+    if SameText(lForm.Caption, 'Please select records to update') or SameText(lForm.Caption, 'What subrecords do you want to copy?') or
+       SameText(lForm.Caption, 'Which records should this value be copied to?') then begin
       lExtra := ListItems;
       lToken := NextToken(xeTestSwitches.ChangeFormIDRefs, TestHost.TestChangeFormIDRefIndex);
       if lToken = '' then begin
