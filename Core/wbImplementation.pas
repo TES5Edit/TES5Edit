@@ -272,6 +272,9 @@ type
 
     eReportMastersGen  : Cardinal;
 
+    procedure PinContainer;
+    procedure UnpinContainer;
+
     {---IInterface---}
     function _AddRef: Integer; virtual; stdcall;
     function _Release: Integer; virtual; stdcall;
@@ -24355,6 +24358,22 @@ begin
   end;
 end;
 
+procedure TwbElement.PinContainer;
+begin
+  var lNew := IInterface(eContainer) as IwbContainerElementRef;
+  var lOld := AtomicExchange(PPointer(@eContainerRef)^, Pointer(lNew));
+  Pointer(lNew) := nil;
+  if Assigned(lOld) then
+    IInterface(lOld)._Release;
+end;
+
+procedure TwbElement.UnpinContainer;
+begin
+  var lOld := AtomicExchange(PPointer(@eContainerRef)^, nil);
+  if Assigned(lOld) then
+    IInterface(lOld)._Release;
+end;
+
 {$D-}
 function TwbElement._AddRef: Integer;
 label
@@ -24373,7 +24392,7 @@ begin
          jne  Skip
   end;
   {$ENDIF WIN32}
-  eContainerRef := IInterface(eContainer) as IwbContainerElementRef;
+  PinContainer;
 Skip:
 
   Result := inherited _AddRef;
@@ -24395,7 +24414,7 @@ begin
          jne  Skip
   end;
   {$ENDIF WIN32}
-  eContainerRef := nil;
+  UnpinContainer;
 Skip:
   Result := inherited _Release;
 end;
