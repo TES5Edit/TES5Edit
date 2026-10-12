@@ -12334,6 +12334,7 @@ begin
     mrReferences := lTmpRefFormIDs;
   finally
     Exclude(mrStates, mrsBuildingRef);
+    Exclude(mrStates, mrsReferencesInjectedChecked);
     mrTmpRefFormIDs := nil;
   end;
 end;
