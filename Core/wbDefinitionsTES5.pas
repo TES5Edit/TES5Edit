@@ -2618,7 +2618,7 @@ begin
     {9} 'Crossbow'
   ]);
 
-  wbEDID := wbStringKC(EDID, 'Editor ID', 0, cpOverride);
+  wbEDID := wbStringKC(EDID, 'Editor ID', 0, cpOverride).IncludeFlag(dfKeepInPartialForm) as IwbSubRecordDef;
   wbFULL := wbLStringKC(FULL, 'Name', 0, cpTranslate);
   wbFULLReq := wbLStringKC(FULL, 'Name', 0, cpTranslate, True);
   wbDESC := wbLStringKC(DESC, 'Description', 0, cpTranslate);
@@ -5219,7 +5219,7 @@ begin
   ]);
 
   RegisterRecordDef(GMST, 'Game Setting', [
-    wbString(EDID, 'Editor ID', 0, cpCritical, True).SetAfterSet(wbGMSTEDIDAfterSet),
+    wbString(EDID, 'Editor ID', 0, cpCritical, True).SetAfterSet(wbGMSTEDIDAfterSet).IncludeFlag(dfKeepInPartialForm),
     wbUnion(DATA, 'Value', wbGMSTUnionDecider, [
       wbLString('Name', 0, cpTranslate),
       wbInteger('Int', itS32),
@@ -5888,7 +5888,8 @@ begin
   RegisterRecordDef(FLST, 'FormID List', [
     wbString(EDID, 'Editor ID', 0, cpBenign)
       .SetAfterSet(wbFLSTEDIDAfterSet)
-      .SetRequired,
+      .SetRequired
+      .IncludeFlag(dfKeepInPartialForm),
     wbRArrayS('FormIDs',
       wbFormID(LNAM, 'FormID')
     ).SetIsSorted(wbFLSTLNAMIsSorted)

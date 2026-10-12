@@ -511,6 +511,7 @@ type
     dfIndexEditorID,
     dfInternalEditOnly,
     dfIsRecordFlags,
+    dfKeepInPartialForm,
     dfMergeIfMultiple,
     dfMustBeUnion,
     dfNeedsPrepareSave,

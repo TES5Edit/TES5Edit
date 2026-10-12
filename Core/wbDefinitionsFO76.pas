@@ -4566,7 +4566,7 @@ begin
     'Fifth Star Slot'
   ]);
 
-  wbEDID := wbStringKC(EDID, 'Editor ID', 0, cpOverride);
+  wbEDID := wbStringKC(EDID, 'Editor ID', 0, cpOverride).IncludeFlag(dfKeepInPartialForm) as IwbSubRecordDef;
   wbFULL := wbLStringKC(FULL, 'Name', 0, cpTranslate);
   wbFULLReq := wbLStringKC(FULL, 'Name', 0, cpTranslate, True);
   wbDESC := wbLStringKC(DESC, 'Description', 0, cpTranslate);
@@ -8878,7 +8878,7 @@ begin
   ]);
 
   RegisterRecordDef(GMST, 'Game Setting', [
-    wbString(EDID, 'Editor ID', 0, cpCritical, True).SetAfterSet(wbGMSTEDIDAfterSet),
+    wbString(EDID, 'Editor ID', 0, cpCritical, True).SetAfterSet(wbGMSTEDIDAfterSet).IncludeFlag(dfKeepInPartialForm),
     wbUnion(DATA, 'Value', wbGMSTUnionDecider, [
       wbLString('Name', 0, cpTranslate),
       wbInteger('Int', itS32),
@@ -9638,7 +9638,7 @@ begin
           {0x00000002} 2, 'Unknown 2',   //0066CD08
           {0x00000200} 9, 'Unknown 9'    //0066CD08
     ])), [
-    wbString(EDID, 'Editor ID', 0, cpBenign, True).SetAfterSet(wbFLSTEDIDAfterSet),
+    wbString(EDID, 'Editor ID', 0, cpBenign, True).SetAfterSet(wbFLSTEDIDAfterSet).IncludeFlag(dfKeepInPartialForm),
     wbXALG,
     wbFULL,
     wbRArrayS('FormIDs',

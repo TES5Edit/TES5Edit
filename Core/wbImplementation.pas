@@ -11664,16 +11664,9 @@ begin
       Exit;
   end;
 
-  if GetIsPartialForm then begin
-    var lHasSignature: IwbHasSignature;
-    if Supports(aElement, IwbHasSignature, lHasSignature) and
-       Assigned(mrDef) and
-       (mrDef.KnownSubRecordSignatures[ksrEditorID] = lHasSignature.Signature)
-    then begin
-      //allow EDID for partial forms
-    end else
+  if GetIsPartialForm then
+    if not (Assigned(aElement.Def) and (dfKeepInPartialForm in aElement.Def.DefFlags)) then
       Exit;
-  end;
 
   if Assigned(mrDef) then begin
 
@@ -11819,13 +11812,10 @@ begin
     if aIndex <> wbAssignThis then begin
       var lPartialShouldExit := True;
       if Assigned(mrDef) then begin
-        lPartialShouldExit := mrDef.KnownSubRecordMemberIndex[ksrEditorID] <> aIndex;
+        lPartialShouldExit := not ((aIndex >= 0) and (aIndex < mrDef.MemberCount) and (dfKeepInPartialForm in mrDef.Members[aIndex].DefFlags));
 
-        if not lPartialShouldExit and Assigned(aElement) then begin
-          var lHasSignature: IwbHasSignature;
-          if Supports(aElement, IwbHasSignature, lHasSignature) then
-            lPartialShouldExit := mrDef.KnownSubRecordSignatures[ksrEditorID] <> lHasSignature.Signature;
-        end;
+        if not lPartialShouldExit and Assigned(aElement) and Supports(aElement, IwbHasSignature) then
+          lPartialShouldExit := not (Assigned(aElement.Def) and (dfKeepInPartialForm in aElement.Def.DefFlags));
 
         if lPartialShouldExit and (lContext.Settings.FillINOM or lContext.Settings.FillINOA) and (GetSignature = 'DIAL') then begin
           var lDIALMember := mrDef.Members[aIndex];
@@ -12500,16 +12490,9 @@ begin
     end;
 
   if GetIsPartialForm then
-    if aIndex <> wbAssignThis then begin
-      var lHasSignature: IwbHasSignature;
-      if Supports(aElement, IwbHasSignature, lHasSignature) and
-         Assigned(mrDef) and
-         (mrDef.KnownSubRecordSignatures[ksrEditorID] = lHasSignature.Signature)
-      then begin
-        //allow EDID for partial forms
-      end else
+    if aIndex <> wbAssignThis then
+      if not (Supports(aElement, IwbHasSignature) and Assigned(aElement.Def) and (dfKeepInPartialForm in aElement.Def.DefFlags)) then
         Exit;
-    end;
 
   if Assigned(eContainer) then
     if not IwbContainer(eContainer).IsElementEditable(Self) then
@@ -13904,7 +13887,7 @@ begin
       Element := cntElements[i];
       Def := Element.Def;
       if Assigned(Def) then begin
-        if Supports(Def, IwbSignatureDef, SigDef) and (mrDef.KnownSubRecordSignatures[ksrEditorID] = SigDef.DefaultSignature) then
+        if dfKeepInPartialForm in Def.DefFlags then
           Continue;
         if dfDontSave in Def.DefFlags then
           Continue;
@@ -15993,9 +15976,7 @@ end;
 
 procedure TwbMainRecord.MakePartialForm;
 var
-  SelfRef     : IwbContainerElementRef;
-  BasePtr     : Pointer;
-  GroupRecord : IwbGroupRecord;
+  SelfRef : IwbContainerElementRef;
 begin
   if not GetCanBePartial then
     Exit;
@@ -16005,40 +15986,24 @@ begin
 
   BeginUpdate;
   try
-    var lEditorID := GetEditorID;
-
     SetModified(True);
     InvalidateStorage;
-    ReleaseElements;
+    for var i := High(cntElements) downto GetAdditionalElementCount do begin
+      var lDef: IwbDef := cntElements[i].Def;
+      var lHasSignature: IwbHasSignature;
+      if not Assigned(lDef) and Supports(cntElements[i], IwbHasSignature, lHasSignature) then begin
+        var lIndex := mrDef.GetMemberIndexFor(Self, lHasSignature.Signature, nil);
+        if (lIndex >= 0) and (lIndex < mrDef.MemberCount) then
+          lDef := mrDef.Members[lIndex];
+      end;
+      if not (Assigned(lDef) and (dfKeepInPartialForm in lDef.DefFlags)) then
+        RemoveElement(i, True);
+    end;
 
     MakeHeaderWriteable;
     GetFlagsPtr.SetDeleted(False);
     GetFlagsPtr.SetPartialForm(True);
     GetFlagsPtr.SetCompressed(False);
-
-    if Supports(Self.GetContainer, IwbGroupRecord, GroupRecord) then
-      if ContextObj.Settings.CreateContainedIn and (GroupRecord.GroupType in [1, 4..10]) then
-        with TwbContainedInElement.Create(Self) do begin
-          _AddRef; _Release;
-        end;
-    GroupRecord := nil;
-
-    BasePtr := dcBasePtr;
-    with TwbRecordHeaderStruct.Create(Self, BasePtr, PByte(BasePtr) + GameDefObj.SizeOfMainRecordStruct, mrDef.RecordHeaderStruct, '') do begin
-      Include(dcFlags, dcfDontSave);
-      SetSortOrder(-1);
-      SetMemoryOrder(Low(Integer));
-      _AddRef; _Release;
-    end;
-
-    if lEditorID <> '' then begin
-      var lMemberIndex := mrDef.KnownSubRecordMemberIndex[ksrEditorID];
-      if lMemberIndex >= 0 then begin
-        var lBaseRecordElement := Assign(lMemberIndex, nil, False);
-        if Assigned(lBaseRecordElement) then
-          lBaseRecordElement.EditValue := lEditorID;
-      end;
-    end;
 
     CollapseStorage(nil, True);
   finally
