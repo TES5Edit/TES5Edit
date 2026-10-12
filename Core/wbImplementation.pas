@@ -46,6 +46,7 @@ type
     procedure SaveFailed(const aText: string; const aAlert: TwbSaveMessageProc);
     function RenameSaved(const aFrom, aTo: string; const aAlert: TwbSaveMessageProc): Boolean;
     function BackupSaved(const aFrom: string; const aAlert: TwbSaveMessageProc): Boolean;
+    function NewSaveStream(const aFileName: string): TStream; virtual;
   public
     destructor Destroy; override; final;
     procedure AllocateDenseIDs(const aRecords: TDynMainRecords); override; final;
@@ -27386,12 +27387,17 @@ begin
   ForceClosed;
 end;
 
+function TwbLoadingGameContext.NewSaveStream(const aFileName: string): TStream;
+begin
+  Result := TBufferedFileStream.Create(aFileName, fmCreate, 1024 * 1024);
+end;
+
 function TwbLoadingGameContext.WriteSave(const aFile: IwbFile; const aSuffix: string; const aReport: TwbSaveMessageProc): TwbSaveWrite;
 const
   ResetModifiedFromBool : array[Boolean] of TwbResetModified = (rmNo, rmSetInternal);
 var
   lCRC    : TwbCRC32;
-  lStream : TBufferedFileStream;
+  lStream : TStream;
 begin
   Result := Default(TwbSaveWrite);
   Result.TargetName := aFile.FileNameOnDisk;
@@ -27412,7 +27418,8 @@ begin
   end;
 
   lCRC := aFile.CRC32;
-  lStream := TBufferedFileStream.Create(Settings.DataPath + Result.SaveName, fmCreate, 1024 * 1024);
+  var lWasUnsaved := esUnsaved in aFile.ElementStates;
+  lStream := NewSaveStream(Settings.DataPath + Result.SaveName);
   try
     try
       aReport('Saving: ' + Result.SaveName);
@@ -27440,6 +27447,10 @@ begin
       System.SysUtils.DeleteFile(Settings.DataPath + Result.SaveName);
       Result.Failed := True;
       Result.NeedsRename := False;
+      Result.TryDirectRename := False;
+      Result.Commit := False;
+      if lWasUnsaved then
+        aFile.SetElementState(esUnsaved);
       aReport('Error saving ' + Result.SaveName + ': ' + E.Message);
     end;
   end;
@@ -27447,7 +27458,7 @@ end;
 
 function TwbLoadingGameContext.WriteSave(aFile: TwbLocalizationFile; const aSuffix: string; const aReport: TwbSaveMessageProc): TwbSaveWrite;
 var
-  lStream : TBufferedFileStream;
+  lStream : TStream;
 begin
   Result := Default(TwbSaveWrite);
   Result.SaveName := aFile.FileName;
@@ -27466,17 +27477,17 @@ begin
         Result.SaveName := Result.TargetName + aSuffix + '_' + lIdx.ToString;
       end;
     end;
-    lStream := TBufferedFileStream.Create(Settings.DataPath + Result.SaveName, fmCreate, 1024 * 1024);
+    lStream := NewSaveStream(Settings.DataPath + Result.SaveName);
     try
       aReport('Saving: ' + Result.SaveName);
       aFile.WriteToStream(lStream);
-      Result.Saved := True;
-      Result.Commit := True;
-      Result.TryDirectRename := True;
-      aFile.Modified := False;
     finally
       lStream.Free;
     end;
+    Result.Saved := True;
+    Result.Commit := True;
+    Result.TryDirectRename := True;
+    aFile.Modified := False;
   except
     on E: Exception do begin
       Result.Failed := True;
