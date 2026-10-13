@@ -3347,6 +3347,7 @@ var
   lLeveledListEntries   : IwbContainerElementRef;
   lLeveledListEntry     : IwbContainerElementRef;
   lCopiedElement        : IwbElement;
+  lCopiedGroup          : IwbGroupRecord;
   lRules                : TwbCopyRules;
   lCallbackOnly         : TwbCopyRules;
   lWrappedFlags         : TwbCopyFlags;
@@ -3440,6 +3441,10 @@ begin
       wbProgress(aOptions.Operation + ' ' + wbCurrentProgress);
       aResult[0] := AddCopy(lMainRecord.ChildGroup, PathFlags, lCallbackOnly);
       wbProgress('');
+      if Supports(aResult[0], IwbGroupRecord, lCopiedGroup) then
+        lMainRecord := lCopiedGroup.ChildrenOf
+      else
+        lMainRecord := nil;
     end else begin
       wbCurrentProgress := Format('[%s] into [%s]', [aElements[0].FullPath, lFile.FullPath]);
       wbProgress(aOptions.Operation + ' ' + wbCurrentProgress);
