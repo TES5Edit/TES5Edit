@@ -4797,6 +4797,8 @@ begin
       lMenuItem := mniNavSetVWDAutoInto
     else if SameText(xeTestSwitches.ChangeFormIDOp, 'copyidle') then
       lMenuItem := mniNavCopyIdle
+    else if SameText(xeTestSwitches.ChangeFormIDOp, 'copyspawnrate') then
+      lMenuItem := mniNavCopyAsSpawnRateOverride
     else if SameText(xeTestSwitches.ChangeFormIDOp, 'copyrows') then
       lMenuItem := mniViewCopyMultipleToSelectedRecords
     else if lRefBy then
@@ -4855,6 +4857,8 @@ begin
           mniNavSetVWDAutoIntoClick(lMenuItem)
         else if lMenuItem = mniNavCopyIdle then
           mniNavCopyIdleClick(lMenuItem)
+        else if lMenuItem = mniNavCopyAsSpawnRateOverride then
+          mniNavCopyIntoClick(lMenuItem)
         else if lMenuItem = mniViewCopyMultipleToSelectedRecords then
           mniViewCopyMultipleToSelectedRecordsClick(lMenuItem)
         else if lRefBy then begin
@@ -5406,6 +5410,33 @@ begin
 end;
 
 procedure TxeTestFormHelper.TestChangeFormIDAfter(aLines: TStrings);
+
+  function LeveledText(const aRecord: IwbMainRecord): string;
+  var
+    lEntries : IwbContainerElementRef;
+    lEntry   : IwbContainerElementRef;
+    lData    : IwbContainerElementRef;
+    lCounter : IwbElement;
+  begin
+    if not Assigned(aRecord) then
+      Exit('none');
+    Result := 'entries 0';
+    if Supports(aRecord.ElementByName['Leveled List Entries'], IwbContainerElementRef, lEntries) then begin
+      Result := 'entries ' + IntToStr(lEntries.ElementCount);
+      for var i := 0 to Pred(lEntries.ElementCount) do
+        if Supports(lEntries.Elements[i], IwbContainerElementRef, lEntry) then begin
+          if not Supports(lEntry.ElementBySignature['LVLO'], IwbContainerElementRef, lData) then
+            lData := lEntry;
+          Result := Result + ' ' + lData.ElementEditValues['Level'] + '/' + lData.ElementEditValues['Count'];
+        end;
+    end;
+    lCounter := aRecord.ElementBySignature['LLCT'];
+    if Assigned(lCounter) then
+      Result := Result + #9 + 'LLCT ' + lCounter.EditValue
+    else
+      Result := Result + #9 + 'LLCT none';
+  end;
+
 var
   lLines    : TStrings;
   lStream   : TMemoryStream;
@@ -5444,6 +5475,14 @@ begin
     TestChangeFormIDFiles(lLines, 'after', Files);
     if lLocalize then
       TestChangeFormIDLocalization(lLines, 'after', TestHost.TestChangeFormIDTarget);
+    if SameText(xeTestSwitches.ChangeFormIDOp, 'copyspawnrate') then
+      for var lSource in TestHost.TestChangeFormIDRecords do begin
+        var lCopy: IwbMainRecord := nil;
+        if Assigned(TestHost.TestChangeFormIDTarget) then
+          lCopy := TestHost.TestChangeFormIDTarget.ContainedRecordByLoadOrderFormID[lSource.LoadOrderFormID, False];
+        lLines.Add('leveled' + #9 + 'source ' + lSource.EditorID + '@' + lSource._File.FileName + #9 + LeveledText(lSource));
+        lLines.Add('leveled' + #9 + 'copy in ' + xeTestSwitches.ChangeFormIDTarget + #9 + LeveledText(lCopy));
+      end;
 
     ForceDirectories(xeTestSwitches.ChangeFormIDOut);
     for var i := Low(Files) to High(Files) do

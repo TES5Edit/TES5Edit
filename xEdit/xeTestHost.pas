@@ -597,12 +597,15 @@ begin
             SameText(ChangeFormIDOp, 'localize') or SameText(ChangeFormIDOp, 'locview') or
             SameText(ChangeFormIDOp, 'setvwd') or SameText(ChangeFormIDOp, 'setvwdinto') or
             SameText(ChangeFormIDOp, 'copyidle') or SameText(ChangeFormIDOp, 'copyrows') or
-            ChangeFormIDOp.StartsWith('refby', True)) or
+            SameText(ChangeFormIDOp, 'copyspawnrate') or ChangeFormIDOp.StartsWith('refby', True)) or
        ((SameText(ChangeFormIDOp, 'copyrows') or ChangeFormIDOp.StartsWith('refby', True)) and (ChangeFormIDView = '')) or
-       ((SameText(ChangeFormIDOp, 'batchrefs') or SameText(ChangeFormIDOp, 'localize')) and (ChangeFormIDTarget = '')) then begin
+       ((SameText(ChangeFormIDOp, 'batchrefs') or SameText(ChangeFormIDOp, 'localize') or
+         SameText(ChangeFormIDOp, 'copyspawnrate')) and (ChangeFormIDTarget = '')) then begin
       ShowMessage('testchangeformid requires -testchangeformid:<filename> -testchangeformidrecords:<EditorID>@<module>[,...] ' +
         '(setvwd, setvwdinto: also @<module>, the file''s node) -testchangeformidout:<folder> ' +
-        '[-testchangeformidop:<changeformid|changerefs|batchrefs|cleanupinjected|localize|locview|setvwd|setvwdinto|copyidle|copyrows>] ' +
+        '[-testchangeformidop:<changeformid|changerefs|batchrefs|cleanupinjected|localize|locview|setvwd|setvwdinto|copyidle|copyrows|' +
+        'copyspawnrate>] (copyspawnrate: Copy as Spawn Rate Override into -testchangeformidtarget, the copy''s leveled entries ' +
+        'reported) ' +
         '(copyrows: the records compared in the view, the source column the record -testchangeformidview names; the subrecord ' +
         'and target lists answered with the next two of -testchangeformidrefs; -testchangeformidview:nav:<EditorID>@<module> ' +
         'leaves the view to what the nav selection itself shows; -testchangeformidpinned:<EditorID>@<module>[,...] compares ' +
