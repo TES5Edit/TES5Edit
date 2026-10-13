@@ -251,6 +251,7 @@ type
     ChangeFormIDCsv       : string;
     ChangeFormIDView      : string;
     ChangeFormIDPinned    : string;
+    ChangeFormIDRow       : string;
     Hide                  : Boolean;
     HideFile              : string;
     HideRecord            : string;
@@ -586,6 +587,7 @@ begin
     wbFindCmdLineParam('testchangeformidcsv', ChangeFormIDCsv);
     wbFindCmdLineParam('testchangeformidview', ChangeFormIDView);
     wbFindCmdLineParam('testchangeformidpinned', ChangeFormIDPinned);
+    wbFindCmdLineParam('testchangeformidrow', ChangeFormIDRow);
     ChangeFormIDShift := FindCmdLineSwitch('testchangeformidshift');
     if ChangeFormIDOp = '' then
       ChangeFormIDOp := 'changeformid';
@@ -597,15 +599,19 @@ begin
             SameText(ChangeFormIDOp, 'localize') or SameText(ChangeFormIDOp, 'locview') or
             SameText(ChangeFormIDOp, 'setvwd') or SameText(ChangeFormIDOp, 'setvwdinto') or
             SameText(ChangeFormIDOp, 'copyidle') or SameText(ChangeFormIDOp, 'copyrows') or
-            SameText(ChangeFormIDOp, 'copyspawnrate') or ChangeFormIDOp.StartsWith('refby', True)) or
+            SameText(ChangeFormIDOp, 'copyspawnrate') or SameText(ChangeFormIDOp, 'viewadd') or
+            ChangeFormIDOp.StartsWith('refby', True)) or
        ((SameText(ChangeFormIDOp, 'copyrows') or ChangeFormIDOp.StartsWith('refby', True)) and (ChangeFormIDView = '')) or
+       (SameText(ChangeFormIDOp, 'viewadd') and ((ChangeFormIDTarget = '') or (ChangeFormIDRow = ''))) or
        ((SameText(ChangeFormIDOp, 'batchrefs') or SameText(ChangeFormIDOp, 'localize') or
          SameText(ChangeFormIDOp, 'copyspawnrate')) and (ChangeFormIDTarget = '')) then begin
       ShowMessage('testchangeformid requires -testchangeformid:<filename> -testchangeformidrecords:<EditorID>@<module>[,...] ' +
         '(setvwd, setvwdinto: also @<module>, the file''s node) -testchangeformidout:<folder> ' +
         '[-testchangeformidop:<changeformid|changerefs|batchrefs|cleanupinjected|localize|locview|setvwd|setvwdinto|copyidle|copyrows|' +
-        'copyspawnrate>] (copyspawnrate: Copy as Spawn Rate Override into -testchangeformidtarget, the copy''s leveled entries ' +
+        'copyspawnrate|viewadd>] (copyspawnrate: Copy as Spawn Rate Override into -testchangeformidtarget, the copy''s leveled entries ' +
         'reported) ' +
+        '(viewadd: each record shown in the View tab, the row named by -testchangeformidrow:<element name> focused in the column of ' +
+        '-testchangeformidtarget:<module>, whether Add is offered, and Add clicked when it is) ' +
         '(copyrows: the records compared in the view, the source column the record -testchangeformidview names; the subrecord ' +
         'and target lists answered with the next two of -testchangeformidrefs; -testchangeformidview:nav:<EditorID>@<module> ' +
         'leaves the view to what the nav selection itself shows; -testchangeformidpinned:<EditorID>@<module>[,...] compares ' +

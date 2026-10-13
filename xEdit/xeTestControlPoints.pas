@@ -93,6 +93,7 @@ type
     procedure TestChangeFormIDAfter(aLines: TStrings);
     procedure TestChangeFormIDNodes(aLines: TStrings);
     procedure TestChangeFormIDLocView(aLines: TStrings);
+    procedure TestChangeFormIDViewAdd(aLines: TStrings);
     function TestRefByMenuItem: TMenuItem;
     procedure TestRefByShow(aLines: TStrings);
     procedure TestRefByRows(aLines: TStrings; const aWhen: string);
@@ -4789,7 +4790,7 @@ begin
       lMenuItem := mniNavCleanupInjected
     else if SameText(xeTestSwitches.ChangeFormIDOp, 'localize') then
       lMenuItem := mniNavLocalizationSwitch
-    else if SameText(xeTestSwitches.ChangeFormIDOp, 'locview') then
+    else if SameText(xeTestSwitches.ChangeFormIDOp, 'locview') or SameText(xeTestSwitches.ChangeFormIDOp, 'viewadd') then
       lMenuItem := nil
     else if SameText(xeTestSwitches.ChangeFormIDOp, 'setvwd') then
       lMenuItem := mniNavSetVWDAuto
@@ -4866,7 +4867,9 @@ begin
             lMenuItem.Click
           else
             lLines.Add('notclicked' + #9 + 'the menu item is hidden');
-        end else if not Assigned(lMenuItem) then
+        end else if SameText(xeTestSwitches.ChangeFormIDOp, 'viewadd') then
+          TestChangeFormIDViewAdd(lLines)
+        else if not Assigned(lMenuItem) then
           TestChangeFormIDLocView(lLines)
         else
           mniNavChangeFormIDClick(lMenuItem);
@@ -4983,6 +4986,60 @@ begin
           aLines.Add('locview' + #9 + lRecord.EditorID + #9 + lElement.Name + #9 + 'raised' + #9 + E.ClassName + #9 + E.Message);
       end;
     end;
+  end;
+end;
+
+procedure TxeTestFormHelper.TestChangeFormIDViewAdd(aLines: TStrings);
+var
+  lColumn : Integer;
+  lRow    : PVirtualNode;
+  lTarget : IwbMainRecord;
+  lCell   : IwbMainRecord;
+  lAdded  : IwbElement;
+begin
+  for var lRecord in TestHost.TestChangeFormIDRecords do begin
+    DoSetActiveRecord(IwbMainRecord(nil));
+    DoSetActiveRecord(lRecord, True);
+    vstView.FullExpand;
+    lColumn := -1;
+    lTarget := nil;
+    for var c := Low(ActiveRecords) to High(ActiveRecords) do
+      if Supports(ActiveRecords[c].Element, IwbMainRecord, lCell) and lCell._File.Equals(TestHost.TestChangeFormIDTarget) then begin
+        lColumn := c;
+        lTarget := lCell;
+      end;
+    if lColumn < 0 then begin
+      aLines.Add('viewadd' + #9 + lRecord.EditorID + #9 + 'no column for ' + xeTestSwitches.ChangeFormIDTarget);
+      Continue;
+    end;
+    lRow := nil;
+    for var lNode in vstView.Nodes(False) do begin
+      for var c := Low(ActiveRecords) to High(ActiveRecords) do
+        if Assigned(ViewCells(lNode)[c].Element) and SameText(ViewCells(lNode)[c].Element.Name, xeTestSwitches.ChangeFormIDRow) then
+          lRow := lNode;
+      if Assigned(lRow) then
+        Break;
+    end;
+    if not Assigned(lRow) then begin
+      aLines.Add('viewadd' + #9 + lRecord.EditorID + #9 + 'no row ' + xeTestSwitches.ChangeFormIDRow);
+      Continue;
+    end;
+    aLines.Add('viewadd' + #9 + lRecord.EditorID + #9 + 'column ' + IntToStr(lColumn) + ' of ' + IntToStr(Length(ActiveRecords)) + #9 +
+      'partial ' + BoolToStr(lTarget.IsPartialForm, True) + #9 + 'cell ' + IfThen(Assigned(ViewCells(lRow)[lColumn].Element), 'E', '-'));
+    vstViewFocusedNode := lRow;
+    vstView.FocusedColumn := Succ(lColumn);
+    pmuViewPopup(nil);
+    aLines.Add('viewadd' + #9 + lRecord.EditorID + #9 + 'offered ' + BoolToStr(mniViewAdd.Visible and mniViewAdd.Enabled, True) + #9 +
+      'caption ' + StripHotkey(mniViewAdd.Caption) + #9 + 'choices ' + IntToStr(mniViewAdd.Count));
+    if mniViewAdd.Visible and mniViewAdd.Enabled then
+      if mniViewAdd.Count > 0 then
+        mniViewAdd.Items[0].Click
+      else
+        mniViewAdd.Click;
+    lAdded := lTarget.ElementByName[xeTestSwitches.ChangeFormIDRow];
+    aLines.Add('viewadd' + #9 + lRecord.EditorID + #9 + 'after' + #9 + 'has ' + BoolToStr(Assigned(lAdded), True) + #9 + 'partial ' +
+      BoolToStr(lTarget.IsPartialForm, True) + #9 + 'modified ' + BoolToStr(lTarget.Modified, True) + #9 + 'elements ' +
+      IntToStr(lTarget.ElementCount));
   end;
 end;
 
