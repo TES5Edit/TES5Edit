@@ -9704,7 +9704,11 @@ function TwbGameDefCommon.wbWorldCellSizeData: IwbRecordMemberDef;
 begin
   Result :=
     IfThen(DefineOptions.HideLargeSubrecords,
-      wbByteArray(CLSZ, 'Cell Sizes', 0, cpIgnore).SetDontShow(wbNeverShow),
+      wbByteArray(CLSZ, 'Cell Sizes', 0, cpIgnore)
+        .SetDontShow(wbNeverShow)
+        .IncludeFlag(dfInternalEditOnly)
+        .IncludeFlag(dfKeepInPartialForm)
+        .IncludeFlag(dfNoCopyAsOverride),
       wbArray(CLSZ, 'Cell Sizes',
         wbArray('Row',
           wbInteger('Cell', itU32, nil, cpIgnore),
@@ -9717,6 +9721,7 @@ begin
        .IncludeFlag(dfCollapsed, clpObjectBounds in DefineOptions.Collapse)
        .IncludeFlag(dfFastAssign)
        .IncludeFlag(dfInternalEditOnly)
+       .IncludeFlag(dfKeepInPartialForm)
        .IncludeFlag(dfNoCopyAsOverride)
        .IncludeFlag(dfNotAlignable));
 end;
@@ -9964,7 +9969,8 @@ begin
       .SetSummaryMemberPrefixSuffix(1, 'Max', ']')
       .SetSummaryDelimiter(', ')
       .SetRequired
-      .IncludeFlag(dfCollapsed, clpObjectBounds in DefineOptions.Collapse);
+      .IncludeFlag(dfCollapsed, clpObjectBounds in DefineOptions.Collapse)
+      .IncludeFlag(dfKeepInPartialForm);
 end;
 
 function TwbGameDefCommon.wbWorldOffsetData: IwbRecordMemberDef;
@@ -9973,6 +9979,8 @@ begin
     IfThen(DefineOptions.HideLargeSubrecords,
       wbByteArray(OFST, 'Offsets', 0, cpIgnore)
         .SetDontShow(wbNeverShow)
+        .IncludeFlag(dfInternalEditOnly)
+        .IncludeFlag(dfKeepInPartialForm)
         .IncludeFlag(dfNoCopyAsOverride),
       wbArray(OFST, 'Offsets',
         wbArray('Row',
@@ -9986,6 +9994,7 @@ begin
        .IncludeFlag(dfCollapsed, clpOther in DefineOptions.Collapse)
        .IncludeFlag(dfFastAssign)
        .IncludeFlag(dfInternalEditOnly)
+       .IncludeFlag(dfKeepInPartialForm)
        .IncludeFlag(dfNoCopyAsOverride)
        .IncludeFlag(dfNotAlignable));
 end;

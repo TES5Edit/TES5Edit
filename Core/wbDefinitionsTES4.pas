@@ -1310,7 +1310,7 @@ begin
 {>>> Common Defs <<<}
 
   wbDESC := wbStringKC(DESC, 'Description', 0, cpTranslate);
-  wbEDID := wbString(EDID, 'Editor ID', 0, cpNormal); // not cpBenign according to Arthmoor
+  wbEDID := wbString(EDID, 'Editor ID').IncludeFlag(dfKeepInPartialForm); // not cpBenign according to Arthmoor
   wbFULL := wbStringKC(FULL, 'Name', 0, cpTranslate);
   wbFULLReq := wbStringKC(FULL, 'Name', 0, cpTranslate).SetRequired;
   wbICON := wbString(ICON, 'Icon Filename');
@@ -1765,10 +1765,13 @@ begin
 
   RegisterRecordDef(CELL, 'Cell',
     wbFlags(wbFlagsList([
-      10, 'Persistent',
-      17, 'Off Limits',
-      19, 'Can''t Wait'
-    ])), [
+    10, 'Persistent',
+    14, 'Partial Form',
+    17, 'Off Limits',
+    19, 'Can''t Wait'
+    ]), [14])
+      .SetFlagHasDontShow(14, wbFlagPartialFormDontShow),
+    [
     wbEDID,
     wbFULL,
     wbInteger(DATA, 'Flags', itU8,
@@ -2152,7 +2155,10 @@ begin
     ])
   ]);
 
-  RegisterRecordDef(DIAL, 'Dialog Topic', [
+  RegisterRecordDef(DIAL, 'Dialog Topic',
+    wbFlags(wbFlagsList([
+    14, 'Partial Form'
+    ]), [14]), [
     wbEDID,
     wbQSTI,
     wbQSTR,
@@ -3636,8 +3642,9 @@ begin
 
   RegisterRecordDef(WRLD, 'Worldspace',
     wbFlags(wbFlagsList([
-      19, 'Can''t Wait'
-    ])), [
+    14, 'Partial Form',
+    19, 'Can''t Wait'
+    ]), [14]), [
     wbEDID.SetRequired,
     wbFULL,
     wbFormIDCk(WNAM, 'Parent Worldspace', [WRLD]),

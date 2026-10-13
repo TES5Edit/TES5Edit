@@ -2894,9 +2894,9 @@ begin
     'ReloadZ'
   ]);
 
-  wbEDID := wbString(EDID, 'Editor ID', 0, cpNormal); // not cpBenign according to Arthmoor
-  wbEDIDReq := wbString(EDID, 'Editor ID', 0, cpNormal, True); // not cpBenign according to Arthmoor
-  wbEDIDReqKC := wbStringKC(EDID, 'Editor ID', 0, cpNormal, True); // not cpBenign according to Arthmoor
+  wbEDID := wbString(EDID, 'Editor ID').IncludeFlag(dfKeepInPartialForm) as IwbSubRecordDef; // not cpBenign according to Arthmoor
+  wbEDIDReq := wbString(EDID, 'Editor ID', 0, cpNormal, True).IncludeFlag(dfKeepInPartialForm) as IwbSubRecordDef; // not cpBenign according to Arthmoor
+  wbEDIDReqKC := wbStringKC(EDID, 'Editor ID', 0, cpNormal, True).IncludeFlag(dfKeepInPartialForm) as IwbSubRecordDef; // not cpBenign according to Arthmoor
   wbFULL := wbStringKC(FULL, 'Name', 0, cpTranslate);
   wbFULLActor := wbStringKC(FULL, 'Name', 0, cpTranslate).SetDontShow(wbActorTemplateUseBaseData);
   wbFULLReq := wbStringKC(FULL, 'Name', 0, cpTranslate, True);
@@ -4073,10 +4073,13 @@ begin
 
   RegisterRecordDef(CELL, 'Cell',
     wbFlags(wbFlagsList([
-      10, 'Persistent',
-      17, 'Off Limits',
-      19, 'Can''t Wait'
-    ])), [
+    10, 'Persistent',
+    14, 'Partial Form',
+    17, 'Off Limits',
+    19, 'Can''t Wait'
+    ]), [14])
+      .SetFlagHasDontShow(14, wbFlagPartialFormDontShow),
+    [
     wbEDID,
     wbFULL,
     wbInteger(DATA, 'Flags', itU8,
@@ -4528,7 +4531,10 @@ begin
     ], cpNormal, True)
   ]);
 
-  RegisterRecordDef(DIAL, 'Dialog Topic', [
+  RegisterRecordDef(DIAL, 'Dialog Topic',
+    wbFlags(wbFlagsList([
+    14, 'Partial Form'
+    ]), [14]), [
     wbEDIDReqKC,
     wbRArrayS('Added Quests',
       wbRStructSK([0], 'Added Quest', [
@@ -8949,8 +8955,9 @@ begin
 
   RegisterRecordDef(WRLD, 'Worldspace',
     wbFlags(wbFlagsList([
-      19, 'Can''t Wait'
-    ])), [
+    14, 'Partial Form',
+    19, 'Can''t Wait'
+    ]), [14]), [
     wbEDIDReq,
     wbFULL,
     wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]),
