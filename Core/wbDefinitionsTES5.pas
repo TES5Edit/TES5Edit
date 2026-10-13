@@ -118,7 +118,6 @@ type
     wbNull: IwbValueDef;
     wbYNAM: IwbSubRecordDef;
     wbZNAM: IwbSubRecordDef;
-    wbTVDT: IwbSubRecordDef;
     wbNVNM: IwbSubRecordDef;
     wbFactionRank: IwbRecordMemberDef;
     wbSubtypeNamesEnum: IwbEnumDef;
@@ -3092,9 +3091,6 @@ begin
     'Very Hard'
   ]));
 
-  wbTVDT := wbByteArray(TVDT, 'Occlusion Data', 0, cpNormal);
-//  wbTVDT := wbArray(TVDT, 'Occlusion Data', wbInteger('Unknown', itS32)),
-
   RegisterRefRecordDef(ACHR, 'Placed NPC',
     wbFlags(wbFlagsList([
       9, 'Starts Dead',
@@ -4246,7 +4242,7 @@ begin
       .SetDontShow(wbCellExteriorDontShow)
       .SetIsRemovable(wbCellLightingIsRemovable),
 
-    wbTVDT,
+    wbByteArray(TVDT, 'Terrain Visibility Data'),
     wbMHDTCELL,
     wbFormIDCk(LTMP, 'Lighting Template', [LGTM, NULL], False, cpNormal, True),
     wbByteArray(LNAM, 'Unknown', 0, cpIgnore), // leftover flags, they are now in XCLC
