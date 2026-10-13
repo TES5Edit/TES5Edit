@@ -17162,7 +17162,7 @@ begin
           Text := Element.EditValue;
           for i := 0 to Pred(Count) do
             if StartsWith(Trim(Strings[i]), 'begin') then begin
-              while i <= Count do
+              while i < Count do
                 Delete(Pred(Count));
               Break;
             end;
