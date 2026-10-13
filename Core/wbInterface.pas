@@ -25581,7 +25581,6 @@ class function TwbCleanupInjectedPlan.Plan(const aElements: TDynElements): TwbCl
 var
   lMainRecord : IwbMainRecord;
   lSources    : TwbFiles;
-  lContainer  : IwbContainer;
   lMasters    : TwbFilesSet;
 begin
   Result := Default(TwbCleanupInjectedPlan);
@@ -25602,14 +25601,8 @@ begin
 
   lMasters := TwbFilesSet.Create;
   try
-    for var lRecord in Result.Records do begin
-      lRecord.ReportRequiredMasters(lMasters, False);
-      lContainer := lRecord.Container;
-      while Assigned(lContainer) do begin
-        lContainer.ReportRequiredMasters(lMasters, False, False);
-        lContainer := lContainer.Container;
-      end;
-    end;
+    for var lRecord in Result.Records do
+      lRecord.ReportRequiredMastersForCopy(lMasters, False, True, Result.Target);
     for var lFile in lMasters do
       Result.NewMasters := Result.NewMasters + [lFile];
   finally
