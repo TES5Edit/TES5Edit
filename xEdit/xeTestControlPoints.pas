@@ -4701,10 +4701,60 @@ begin
     end;
     pmuNavPopup(nil);
     if SameText(xeTestSwitches.ChangeFormIDOp, 'copyrows') then begin
-      SetActiveRecord(TestHost.TestChangeFormIDRecords);
+      var lViewSpec := xeTestSwitches.ChangeFormIDView;
+      var lNavRoute := lViewSpec.StartsWith('nav:', True);
+      if lNavRoute then
+        lViewSpec := lViewSpec.Substring(4);
+      if xeTestSwitches.ChangeFormIDPinned <> '' then begin
+        vstNav.ClearSelection;
+        lFirst := nil;
+        for var lSpec in xeTestSwitches.ChangeFormIDPinned.Split([',']) do begin
+          lNode := FindNodeForElement(FindRecord(lSpec));
+          if not Assigned(lNode) then
+            raise Exception.Create('no nav node for ' + lSpec);
+          if not Assigned(lFirst) then begin
+            lFirst := lNode;
+            vstNav.FocusedNode := lNode;
+          end;
+          vstNav.Selected[lNode] := True;
+        end;
+        vstNavChange(vstNav, vstNav.FocusedNode);
+        if tmrPendingSetActive.Enabled then
+          tmrPendingSetActiveTimer(tmrPendingSetActive);
+        bnPinned.Down := True;
+        bnPinnedClick(bnPinned);
+        vstNav.ClearSelection;
+        lFirst := nil;
+        for var lSelected in TestHost.TestChangeFormIDRecords do begin
+          lNode := FindNodeForElement(lSelected);
+          if not Assigned(lNode) then
+            raise Exception.Create('no nav node for ' + lSelected.Name);
+          if not Assigned(lFirst) then begin
+            lFirst := lNode;
+            vstNav.FocusedNode := lNode;
+          end;
+          vstNav.Selected[lNode] := True;
+        end;
+        vstNavChange(vstNav, vstNav.FocusedNode);
+      end else if lNavRoute then
+        vstNavChange(vstNav, vstNav.FocusedNode)
+      else
+        SetActiveRecord(TestHost.TestChangeFormIDRecords);
       if tmrPendingSetActive.Enabled then
         tmrPendingSetActiveTimer(tmrPendingSetActive);
-      var lSource := FindRecord(xeTestSwitches.ChangeFormIDView);
+      if lNavRoute or (xeTestSwitches.ChangeFormIDPinned <> '') then begin
+        var lShown := '';
+        var lShownRecord: IwbMainRecord;
+        for var i := Low(ActiveRecords) to High(ActiveRecords) do begin
+          if lShown <> '' then
+            lShown := lShown + ',';
+          if Supports(ActiveRecords[i].Element, IwbMainRecord, lShownRecord) then
+            lShown := lShown + lShownRecord.EditorID + '@' + lShownRecord._File.FileName;
+        end;
+        lLines.Add('viewrecords' + #9 + lShown + #9 + 'pinned ' + BoolToStr(IsPinned, True) + #9 + 'nav selected ' +
+          IntToStr(vstNav.SelectedCount));
+      end;
+      var lSource := FindRecord(lViewSpec);
       var lColumn := -1;
       for var i := Low(ActiveRecords) to High(ActiveRecords) do
         if Assigned(ActiveRecords[i].Element) and ActiveRecords[i].Element.Equals(lSource) then

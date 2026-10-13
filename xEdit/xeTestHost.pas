@@ -250,6 +250,7 @@ type
     ChangeFormIDOp        : string;
     ChangeFormIDCsv       : string;
     ChangeFormIDView      : string;
+    ChangeFormIDPinned    : string;
     Hide                  : Boolean;
     HideFile              : string;
     HideRecord            : string;
@@ -584,6 +585,7 @@ begin
     wbFindCmdLineParam('testchangeformidop', ChangeFormIDOp);
     wbFindCmdLineParam('testchangeformidcsv', ChangeFormIDCsv);
     wbFindCmdLineParam('testchangeformidview', ChangeFormIDView);
+    wbFindCmdLineParam('testchangeformidpinned', ChangeFormIDPinned);
     ChangeFormIDShift := FindCmdLineSwitch('testchangeformidshift');
     if ChangeFormIDOp = '' then
       ChangeFormIDOp := 'changeformid';
@@ -601,7 +603,9 @@ begin
         '(setvwd, setvwdinto: also @<module>, the file''s node) -testchangeformidout:<folder> ' +
         '[-testchangeformidop:<changeformid|changerefs|batchrefs|cleanupinjected|localize|locview|setvwd|setvwdinto|copyidle|copyrows>] ' +
         '(copyrows: the records compared in the view, the source column the record -testchangeformidview names; the subrecord ' +
-        'and target lists answered with the next two of -testchangeformidrefs) ' +
+        'and target lists answered with the next two of -testchangeformidrefs; -testchangeformidview:nav:<EditorID>@<module> ' +
+        'leaves the view to what the nav selection itself shows; -testchangeformidpinned:<EditorID>@<module>[,...] compares ' +
+        'those records and pins the view before the records are selected) ' +
         '(copyidle: the idle list answered with the next of -testchangeformidrefs, listed folders joined by ;, none or cancel; the model ' +
         'prefix prompt with the next of -testchangeformidids) ' +
         '[-testchangeformidshift] [-testchangeformidtarget:<module|new>] (batchrefs, localize: the file focused; new: the ' +
