@@ -2364,6 +2364,8 @@ var
   MainRecord         : IwbMainRecord;
   LeveledListEntries : IwbContainerElementRef;
   LeveledListEntry   : IwbContainerElementRef;
+  EntryData          : IwbContainerElementRef;
+  ListDef            : IwbSubRecordArrayDef;
   Entries            : array of IwbContainerElementRef;
   i, j               : Integer;
 const
@@ -2375,15 +2377,23 @@ begin
     Assert(Assigned(LeveledListEntries));
 
     for i := 0 to Pred(LeveledListEntries.ElementCount) do
-      if Supports(LeveledListEntries.Elements[i], IwbContainerElementRef, LeveledListEntry) and
-        SameText(LeveledListEntry.Name, 'LVLO - Leveled List Entry') then begin
-          SetLength(Entries, Succ(Length(Entries)));
-          Entries[High(Entries)] := LeveledListEntry;
-        end;
+      if Supports(LeveledListEntries.Elements[i], IwbContainerElementRef, LeveledListEntry) then begin
+        SetLength(Entries, Succ(Length(Entries)));
+        Entries[High(Entries)] := LeveledListEntry;
+      end;
+
+    var lAdjustedCount := Length(Entries) * Succ(Length(Counts));
+    if Supports(LeveledListEntries.Def, IwbSubRecordArrayDef, ListDef) and (ListDef.MaxCount > 0) and
+       (UInt64(lAdjustedCount) > ListDef.MaxCount) then begin
+      wbProgress('Not adjusted: %s would hold %d entries, the maximum is %s', [MainRecord.Name, lAdjustedCount, UIntToStr(ListDef.MaxCount)]);
+      Exit;
+    end;
 
     for i := Low(Entries) to High(Entries) do
       for j := Low(Counts) to High(Counts) do begin
         LeveledListEntry := LeveledListEntries.Assign(Low(Integer), Entries[i], False) as IwbContainerElementRef;
+        if Supports(LeveledListEntry.ElementBySignature['LVLO'], IwbContainerElementRef, EntryData) then
+          LeveledListEntry := EntryData;
         LeveledListEntry.ElementByName['Count'].NativeValue := Counts[j];
       end;
   end;
