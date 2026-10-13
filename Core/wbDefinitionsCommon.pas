@@ -348,6 +348,7 @@ procedure wbDOBJObjectsAfterLoad       (const aElement: IwbElement);
 procedure wbLargeRefsAfterLoad         (const aElement: IwbElement);
 procedure wbLargeRefsRNAMAfterLoad     (const aElement: IwbElement);
 procedure wbMESGAfterLoad              (const aElement: IwbElement);
+procedure wbNAVINavmeshInfosAfterLoad  (const aElement: IwbElement);
 procedure wbPACKDateAfterLoad          (const aElement: IwbElement);
 procedure wbPACKDataBoolAfterLoad      (const aElement: IwbElement);
 procedure wbPERKNumRanksAfterLoad      (const aElement: IwbElement);
@@ -1057,6 +1058,44 @@ begin
       if lMainRecord.ElementExists['TNAM'] then
         lMainRecord.RemoveElement('TNAM');
   finally
+    wbEndInternalEdit;
+  end;
+end;
+
+procedure wbNAVINavmeshInfosAfterLoad(const aElement: IwbElement);
+begin
+  if not Assigned(aElement) then
+    Exit;
+
+  if esModified in aElement.ElementStates then
+    Exit;
+
+  var lContainer := aElement as IwbContainerElementRef;
+  if not Assigned(lContainer) then
+    Exit;
+
+  if aElement.ContextObj.BeginInternalEdit then
+  try
+    lContainer.BeginUpdate;
+
+    for var lIndex := Pred(lContainer.ElementCount) downto 0 do
+    begin
+      var lNVMI := lContainer[lIndex] as IwbContainerElementRef;
+
+      if not Assigned(lNVMI) then
+        Continue;
+
+      var lNavmesh := lNVMI.ElementByName['Navmesh'];
+      if not Assigned(lNavmesh) then
+        Continue;
+
+      var lLinksTo := lNavmesh.LinksTo as IwbMainRecord;
+      if (not Assigned(lLinksTo)) or (lLinksTo.Signature <> NAVM) then
+        lNVMI.Remove;
+    end;
+  finally
+    lContainer.EndUpdate;
+
     wbEndInternalEdit;
   end;
 end;
