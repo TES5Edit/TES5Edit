@@ -71,9 +71,10 @@ type
   end;
 
   TwbRowCopyPlan = record
-    Column : Integer;
-    Source : IwbMainRecord;
-    Rows   : TArray<TwbRowCopyRow>;
+    Column  : Integer;
+    Source  : IwbMainRecord;
+    Records : TDynMainRecords;
+    Rows    : TArray<TwbRowCopyRow>;
     function Targets(const aRecords: TDynMainRecords): TDynMainRecords;
     function Apply(const aTargets: TDynMainRecords; const aCanEdit: TFunc<Boolean>): Boolean;
   end;
@@ -2657,6 +2658,9 @@ var
 begin
   Result := Default(TwbRowCopyPlan);
   Result.Column := aColumn;
+  SetLength(Result.Records, Length(ctRoot.Datas));
+  for var c := Low(Result.Records) to High(Result.Records) do
+    Supports(ctRoot.Datas[c].Element, IwbMainRecord, Result.Records[c]);
   for var i := 0 to Pred(ctRoot.ChildCount) do begin
     lDatas := ctRoot.Children[i].Datas;
     lElement := lDatas[aColumn].Element;
@@ -2687,27 +2691,33 @@ begin
   Result := nil;
   for var lRecord in aRecords do
     if not Source.Equals(lRecord) then
-      Result := Result + [lRecord];
+      for var lShown in Records do
+        if Assigned(lShown) and lShown.Equals(lRecord) then begin
+          Result := Result + [lRecord];
+          Break;
+        end;
 end;
 
 function TwbRowCopyPlan.Apply(const aTargets: TDynMainRecords; const aCanEdit: TFunc<Boolean>): Boolean;
 var
-  lCells  : TDynElements;
-  lCell   : IwbElement;
-  lHolder : IwbMainRecord;
+  lTargets : TDynMainRecords;
+  lCells   : TDynElements;
+  lCell    : IwbElement;
+  lHolder  : IwbMainRecord;
 begin
   Result := False;
+  lTargets := Targets(aTargets);
   for var lRow in Rows do
     if lRow.Selected then begin
       lCells := Copy(lRow.Cells);
       if Assigned(lCells[Column]) then begin
-        for var lTarget in aTargets do begin
+        for var lTarget in lTargets do begin
           if Assigned(aCanEdit) and not aCanEdit() then
             Exit;
           lTarget.AddCopy(lCells[Column], [cfDeepCopy]);
         end;
       end else
-        for var lTarget in aTargets do
+        for var lTarget in lTargets do
           for var c := Low(lCells) to High(lCells) do begin
             lCell := lCells[c];
             if Assigned(lCell) then begin
@@ -2724,7 +2734,7 @@ begin
             end;
           end;
     end;
-  for var lTarget in aTargets do
+  for var lTarget in lTargets do
     lTarget.UpdateRefs;
   Result := True;
 end;
