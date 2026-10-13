@@ -5503,7 +5503,8 @@ function BSLightingShaderProperty_DecideShaderFlags(const e: TdfElement): Intege
 function BSLightingShaderProperty_EnOldShaderFlags(const e: TdfElement): Boolean; begin Result := nif(e).UserVersion2 <= 130; end;
 function BSLightingShaderProperty_EnNewShaderFlags(const e: TdfElement): Boolean; begin Result := nif(e).UserVersion2 >= 131; end;
 function BSLightingShaderProperty_EnWet(const e: TdfElement): Boolean; begin Result := nif(e).UserVersion2 in [130, 132]; end;
-function BSLightingShaderProperty_EnLightingEffect(const e: TdfElement): Boolean; begin Result := nif(e).UserVersion2 < 130; end;
+function BSLightingShaderProperty_EnLightingEffect(const e: TdfElement): Boolean; begin Result := (nif(e).UserVersion2 < 130) and (e.NativeValues['..\Shader Type'] <> 21); end;
+function BSLightingShaderProperty_EnSpecular(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Shader Type'] <> 21; end;
 function BSLightingShaderProperty_EnBacklightPower(const e: TdfElement): Boolean; begin Result := (nif(e).UserVersion2 in [130, 132]) and (e.EditValues['..\Rimlight Power'] = 'Max'); end;
 function BSLightingShaderProperty_EnEnvMapScale(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Shader Type'] = 1; end;
 function BSLightingShaderProperty_EnUnknownEnvMapShort(const e: TdfElement): Boolean; begin Result := (nif(e).UserVersion2 in [130, 132]) and (e.NativeValues['..\Shader Type'] = 1); end;
@@ -5514,6 +5515,7 @@ function BSLightingShaderProperty_EnMaxPasses(const e: TdfElement): Boolean; beg
 function BSLightingShaderProperty_EnParallax(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Shader Type'] = 11; end;
 function BSLightingShaderProperty_EnSparkleParameters(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Shader Type'] = 14; end;
 function BSLightingShaderProperty_EnEyes(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Shader Type'] = 16; end;
+function BSLightingShaderProperty_EnPBR(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Shader Type'] = 21; end;
 
 procedure wbDefineBSLightingShaderProperty;
 begin
@@ -5543,8 +5545,8 @@ begin
     dfFloat('Refraction Strength'),
     dfFloat('Glossiness', '80.0', [DF_OnGetEnabled, @BSLightingShaderProperty_EnLightingEffect]),
     dfFloat('Smoothness', '1.0', [DF_OnGetEnabled, @BSLightingShaderProperty_EnWet]),
-    wbColor3('Specular Color'),
-    dfFloat('Specular Strength', '1.0'),
+    wbColor3('Specular Color').SetOnEnabled(BSLightingShaderProperty_EnSpecular),
+    dfFloat('Specular Strength', '1.0').SetOnEnabled(BSLightingShaderProperty_EnSpecular),
     dfFloat('Lighting Effect 1', '0.3', [DF_OnGetEnabled, @BSLightingShaderProperty_EnLightingEffect]),
     dfFloat('Lighting Effect 2', '2.0', [DF_OnGetEnabled, @BSLightingShaderProperty_EnLightingEffect]),
     dfFloat('Subsurface Rolloff', '0.3', [DF_OnGetEnabled, @BSLightingShaderProperty_EnWet]),
@@ -5578,7 +5580,30 @@ begin
       dfFloat('Cubemap Scale'),
       wbVector3('Left Eye Reflection Center', []),
       wbVector3('Right Eye Reflection Center', [])
-    ], [DF_OnGetEnabled, @BSLightingShaderProperty_EnEyes])
+    ], [DF_OnGetEnabled, @BSLightingShaderProperty_EnEyes]),
+    dfStruct('PBR Material Data', [
+      dfInteger('Version', dtU32).SetDefaultValue('1'),
+      wbBSLightingShaderPropertyPBRFeatures('Feature Flags', '', []),
+      dfFloat('Roughness Scale').SetDefaultValue('1.0'),
+      dfFloat('Specular Level').SetDefaultValue('0.04'),
+      dfFloat('Displacement Scale').SetDefaultValue('1.0'),
+      wbColor3('Subsurface Color', '#FFFFFF', []),
+      dfFloat('Subsurface Opacity'),
+      dfStruct('Coat', [
+        wbColor3('Color', '#FFFFFF', []),
+        dfFloat('Strength').SetDefaultValue('1.0'),
+        dfFloat('Roughness').SetDefaultValue('1.0'),
+        dfFloat('Specular Level').SetDefaultValue('0.04')
+      ]),
+      wbColor3('Fuzz Color', '#FFFFFF', []),
+      dfFloat('Fuzz Weight'),
+      dfStruct('Glint', [
+        dfFloat('Screen Space Scale').SetDefaultValue('1.5'),
+        dfFloat('Log Microfacet Density').SetDefaultValue('40.0'),
+        dfFloat('Microfacet Roughness').SetDefaultValue('0.015'),
+        dfFloat('Density Randomization').SetDefaultValue('2.0')
+      ])
+    ]).SetOnEnabled(BSLightingShaderProperty_EnPBR)
   ]), 'BSShaderProperty', False, 1);
 end;
 
