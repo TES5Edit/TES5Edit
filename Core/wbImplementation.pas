@@ -555,6 +555,7 @@ type
     procedure SetIsSortedBySortOrder(aForce: Boolean);
     procedure MoveElementTo(const aElement: IwbElement; aIndex: Integer);
     procedure CreatedEmpty;
+    function EntriesToCopy(aMaxCount: UInt64; aCount: Integer): Integer;
 
     function Reached: Boolean; override;
     function RemoveInjected(aCanRemove: Boolean): Boolean; override;
@@ -10796,6 +10797,15 @@ begin
   Exclude(cntStates, csSortedBySortOrder);
 end;
 
+function TwbContainer.EntriesToCopy(aMaxCount: UInt64; aCount: Integer): Integer;
+begin
+  Result := aCount;
+  if (aMaxCount > 0) and (UInt64(aCount) > aMaxCount) then begin
+    Result := Integer(aMaxCount);
+    wbProgress('[%s]: kept the first %d of %d entries, the maximum is %d', [GetFullPath, Result, aCount, Result]);
+  end;
+end;
+
 function TwbContainer.ReleaseKeepAlive: IwbContainerElementRef;
 begin
   Result := cntKeepAliveNext;
@@ -18726,7 +18736,7 @@ function TwbSubRecord.AtMaxCount: Boolean;
 var
   lArrayDef: IwbArrayDef;
 begin
-  if (csAssigningAll in cntStates) or not Supports(srValueDef, IwbArrayDef, lArrayDef) then
+  if not Supports(srValueDef, IwbArrayDef, lArrayDef) then
     Exit(False);
   var lMaxCount := lArrayDef.MaxCount;
   if lMaxCount = 0 then
@@ -18917,7 +18927,8 @@ begin
                (dfFastAssign in ArrayDef.DefFlags) or
                wbAlwaysFastAssign
              ) and
-             Supports(aElement, IwbDataContainer, lDataContainer)
+             Supports(aElement, IwbDataContainer, lDataContainer) and
+             ((ArrayDef.MaxCount = 0) or (UInt64(Container.ElementCount) <= ArrayDef.MaxCount))
           then begin
             SetModified(True);
             InvalidateStorage;
@@ -18950,19 +18961,13 @@ begin
               var CopyCount := Container.ElementCount;
               if (ArrayDef.ElementCount > 0) and (CopyCount > ArrayDef.ElementCount) then
                 CopyCount := ArrayDef.ElementCount;
+              CopyCount := EntriesToCopy(ArrayDef.MaxCount, CopyCount);
 
-              var lWasAssigningAll := csAssigningAll in cntStates;
-              Include(cntStates, csAssigningAll);
-              try
-                for i := 0 to Pred(CopyCount) do
-                  if (i < Length(cntElements)) and not Supports(cntElements[i], IwbStringListTerminator) then
-                    cntElements[i].Assign(wbAssignThis, Container.Elements[i], aOnlySK)
-                  else
-                    Assign(i, Container.Elements[i], aOnlySK);
-              finally
-                if not lWasAssigningAll then
-                  Exclude(cntStates, csAssigningAll);
-              end;
+              for i := 0 to Pred(CopyCount) do
+                if (i < Length(cntElements)) and not Supports(cntElements[i], IwbStringListTerminator) then
+                  cntElements[i].Assign(wbAssignThis, Container.Elements[i], aOnlySK)
+                else
+                  Assign(i, Container.Elements[i], aOnlySK);
             end;
           end else begin
             if Assigned(Container) then begin
@@ -24453,7 +24458,7 @@ end;
 function TwbSubRecordArray.AtMaxCount: Boolean;
 begin
   var lMaxCount := arcDef.MaxCount;
-  if (lMaxCount = 0) or (csAssigningAll in cntStates) then
+  if lMaxCount = 0 then
     Exit(False);
   var lCount := GetElementCount;
   if csAsCreatedEmpty in cntStates then
@@ -24561,15 +24566,8 @@ begin
     InvalidateStorage;
     ReleaseElements;
 
-    var lWasAssigningAll := csAssigningAll in cntStates;
-    Include(cntStates, csAssigningAll);
-    try
-      for i := 0 to Pred(Container.ElementCount) do
-        Assign(i, Container.Elements[i], aOnlySK);
-    finally
-      if not lWasAssigningAll then
-        Exclude(cntStates, csAssigningAll);
-    end;
+    for i := 0 to Pred(EntriesToCopy(arcDef.MaxCount, Container.ElementCount)) do
+      Assign(i, Container.Elements[i], aOnlySK);
 
   end else if (aIndex >= 0) and (not Assigned(aElement) or arcDef.Element.CanAssign(Self, wbAssignThis, aElement.Def))  or
     ((aIndex = wbAssignThis) and arcDef.Element.CanAssign(Self, aIndex, aElement.Def)) then begin
@@ -26150,15 +26148,8 @@ begin
           RequestStorageChange(p, q, ArrayDef.PrefixSize[nil]);
       NotifyChanged(eContainer);
 
-      var lWasAssigningAll := csAssigningAll in cntStates;
-      Include(cntStates, csAssigningAll);
-      try
-        for i := 0 to Pred(Container.ElementCount) do
-          Assign(i, Container.Elements[i], aOnlySK);
-      finally
-        if not lWasAssigningAll then
-          Exclude(cntStates, csAssigningAll);
-      end;
+      for i := 0 to Pred(EntriesToCopy(ArrayDef.MaxCount, Container.ElementCount)) do
+        Assign(i, Container.Elements[i], aOnlySK);
     end else begin
       Assert(Container.ElementCount = ArrayDef.ElementCount);
       Assert(GetElementCount = ArrayDef.ElementCount);
@@ -26262,8 +26253,6 @@ end;
 
 function TwbArray.AtMaxCount: Boolean;
 begin
-  if csAssigningAll in cntStates then
-    Exit(False);
   var lMaxCount := (vbValueDef as IwbArrayDef).MaxCount;
   Result := (lMaxCount > 0) and (UInt64(GetElementCount) >= lMaxCount);
 end;

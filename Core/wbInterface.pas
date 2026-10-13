@@ -1498,8 +1498,7 @@ type
     csCollapsed,
     csExpanded,
     csConstructionCompleted,
-    csFillPending,
-    csAssigningAll
+    csFillPending
   );
 
   TwbContainerStates = set of TwbContainerState;
