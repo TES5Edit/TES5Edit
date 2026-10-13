@@ -1232,6 +1232,10 @@ begin
         // decide on shader when multiple features
         var NewShaderType := '';
 
+        if (ShaderType = 'PBR') then
+          NewShaderType := 'PBR' else
+
+
         // perfect matches first: type + texture + flags
         if (ShaderType = 'Facegen') and bTexEmissive and bTexParallax and bTexSubSurface and Shader.NativeValues['Shader Flags 1\Facegen'] then
           NewShaderType := 'Facegen' else
@@ -1447,6 +1451,45 @@ begin
             Result := True;
           end;
 
+        if (ShaderType = 'PBR') then
+        begin
+          // Unsupported flags on PBR
+          if Shader.NativeValues['Shader Flags 1\Specular'] then
+          begin
+            Shader.NativeValues['Shader Flags 1\Specular'] := False;
+            Log.Add(#9 + Shader.Name + ': Removed Specular shader flag because Shader Type is PBR');
+            Result := True;
+          end;
+
+          if Shader.NativeValues['Shader Flags 2\Anisotropic_Lighting'] then
+          begin
+            Shader.NativeValues['Shader Flags 2\Anisotropic_Lighting'] := False;
+            Log.Add(#9 + Shader.Name + ': Removed Anisotropic_Lighting shader flag because Shader Type is PBR');
+            Result := True;
+          end;
+
+          if Shader.NativeValues['Shader Flags 2\Soft_Lighting'] then
+          begin
+            Shader.NativeValues['Shader Flags 2\Soft_Lighting'] := False;
+            Log.Add(#9 + Shader.Name + ': Removed Soft_Lighting shader flag because Shader Type is PBR');
+            Result := True;
+          end;
+
+          if Shader.NativeValues['Shader Flags 2\Rim_Lighting'] then
+          begin
+            Shader.NativeValues['Shader Flags 2\Rim_Lighting'] := False;
+            Log.Add(#9 + Shader.Name + ': Removed Rim_Lighting shader flag because Shader Type is PBR');
+            Result := True;
+          end;
+
+          if Shader.NativeValues['Shader Flags 2\Back_Lighting'] then
+          begin
+            Shader.NativeValues['Shader Flags 2\Back_Lighting'] := False;
+            Log.Add(#9 + Shader.Name + ': Removed Back_Lighting shader flag because Shader Type is PBR');
+            Result := True;
+          end;
+        end;
+
         // Character Lighting flag
         if bFacegen then begin
           if not Shader.NativeValues['Shader Flags 2\Character_Lighting'] then begin
@@ -1516,7 +1559,7 @@ begin
           end;
         end;
 
-        if Shader.NativeValues['Glossiness'] = 0 then begin
+        if (ShaderType <> 'PBR') and (Shader.NativeValues['Glossiness'] = 0) then begin
           Shader.NativeValues['Glossiness'] := 1;
           Log.Add(#9 + Shader.Name + ': Set Glossiness to 1, because 0 causes lighting issues');
           Result := True;
