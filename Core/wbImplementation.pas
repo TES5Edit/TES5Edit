@@ -1452,6 +1452,7 @@ type
     function GetIsPartialForm: Boolean;
     procedure SetIsPartialForm(aValue: Boolean);
     function GetCanBePartial: Boolean;
+    function PartialFormKeeps(aIndex: Integer; const aElement: IwbElement): Boolean;
     function GetIsCompressed: Boolean;
     procedure SetIsCompressed(aValue: Boolean);
     function GetIsVisibleWhenDistant: Boolean;
@@ -11846,21 +11847,14 @@ begin
 
   if GetIsPartialForm then
     if aIndex <> wbAssignThis then begin
-      var lPartialShouldExit := True;
-      if Assigned(mrDef) then begin
-        lPartialShouldExit := not ((aIndex >= 0) and (aIndex < mrDef.MemberCount) and (dfKeepInPartialForm in mrDef.Members[aIndex].DefFlags));
-
-        if not lPartialShouldExit and Assigned(aElement) and Supports(aElement, IwbHasSignature) then
-          lPartialShouldExit := not (Assigned(aElement.Def) and (dfKeepInPartialForm in aElement.Def.DefFlags));
-
-        if lPartialShouldExit and (lContext.Settings.FillINOM or lContext.Settings.FillINOA) and (GetSignature = 'DIAL') then begin
-          var lDIALMember := mrDef.Members[aIndex];
-          if Assigned(lDIALMember) then begin
-            if (lContext.Settings.FillINOM and (lDIALMember.DefaultSignature = 'INOM')) or
-               (lContext.Settings.FillINOA and (lDIALMember.DefaultSignature = 'INOA'))
-            then
-              lPartialShouldExit := False;
-          end;
+      var lPartialShouldExit := not PartialFormKeeps(aIndex, aElement);
+      if lPartialShouldExit and Assigned(mrDef) and (lContext.Settings.FillINOM or lContext.Settings.FillINOA) and (GetSignature = 'DIAL') then begin
+        var lDIALMember := mrDef.Members[aIndex];
+        if Assigned(lDIALMember) then begin
+          if (lContext.Settings.FillINOM and (lDIALMember.DefaultSignature = 'INOM')) or
+             (lContext.Settings.FillINOA and (lDIALMember.DefaultSignature = 'INOA'))
+          then
+            lPartialShouldExit := False;
         end;
       end;
 
@@ -12528,7 +12522,7 @@ begin
 
   if GetIsPartialForm then
     if aIndex <> wbAssignThis then
-      if not (Supports(aElement, IwbHasSignature) and Assigned(aElement.Def) and (dfKeepInPartialForm in aElement.Def.DefFlags)) then
+      if not PartialFormKeeps(aIndex, aElement) then
         Exit;
 
   if Assigned(eContainer) then
@@ -13805,6 +13799,13 @@ begin
     Result := BaseRecord.Signature
   else
     Result := 'NULL';
+end;
+
+function TwbMainRecord.PartialFormKeeps(aIndex: Integer; const aElement: IwbElement): Boolean;
+begin
+  Result := Assigned(mrDef) and (aIndex >= 0) and (aIndex < mrDef.MemberCount) and (dfKeepInPartialForm in mrDef.Members[aIndex].DefFlags);
+  if Result and Supports(aElement, IwbHasSignature) then
+    Result := Assigned(aElement.Def) and (dfKeepInPartialForm in aElement.Def.DefFlags);
 end;
 
 function TwbMainRecord.GetCanBePartial: Boolean;
