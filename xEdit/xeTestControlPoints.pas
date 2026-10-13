@@ -93,6 +93,10 @@ type
     procedure TestChangeFormIDAfter(aLines: TStrings);
     procedure TestChangeFormIDNodes(aLines: TStrings);
     procedure TestChangeFormIDLocView(aLines: TStrings);
+    procedure TestChangeFormIDViewAdd(aLines: TStrings);
+    function TestRefByMenuItem: TMenuItem;
+    procedure TestRefByShow(aLines: TStrings);
+    procedure TestRefByRows(aLines: TStrings; const aWhen: string);
     procedure TestChangeFormIDSave;
     procedure TestChangeFormIDWrite;
     procedure TestChangeFormIDOnClose;
@@ -4534,6 +4538,10 @@ var
   lOther  : IwbMainRecord;
 begin
   for var i := Low(aRecords) to High(aRecords) do begin
+    if not Assigned(aRecords[i]._File) then begin
+      aLines.Add('rec' + #9 + aWhen + #9 + IntToStr(i) + #9 + TestChangeFormIDText(aBefore[i]) + #9 + 'removed');
+      Continue;
+    end;
     lMaster := aRecords[i].MasterOrSelf;
     aLines.Add('rec' + #9 + aWhen + #9 + IntToStr(i) + #9 + TestChangeFormIDText(aBefore[i]) + #9 +
       TestChangeFormIDText(aRecords[i].LoadOrderFormID) + #9 + aRecords[i]._File.FileName + #9 + string(aRecords[i].Signature) + #9 +
@@ -4627,6 +4635,7 @@ begin
   TestHost.TestChangeFormIDTimer.Enabled := False;
   lLines := TestHost.TestChangeFormIDLines;
   try
+    var lRefBy := xeTestSwitches.ChangeFormIDOp.StartsWith('refby', True);
     TestHost.TestChangeFormIDTarget := nil;
     if (xeTestSwitches.ChangeFormIDTarget <> '') and not SameText(xeTestSwitches.ChangeFormIDTarget, 'new') then begin
       TestHost.TestChangeFormIDTarget := FindFile(xeTestSwitches.ChangeFormIDTarget);
@@ -4678,6 +4687,12 @@ begin
         raise Exception.Create('no nav node for ' + TestHost.TestChangeFormIDTarget.FileName);
       vstNav.FocusedNode := lFirst;
       vstNav.Selected[lFirst] := True;
+    end else if lRefBy then begin
+      lFirst := FindNodeForElement(FindRecord(xeTestSwitches.ChangeFormIDView));
+      if not Assigned(lFirst) then
+        raise Exception.Create('no nav node for ' + xeTestSwitches.ChangeFormIDView);
+      vstNav.FocusedNode := lFirst;
+      vstNav.Selected[lFirst] := True;
     end else
       for lRecord in TestHost.TestChangeFormIDRecords do begin
         lNode := FindNodeForElement(lRecord);
@@ -4700,11 +4715,63 @@ begin
       vstNav.Selected[lNode] := True;
     end;
     pmuNavPopup(nil);
+    if lRefBy then
+      TestRefByShow(lLines);
     if SameText(xeTestSwitches.ChangeFormIDOp, 'copyrows') then begin
-      SetActiveRecord(TestHost.TestChangeFormIDRecords);
+      var lViewSpec := xeTestSwitches.ChangeFormIDView;
+      var lNavRoute := lViewSpec.StartsWith('nav:', True);
+      if lNavRoute then
+        lViewSpec := lViewSpec.Substring(4);
+      if xeTestSwitches.ChangeFormIDPinned <> '' then begin
+        vstNav.ClearSelection;
+        lFirst := nil;
+        for var lSpec in xeTestSwitches.ChangeFormIDPinned.Split([',']) do begin
+          lNode := FindNodeForElement(FindRecord(lSpec));
+          if not Assigned(lNode) then
+            raise Exception.Create('no nav node for ' + lSpec);
+          if not Assigned(lFirst) then begin
+            lFirst := lNode;
+            vstNav.FocusedNode := lNode;
+          end;
+          vstNav.Selected[lNode] := True;
+        end;
+        vstNavChange(vstNav, vstNav.FocusedNode);
+        if tmrPendingSetActive.Enabled then
+          tmrPendingSetActiveTimer(tmrPendingSetActive);
+        bnPinned.Down := True;
+        bnPinnedClick(bnPinned);
+        vstNav.ClearSelection;
+        lFirst := nil;
+        for var lSelected in TestHost.TestChangeFormIDRecords do begin
+          lNode := FindNodeForElement(lSelected);
+          if not Assigned(lNode) then
+            raise Exception.Create('no nav node for ' + lSelected.Name);
+          if not Assigned(lFirst) then begin
+            lFirst := lNode;
+            vstNav.FocusedNode := lNode;
+          end;
+          vstNav.Selected[lNode] := True;
+        end;
+        vstNavChange(vstNav, vstNav.FocusedNode);
+      end else if lNavRoute then
+        vstNavChange(vstNav, vstNav.FocusedNode)
+      else
+        SetActiveRecord(TestHost.TestChangeFormIDRecords);
       if tmrPendingSetActive.Enabled then
         tmrPendingSetActiveTimer(tmrPendingSetActive);
-      var lSource := FindRecord(xeTestSwitches.ChangeFormIDView);
+      if lNavRoute or (xeTestSwitches.ChangeFormIDPinned <> '') then begin
+        var lShown := '';
+        var lShownRecord: IwbMainRecord;
+        for var i := Low(ActiveRecords) to High(ActiveRecords) do begin
+          if lShown <> '' then
+            lShown := lShown + ',';
+          if Supports(ActiveRecords[i].Element, IwbMainRecord, lShownRecord) then
+            lShown := lShown + lShownRecord.EditorID + '@' + lShownRecord._File.FileName;
+        end;
+        lLines.Add('viewrecords' + #9 + lShown + #9 + 'pinned ' + BoolToStr(IsPinned, True) + #9 + 'nav selected ' +
+          IntToStr(vstNav.SelectedCount));
+      end;
+      var lSource := FindRecord(lViewSpec);
       var lColumn := -1;
       for var i := Low(ActiveRecords) to High(ActiveRecords) do
         if Assigned(ActiveRecords[i].Element) and ActiveRecords[i].Element.Equals(lSource) then
@@ -4723,7 +4790,7 @@ begin
       lMenuItem := mniNavCleanupInjected
     else if SameText(xeTestSwitches.ChangeFormIDOp, 'localize') then
       lMenuItem := mniNavLocalizationSwitch
-    else if SameText(xeTestSwitches.ChangeFormIDOp, 'locview') then
+    else if SameText(xeTestSwitches.ChangeFormIDOp, 'locview') or SameText(xeTestSwitches.ChangeFormIDOp, 'viewadd') then
       lMenuItem := nil
     else if SameText(xeTestSwitches.ChangeFormIDOp, 'setvwd') then
       lMenuItem := mniNavSetVWDAuto
@@ -4731,8 +4798,12 @@ begin
       lMenuItem := mniNavSetVWDAutoInto
     else if SameText(xeTestSwitches.ChangeFormIDOp, 'copyidle') then
       lMenuItem := mniNavCopyIdle
+    else if SameText(xeTestSwitches.ChangeFormIDOp, 'copyspawnrate') then
+      lMenuItem := mniNavCopyAsSpawnRateOverride
     else if SameText(xeTestSwitches.ChangeFormIDOp, 'copyrows') then
       lMenuItem := mniViewCopyMultipleToSelectedRecords
+    else if lRefBy then
+      lMenuItem := TestRefByMenuItem
     else
       lMenuItem := mniNavChangeFormID;
     if Assigned(lMenuItem) then
@@ -4787,8 +4858,17 @@ begin
           mniNavSetVWDAutoIntoClick(lMenuItem)
         else if lMenuItem = mniNavCopyIdle then
           mniNavCopyIdleClick(lMenuItem)
+        else if lMenuItem = mniNavCopyAsSpawnRateOverride then
+          mniNavCopyIntoClick(lMenuItem)
         else if lMenuItem = mniViewCopyMultipleToSelectedRecords then
           mniViewCopyMultipleToSelectedRecordsClick(lMenuItem)
+        else if lRefBy then begin
+          if lMenuItem.Visible then
+            lMenuItem.Click
+          else
+            lLines.Add('notclicked' + #9 + 'the menu item is hidden');
+        end else if SameText(xeTestSwitches.ChangeFormIDOp, 'viewadd') then
+          TestChangeFormIDViewAdd(lLines)
         else if not Assigned(lMenuItem) then
           TestChangeFormIDLocView(lLines)
         else
@@ -4828,6 +4908,8 @@ begin
     if TestHost.TestChangeFormIDFallback then
       lLines.Add('fallback' + #9 + 'a dialog was answered with no listed answer');
     lLines.Add('after' + #9 + 'progress "' + wbCurrentProgress + '"' + #9 + 'page ' + pgMain.ActivePage.Name);
+    if lRefBy then
+      TestRefByRows(lLines, 'after');
     TestChangeFormIDNodes(lLines);
 
     TestHost.TestChangeFormIDTimer.OnTimer := TestChangeFormIDReportTimer;
@@ -4904,6 +4986,145 @@ begin
           aLines.Add('locview' + #9 + lRecord.EditorID + #9 + lElement.Name + #9 + 'raised' + #9 + E.ClassName + #9 + E.Message);
       end;
     end;
+  end;
+end;
+
+procedure TxeTestFormHelper.TestChangeFormIDViewAdd(aLines: TStrings);
+var
+  lColumn : Integer;
+  lRow    : PVirtualNode;
+  lTarget : IwbMainRecord;
+  lCell   : IwbMainRecord;
+  lAdded  : IwbElement;
+begin
+  for var lRecord in TestHost.TestChangeFormIDRecords do begin
+    DoSetActiveRecord(IwbMainRecord(nil));
+    DoSetActiveRecord(lRecord, True);
+    vstView.FullExpand;
+    lColumn := -1;
+    lTarget := nil;
+    for var c := Low(ActiveRecords) to High(ActiveRecords) do
+      if Supports(ActiveRecords[c].Element, IwbMainRecord, lCell) and lCell._File.Equals(TestHost.TestChangeFormIDTarget) then begin
+        lColumn := c;
+        lTarget := lCell;
+      end;
+    if lColumn < 0 then begin
+      aLines.Add('viewadd' + #9 + lRecord.EditorID + #9 + 'no column for ' + xeTestSwitches.ChangeFormIDTarget);
+      Continue;
+    end;
+    lRow := nil;
+    for var lNode in vstView.Nodes(False) do begin
+      for var c := Low(ActiveRecords) to High(ActiveRecords) do
+        if Assigned(ViewCells(lNode)[c].Element) and SameText(ViewCells(lNode)[c].Element.Name, xeTestSwitches.ChangeFormIDRow) then
+          lRow := lNode;
+      if Assigned(lRow) then
+        Break;
+    end;
+    if not Assigned(lRow) then begin
+      aLines.Add('viewadd' + #9 + lRecord.EditorID + #9 + 'no row ' + xeTestSwitches.ChangeFormIDRow);
+      Continue;
+    end;
+    aLines.Add('viewadd' + #9 + lRecord.EditorID + #9 + 'column ' + IntToStr(lColumn) + ' of ' + IntToStr(Length(ActiveRecords)) + #9 +
+      'partial ' + BoolToStr(lTarget.IsPartialForm, True) + #9 + 'cell ' + IfThen(Assigned(ViewCells(lRow)[lColumn].Element), 'E', '-'));
+    vstViewFocusedNode := lRow;
+    vstView.FocusedColumn := Succ(lColumn);
+    pmuViewPopup(nil);
+    aLines.Add('viewadd' + #9 + lRecord.EditorID + #9 + 'offered ' + BoolToStr(mniViewAdd.Visible and mniViewAdd.Enabled, True) + #9 +
+      'caption ' + StripHotkey(mniViewAdd.Caption) + #9 + 'choices ' + IntToStr(mniViewAdd.Count));
+    if mniViewAdd.Visible and mniViewAdd.Enabled then
+      if mniViewAdd.Count > 0 then
+        mniViewAdd.Items[0].Click
+      else
+        mniViewAdd.Click;
+    lAdded := lTarget.ElementByName[xeTestSwitches.ChangeFormIDRow];
+    aLines.Add('viewadd' + #9 + lRecord.EditorID + #9 + 'after' + #9 + 'has ' + BoolToStr(Assigned(lAdded), True) + #9 + 'partial ' +
+      BoolToStr(lTarget.IsPartialForm, True) + #9 + 'modified ' + BoolToStr(lTarget.Modified, True) + #9 + 'elements ' +
+      IntToStr(lTarget.ElementCount));
+  end;
+end;
+
+function TxeTestFormHelper.TestRefByMenuItem: TMenuItem;
+var
+  lOp : string;
+begin
+  lOp := LowerCase(xeTestSwitches.ChangeFormIDOp);
+  if lOp = 'refbyvwd' then
+    Result := mniRefByVWD
+  else if lOp = 'refbynotvwd' then
+    Result := mniRefByNotVWD
+  else if lOp = 'refbymarkmodified' then
+    Result := mniRefByMarkModified
+  else if lOp = 'refbyremove' then
+    Result := mniRefByRemove
+  else if lOp = 'refbycopyinto' then
+    Result := mniRefByCopyOverrideInto
+  else if lOp = 'refbycopyintooverwrite' then
+    Result := mniRefByCopyOverrideIntoWithOverwriting
+  else if lOp = 'refbydeepcopyinto' then
+    Result := mniRefByDeepCopyOverrideInto
+  else if lOp = 'refbydeepcopyintooverwrite' then
+    Result := mniRefByDeepCopyOverrideIntoWithOverwriting
+  else if lOp = 'refbycopyasnew' then
+    Result := mniRefByCopyAsNewInto
+  else if lOp = 'refbydisabledinto' then
+    Result := mniRefByCopyDisabledOverrideInto
+  else if lOp = 'refbycompare' then
+    Result := mniRefByCompareSelected
+  else
+    raise Exception.Create('no Referenced By menu item for -testchangeformidop:' + xeTestSwitches.ChangeFormIDOp);
+end;
+
+procedure TxeTestFormHelper.TestRefByShow(aLines: TStrings);
+var
+  lItem   : TListItem;
+  lRecord : IwbMainRecord;
+begin
+  vstNavChange(vstNav, vstNav.FocusedNode);
+  if tmrPendingSetActive.Enabled then
+    tmrPendingSetActiveTimer(tmrPendingSetActive);
+  pgMain.ActivePage := tbsReferencedBy;
+  pgMainChange(pgMain);
+  lvReferencedBy.ClearSelection;
+  for var i := 0 to Pred(lvReferencedBy.Items.Count) do begin
+    lItem := lvReferencedBy.Items[i];
+    if not Assigned(lItem) or not Assigned(lItem.Data) then
+      Continue;
+    lRecord := IwbMainRecord(lItem.Data);
+    for var lWanted in TestHost.TestChangeFormIDRecords do
+      if lWanted.Equals(lRecord) then begin
+        lItem.Selected := True;
+        Break;
+      end;
+  end;
+  TestRefByRows(aLines, 'before');
+  pmuRefByPopup(nil);
+end;
+
+procedure TxeTestFormHelper.TestRefByRows(aLines: TStrings; const aWhen: string);
+var
+  lItem   : TListItem;
+  lRecord : IwbMainRecord;
+  lActive : string;
+begin
+  lActive := 'none';
+  if Assigned(ActiveRecord) then
+    lActive := ActiveRecord.EditorID + '@' + ActiveRecord._File.FileName;
+  aLines.Add('refbylist' + #9 + aWhen + #9 + 'active ' + lActive + #9 + 'page ' + pgMain.ActivePage.Name + #9 + 'rows ' +
+    IntToStr(lvReferencedBy.Items.Count) + #9 + 'selected ' + IntToStr(lvReferencedBy.SelCount));
+  var lColumns := '';
+  for var i := Low(ActiveRecords) to High(ActiveRecords) do
+    if Supports(ActiveRecords[i].Element, IwbMainRecord, lRecord) then
+      lColumns := lColumns + ' ' + lRecord.EditorID + '@' + lRecord._File.FileName;
+  aLines.Add('refbyview' + #9 + aWhen + #9 + 'columns' + lColumns);
+  for var i := 0 to Pred(lvReferencedBy.Items.Count) do begin
+    lItem := lvReferencedBy.Items[i];
+    if not Assigned(lItem) or not Assigned(lItem.Data) then begin
+      aLines.Add('refbyrow' + #9 + aWhen + #9 + IntToStr(i) + #9 + 'no record');
+      Continue;
+    end;
+    lRecord := IwbMainRecord(lItem.Data);
+    aLines.Add('refbyrow' + #9 + aWhen + #9 + IntToStr(i) + #9 + TestChangeFormIDText(lRecord.LoadOrderFormID) + #9 +
+      string(lRecord.Signature) + #9 + lRecord.EditorID + #9 + lItem.SubItems[1] + #9 + 'selected ' + BoolToStr(lItem.Selected, True));
   end;
 end;
 
@@ -5246,6 +5467,33 @@ begin
 end;
 
 procedure TxeTestFormHelper.TestChangeFormIDAfter(aLines: TStrings);
+
+  function LeveledText(const aRecord: IwbMainRecord): string;
+  var
+    lEntries : IwbContainerElementRef;
+    lEntry   : IwbContainerElementRef;
+    lData    : IwbContainerElementRef;
+    lCounter : IwbElement;
+  begin
+    if not Assigned(aRecord) then
+      Exit('none');
+    Result := 'entries 0';
+    if Supports(aRecord.ElementByName['Leveled List Entries'], IwbContainerElementRef, lEntries) then begin
+      Result := 'entries ' + IntToStr(lEntries.ElementCount);
+      for var i := 0 to Pred(lEntries.ElementCount) do
+        if Supports(lEntries.Elements[i], IwbContainerElementRef, lEntry) then begin
+          if not Supports(lEntry.ElementBySignature['LVLO'], IwbContainerElementRef, lData) then
+            lData := lEntry;
+          Result := Result + ' ' + lData.ElementEditValues['Level'] + '/' + lData.ElementEditValues['Count'];
+        end;
+    end;
+    lCounter := aRecord.ElementBySignature['LLCT'];
+    if Assigned(lCounter) then
+      Result := Result + #9 + 'LLCT ' + lCounter.EditValue
+    else
+      Result := Result + #9 + 'LLCT none';
+  end;
+
 var
   lLines    : TStrings;
   lStream   : TMemoryStream;
@@ -5284,6 +5532,14 @@ begin
     TestChangeFormIDFiles(lLines, 'after', Files);
     if lLocalize then
       TestChangeFormIDLocalization(lLines, 'after', TestHost.TestChangeFormIDTarget);
+    if SameText(xeTestSwitches.ChangeFormIDOp, 'copyspawnrate') then
+      for var lSource in TestHost.TestChangeFormIDRecords do begin
+        var lCopy: IwbMainRecord := nil;
+        if Assigned(TestHost.TestChangeFormIDTarget) then
+          lCopy := TestHost.TestChangeFormIDTarget.ContainedRecordByLoadOrderFormID[lSource.LoadOrderFormID, False];
+        lLines.Add('leveled' + #9 + 'source ' + lSource.EditorID + '@' + lSource._File.FileName + #9 + LeveledText(lSource));
+        lLines.Add('leveled' + #9 + 'copy in ' + xeTestSwitches.ChangeFormIDTarget + #9 + LeveledText(lCopy));
+      end;
 
     ForceDirectories(xeTestSwitches.ChangeFormIDOut);
     for var i := Low(Files) to High(Files) do

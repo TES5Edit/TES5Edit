@@ -250,6 +250,8 @@ type
     ChangeFormIDOp        : string;
     ChangeFormIDCsv       : string;
     ChangeFormIDView      : string;
+    ChangeFormIDPinned    : string;
+    ChangeFormIDRow       : string;
     Hide                  : Boolean;
     HideFile              : string;
     HideRecord            : string;
@@ -584,6 +586,8 @@ begin
     wbFindCmdLineParam('testchangeformidop', ChangeFormIDOp);
     wbFindCmdLineParam('testchangeformidcsv', ChangeFormIDCsv);
     wbFindCmdLineParam('testchangeformidview', ChangeFormIDView);
+    wbFindCmdLineParam('testchangeformidpinned', ChangeFormIDPinned);
+    wbFindCmdLineParam('testchangeformidrow', ChangeFormIDRow);
     ChangeFormIDShift := FindCmdLineSwitch('testchangeformidshift');
     if ChangeFormIDOp = '' then
       ChangeFormIDOp := 'changeformid';
@@ -594,16 +598,29 @@ begin
             SameText(ChangeFormIDOp, 'batchrefs') or SameText(ChangeFormIDOp, 'cleanupinjected') or
             SameText(ChangeFormIDOp, 'localize') or SameText(ChangeFormIDOp, 'locview') or
             SameText(ChangeFormIDOp, 'setvwd') or SameText(ChangeFormIDOp, 'setvwdinto') or
-            SameText(ChangeFormIDOp, 'copyidle') or SameText(ChangeFormIDOp, 'copyrows')) or
-       (SameText(ChangeFormIDOp, 'copyrows') and (ChangeFormIDView = '')) or
-       ((SameText(ChangeFormIDOp, 'batchrefs') or SameText(ChangeFormIDOp, 'localize')) and (ChangeFormIDTarget = '')) then begin
+            SameText(ChangeFormIDOp, 'copyidle') or SameText(ChangeFormIDOp, 'copyrows') or
+            SameText(ChangeFormIDOp, 'copyspawnrate') or SameText(ChangeFormIDOp, 'viewadd') or
+            ChangeFormIDOp.StartsWith('refby', True)) or
+       ((SameText(ChangeFormIDOp, 'copyrows') or ChangeFormIDOp.StartsWith('refby', True)) and (ChangeFormIDView = '')) or
+       (SameText(ChangeFormIDOp, 'viewadd') and ((ChangeFormIDTarget = '') or (ChangeFormIDRow = ''))) or
+       ((SameText(ChangeFormIDOp, 'batchrefs') or SameText(ChangeFormIDOp, 'localize') or
+         SameText(ChangeFormIDOp, 'copyspawnrate')) and (ChangeFormIDTarget = '')) then begin
       ShowMessage('testchangeformid requires -testchangeformid:<filename> -testchangeformidrecords:<EditorID>@<module>[,...] ' +
         '(setvwd, setvwdinto: also @<module>, the file''s node) -testchangeformidout:<folder> ' +
-        '[-testchangeformidop:<changeformid|changerefs|batchrefs|cleanupinjected|localize|locview|setvwd|setvwdinto|copyidle|copyrows>] ' +
+        '[-testchangeformidop:<changeformid|changerefs|batchrefs|cleanupinjected|localize|locview|setvwd|setvwdinto|copyidle|copyrows|' +
+        'copyspawnrate|viewadd>] (copyspawnrate: Copy as Spawn Rate Override into -testchangeformidtarget, the copy''s leveled entries ' +
+        'reported) ' +
+        '(viewadd: each record shown in the View tab, the row named by -testchangeformidrow:<element name> focused in the column of ' +
+        '-testchangeformidtarget:<module>, whether Add is offered, and Add clicked when it is) ' +
         '(copyrows: the records compared in the view, the source column the record -testchangeformidview names; the subrecord ' +
-        'and target lists answered with the next two of -testchangeformidrefs) ' +
+        'and target lists answered with the next two of -testchangeformidrefs; -testchangeformidview:nav:<EditorID>@<module> ' +
+        'leaves the view to what the nav selection itself shows; -testchangeformidpinned:<EditorID>@<module>[,...] compares ' +
+        'those records and pins the view before the records are selected) ' +
         '(copyidle: the idle list answered with the next of -testchangeformidrefs, listed folders joined by ;, none or cancel; the model ' +
         'prefix prompt with the next of -testchangeformidids) ' +
+        '(refby<item>: the Referenced By tab of the record -testchangeformidview names, its rows that are the records selected, and ' +
+        'the item clicked -- vwd, notvwd, markmodified, remove, copyinto, copyintooverwrite, deepcopyinto, deepcopyintooverwrite, ' +
+        'copyasnew, disabledinto or compare) ' +
         '[-testchangeformidshift] [-testchangeformidtarget:<module|new>] (batchrefs, localize: the file focused; new: the ' +
         'picker''s first <new file> template, its name prompt answered with the next of -testchangeformidids) ' +
         '[-testchangeformidids:<hex|empty|offered|cancel>[,...]] ' +

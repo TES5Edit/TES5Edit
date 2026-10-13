@@ -555,6 +555,7 @@ type
     procedure SetIsSortedBySortOrder(aForce: Boolean);
     procedure MoveElementTo(const aElement: IwbElement; aIndex: Integer);
     procedure CreatedEmpty;
+    function EntriesToCopy(aMaxCount: UInt64; aCount: Integer): Integer;
 
     function Reached: Boolean; override;
     function RemoveInjected(aCanRemove: Boolean): Boolean; override;
@@ -1451,6 +1452,7 @@ type
     function GetIsPartialForm: Boolean;
     procedure SetIsPartialForm(aValue: Boolean);
     function GetCanBePartial: Boolean;
+    function PartialFormKeeps(aIndex: Integer; const aElement: IwbElement): Boolean;
     function GetIsCompressed: Boolean;
     procedure SetIsCompressed(aValue: Boolean);
     function GetIsVisibleWhenDistant: Boolean;
@@ -1604,6 +1606,8 @@ type
     srResolvedDef        : IwbValueDef;
     srStates             : TwbSubRecordStates;
     srArraySizePrefix    : Integer;
+    function AtMaxCount: Boolean;
+    procedure RefuseEntryAtMaxCount;
   protected
     constructor Create(const aContainer : IwbContainer;
                        const aSubRecordDef: IwbSubRecordDef); overload;
@@ -1769,6 +1773,8 @@ type
     arrSortedInCopy  : Boolean;
     arrSizePrefix    : Integer;
     procedure UpdateSortedAfterCopy;
+    function AtMaxCount: Boolean;
+    procedure RefuseEntryAtMaxCount;
   protected
     procedure DoInit(aNeedSorted: Boolean); override; final;
     procedure Init; override; final;
@@ -2110,6 +2116,8 @@ type
     arcNameGen     : Integer;
     arcContextObj  : TwbGameContext;
     arcPendingFor  : Pointer;
+    function AtMaxCount: Boolean;
+    procedure RefuseEntryAtMaxCount;
   protected
     constructor Create(const aOwner     : IwbContainer;
                        const aContainer : IwbContainer;
@@ -3347,6 +3355,7 @@ var
   lLeveledListEntries   : IwbContainerElementRef;
   lLeveledListEntry     : IwbContainerElementRef;
   lCopiedElement        : IwbElement;
+  lCopiedGroup          : IwbGroupRecord;
   lRules                : TwbCopyRules;
   lCallbackOnly         : TwbCopyRules;
   lWrappedFlags         : TwbCopyFlags;
@@ -3440,6 +3449,10 @@ begin
       wbProgress(aOptions.Operation + ' ' + wbCurrentProgress);
       aResult[0] := AddCopy(lMainRecord.ChildGroup, PathFlags, lCallbackOnly);
       wbProgress('');
+      if Supports(aResult[0], IwbGroupRecord, lCopiedGroup) then
+        lMainRecord := lCopiedGroup.ChildrenOf
+      else
+        lMainRecord := nil;
     end else begin
       wbCurrentProgress := Format('[%s] into [%s]', [aElements[0].FullPath, lFile.FullPath]);
       wbProgress(aOptions.Operation + ' ' + wbCurrentProgress);
@@ -3796,6 +3809,21 @@ var
         lFaulty.Add(aMaster);
         Exit;
       end;
+
+      for l := Low(aRow.Lists) to High(aRow.Lists) do
+        if Assigned(lTargetLists[l]) and Assigned(lWinningLists[l]) and not ListsEqual(lTargetLists[l], lWinningLists[l]) then begin
+          var lList := lWinner.ElementByName[aRow.Lists[l]];
+          if not Assigned(lList) then
+            lList := aMaster.ElementByName[aRow.Lists[l]];
+          var lListDef: IwbSubRecordArrayDef;
+          if Assigned(lList) and Supports(lList.Def, IwbSubRecordArrayDef, lListDef) and (lListDef.MaxCount > 0) and
+             (UInt64(lTargetLists[l].Count) > lListDef.MaxCount) then begin
+            Report('Error: Can''t merge ' + aMaster.Name + ': its ' + aRow.Lists[l] + ' would hold ' + IntToStr(lTargetLists[l].Count) +
+              ' entries, the maximum is ' + UIntToStr(lListDef.MaxCount));
+            lFaulty.Add(aMaster);
+            Exit;
+          end;
+        end;
 
       lTargetRecord := nil;
       for l := Low(aRow.Lists) to High(aRow.Lists) do
@@ -10772,6 +10800,15 @@ begin
   Exclude(cntStates, csSortedBySortOrder);
 end;
 
+function TwbContainer.EntriesToCopy(aMaxCount: UInt64; aCount: Integer): Integer;
+begin
+  Result := aCount;
+  if (aMaxCount > 0) and (UInt64(aCount) > aMaxCount) then begin
+    Result := Integer(aMaxCount);
+    wbProgress('[%s]: kept the first %d of %d entries, the maximum is %d', [GetFullPath, Result, aCount, Result]);
+  end;
+end;
+
 function TwbContainer.ReleaseKeepAlive: IwbContainerElementRef;
 begin
   Result := cntKeepAliveNext;
@@ -11812,21 +11849,14 @@ begin
 
   if GetIsPartialForm then
     if aIndex <> wbAssignThis then begin
-      var lPartialShouldExit := True;
-      if Assigned(mrDef) then begin
-        lPartialShouldExit := not ((aIndex >= 0) and (aIndex < mrDef.MemberCount) and (dfKeepInPartialForm in mrDef.Members[aIndex].DefFlags));
-
-        if not lPartialShouldExit and Assigned(aElement) and Supports(aElement, IwbHasSignature) then
-          lPartialShouldExit := not (Assigned(aElement.Def) and (dfKeepInPartialForm in aElement.Def.DefFlags));
-
-        if lPartialShouldExit and (lContext.Settings.FillINOM or lContext.Settings.FillINOA) and (GetSignature = 'DIAL') then begin
-          var lDIALMember := mrDef.Members[aIndex];
-          if Assigned(lDIALMember) then begin
-            if (lContext.Settings.FillINOM and (lDIALMember.DefaultSignature = 'INOM')) or
-               (lContext.Settings.FillINOA and (lDIALMember.DefaultSignature = 'INOA'))
-            then
-              lPartialShouldExit := False;
-          end;
+      var lPartialShouldExit := not PartialFormKeeps(aIndex, aElement);
+      if lPartialShouldExit and Assigned(mrDef) and (lContext.Settings.FillINOM or lContext.Settings.FillINOA) and (GetSignature = 'DIAL') then begin
+        var lDIALMember := mrDef.Members[aIndex];
+        if Assigned(lDIALMember) then begin
+          if (lContext.Settings.FillINOM and (lDIALMember.DefaultSignature = 'INOM')) or
+             (lContext.Settings.FillINOA and (lDIALMember.DefaultSignature = 'INOA'))
+          then
+            lPartialShouldExit := False;
         end;
       end;
 
@@ -12336,6 +12366,7 @@ begin
     mrReferences := lTmpRefFormIDs;
   finally
     Exclude(mrStates, mrsBuildingRef);
+    Exclude(mrStates, mrsReferencesInjectedChecked);
     mrTmpRefFormIDs := nil;
   end;
 end;
@@ -12493,7 +12524,7 @@ begin
 
   if GetIsPartialForm then
     if aIndex <> wbAssignThis then
-      if not (Supports(aElement, IwbHasSignature) and Assigned(aElement.Def) and (dfKeepInPartialForm in aElement.Def.DefFlags)) then
+      if not PartialFormKeeps(aIndex, aElement) then
         Exit;
 
   if Assigned(eContainer) then
@@ -13770,6 +13801,13 @@ begin
     Result := BaseRecord.Signature
   else
     Result := 'NULL';
+end;
+
+function TwbMainRecord.PartialFormKeeps(aIndex: Integer; const aElement: IwbElement): Boolean;
+begin
+  Result := Assigned(mrDef) and (aIndex >= 0) and (aIndex < mrDef.MemberCount) and (dfKeepInPartialForm in mrDef.Members[aIndex].DefFlags);
+  if Result and Supports(aElement, IwbHasSignature) then
+    Result := Assigned(aElement.Def) and (dfKeepInPartialForm in aElement.Def.DefFlags);
 end;
 
 function TwbMainRecord.GetCanBePartial: Boolean;
@@ -17158,7 +17196,7 @@ begin
           Text := Element.EditValue;
           for i := 0 to Pred(Count) do
             if StartsWith(Trim(Strings[i]), 'begin') then begin
-              while i <= Count do
+              while i < Count do
                 Delete(Pred(Count));
               Break;
             end;
@@ -18697,6 +18735,27 @@ begin
     Result := inherited Add(aName, aSilent);
 end;
 
+function TwbSubRecord.AtMaxCount: Boolean;
+var
+  lArrayDef: IwbArrayDef;
+begin
+  if not Supports(srValueDef, IwbArrayDef, lArrayDef) then
+    Exit(False);
+  var lMaxCount := lArrayDef.MaxCount;
+  if lMaxCount = 0 then
+    Exit(False);
+  var lCount := GetElementCount;
+  if csAsCreatedEmpty in cntStates then
+    Dec(lCount);
+  Result := UInt64(lCount) >= lMaxCount;
+end;
+
+procedure TwbSubRecord.RefuseEntryAtMaxCount;
+begin
+  if AtMaxCount then
+    raise Exception.Create(GetName + ' already holds its maximum of ' + UIntToStr((srValueDef as IwbArrayDef).MaxCount) + ' entries');
+end;
+
 function TwbSubRecord.AddIfMissingInternal(const aElement: IwbElement; aFlags: TwbCopyFlags; const aRules: TwbCopyRules): IwbElement;
 var
   SelfRef    : IwbContainerElementRef;
@@ -18753,6 +18812,7 @@ begin
               raise;
             end;
           end else begin
+            RefuseEntryAtMaxCount;
             ValueDef := ArrayDef.Element;
             if ValueDef.DefType = dtResolvable then
               ValueDef := Resolve(ValueDef, nil, nil, aElement);
@@ -18870,7 +18930,8 @@ begin
                (dfFastAssign in ArrayDef.DefFlags) or
                wbAlwaysFastAssign
              ) and
-             Supports(aElement, IwbDataContainer, lDataContainer)
+             Supports(aElement, IwbDataContainer, lDataContainer) and
+             ((ArrayDef.MaxCount = 0) or (UInt64(Container.ElementCount) <= ArrayDef.MaxCount))
           then begin
             SetModified(True);
             InvalidateStorage;
@@ -18903,6 +18964,7 @@ begin
               var CopyCount := Container.ElementCount;
               if (ArrayDef.ElementCount > 0) and (CopyCount > ArrayDef.ElementCount) then
                 CopyCount := ArrayDef.ElementCount;
+              CopyCount := EntriesToCopy(ArrayDef.MaxCount, CopyCount);
 
               for i := 0 to Pred(CopyCount) do
                 if (i < Length(cntElements)) and not Supports(cntElements[i], IwbStringListTerminator) then
@@ -18945,6 +19007,7 @@ begin
                   raise;
                 end;
               end else begin
+                RefuseEntryAtMaxCount;
                 Element := nil;
                 if not Supports(aElement, IwbStringListTerminator) then begin
                   ValueDef := ArrayDef.Element;
@@ -19064,7 +19127,7 @@ var
     if srsIsArray in srStates then begin
       Result :=
          ArrayDef.CanAssign(Self, aIndex, lDef) or
-         ( (ArrayDef.ElementCount <= 0) and ArrayDef.Element.CanAssign(Self, wbAssignThis, lDef) );
+         ( (ArrayDef.ElementCount <= 0) and not AtMaxCount and ArrayDef.Element.CanAssign(Self, wbAssignThis, lDef) );
     end else begin
       Result := inherited CanAssignInternal(aIndex, aElement, aCheckDontShow);
       if not Result and Assigned(srDef) then
@@ -19094,7 +19157,7 @@ begin
     ArrayDef := srValueDef as IwbArrayDef;
     if not Assigned(aElement) then begin
       if aIndex = wbAssignAdd then
-        Result := ArrayDef.ElementCount <= 0;
+        Result := (ArrayDef.ElementCount <= 0) and not AtMaxCount;
       Exit;
     end;
   end;
@@ -24395,6 +24458,23 @@ begin
   Result := Assign(StrToIntDef(aName, wbAssignAdd), nil, False);
 end;
 
+function TwbSubRecordArray.AtMaxCount: Boolean;
+begin
+  var lMaxCount := arcDef.MaxCount;
+  if lMaxCount = 0 then
+    Exit(False);
+  var lCount := GetElementCount;
+  if csAsCreatedEmpty in cntStates then
+    Dec(lCount);
+  Result := UInt64(lCount) >= lMaxCount;
+end;
+
+procedure TwbSubRecordArray.RefuseEntryAtMaxCount;
+begin
+  if AtMaxCount then
+    raise Exception.Create(GetName + ' already holds its maximum of ' + UIntToStr(arcDef.MaxCount) + ' entries');
+end;
+
 function TwbSubRecordArray.AddIfMissingInternal(const aElement: IwbElement; aFlags: TwbCopyFlags; const aRules: TwbCopyRules): IwbElement;
 var
   SelfRef   : IwbContainerElementRef;
@@ -24426,7 +24506,8 @@ begin
     Assert(Length(cntElements)=1);
     Result := cntElements[0];
     Exclude(cntStates, csAsCreatedEmpty);
-  end else
+  end else begin
+    RefuseEntryAtMaxCount;
     case arcDef.Element.DefType of
       dtSubRecord:
         Result := TwbSubRecord.Create(Self, arcDef.Element as IwbSubRecordDef);
@@ -24437,6 +24518,7 @@ begin
     else
       Assert(False);
     end;
+  end;
 
   try
     Result.Assign(wbAssignThis, aElement, not (cfDeepCopy in aFlags));
@@ -24487,7 +24569,7 @@ begin
     InvalidateStorage;
     ReleaseElements;
 
-    for i := 0 to Pred(Container.ElementCount) do
+    for i := 0 to Pred(EntriesToCopy(arcDef.MaxCount, Container.ElementCount)) do
       Assign(i, Container.Elements[i], aOnlySK);
 
   end else if (aIndex >= 0) and (not Assigned(aElement) or arcDef.Element.CanAssign(Self, wbAssignThis, aElement.Def))  or
@@ -24503,6 +24585,7 @@ begin
       Element := cntElements[0];
       Exclude(cntStates, csAsCreatedEmpty);
     end else begin
+      RefuseEntryAtMaxCount;
 
       ElementDef := arcDef.Element;
       while ElementDef.DefType = dtSubRecordUnion do begin
@@ -24585,6 +24668,8 @@ function TwbSubRecordArray.CanAssignInternal(aIndex: Integer; const aElement: Iw
 
   function CheckAssign(const aElement: IwbElement): Boolean;
   begin
+    if AtMaxCount and not Supports(aElement, IwbSubRecordArray) then
+      Exit(False);
     Result := arcDef.CanAssign(Self, aIndex, aElement.Def);
     if not Result then begin
       Result := arcDef.Element.CanAssign(Self, wbAssignThis, aElement.Def);
@@ -24611,7 +24696,7 @@ begin
     Exit;
 
   if not Assigned(aElement) then begin
-    Result := aIndex >= 0;
+    Result := (aIndex >= 0) and not AtMaxCount;
     Exit;
   end;
 
@@ -24850,6 +24935,13 @@ begin
   DoInit(False);
 
   arcDef.ToString(Result, Self, ctCheck);
+
+  var lMaxCount := arcDef.MaxCount;
+  if (lMaxCount > 0) and (UInt64(GetElementCount) > lMaxCount) then begin
+    if Result <> '' then
+      Result := Result + '; ';
+    Result := Result + 'Holds ' + IntToStr(GetElementCount) + ' entries, the maximum is ' + UIntToStr(lMaxCount);
+  end;
 end;
 
 function TwbSubRecordArray.GetDef: IwbNamedDef;
@@ -25980,6 +26072,8 @@ begin
     end;
   end;
 
+  RefuseEntryAtMaxCount;
+
   if arrSorted then
     s := ''
   else
@@ -26057,7 +26151,7 @@ begin
           RequestStorageChange(p, q, ArrayDef.PrefixSize[nil]);
       NotifyChanged(eContainer);
 
-      for i := 0 to Pred(Container.ElementCount) do
+      for i := 0 to Pred(EntriesToCopy(ArrayDef.MaxCount, Container.ElementCount)) do
         Assign(i, Container.Elements[i], aOnlySK);
     end else begin
       Assert(Container.ElementCount = ArrayDef.ElementCount);
@@ -26073,6 +26167,7 @@ begin
   end else begin
     if (aIndex >= 0) and (ArrayDef.ElementCount <= 0) and ((aIndex = wbAssignAdd) or ArrayDef.Element.CanAssign(Self, wbAssignThis, aElement.ValueDef)) then begin
       {add one entry}
+      RefuseEntryAtMaxCount;
 
       if arrSorted then
         s := ''
@@ -26151,12 +26246,24 @@ begin
   ArrayDef := vbValueDef as IwbArrayDef;
   if not Assigned(aElement) then begin
     if aIndex = wbAssignAdd then
-      Result := ArrayDef.ElementCount <= 0;
+      Result := (ArrayDef.ElementCount <= 0) and not AtMaxCount;
     Exit;
   end;
   Result :=
      ArrayDef.CanAssign(Self, aIndex, aElement.ValueDef) or
-     ( (ArrayDef.ElementCount <= 0) and ArrayDef.Element.CanAssign(Self, wbAssignThis, aElement.ValueDef) );
+     ( (ArrayDef.ElementCount <= 0) and not AtMaxCount and ArrayDef.Element.CanAssign(Self, wbAssignThis, aElement.ValueDef) );
+end;
+
+function TwbArray.AtMaxCount: Boolean;
+begin
+  var lMaxCount := (vbValueDef as IwbArrayDef).MaxCount;
+  Result := (lMaxCount > 0) and (UInt64(GetElementCount) >= lMaxCount);
+end;
+
+procedure TwbArray.RefuseEntryAtMaxCount;
+begin
+  if AtMaxCount then
+    raise Exception.Create(GetName + ' already holds its maximum of ' + UIntToStr((vbValueDef as IwbArrayDef).MaxCount) + ' entries');
 end;
 
 function TwbArray.CanMoveElement: Boolean;
