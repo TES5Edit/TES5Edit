@@ -4775,10 +4775,7 @@ end;
 
 procedure wbDIALQuestToStr(var aValue: string; aBasePtr, aEndPtr: Pointer; const aElement : IwbElement; aType : TwbCallbackType);
 begin
-  if (aType <> ctCheck) and (aType <> ctToStr) then
-    Exit;
-
-  if not Assigned(aElement) then
+  if not (Assigned(aElement) and (aType in [ctCheck, ctToStr])) then
     Exit;
 
   var lBNAM := aElement.ContainingMainRecord.ElementBySignature[BNAM];
@@ -4797,14 +4794,11 @@ begin
   if not Assigned(lBranchQuest) then
     Exit;
 
-  lBranchQuest := lBranchQuest.MasterOrSelf;
-
   var lElementQuest := aElement.LinksTo as IwbMainRecord;
   if not Assigned(lElementQuest) then
     Exit;
 
-  lElementQuest := lElementQuest.MasterOrSelf;
-  if lElementQuest = lBranchQuest then
+  if lElementQuest.MasterOrSelf = lBranchQuest.MasterOrSelf then
     Exit;
 
   case aType of
