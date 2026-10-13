@@ -11848,7 +11848,8 @@ begin
   if GetIsPartialForm then
     if aIndex <> wbAssignThis then begin
       var lPartialShouldExit := not PartialFormKeeps(aIndex, aElement);
-      if lPartialShouldExit and Assigned(mrDef) and (lContext.Settings.FillINOM or lContext.Settings.FillINOA) and (GetSignature = 'DIAL') then begin
+      if lPartialShouldExit and Assigned(mrDef) and (aIndex >= 0) and (aIndex < mrDef.MemberCount) and
+         (lContext.Settings.FillINOM or lContext.Settings.FillINOA) and (GetSignature = 'DIAL') then begin
         var lDIALMember := mrDef.Members[aIndex];
         if Assigned(lDIALMember) then begin
           if (lContext.Settings.FillINOM and (lDIALMember.DefaultSignature = 'INOM')) or
