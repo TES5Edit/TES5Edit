@@ -1604,6 +1604,8 @@ type
     srResolvedDef        : IwbValueDef;
     srStates             : TwbSubRecordStates;
     srArraySizePrefix    : Integer;
+    function AtMaxCount: Boolean;
+    procedure RefuseEntryAtMaxCount;
   protected
     constructor Create(const aContainer : IwbContainer;
                        const aSubRecordDef: IwbSubRecordDef); overload;
@@ -1769,6 +1771,8 @@ type
     arrSortedInCopy  : Boolean;
     arrSizePrefix    : Integer;
     procedure UpdateSortedAfterCopy;
+    function AtMaxCount: Boolean;
+    procedure RefuseEntryAtMaxCount;
   protected
     procedure DoInit(aNeedSorted: Boolean); override; final;
     procedure Init; override; final;
@@ -2110,6 +2114,8 @@ type
     arcNameGen     : Integer;
     arcContextObj  : TwbGameContext;
     arcPendingFor  : Pointer;
+    function AtMaxCount: Boolean;
+    procedure RefuseEntryAtMaxCount;
   protected
     constructor Create(const aOwner     : IwbContainer;
                        const aContainer : IwbContainer;
@@ -3801,6 +3807,21 @@ var
         lFaulty.Add(aMaster);
         Exit;
       end;
+
+      for l := Low(aRow.Lists) to High(aRow.Lists) do
+        if Assigned(lTargetLists[l]) and Assigned(lWinningLists[l]) and not ListsEqual(lTargetLists[l], lWinningLists[l]) then begin
+          var lList := lWinner.ElementByName[aRow.Lists[l]];
+          if not Assigned(lList) then
+            lList := aMaster.ElementByName[aRow.Lists[l]];
+          var lListDef: IwbSubRecordArrayDef;
+          if Assigned(lList) and Supports(lList.Def, IwbSubRecordArrayDef, lListDef) and (lListDef.MaxCount > 0) and
+             (UInt64(lTargetLists[l].Count) > lListDef.MaxCount) then begin
+            Report('Error: Can''t merge ' + aMaster.Name + ': its ' + aRow.Lists[l] + ' would hold ' + IntToStr(lTargetLists[l].Count) +
+              ' entries, the maximum is ' + UIntToStr(lListDef.MaxCount));
+            lFaulty.Add(aMaster);
+            Exit;
+          end;
+        end;
 
       lTargetRecord := nil;
       for l := Low(aRow.Lists) to High(aRow.Lists) do
@@ -18701,6 +18722,27 @@ begin
     Result := inherited Add(aName, aSilent);
 end;
 
+function TwbSubRecord.AtMaxCount: Boolean;
+var
+  lArrayDef: IwbArrayDef;
+begin
+  if (csAssigningAll in cntStates) or not Supports(srValueDef, IwbArrayDef, lArrayDef) then
+    Exit(False);
+  var lMaxCount := lArrayDef.MaxCount;
+  if lMaxCount = 0 then
+    Exit(False);
+  var lCount := GetElementCount;
+  if csAsCreatedEmpty in cntStates then
+    Dec(lCount);
+  Result := UInt64(lCount) >= lMaxCount;
+end;
+
+procedure TwbSubRecord.RefuseEntryAtMaxCount;
+begin
+  if AtMaxCount then
+    raise Exception.Create(GetName + ' already holds its maximum of ' + UIntToStr((srValueDef as IwbArrayDef).MaxCount) + ' entries');
+end;
+
 function TwbSubRecord.AddIfMissingInternal(const aElement: IwbElement; aFlags: TwbCopyFlags; const aRules: TwbCopyRules): IwbElement;
 var
   SelfRef    : IwbContainerElementRef;
@@ -18757,6 +18799,7 @@ begin
               raise;
             end;
           end else begin
+            RefuseEntryAtMaxCount;
             ValueDef := ArrayDef.Element;
             if ValueDef.DefType = dtResolvable then
               ValueDef := Resolve(ValueDef, nil, nil, aElement);
@@ -18908,11 +18951,18 @@ begin
               if (ArrayDef.ElementCount > 0) and (CopyCount > ArrayDef.ElementCount) then
                 CopyCount := ArrayDef.ElementCount;
 
-              for i := 0 to Pred(CopyCount) do
-                if (i < Length(cntElements)) and not Supports(cntElements[i], IwbStringListTerminator) then
-                  cntElements[i].Assign(wbAssignThis, Container.Elements[i], aOnlySK)
-                else
-                  Assign(i, Container.Elements[i], aOnlySK);
+              var lWasAssigningAll := csAssigningAll in cntStates;
+              Include(cntStates, csAssigningAll);
+              try
+                for i := 0 to Pred(CopyCount) do
+                  if (i < Length(cntElements)) and not Supports(cntElements[i], IwbStringListTerminator) then
+                    cntElements[i].Assign(wbAssignThis, Container.Elements[i], aOnlySK)
+                  else
+                    Assign(i, Container.Elements[i], aOnlySK);
+              finally
+                if not lWasAssigningAll then
+                  Exclude(cntStates, csAssigningAll);
+              end;
             end;
           end else begin
             if Assigned(Container) then begin
@@ -18949,6 +18999,7 @@ begin
                   raise;
                 end;
               end else begin
+                RefuseEntryAtMaxCount;
                 Element := nil;
                 if not Supports(aElement, IwbStringListTerminator) then begin
                   ValueDef := ArrayDef.Element;
@@ -19068,7 +19119,7 @@ var
     if srsIsArray in srStates then begin
       Result :=
          ArrayDef.CanAssign(Self, aIndex, lDef) or
-         ( (ArrayDef.ElementCount <= 0) and ArrayDef.Element.CanAssign(Self, wbAssignThis, lDef) );
+         ( (ArrayDef.ElementCount <= 0) and not AtMaxCount and ArrayDef.Element.CanAssign(Self, wbAssignThis, lDef) );
     end else begin
       Result := inherited CanAssignInternal(aIndex, aElement, aCheckDontShow);
       if not Result and Assigned(srDef) then
@@ -19098,7 +19149,7 @@ begin
     ArrayDef := srValueDef as IwbArrayDef;
     if not Assigned(aElement) then begin
       if aIndex = wbAssignAdd then
-        Result := ArrayDef.ElementCount <= 0;
+        Result := (ArrayDef.ElementCount <= 0) and not AtMaxCount;
       Exit;
     end;
   end;
@@ -24399,6 +24450,23 @@ begin
   Result := Assign(StrToIntDef(aName, wbAssignAdd), nil, False);
 end;
 
+function TwbSubRecordArray.AtMaxCount: Boolean;
+begin
+  var lMaxCount := arcDef.MaxCount;
+  if (lMaxCount = 0) or (csAssigningAll in cntStates) then
+    Exit(False);
+  var lCount := GetElementCount;
+  if csAsCreatedEmpty in cntStates then
+    Dec(lCount);
+  Result := UInt64(lCount) >= lMaxCount;
+end;
+
+procedure TwbSubRecordArray.RefuseEntryAtMaxCount;
+begin
+  if AtMaxCount then
+    raise Exception.Create(GetName + ' already holds its maximum of ' + UIntToStr(arcDef.MaxCount) + ' entries');
+end;
+
 function TwbSubRecordArray.AddIfMissingInternal(const aElement: IwbElement; aFlags: TwbCopyFlags; const aRules: TwbCopyRules): IwbElement;
 var
   SelfRef   : IwbContainerElementRef;
@@ -24430,7 +24498,8 @@ begin
     Assert(Length(cntElements)=1);
     Result := cntElements[0];
     Exclude(cntStates, csAsCreatedEmpty);
-  end else
+  end else begin
+    RefuseEntryAtMaxCount;
     case arcDef.Element.DefType of
       dtSubRecord:
         Result := TwbSubRecord.Create(Self, arcDef.Element as IwbSubRecordDef);
@@ -24441,6 +24510,7 @@ begin
     else
       Assert(False);
     end;
+  end;
 
   try
     Result.Assign(wbAssignThis, aElement, not (cfDeepCopy in aFlags));
@@ -24491,8 +24561,15 @@ begin
     InvalidateStorage;
     ReleaseElements;
 
-    for i := 0 to Pred(Container.ElementCount) do
-      Assign(i, Container.Elements[i], aOnlySK);
+    var lWasAssigningAll := csAssigningAll in cntStates;
+    Include(cntStates, csAssigningAll);
+    try
+      for i := 0 to Pred(Container.ElementCount) do
+        Assign(i, Container.Elements[i], aOnlySK);
+    finally
+      if not lWasAssigningAll then
+        Exclude(cntStates, csAssigningAll);
+    end;
 
   end else if (aIndex >= 0) and (not Assigned(aElement) or arcDef.Element.CanAssign(Self, wbAssignThis, aElement.Def))  or
     ((aIndex = wbAssignThis) and arcDef.Element.CanAssign(Self, aIndex, aElement.Def)) then begin
@@ -24507,6 +24584,7 @@ begin
       Element := cntElements[0];
       Exclude(cntStates, csAsCreatedEmpty);
     end else begin
+      RefuseEntryAtMaxCount;
 
       ElementDef := arcDef.Element;
       while ElementDef.DefType = dtSubRecordUnion do begin
@@ -24589,6 +24667,8 @@ function TwbSubRecordArray.CanAssignInternal(aIndex: Integer; const aElement: Iw
 
   function CheckAssign(const aElement: IwbElement): Boolean;
   begin
+    if AtMaxCount and not Supports(aElement, IwbSubRecordArray) then
+      Exit(False);
     Result := arcDef.CanAssign(Self, aIndex, aElement.Def);
     if not Result then begin
       Result := arcDef.Element.CanAssign(Self, wbAssignThis, aElement.Def);
@@ -24615,7 +24695,7 @@ begin
     Exit;
 
   if not Assigned(aElement) then begin
-    Result := aIndex >= 0;
+    Result := (aIndex >= 0) and not AtMaxCount;
     Exit;
   end;
 
@@ -24854,6 +24934,13 @@ begin
   DoInit(False);
 
   arcDef.ToString(Result, Self, ctCheck);
+
+  var lMaxCount := arcDef.MaxCount;
+  if (lMaxCount > 0) and (UInt64(GetElementCount) > lMaxCount) then begin
+    if Result <> '' then
+      Result := Result + '; ';
+    Result := Result + 'Holds ' + IntToStr(GetElementCount) + ' entries, the maximum is ' + UIntToStr(lMaxCount);
+  end;
 end;
 
 function TwbSubRecordArray.GetDef: IwbNamedDef;
@@ -25984,6 +26071,8 @@ begin
     end;
   end;
 
+  RefuseEntryAtMaxCount;
+
   if arrSorted then
     s := ''
   else
@@ -26061,8 +26150,15 @@ begin
           RequestStorageChange(p, q, ArrayDef.PrefixSize[nil]);
       NotifyChanged(eContainer);
 
-      for i := 0 to Pred(Container.ElementCount) do
-        Assign(i, Container.Elements[i], aOnlySK);
+      var lWasAssigningAll := csAssigningAll in cntStates;
+      Include(cntStates, csAssigningAll);
+      try
+        for i := 0 to Pred(Container.ElementCount) do
+          Assign(i, Container.Elements[i], aOnlySK);
+      finally
+        if not lWasAssigningAll then
+          Exclude(cntStates, csAssigningAll);
+      end;
     end else begin
       Assert(Container.ElementCount = ArrayDef.ElementCount);
       Assert(GetElementCount = ArrayDef.ElementCount);
@@ -26077,6 +26173,7 @@ begin
   end else begin
     if (aIndex >= 0) and (ArrayDef.ElementCount <= 0) and ((aIndex = wbAssignAdd) or ArrayDef.Element.CanAssign(Self, wbAssignThis, aElement.ValueDef)) then begin
       {add one entry}
+      RefuseEntryAtMaxCount;
 
       if arrSorted then
         s := ''
@@ -26155,12 +26252,26 @@ begin
   ArrayDef := vbValueDef as IwbArrayDef;
   if not Assigned(aElement) then begin
     if aIndex = wbAssignAdd then
-      Result := ArrayDef.ElementCount <= 0;
+      Result := (ArrayDef.ElementCount <= 0) and not AtMaxCount;
     Exit;
   end;
   Result :=
      ArrayDef.CanAssign(Self, aIndex, aElement.ValueDef) or
-     ( (ArrayDef.ElementCount <= 0) and ArrayDef.Element.CanAssign(Self, wbAssignThis, aElement.ValueDef) );
+     ( (ArrayDef.ElementCount <= 0) and not AtMaxCount and ArrayDef.Element.CanAssign(Self, wbAssignThis, aElement.ValueDef) );
+end;
+
+function TwbArray.AtMaxCount: Boolean;
+begin
+  if csAssigningAll in cntStates then
+    Exit(False);
+  var lMaxCount := (vbValueDef as IwbArrayDef).MaxCount;
+  Result := (lMaxCount > 0) and (UInt64(GetElementCount) >= lMaxCount);
+end;
+
+procedure TwbArray.RefuseEntryAtMaxCount;
+begin
+  if AtMaxCount then
+    raise Exception.Create(GetName + ' already holds its maximum of ' + UIntToStr((vbValueDef as IwbArrayDef).MaxCount) + ' entries');
 end;
 
 function TwbArray.CanMoveElement: Boolean;

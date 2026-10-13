@@ -9936,7 +9936,7 @@ begin
         wbCOED
       ]).SetSummaryMemberMaxDepth(0, 1)
         .IncludeFlag(dfCollapsed, clpLeveledItems in DefineOptions.Collapse)
-    ).SetCountPath(LLCT),
+    ).SetCountPath(LLCT).SetMaxCount(255),
     wbFilterKeywordChances,
     wbGenericModel
   ]).SetAfterLoad(wbLLEAfterLoad);
@@ -9959,7 +9959,7 @@ begin
         wbCOED
       ]).SetSummaryMemberMaxDepth(0, 1)
         .IncludeFlag(dfCollapsed, clpLeveledItems in DefineOptions.Collapse)
-    ).SetCountPath(LLCT),
+    ).SetCountPath(LLCT).SetMaxCount(255),
     wbFilterKeywordChances,
     wbFormIDCk(LVSG, 'Epic Loot Chance', [GLOB]),
     wbLStringKC(ONAM, 'Override Name', 0, cpTranslate)
@@ -9981,7 +9981,7 @@ begin
         wbLeveledListEntry('Spell', [LVSP, SPEL])
       ]).SetSummaryMemberMaxDepth(0, 1)
         .IncludeFlag(dfCollapsed, clpLeveledItems in DefineOptions.Collapse)
-    ).SetCountPath(LLCT)
+    ).SetCountPath(LLCT).SetMaxCount(255)
   ]);
 
   RegisterRecordDef(MGEF, 'Magic Effect', [

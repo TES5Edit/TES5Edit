@@ -8020,7 +8020,7 @@ begin
         wbCOED
       ]).SetSummaryMemberMaxDepth(0, 1)
         .IncludeFlag(dfCollapsed, clpLeveledItems in DefineOptions.Collapse)
-    ).SetCountPath(LLCT),
+    ).SetCountPath(LLCT).SetMaxCount(255),
     wbGenericModel
   ]);
 
@@ -8042,7 +8042,7 @@ begin
         wbCOED
       ]).SetSummaryMemberMaxDepth(0, 1)
         .IncludeFlag(dfCollapsed, clpLeveledItems in DefineOptions.Collapse)
-    ).SetCountPath(LLCT)
+    ).SetCountPath(LLCT).SetMaxCount(255)
   ]);
 
    RegisterRecordDef(LVSP, 'Leveled Spell', [
@@ -8060,7 +8060,7 @@ begin
         wbLeveledListEntry('Spell', [LVSP, SPEL])
       ]).SetSummaryMemberMaxDepth(0, 1)
         .IncludeFlag(dfCollapsed, clpLeveledItems in DefineOptions.Collapse)
-    ).SetCountPath(LLCT)
+    ).SetCountPath(LLCT).SetMaxCount(255)
   ]);
 
   RegisterRecordDef(MGEF, 'Magic Effect', [

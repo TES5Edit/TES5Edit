@@ -12374,7 +12374,7 @@ begin
     wbConditions,
     wbLLCT,
     wbRArrayS('Leveled List Entries', wbLeveledListEntryNPC)
-      .SetCountPath(LLCT),
+      .SetCountPath(LLCT).SetMaxCount(255),
     wbArrayS(LLKC, 'Filter Keyword Chances',
       wbStructSK([0], 'Filter', [
         wbFormIDCk('Keyword', [KYWD]),
@@ -12410,7 +12410,7 @@ begin
     wbConditions,
     wbLLCT,
     wbRArrayS('Leveled List Entries', wbLeveledListEntryItem)
-      .SetCountPath(LLCT),
+      .SetCountPath(LLCT).SetMaxCount(255),
     wbArrayS(LLKC, 'Filter Keyword Chances',
       wbStructSK([0], 'Filter', [
         wbFormIDCk('Keyword', [KYWD]),
@@ -12444,7 +12444,7 @@ begin
     //wbFormIDCk(LVLG, 'Use Global', [GLOB]),
     wbLLCT,
     wbRArrayS('Leveled List Entries', wbLeveledListEntryPackIn)
-      .SetCountPath(LLCT),
+      .SetCountPath(LLCT).SetMaxCount(255),
     {
     wbArrayS(LLKC, 'Filter Keyword Chances',
       wbStructSK([0], 'Filter', [
@@ -16443,7 +16443,7 @@ begin
     wbLVLF,
     wbLLCT,
     wbRArrayS('Leveled List Entries', wbLeveledListEntryPerkCard)
-      .SetCountPath(LLCT),
+      .SetCountPath(LLCT).SetMaxCount(255),
     wbUnknown(LVCL),
     wbUnknown(LVUO)
   ]);

@@ -1498,7 +1498,8 @@ type
     csCollapsed,
     csExpanded,
     csConstructionCompleted,
-    csFillPending
+    csFillPending,
+    csAssigningAll
   );
 
   TwbContainerStates = set of TwbContainerState;
@@ -3058,6 +3059,7 @@ type
     function SetCountPathOnValue(const aValues: array of string; aUseForCountCallback: Boolean): IwbSubRecordWithArrayDef; overload;
     function SetCountFromEnumOnValue(const aEnum: IwbEnumDef): IwbSubRecordWithArrayDef;
     function SetWronglyAssumedFixedSizePerElementOnValue(aSize: Integer): IwbSubRecordWithArrayDef;
+    function SetMaxCountOnValue(const aMaxCount: UInt64): IwbSubRecordWithArrayDef;
   end;
 
   IwbStringDefFormater = interface;
@@ -3086,16 +3088,19 @@ type
     function GetSorted(const aContainer: IwbContainer): Boolean;
     function GetCountPaths: TArray<string>;
     function GetCount: Integer;
+    function GetMaxCount: UInt64;
 
     function SetCountPath(const aValue: string): IwbSubRecordArrayDef; overload;
     function SetCountPath(const aValues: array of string): IwbSubRecordArrayDef; overload;
     function SetIsSorted(const aIsSorted: TwbIsSortedCallback): IwbSubRecordArrayDef;
+    function SetMaxCount(const aMaxCount: UInt64): IwbSubRecordArrayDef;
 
     function SetDefaultEditValues(const aValues: array of string): IwbSubRecordArrayDef;
     function GetDefaultEditValues: TwbStringArray;
 
     property Element: IwbRecordMemberDef read GetElement;
     property Count: Integer read GetCount; //fixed number of elementes if > 0
+    property MaxCount: UInt64 read GetMaxCount;
     property Sorted[const aContainer: IwbContainer]: Boolean read GetSorted;
     property CountPaths: TArray<string> read GetCountPaths;
     property DefaultEditValues: TwbStringArray read GetDefaultEditValues;
@@ -3273,6 +3278,9 @@ type
     function SetWronglyAssumedFixedSizePerElement(aSize: Integer): IwbArrayDef;
     function GetWronglyAssumedFixedSizePerElement: Integer;
 
+    function SetMaxCount(const aMaxCount: UInt64): IwbArrayDef;
+    function GetMaxCount: UInt64;
+
     property Element: IwbValueDef
       read GetElement;
     property ElementCount: Integer
@@ -3290,6 +3298,8 @@ type
       read GetCountCallback;
     property WronglyAssumedFixedSizePerElement: Integer
       read GetWronglyAssumedFixedSizePerElement;
+    property MaxCount: UInt64
+      read GetMaxCount;
 
     property CanAddTo: Boolean
       read GetCanAddTo;
@@ -8610,6 +8620,7 @@ type
     function SetCountPathOnValue(const aValues: array of string; aUseForCountCallback: Boolean): IwbSubRecordWithArrayDef; overload;
     function SetCountFromEnumOnValue(const aEnum: IwbEnumDef): IwbSubRecordWithArrayDef;
     function SetWronglyAssumedFixedSizePerElementOnValue(aSize: Integer): IwbSubRecordWithArrayDef;
+    function SetMaxCountOnValue(const aMaxCount: UInt64): IwbSubRecordWithArrayDef;
 
     {---IwbSubRecordWithBaseStringDef---}
     function SetFormaterOnValue(const aFormater: IwbStringDefFormater): IwbSubRecordWithBaseStringDef;
@@ -8654,6 +8665,7 @@ type
     sraIsSorted          : TwbIsSortedCallback;
     sraDefaultEditValues : TwbStringArray;
     sraCountPaths        : TArray<string>;
+    sraMaxCount          : UInt64;
   public
     constructor Clone(const aSource: TwbDef); override; final;
     constructor Create(aPriority  : TwbConflictPriority;
@@ -8697,6 +8709,7 @@ type
     function GetSorted(const aContainer: IwbContainer): Boolean;
     function GetCountPaths: TArray<string>;
     function GetCount: Integer;
+    function GetMaxCount: UInt64;
 
     function SetDefaultEditValues(const aValues: array of string): IwbSubRecordArrayDef;
     function GetDefaultEditValues: TwbStringArray;
@@ -8704,6 +8717,7 @@ type
     function SetCountPath(const aValue: string): IwbSubRecordArrayDef; overload;
     function SetCountPath(const aValues: array of string): IwbSubRecordArrayDef; overload;
     function SetIsSorted(const aIsSorted: TwbIsSortedCallback): IwbSubRecordArrayDef;
+    function SetMaxCount(const aMaxCount: UInt64): IwbSubRecordArrayDef;
   end;
 
   TwbSubRecordStructDef = class(TwbRecordMemberDef, IwbSubRecordStructDef, IwbRecordDef)
@@ -9503,6 +9517,7 @@ type
     arCountPaths        : TArray<string>;
     arShouldInclude     : TwbShouldIncludeCallback;
     arWronglyAssumedFixedSizePerElement: Integer;
+    arMaxCount          : UInt64;
 
     arSummaryDelimiter            : string;
     arSummaryPassthroughMaxCount  : Integer;
@@ -9584,6 +9599,11 @@ type
 
     function SetWronglyAssumedFixedSizePerElement(aSize: Integer): IwbArrayDef;
     function GetWronglyAssumedFixedSizePerElement: Integer;
+
+    function SetMaxCount(const aMaxCount: UInt64): IwbArrayDef;
+    function GetMaxCount: UInt64;
+
+    function Check(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string; override; final;
   end;
 
   TwbStructDef = class(TwbValueDef, IwbStructDef)
@@ -13977,6 +13997,18 @@ begin
   Result := inherited SetSummaryName(aName) as IwbRecordMemberDef;
 end;
 
+function TwbSubRecordDef.SetMaxCountOnValue(const aMaxCount: UInt64): IwbSubRecordWithArrayDef;
+begin
+  if defIsLocked then
+    Exit(TwbSubRecordDef(Duplicate).SetMaxCountOnValue(aMaxCount));
+
+  if Assigned(srValue) then begin
+    srValue := (srValue as IwbArrayDef).SetMaxCount(aMaxCount);
+    srValue := (srValue as IwbDefInternal).SetParent(Self, False) as IwbValueDef;
+  end;
+  Result := Self;
+end;
+
 function TwbSubRecordDef.SetSummaryPassthroughMaxCountOnValue(aCount: Integer): IwbSubRecordWithArrayDef;
 begin
   if defIsLocked then
@@ -14082,6 +14114,7 @@ begin
     Self.sraDefaultEditValues := sraDefaultEditValues;
     Self.sraCountPaths := Copy(sraCountPaths);
     Self.sraIsSorted := sraIsSorted;
+    Self.sraMaxCount := sraMaxCount;
   end;
 end;
 
@@ -14313,6 +14346,20 @@ begin
 
   Result := Self;
   sraIsSorted := aIsSorted;
+end;
+
+function TwbSubRecordArrayDef.SetMaxCount(const aMaxCount: UInt64): IwbSubRecordArrayDef;
+begin
+  if defIsLocked then
+    Exit(TwbSubRecordArrayDef(Duplicate).SetMaxCount(aMaxCount));
+
+  Result := Self;
+  sraMaxCount := aMaxCount;
+end;
+
+function TwbSubRecordArrayDef.GetMaxCount: UInt64;
+begin
+  Result := sraMaxCount;
 end;
 
 function TwbSubRecordArrayDef.GetDefType: TwbDefType;
@@ -15968,6 +16015,7 @@ begin
     Self.arCountPaths := Copy(arCountPaths);
     Self.arShouldInclude := arShouldInclude;
     Self.arWronglyAssumedFixedSizePerElement := arWronglyAssumedFixedSizePerElement;
+    Self.arMaxCount := arMaxCount;
   end;
 end;
 
@@ -16559,6 +16607,32 @@ begin
 
   Result := Self;
   arWronglyAssumedFixedSizePerElement := aSize;
+end;
+
+function TwbArrayDef.SetMaxCount(const aMaxCount: UInt64): IwbArrayDef;
+begin
+  if defIsLocked then
+    Exit(TwbArrayDef(Duplicate).SetMaxCount(aMaxCount));
+
+  Result := Self;
+  arMaxCount := aMaxCount;
+end;
+
+function TwbArrayDef.GetMaxCount: UInt64;
+begin
+  Result := arMaxCount;
+end;
+
+function TwbArrayDef.Check(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string;
+var
+  lContainer: IwbContainer;
+begin
+  Result := inherited Check(aBasePtr, aEndPtr, aElement);
+  if (arMaxCount > 0) and Supports(aElement, IwbContainer, lContainer) and (UInt64(lContainer.ElementCount) > arMaxCount) then begin
+    if Result <> '' then
+      Result := Result + '; ';
+    Result := Result + 'Holds ' + IntToStr(lContainer.ElementCount) + ' entries, the maximum is ' + UIntToStr(arMaxCount);
+  end;
 end;
 
 function TwbArrayDef.ShouldInclude(aBasePtr, aEndPtr: Pointer; const aArray: IwbElement): Boolean;
