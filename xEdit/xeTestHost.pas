@@ -596,8 +596,9 @@ begin
             SameText(ChangeFormIDOp, 'batchrefs') or SameText(ChangeFormIDOp, 'cleanupinjected') or
             SameText(ChangeFormIDOp, 'localize') or SameText(ChangeFormIDOp, 'locview') or
             SameText(ChangeFormIDOp, 'setvwd') or SameText(ChangeFormIDOp, 'setvwdinto') or
-            SameText(ChangeFormIDOp, 'copyidle') or SameText(ChangeFormIDOp, 'copyrows')) or
-       (SameText(ChangeFormIDOp, 'copyrows') and (ChangeFormIDView = '')) or
+            SameText(ChangeFormIDOp, 'copyidle') or SameText(ChangeFormIDOp, 'copyrows') or
+            ChangeFormIDOp.StartsWith('refby', True)) or
+       ((SameText(ChangeFormIDOp, 'copyrows') or ChangeFormIDOp.StartsWith('refby', True)) and (ChangeFormIDView = '')) or
        ((SameText(ChangeFormIDOp, 'batchrefs') or SameText(ChangeFormIDOp, 'localize')) and (ChangeFormIDTarget = '')) then begin
       ShowMessage('testchangeformid requires -testchangeformid:<filename> -testchangeformidrecords:<EditorID>@<module>[,...] ' +
         '(setvwd, setvwdinto: also @<module>, the file''s node) -testchangeformidout:<folder> ' +
@@ -608,6 +609,9 @@ begin
         'those records and pins the view before the records are selected) ' +
         '(copyidle: the idle list answered with the next of -testchangeformidrefs, listed folders joined by ;, none or cancel; the model ' +
         'prefix prompt with the next of -testchangeformidids) ' +
+        '(refby<item>: the Referenced By tab of the record -testchangeformidview names, its rows that are the records selected, and ' +
+        'the item clicked -- vwd, notvwd, markmodified, remove, copyinto, copyintooverwrite, deepcopyinto, deepcopyintooverwrite, ' +
+        'copyasnew, disabledinto or compare) ' +
         '[-testchangeformidshift] [-testchangeformidtarget:<module|new>] (batchrefs, localize: the file focused; new: the ' +
         'picker''s first <new file> template, its name prompt answered with the next of -testchangeformidids) ' +
         '[-testchangeformidids:<hex|empty|offered|cancel>[,...]] ' +

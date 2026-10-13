@@ -9836,7 +9836,7 @@ begin
 
       FoundIt := False;
       for j := Low(Cells) to Pred(k) do
-        if MainRecord.Equals(Cells[i]) then begin
+        if MainRecord.Equals(Cells[j]) then begin
           FoundIt := True;
           Break;
         end;
