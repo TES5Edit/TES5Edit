@@ -3196,7 +3196,7 @@ begin
 
   ]);
 
-  var wbEDID := wbStringKC(EDID, 'Editor ID', 0, cpOverride);
+  var wbEDID := wbStringKC(EDID, 'Editor ID', 0, cpOverride).IncludeFlag(dfKeepInPartialForm) as IwbSubRecordDef;
   var wbNLDT := wbString(NLDT, 'Context Notes'); // localization note, explanation of variable, etc.
   var wbFULL := wbLStringKC(FULL, 'Name', 0, cpTranslate);
   var wbFULLReq := wbLStringKC(FULL, 'Name', 0, cpTranslate, True);
@@ -12059,7 +12059,7 @@ begin
       .SetFlagHasDontShow(28, wbFlagNavmeshOnlyCutDontShow)
       .SetFlagHasDontShow(29, wbFlagNavmeshIgnoreErosionDontShow)
       .SetFlagHasDontShow(30, wbFlagNavmeshGroundDontShow), [
-    wbString(EDID, 'Editor ID', 0, cpBenign, True).SetAfterSet(wbFLSTEDIDAfterSet),
+    wbString(EDID, 'Editor ID', 0, cpBenign, True).SetAfterSet(wbFLSTEDIDAfterSet).IncludeFlag(dfKeepInPartialForm),
     wbBaseFormComponents,
     wbFULL,
     wbRArrayS('FormIDs',
@@ -12374,7 +12374,7 @@ begin
 
   {subrecords checked against Starfield.esm}
   RegisterRecordDef(GMST, 'Game Setting', [
-    wbString(EDID, 'Editor ID', 0, cpCritical, True).SetAfterSet(wbGMSTEDIDAfterSet),
+    wbString(EDID, 'Editor ID', 0, cpCritical, True).SetAfterSet(wbGMSTEDIDAfterSet).IncludeFlag(dfKeepInPartialForm),
     wbXALG,
     wbUnion(DATA, 'Value', wbGMSTUnionDecider, [
       wbLString('Name', 0, cpTranslate),

@@ -4621,19 +4621,32 @@ var
   lShift  : Byte;
   lMenuItem : TMenuItem;
   lShowView : Boolean;
+  lSelFiles : TArray<IwbFile>;
+  lSelFile  : IwbFile;
 begin
   TestHost.TestChangeFormIDTimer.Enabled := False;
   lLines := TestHost.TestChangeFormIDLines;
   try
     TestHost.TestChangeFormIDTarget := nil;
-    if xeTestSwitches.ChangeFormIDTarget <> '' then begin
+    if (xeTestSwitches.ChangeFormIDTarget <> '') and not SameText(xeTestSwitches.ChangeFormIDTarget, 'new') then begin
       TestHost.TestChangeFormIDTarget := FindFile(xeTestSwitches.ChangeFormIDTarget);
       if not Assigned(TestHost.TestChangeFormIDTarget) then
         raise Exception.Create(xeTestSwitches.ChangeFormIDTarget + ' is not loaded');
     end;
     TestHost.TestChangeFormIDRecords := nil;
     TestHost.TestChangeFormIDBefore := nil;
+    lSelFiles := nil;
     for var lSpec in xeTestSwitches.ChangeFormIDRecords.Split([',']) do begin
+      if lSpec.StartsWith('@') and (SameText(xeTestSwitches.ChangeFormIDOp, 'setvwd') or
+         SameText(xeTestSwitches.ChangeFormIDOp, 'setvwdinto')) then begin
+        lSelFile := FindFile(lSpec.Substring(1));
+        if not Assigned(lSelFile) then
+          raise Exception.Create(lSpec.Substring(1) + ' is not loaded');
+        lSelFiles := lSelFiles + [lSelFile];
+        lLines.Add('selectedfile' + #9 + IntToStr(High(lSelFiles)) + #9 + lSelFile.FileName + #9 + 'editable ' +
+          BoolToStr(lSelFile.IsEditable, True));
+        Continue;
+      end;
       lRecord := FindRecord(lSpec);
       TestHost.TestChangeFormIDRecords := TestHost.TestChangeFormIDRecords + [lRecord];
       TestHost.TestChangeFormIDBefore := TestHost.TestChangeFormIDBefore + [lRecord.LoadOrderFormID];
@@ -4676,7 +4689,32 @@ begin
         end;
         vstNav.Selected[lNode] := True;
       end;
+    for lSelFile in lSelFiles do begin
+      lNode := FindNodeForElement(lSelFile);
+      if not Assigned(lNode) then
+        raise Exception.Create('no nav node for ' + lSelFile.FileName);
+      if not Assigned(lFirst) then begin
+        lFirst := lNode;
+        vstNav.FocusedNode := lNode;
+      end;
+      vstNav.Selected[lNode] := True;
+    end;
     pmuNavPopup(nil);
+    if SameText(xeTestSwitches.ChangeFormIDOp, 'copyrows') then begin
+      SetActiveRecord(TestHost.TestChangeFormIDRecords);
+      if tmrPendingSetActive.Enabled then
+        tmrPendingSetActiveTimer(tmrPendingSetActive);
+      var lSource := FindRecord(xeTestSwitches.ChangeFormIDView);
+      var lColumn := -1;
+      for var i := Low(ActiveRecords) to High(ActiveRecords) do
+        if Assigned(ActiveRecords[i].Element) and ActiveRecords[i].Element.Equals(lSource) then
+          lColumn := i;
+      vstView.FocusedColumn := Succ(lColumn);
+      vstViewFocusedNode := vstView.GetFirst;
+      pmuViewPopup(nil);
+      lLines.Add('view' + #9 + 'columns ' + IntToStr(Length(ActiveRecords)) + #9 + 'source ' + lSource.EditorID + ' column ' +
+        IntToStr(lColumn));
+    end;
     if SameText(xeTestSwitches.ChangeFormIDOp, 'changerefs') then
       lMenuItem := mniNavChangeReferencingRecords
     else if SameText(xeTestSwitches.ChangeFormIDOp, 'batchrefs') then
@@ -4687,6 +4725,14 @@ begin
       lMenuItem := mniNavLocalizationSwitch
     else if SameText(xeTestSwitches.ChangeFormIDOp, 'locview') then
       lMenuItem := nil
+    else if SameText(xeTestSwitches.ChangeFormIDOp, 'setvwd') then
+      lMenuItem := mniNavSetVWDAuto
+    else if SameText(xeTestSwitches.ChangeFormIDOp, 'setvwdinto') then
+      lMenuItem := mniNavSetVWDAutoInto
+    else if SameText(xeTestSwitches.ChangeFormIDOp, 'copyidle') then
+      lMenuItem := mniNavCopyIdle
+    else if SameText(xeTestSwitches.ChangeFormIDOp, 'copyrows') then
+      lMenuItem := mniViewCopyMultipleToSelectedRecords
     else
       lMenuItem := mniNavChangeFormID;
     if Assigned(lMenuItem) then
@@ -4713,6 +4759,8 @@ begin
       SetKeyboardState(lState);
     end;
     lLines.Add('call' + #9 + 'shift ' + BoolToStr(GetKeyState(VK_SHIFT) < 0, True));
+    if xeTestSwitches.FileLists <> '' then
+      TestWriteFileLists;
     TestHost.TestChangeFormIDMessages := mmoMessages.Lines.Count;
 
     TestHost.TestChangeFormIDAnswer := TTimer.Create(Self);
@@ -4733,6 +4781,14 @@ begin
           mniNavCleanupInjectedClick(lMenuItem)
         else if lMenuItem = mniNavLocalizationSwitch then
           mniNavLocalizationSwitchClick(lMenuItem)
+        else if lMenuItem = mniNavSetVWDAuto then
+          mniNavSetVWDAutoClick(lMenuItem)
+        else if lMenuItem = mniNavSetVWDAutoInto then
+          mniNavSetVWDAutoIntoClick(lMenuItem)
+        else if lMenuItem = mniNavCopyIdle then
+          mniNavCopyIdleClick(lMenuItem)
+        else if lMenuItem = mniViewCopyMultipleToSelectedRecords then
+          mniViewCopyMultipleToSelectedRecordsClick(lMenuItem)
         else if not Assigned(lMenuItem) then
           TestChangeFormIDLocView(lLines)
         else
@@ -4973,13 +5029,15 @@ begin
   lResult := mrNone;
   if lForm is TfrmModuleSelect then begin
     lExtra := 'offered: ' + string.Join(' | ', TfrmModuleSelect(lForm).AllModules.ToStrings(False));
-    var lOffered := False;
-    if Assigned(TestHost.TestChangeFormIDTarget) then
-      for var lInfo in TfrmModuleSelect(lForm).AllModules do
+    var lOffered: PwbModuleInfo := nil;
+    for var lInfo in TfrmModuleSelect(lForm).AllModules do
+      if Assigned(TestHost.TestChangeFormIDTarget) then begin
         if lInfo = PwbModuleInfo(TestHost.TestChangeFormIDTarget.ModuleInfo) then
-          lOffered := True;
-    if lOffered then begin
-      Include(PwbModuleInfo(TestHost.TestChangeFormIDTarget.ModuleInfo).miFlags, mfTagged);
+          lOffered := lInfo;
+      end else if SameText(xeTestSwitches.ChangeFormIDTarget, 'new') and (mfTemplate in lInfo.miFlags) and not Assigned(lOffered) then
+        lOffered := lInfo;
+    if Assigned(lOffered) then begin
+      Include(lOffered.miFlags, mfTagged);
       lResult := mrOk;
     end else begin
       TestHost.TestChangeFormIDNotOffered := True;
@@ -4987,7 +5045,8 @@ begin
     end;
   end else if lForm is TfrmFileSelect then begin
     lList := TfrmFileSelect(lForm).CheckListBox1;
-    if SameText(lForm.Caption, 'Please select records to update') then begin
+    if SameText(lForm.Caption, 'Please select records to update') or SameText(lForm.Caption, 'What subrecords do you want to copy?') or
+       SameText(lForm.Caption, 'Which records should this value be copied to?') then begin
       lExtra := ListItems;
       lToken := NextToken(xeTestSwitches.ChangeFormIDRefs, TestHost.TestChangeFormIDRefIndex);
       if lToken = '' then begin
@@ -5013,6 +5072,32 @@ begin
               lExtra := lExtra + ' index ' + lIndex + ' not checkable';
           end;
         lExtra := lExtra + ' listed answer ' + lToken;
+        lResult := mrOk;
+      end;
+    end else if SameText(lForm.Caption, 'Which Idles do you want to copy?') then begin
+      lExtra := 'items ' + IntToStr(lList.Count);
+      lToken := NextToken(xeTestSwitches.ChangeFormIDRefs, TestHost.TestChangeFormIDRefIndex);
+      if lToken = '' then begin
+        lResult := mrCancel;
+        lExtra := lExtra + ' fallback';
+        TestHost.TestChangeFormIDFallback := True;
+      end else if lToken = 'cancel' then begin
+        lResult := mrCancel;
+        lExtra := lExtra + ' listed answer cancel';
+      end else begin
+        lList.ItemIndex := -1;
+        if lToken <> 'none' then
+          for var lFolder in lToken.Split([';']) do begin
+            var lListed := False;
+            for var i := 0 to Pred(lList.Count) do
+              if SameText(lList.Items[i], lFolder) then begin
+                lList.Selected[i] := True;
+                lListed := True;
+              end;
+            if not lListed then
+              lExtra := lExtra + ' ' + lFolder + ' not listed';
+          end;
+        lExtra := lExtra + ' listed answer ' + lToken + ' selected ' + IntToStr(lList.ItemIndex);
         lResult := mrOk;
       end;
     end else begin
@@ -5052,6 +5137,44 @@ begin
     else
       lExtra := 'focused none';
     lResult := mrOk;
+  end else if SameText(lForm.Caption, 'Model Prefix') or SameText(lForm.Caption, 'New Module File') then begin
+    lEdit := FindEdit(lForm);
+    if Assigned(lEdit) then
+      lExtra := 'offered: ' + lEdit.Text;
+    lToken := NextToken(xeTestSwitches.ChangeFormIDIds, TestHost.TestChangeFormIDIdIndex);
+    if lToken = '' then begin
+      lResult := mrCancel;
+      lExtra := (lExtra + ' fallback').Trim;
+      TestHost.TestChangeFormIDFallback := True;
+    end else if lToken = 'cancel' then begin
+      lResult := mrCancel;
+      lExtra := (lExtra + ' listed answer cancel').Trim;
+    end else begin
+      if Assigned(lEdit) and (lToken <> 'offered') then
+        lEdit.Text := lToken;
+      if Assigned(lEdit) then
+        lExtra := lExtra + ' entered: ' + lEdit.Text;
+      lResult := mrOk;
+    end;
+  end else if SameText(xeTestSwitches.ChangeFormIDOp, 'copyidle') and string(lForm.Caption).StartsWith('EditorID ') then begin
+    lEdit := FindEdit(lForm);
+    if Assigned(lEdit) then
+      lExtra := 'offered: ' + lEdit.Text;
+    lToken := NextToken(xeTestSwitches.ChangeFormIDAnswers, TestHost.TestChangeFormIDAnswerIndex);
+    if lToken = '' then begin
+      lResult := mrCancel;
+      lExtra := (lExtra + ' fallback').Trim;
+      TestHost.TestChangeFormIDFallback := True;
+    end else if lToken = 'cancel' then begin
+      lResult := mrCancel;
+      lExtra := (lExtra + ' listed answer cancel').Trim;
+    end else begin
+      if Assigned(lEdit) and (lToken <> 'ok') then
+        lEdit.Text := lToken;
+      if Assigned(lEdit) then
+        lExtra := lExtra + ' entered: ' + lEdit.Text;
+      lResult := mrOk;
+    end;
   end else if string(lForm.Caption).StartsWith('New FormID') then begin
     lEdit := FindEdit(lForm);
     if Assigned(lEdit) then

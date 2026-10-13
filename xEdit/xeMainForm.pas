@@ -13,8 +13,6 @@ unit xeMainForm;
 interface
 
 uses
-  VirtualTrees.BaseTree,
-  VirtualTrees.Types,
   System.Actions,
   System.Generics.Collections,
   System.Generics.Defaults,
@@ -48,6 +46,8 @@ uses
   VirtualTrees,
   VirtualTrees.AncestorVCL,
   VirtualTrees.BaseAncestorVCL,
+  VirtualTrees.BaseTree,
+  VirtualTrees.Types,
   VirtualEditTree,
 
   wbDataFormat,
@@ -3146,21 +3146,8 @@ end;
 
 procedure TfrmMain.mniNavCopyIdleClick(Sender: TObject);
 var
-  i, j, k        : Integer;
-  Container      : IwbContainerElementRef;
-  MainRecord     : IwbMainRecord;
-  MainRecords    : TDynMainRecords;
-  s              : string;
-  sl             : TwbFastStringListIC;
-  List           : TList;
-  OldElements    : TDynElements;
-  NewElements    : TDynElements;
-  OldModelPrefix : string;
+  lGroups        : TwbIdleModelGroups;
   NewModelPrefix : string;
-  OldFormIDs     : TwbFormIDs;
-  NewFormIDs     : TwbFormIDs;
-  OldMainRecord  : IwbMainRecord;
-  NewMainRecord  : IwbMainRecord;
 begin
   if not xeContext.Settings.EditAllowed then
     Exit;
@@ -3170,92 +3157,31 @@ begin
   if not EditWarn then
     Exit;
 
-  ResetAllTags;
+  lGroups := xeContext.IdleModelGroups;
 
-  sl := TwbFastStringListIC.CreateSorted;
-  try
-    for i := Low(Files) to High(Files) do
-      if Supports(Files[i].GroupBySignature['IDLE'], IwbContainerElementRef, Container) then begin
-        for j := 0 to Pred(Container.ElementCount) do
-          if Supports(Container.Elements[j], IwbMainRecord, MainRecord) then begin
-            MainRecord := MainRecord.WinningOverride;
-            if not MainRecord.IsTagged then begin
-              MainRecord.Tag;
-              s := Trim(LowerCase((MainRecord.ElementEditValues['MODL\MODL'])));
-              if ExtractFileExt(s) <> '' then
-                s := ExtractFilePath(s);
-              s := ExcludeTrailingPathDelimiter(s);
+  with TfrmFileSelect.Create(nil) do try
 
-              if not sl.Find(s, k) then
-                k := sl.AddObject(s, TList.Create);
+    for var lGroup in lGroups do
+      CheckListBox1.Items.Add(lGroup.Prefix);
+    Caption := 'Which Idles do you want to copy?';
 
-              TList(sl.Objects[k]).Add(Pointer(MainRecord));
+    if ShowModal <> mrOK then
+      Exit;
 
-              SetLength(MainRecords, Succ(Length(MainRecords)));
-              MainRecords[High(MainRecords)] := MainRecord;
-            end;
-          end;
-      end;
+    for var i := 0 to Pred(CheckListBox1.Items.Count) do
+      if CheckListBox1.Selected[i] then begin
+        NewModelPrefix := lGroups[i].Prefix;
 
-      with TfrmFileSelect.Create(nil) do try
+        repeat
+          if not InputQuery('Model Prefix', 'Please change the model prefix', NewModelPrefix) then
+            Exit;
+        until not SameText(lGroups[i].Prefix, NewModelPrefix);
 
-        CheckListBox1.Items.Assign(sl);
-        Caption := 'Which Idles do you want to copy?';
-
-        if ShowModal <> mrOK then
+        if not lGroups[i].RetargetCopies(CopyInto(True, False, False, True, False, lGroups[i].Records), NewModelPrefix) then
           Exit;
-
-        for i := 0 to Pred(CheckListBox1.Items.Count) do
-          if CheckListBox1.Selected[i] then begin
-            List := CheckListBox1.Items.Objects[i] as TList;
-            SetLength(OldElements, List.Count);
-            for j := 0 to Pred(List.Count) do
-              Supports(IInterface(List[j]), IwbElement, OldElements[j]);
-
-            OldModelPrefix := CheckListBox1.Items[i];
-            NewModelPrefix := OldModelPrefix;
-
-            repeat
-              if not InputQuery('Model Prefix', 'Please change the model prefix', NewModelPrefix) then
-                Exit;
-            until not SameText(OldModelPrefix, NewModelPrefix);
-
-            NewElements := CopyInto(True, False, False, True, False, OldElements);
-            Assert(Length(NewElements) = Length(OldElements));
-
-            SetLength(OldFormIDs, Length(NewElements));
-            SetLength(NewFormIDs, Length(NewElements));
-
-            for j := Low(NewElements) to High(NewElements) do begin
-              if not Supports(OldElements[j], IwbMainRecord, OldMainRecord) then
-                Assert(False);
-              if not Supports(NewElements[j], IwbMainRecord, NewMainRecord) then
-                Assert(False);
-
-              OldFormIDs[j] := OldMainRecord.LoadOrderFormID;
-              NewFormIDs[j] := NewMainRecord.LoadOrderFormID;
-            end;
-
-            for j := Low(NewElements) to High(NewElements) do begin
-              if not Supports(NewElements[j], IwbMainRecord, NewMainRecord) then
-                Assert(False);
-
-              s := Trim(LowerCase((NewMainRecord.ElementValues['MODL\MODL'])));
-              s := NewModelPrefix + Copy(s, Succ(Length(OldModelPrefix)), High(Integer));
-              NewMainRecord.ElementEditValues['MODL\MODL'] := s;
-
-              for k := Low(OldFormIDs) to High(OldFormIDs) do
-                NewMainRecord.CompareExchangeFormID(OldFormIDs[k], NewFormIDs[k]);
-            end;
-          end;
-      finally
-        Free;
       end;
-
   finally
-    for i := 0 to Pred(sl.Count) do
-      sl.Objects[i].Free;
-    sl.Free;
+    Free;
   end;
 end;
 
@@ -5458,15 +5384,21 @@ begin
   if Assigned(CheckGitHubReleaseThread) then begin
     if CheckGitHubReleaseThread.Finished then
       FreeAndNil(CheckGitHubReleaseThread)
-    else
-      TerminateThread(CheckGitHubReleaseThread.Handle, 0);
+    else begin
+      CheckGitHubReleaseThread.FreeOnTerminate := True;
+      CheckGitHubReleaseThread.Terminate;
+      CheckGitHubReleaseThread := nil;
+    end;
   end;
 
   if Assigned(CheckNexusModsReleaseThread) then begin
     if CheckNexusModsReleaseThread.Finished then
       FreeAndNil(CheckNexusModsReleaseThread)
-    else
-      TerminateThread(CheckNexusModsReleaseThread.Handle, 0);
+    else begin
+      CheckNexusModsReleaseThread.FreeOnTerminate := True;
+      CheckNexusModsReleaseThread.Terminate;
+      CheckNexusModsReleaseThread := nil;
+    end;
   end;
 
   if not QuickCleanSaveFailed and (SaveChanged >= srAbort) then begin
@@ -6914,18 +6846,14 @@ end;
 
 procedure TfrmMain.mniViewCopyMultipleToSelectedRecordsClick(Sender: TObject);
 var
-  AllRows                     : array of TArray<IwbElement>;
-  NodeDatas                   : PViewNodeDatas;
+  lPlan                       : TwbRowCopyPlan;
   NodeData                    : PNavNodeData;
-  Element                     : IwbElement;
-  Names                       : array of string;
-  MainRecords                 : array of IwbMainRecord;
-  MainRecordIndices           : array of Integer;
-  SourceMainRecord            : IwbMainRecord;
-  TargetMainRecord            : IwbMainRecord;
+  MainRecord                  : IwbMainRecord;
+  MainRecords                 : TDynMainRecords;
+  CheckedTargets              : TDynMainRecords;
   SelectedNodes               : TNodeArray;
-  i, j, k                     : Integer;
-  Node                        : PVirtualNode;
+  AnySelected                 : Boolean;
+  i                           : Integer;
   Column                      : Integer;
 begin
   if not xeContext.Settings.EditAllowed then
@@ -6935,51 +6863,21 @@ begin
   if (Column < 0) or (Column > High(ActiveRecords)) then
     Exit;
 
-  SourceMainRecord := nil;
-  SetLength(AllRows, 0);
-  SetLength(Names, 0);
-  for Node in vstView.LevelNodes(0) do begin
-    NodeDatas := ViewCells(Node);
-    if Assigned(NodeDatas) then begin
-      Element := NodeDatas[Column].Element;
-      if Assigned(Element) and not Assigned(SourceMainRecord) then
-        SourceMainRecord := Element.ContainingMainRecord;
-      if not Assigned(Element) then
-        for i := Low(ActiveRecords) to High(ActiveRecords) do begin
-          Element := NodeDatas[i].Element;
-          if Assigned(Element) then
-            Break;
-        end;
-
-      if Assigned(Element) and (Element.Name <> 'Record Header') and not Element.Name.StartsWith('EDID') then begin
-        var lRow: TArray<IwbElement>;
-        SetLength(lRow, Length(ActiveRecords));
-        for i := Low(lRow) to High(lRow) do
-          lRow[i] := NodeDatas[i].Element;
-        AllRows := AllRows + [lRow];
-        Names := Names + [Element.Name];
-      end;
-    end;
-  end;
-  if Length(AllRows) < 1 then
+  if not Assigned(ViewTree) then
+    Exit;
+  lPlan := ViewTree.PlanRowCopy(Column);
+  if Length(lPlan.Rows) < 1 then
     Exit;
 
   SelectedNodes := vstNav.GetSortedSelection(True);
   if Length(SelectedNodes) < 2 then
     Exit;
-  SetLength(MainRecords, Length(SelectedNodes));
-  SetLength(MainRecordIndices, Length(SelectedNodes));
-  j := 0;
   for i := Low(SelectedNodes) to High(SelectedNodes) do begin
     NodeData := vstNav.GetNodeData(SelectedNodes[i]);
-    if Assigned(NodeData) and not SourceMainRecord.Equals(NodeData.Element) and
-      Supports(NodeData.Element, IwbMainRecord, MainRecords[j]) then begin
-        MainRecordIndices[j] := i;
-        Inc(j);
-      end;
+    if Assigned(NodeData) and Supports(NodeData.Element, IwbMainRecord, MainRecord) then
+      MainRecords := MainRecords + [MainRecord];
   end;
-  SetLength(MainRecords, j);
-  SetLength(MainRecordIndices, j);
+  MainRecords := lPlan.Targets(MainRecords);
   if Length(MainRecords) < 1 then
     Exit;
 
@@ -6987,27 +6885,23 @@ begin
 
     Caption := 'What subrecords do you want to copy?';
 
-    for i := Low(AllRows) to High(AllRows) do begin
-      CheckListBox1.AddItem(Names[i], nil);
+    for i := Low(lPlan.Rows) to High(lPlan.Rows) do begin
+      CheckListBox1.AddItem(lPlan.Rows[i].Name, nil);
       CheckListBox1.Checked[Pred(CheckListBox1.Items.Count)] := True;
     end;
 
     if ShowModal <> mrOk then
       Exit;
 
-    j := 0;
-    for i := 0 to Pred(CheckListBox1.Items.Count) do
-      if CheckListBox1.Checked[i] then begin
-        if j <> i then
-          AllRows[j] := AllRows[i];
-        Inc(j);
-      end;
-    SetLength(AllRows, j);
-    Names := nil; //not valid anymore
+    AnySelected := False;
+    for i := 0 to Pred(CheckListBox1.Items.Count) do begin
+      lPlan.Rows[i].Selected := CheckListBox1.Checked[i];
+      AnySelected := AnySelected or lPlan.Rows[i].Selected;
+    end;
   finally
     Free;
   end;
-  if Length(AllRows) < 1 then
+  if not AnySelected then
     Exit;
 
   with TfrmFileSelect.Create(Self) do try
@@ -7022,45 +6916,17 @@ begin
     if ShowModal <> mrOk then
       Exit;
 
+    for i := Low(MainRecords) to High(MainRecords) do
+      if CheckListBox1.Checked[i] then
+        CheckedTargets := CheckedTargets + [MainRecords[i]];
+
     LockProcessMessages;
     try
-      for j := Low(AllRows) to High(AllRows) do begin
-        Element := AllRows[j][Column];
-        if Assigned(Element) then begin
-          for i := Low(MainRecords) to High(MainRecords) do begin
-            if CheckListBox1.Checked[i] then begin
-              if not EditWarn then
-                Exit;
-
-              MainRecords[i].AddCopy(Element, [cfDeepCopy])
-            end;
-          end;
-        end else begin
-          for k := Low(MainRecords) to High(MainRecords) do begin
-            if CheckListBox1.Checked[k] then begin
-              for i := Low(AllRows[j]) to High(AllRows[j]) do begin
-                Element := AllRows[j][i];
-                if Assigned(Element) then begin
-                  TargetMainRecord := Element.ContainingMainRecord;
-                  if Assigned(TargetMainRecord) and MainRecords[k].Equals(TargetMainRecord) then begin
-                    if Element.IsRemovable then begin
-                      if not EditWarn then
-                        Exit;
-                      Element.Remove;
-                      Element := nil;
-                      AllRows[j][i] := nil;
-                    end;
-                    Break;
-                  end;
-                end;
-              end;
-            end;
-          end;
-        end;
-      end;
-      for i := Low(MainRecords) to High(MainRecords) do
-        if CheckListBox1.Checked[i] then
-          MainRecords[i].UpdateRefs;
+      lPlan.Apply(CheckedTargets,
+        function: Boolean
+        begin
+          Result := EditWarn;
+        end);
     finally
       for i := Low(SelectedNodes) to High(SelectedNodes) do
         vstNav.IterateSubtree(SelectedNodes[i], ClearConflict, nil);
@@ -9519,28 +9385,6 @@ begin
   InvalidateElementsTreeView(NoNodes);
 end;
 
-function IsExterior(aElement: IwbElement): Boolean;
-var
-  GroupRecord: IwbGroupRecord;
-begin
-  Result := False;
-  if not Assigned(aElement) then
-    Exit;
-  if Supports(aElement, IwbGroupRecord, GroupRecord) then
-    case GroupRecord.GroupType of
-      0: begin
-        Result := TwbSignature(GroupRecord.GroupLabel) = 'WRLD';
-        Exit;
-      end;
-      1, 4, 5: begin
-        Result := True;
-        Exit;
-      end;
-      2, 3: Exit;
-    end;
-  Result := IsExterior(aElement.Container);
-end;
-
 procedure TfrmMain.mniNavSetVWDAutoClick(Sender: TObject);
 const
   sJustWait                   = 'Setting VWD for all REFR with VWD Mesh. Please wait...';
@@ -9549,8 +9393,6 @@ var
   StartNode, Node, NextNode   : PVirtualNode;
   NodeData                    : PNavNodeData;
   MainRecord                  : IwbMainRecord;
-  MainRecord2                 : IwbMainRecord;
-  NameRec                     : IwbContainerElementRef;
   Count                       : Cardinal;
   ChangeCount                 : Cardinal;
   StartTick                   : UInt64;
@@ -9593,22 +9435,13 @@ begin
         NodeData := vstNav.GetNodeData(Node);
 
         if Supports(NodeData.Element, IwbMainRecord, MainRecord) and
-          (MainRecord.Signature = 'REFR') and
-          not MainRecord.IsVisibleWhenDistant and
-          IsExterior(MainRecord) and
-          Supports(MainRecord.RecordBySignature['NAME'], IwbContainerElementRef, NameRec) and
-          Supports(NameRec.LinksTo, IwbMainRecord, MainRecord2) and
-          MainRecord2.HasVisibleWhenDistantMesh then begin
-
-          if not MainRecord.IsEditable then
-            AddMessage('Can''t change: ' + MainRecord.Name)
-          else begin
-            AddMessage('Setting VWD: ' + MainRecord.Name);
-            MainRecord.IsVisibleWhenDistant := True;
-            Inc(ChangeCount);
-            vstNav.DeleteNode(Node);
-          end;
-
+          MainRecord.ApplyNeededVisibleWhenDistant(
+            procedure(aMessage: string)
+            begin
+              AddMessage(aMessage);
+            end) then begin
+          Inc(ChangeCount);
+          vstNav.DeleteNode(Node);
         end;
 
         Node := NextNode;
@@ -9639,14 +9472,6 @@ begin
   end;
 end;
 
-procedure SetVWDCallback(const aElement: IwbElement);
-var
-  MainRecord: IwbMainRecord;
-begin
-  if Supports(aElement, IwbMainRecord, MainRecord) then
-    MainRecord.IsVisibleWhenDistant := True;
-end;
-
 procedure TfrmMain.mniNavSetVWDAutoIntoClick(Sender: TObject);
 const
   sJustWaitScan               = 'Scanning for REFR without VWD Flag but with VWD Mesh';
@@ -9655,9 +9480,7 @@ var
   StartNode, Node, NextNode   : PVirtualNode;
   NodeData                    : PNavNodeData;
   MainRecord                  : IwbMainRecord;
-  MainRecord2                 : IwbMainRecord;
-  NameRec                     : IwbContainerElementRef;
-  Elements                    : TDynElements;
+  Records                     : TDynMainRecords;
 begin
   if not xeContext.Settings.EditAllowed then
     Exit;
@@ -9681,8 +9504,8 @@ begin
       i, j : Integer;
     begin
       j := 0;
-      Elements := nil;
-      SetLength(Elements, 1024);
+      Records := nil;
+      SetLength(Records, 1024);
       try
         for i := Low(Selection) to High(Selection) do begin
           StartNode := Selection[i];
@@ -9695,15 +9518,12 @@ begin
             NextNode := vstNav.GetPrevious(Node);
             NodeData := vstNav.GetNodeData(Node);
 
-            if Supports(NodeData.Element, IwbMainRecord, MainRecord) and
-              (MainRecord.Signature = 'REFR') and IsExterior(MainRecord) then begin
-
-                if j > High(Elements) then
-                  SetLength(Elements, Length(Elements)*2);
-                Elements[j] := MainRecord;
-                Inc(j);
-
-              end;
+            if Supports(NodeData.Element, IwbMainRecord, MainRecord) then begin
+              if j > High(Records) then
+                SetLength(Records, Length(Records)*2);
+              Records[j] := MainRecord;
+              Inc(j);
+            end;
 
             Node := NextNode;
             if Node = StartNode then
@@ -9715,47 +9535,15 @@ begin
         UpdatePnlCancelVisible;
       end;
 
-      SetLength(Elements, j);
+      SetLength(Records, j);
 
-      if Length(Elements) > 1 then begin
-        wbMergeSortPtr(@Elements[0], Length(Elements), CompareElementsFormIDAndLoadOrder);
-
-        j := 0;
-        for i := Succ(Low(Elements)) to High(Elements) do begin
-          if (Elements[j] as IwbMainRecord).LoadOrderFormID <> (Elements[i] as IwbMainRecord).LoadOrderFormID then
-            Inc(j);
-          if j <> i then
-            Elements[j] := Elements[i];
-        end;
-        SetLength(Elements, Succ(j));
-      end;
-
-      if Length(Elements) > 0 then begin
-
-        j := 0;
-        for i := Low(Elements) to High(Elements) do begin
-          MainRecord := Elements[i] as IwbMainRecord;
-          if not MainRecord.IsVisibleWhenDistant and
-            Supports(MainRecord.RecordBySignature['NAME'], IwbContainerElementRef, NameRec) and
-            Supports(NameRec.LinksTo, IwbMainRecord, MainRecord2) and
-            MainRecord2.HasVisibleWhenDistantMesh then begin
-
-            if MainRecord.HasErrors then
-              AddMessage('[Setting VWD for all REFR with VWD Mesh] Skipping: ' + MainRecord.Name)
-            else begin
-              if j <> i then
-                Elements[j] := Elements[i];
-              Inc(j);
-            end;
-
-          end;
-        end;
-        SetLength(Elements, j);
-
-      end;
-
-      if Length(Elements) > 0 then
-        CopyInto(False, False, False, False, False, Elements, SetVWDCallback);
+      var lPlan := TwbVisibleWhenDistantCopyPlan.Plan(Records,
+        procedure(aMessage: string)
+        begin
+          AddMessage('[Setting VWD for all REFR with VWD Mesh] ' + aMessage);
+        end);
+      if Length(lPlan.Records) > 0 then
+        CopyInto(False, False, False, False, False, lPlan.Records, TwbVisibleWhenDistantCopyPlan.AfterCopy);
     end);
 
     vstNav.Invalidate;
@@ -20617,8 +20405,10 @@ begin
       J.Free;
     end;
   except end;
+  if Terminated then
+    Exit;
   Synchronize(procedure begin
-    if Assigned(frmMain) then begin
+    if Assigned(frmMain) and not Terminated then begin
       frmMain.GitHubVersion := vmax;
       frmMain.ShowGitHubHint := Now + (1/24/60/6); // 10 seconds
     end;
@@ -20656,8 +20446,10 @@ begin
       end;
     end;
   except end;
+  if Terminated then
+    Exit;
   Synchronize(procedure begin
-    if Assigned(frmMain) then begin
+    if Assigned(frmMain) and not Terminated then begin
       frmMain.NexusModsVersion := vmax;
       frmMain.ShowNexusModsHint := Now + (1/24/60/6); // 10 seconds
     end;

@@ -3,6 +3,7 @@ unit wbConflict;
 interface
 
 uses
+  System.SysUtils,
   System.Generics.Collections,
   wbHash,
   wbInterface;
@@ -61,6 +62,20 @@ type
     property AlignArrayLimit: Integer read cvAlignArrayLimit write SetAlignArrayLimit;
     property Hidden: TwbHiddenSet read cvHidden;
     property Epoch: Cardinal read GetEpoch;
+  end;
+
+  TwbRowCopyRow = record
+    Name     : string;
+    Cells    : TDynElements;
+    Selected : Boolean;
+  end;
+
+  TwbRowCopyPlan = record
+    Column : Integer;
+    Source : IwbMainRecord;
+    Rows   : TArray<TwbRowCopyRow>;
+    function Targets(const aRecords: TDynMainRecords): TDynMainRecords;
+    function Apply(const aTargets: TDynMainRecords; const aCanEdit: TFunc<Boolean>): Boolean;
   end;
 
   TwbConflictTreeNode = class
@@ -125,6 +140,7 @@ type
     function IsStale: Boolean;
     procedure Resolve(aHideNoConflict: Boolean = False);
     function NodeFor(const aElement: IwbElement; out aColumn: Integer): TwbConflictTreeNode;
+    function PlanRowCopy(aColumn: Integer): TwbRowCopyPlan;
     property View: TwbConflictView read ctView;
     property Root: TwbConflictTreeNode read ctRoot;
     property SiblingCompare: Boolean read ctSiblingCompare;
@@ -232,7 +248,6 @@ procedure wbReportDirtyInfos(const aInfos: TwbDirtyInfos; aGameDef: TwbGameDef; 
 implementation
 
 uses
-  System.SysUtils,
   System.Classes,
   System.Math,
   wbBetterStringList,
@@ -2632,6 +2647,86 @@ begin
     lNode := lNode.Children[lFound];
   end;
   Result := lNode;
+end;
+
+function TwbConflictTree.PlanRowCopy(aColumn: Integer): TwbRowCopyPlan;
+var
+  lDatas   : TwbDynConflictNodeDatas;
+  lElement : IwbElement;
+  lRow     : TwbRowCopyRow;
+begin
+  Result := Default(TwbRowCopyPlan);
+  Result.Column := aColumn;
+  for var i := 0 to Pred(ctRoot.ChildCount) do begin
+    lDatas := ctRoot.Children[i].Datas;
+    lElement := lDatas[aColumn].Element;
+    if Assigned(lElement) and not Assigned(Result.Source) then
+      Result.Source := lElement.ContainingMainRecord;
+    if not Assigned(lElement) then
+      for var c := Low(lDatas) to High(lDatas) do begin
+        lElement := lDatas[c].Element;
+        if Assigned(lElement) then
+          Break;
+      end;
+    if Assigned(lElement) and (lElement.Name <> 'Record Header') and not lElement.Name.StartsWith('EDID') then begin
+      lRow := Default(TwbRowCopyRow);
+      lRow.Name := lElement.Name;
+      SetLength(lRow.Cells, Length(lDatas));
+      for var c := Low(lDatas) to High(lDatas) do
+        lRow.Cells[c] := lDatas[c].Element;
+      lRow.Selected := True;
+      Result.Rows := Result.Rows + [lRow];
+    end;
+  end;
+end;
+
+{ TwbRowCopyPlan }
+
+function TwbRowCopyPlan.Targets(const aRecords: TDynMainRecords): TDynMainRecords;
+begin
+  Result := nil;
+  for var lRecord in aRecords do
+    if not Source.Equals(lRecord) then
+      Result := Result + [lRecord];
+end;
+
+function TwbRowCopyPlan.Apply(const aTargets: TDynMainRecords; const aCanEdit: TFunc<Boolean>): Boolean;
+var
+  lCells  : TDynElements;
+  lCell   : IwbElement;
+  lHolder : IwbMainRecord;
+begin
+  Result := False;
+  for var lRow in Rows do
+    if lRow.Selected then begin
+      lCells := Copy(lRow.Cells);
+      if Assigned(lCells[Column]) then begin
+        for var lTarget in aTargets do begin
+          if Assigned(aCanEdit) and not aCanEdit() then
+            Exit;
+          lTarget.AddCopy(lCells[Column], [cfDeepCopy]);
+        end;
+      end else
+        for var lTarget in aTargets do
+          for var c := Low(lCells) to High(lCells) do begin
+            lCell := lCells[c];
+            if Assigned(lCell) then begin
+              lHolder := lCell.ContainingMainRecord;
+              if Assigned(lHolder) and lTarget.Equals(lHolder) then begin
+                if lCell.IsRemovable then begin
+                  if Assigned(aCanEdit) and not aCanEdit() then
+                    Exit;
+                  lCell.Remove;
+                  lCells[c] := nil;
+                end;
+                Break;
+              end;
+            end;
+          end;
+    end;
+  for var lTarget in aTargets do
+    lTarget.UpdateRefs;
+  Result := True;
 end;
 
 end.

@@ -592,11 +592,20 @@ begin
        not wbFindCmdLineParam('testchangeformidout', ChangeFormIDOut) or (ChangeFormIDOut = '') or
        not (SameText(ChangeFormIDOp, 'changeformid') or SameText(ChangeFormIDOp, 'changerefs') or
             SameText(ChangeFormIDOp, 'batchrefs') or SameText(ChangeFormIDOp, 'cleanupinjected') or
-            SameText(ChangeFormIDOp, 'localize') or SameText(ChangeFormIDOp, 'locview')) or
+            SameText(ChangeFormIDOp, 'localize') or SameText(ChangeFormIDOp, 'locview') or
+            SameText(ChangeFormIDOp, 'setvwd') or SameText(ChangeFormIDOp, 'setvwdinto') or
+            SameText(ChangeFormIDOp, 'copyidle') or SameText(ChangeFormIDOp, 'copyrows')) or
+       (SameText(ChangeFormIDOp, 'copyrows') and (ChangeFormIDView = '')) or
        ((SameText(ChangeFormIDOp, 'batchrefs') or SameText(ChangeFormIDOp, 'localize')) and (ChangeFormIDTarget = '')) then begin
       ShowMessage('testchangeformid requires -testchangeformid:<filename> -testchangeformidrecords:<EditorID>@<module>[,...] ' +
-        '-testchangeformidout:<folder> [-testchangeformidop:<changeformid|changerefs|batchrefs|cleanupinjected|localize|locview>] ' +
-        '[-testchangeformidshift] [-testchangeformidtarget:<module>] (batchrefs, localize: the file focused) ' +
+        '(setvwd, setvwdinto: also @<module>, the file''s node) -testchangeformidout:<folder> ' +
+        '[-testchangeformidop:<changeformid|changerefs|batchrefs|cleanupinjected|localize|locview|setvwd|setvwdinto|copyidle|copyrows>] ' +
+        '(copyrows: the records compared in the view, the source column the record -testchangeformidview names; the subrecord ' +
+        'and target lists answered with the next two of -testchangeformidrefs) ' +
+        '(copyidle: the idle list answered with the next of -testchangeformidrefs, listed folders joined by ;, none or cancel; the model ' +
+        'prefix prompt with the next of -testchangeformidids) ' +
+        '[-testchangeformidshift] [-testchangeformidtarget:<module|new>] (batchrefs, localize: the file focused; new: the ' +
+        'picker''s first <new file> template, its name prompt answered with the next of -testchangeformidids) ' +
         '[-testchangeformidids:<hex|empty|offered|cancel>[,...]] ' +
         '[-testchangeformidanswers:<yes|no|yesall|cancel|ok|translate:<from>:<to>>[,...]] ' +
         '[-testchangeformidrefs:<all|none|cancel|<index>[;<index>...]>[,...]] [-testchangeformidcsv:<file|cancel>] ' +

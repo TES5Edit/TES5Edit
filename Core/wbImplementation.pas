@@ -46,6 +46,7 @@ type
     procedure SaveFailed(const aText: string; const aAlert: TwbSaveMessageProc);
     function RenameSaved(const aFrom, aTo: string; const aAlert: TwbSaveMessageProc): Boolean;
     function BackupSaved(const aFrom: string; const aAlert: TwbSaveMessageProc): Boolean;
+    function NewSaveStream(const aFileName: string): TStream; virtual;
   public
     destructor Destroy; override; final;
     procedure AllocateDenseIDs(const aRecords: TDynMainRecords); override; final;
@@ -271,6 +272,9 @@ type
     eSummaryLinksTo    : IwbElement;
 
     eReportMastersGen  : Cardinal;
+
+    procedure PinContainer;
+    procedure UnpinContainer;
 
     {---IInterface---}
     function _AddRef: Integer; virtual; stdcall;
@@ -1292,6 +1296,7 @@ type
     function mrStruct: PwbMainRecordStruct; inline;
 
     procedure mrInvalidateNameCache;
+    procedure SortOverrides;
 
     procedure ElementChanged(const aElement: IwbElement; aContainer: Pointer); override; final;
     function RemoveElement(aPos: Integer; aMarkModified: Boolean = False): IwbElement; overload; override; final;
@@ -1451,6 +1456,9 @@ type
     function GetIsVisibleWhenDistant: Boolean;
     procedure SetIsVisibleWhenDistant(aValue: Boolean);
     function GetHasVisibleWhenDistantMesh: Boolean;
+    function GetIsInExterior: Boolean;
+    function GetNeedsVisibleWhenDistant: Boolean;
+    function ApplyNeededVisibleWhenDistant(const aReport: TProc<string>): Boolean;
     function GetHasMesh: Boolean;
     function GetHasPrecombinedMesh: Boolean;
     function GetPrecombinedMesh: string;
@@ -11658,16 +11666,9 @@ begin
       Exit;
   end;
 
-  if GetIsPartialForm then begin
-    var lHasSignature: IwbHasSignature;
-    if Supports(aElement, IwbHasSignature, lHasSignature) and
-       Assigned(mrDef) and
-       (mrDef.KnownSubRecordSignatures[ksrEditorID] = lHasSignature.Signature)
-    then begin
-      //allow EDID for partial forms
-    end else
+  if GetIsPartialForm then
+    if not (Assigned(aElement.Def) and (dfKeepInPartialForm in aElement.Def.DefFlags)) then
       Exit;
-  end;
 
   if Assigned(mrDef) then begin
 
@@ -11813,13 +11814,10 @@ begin
     if aIndex <> wbAssignThis then begin
       var lPartialShouldExit := True;
       if Assigned(mrDef) then begin
-        lPartialShouldExit := mrDef.KnownSubRecordMemberIndex[ksrEditorID] <> aIndex;
+        lPartialShouldExit := not ((aIndex >= 0) and (aIndex < mrDef.MemberCount) and (dfKeepInPartialForm in mrDef.Members[aIndex].DefFlags));
 
-        if not lPartialShouldExit and Assigned(aElement) then begin
-          var lHasSignature: IwbHasSignature;
-          if Supports(aElement, IwbHasSignature, lHasSignature) then
-            lPartialShouldExit := mrDef.KnownSubRecordSignatures[ksrEditorID] <> lHasSignature.Signature;
-        end;
+        if not lPartialShouldExit and Assigned(aElement) and Supports(aElement, IwbHasSignature) then
+          lPartialShouldExit := not (Assigned(aElement.Def) and (dfKeepInPartialForm in aElement.Def.DefFlags));
 
         if lPartialShouldExit and (lContext.Settings.FillINOM or lContext.Settings.FillINOA) and (GetSignature = 'DIAL') then begin
           var lDIALMember := mrDef.Members[aIndex];
@@ -11890,6 +11888,9 @@ begin
             if Assigned(Element.Def) and (dfNoCopyAsOverride in Element.Def.DefFlags) then
               if GetMasterOrSelf.Equals(Element.ContainingMainRecord.MasterOrSelf) then
                 Continue;
+            if (TObject(Element.ElementID) is TwbContainedInElement) and
+               not GetMasterOrSelf.Equals(Element.ContainingMainRecord.MasterOrSelf) then
+              Continue;
             Assign(Element.SortOrder, Element, aOnlySK);
           end;
         end else begin
@@ -12491,16 +12492,9 @@ begin
     end;
 
   if GetIsPartialForm then
-    if aIndex <> wbAssignThis then begin
-      var lHasSignature: IwbHasSignature;
-      if Supports(aElement, IwbHasSignature, lHasSignature) and
-         Assigned(mrDef) and
-         (mrDef.KnownSubRecordSignatures[ksrEditorID] = lHasSignature.Signature)
-      then begin
-        //allow EDID for partial forms
-      end else
+    if aIndex <> wbAssignThis then
+      if not (Supports(aElement, IwbHasSignature) and Assigned(aElement.Def) and (dfKeepInPartialForm in aElement.Def.DefFlags)) then
         Exit;
-    end;
 
   if Assigned(eContainer) then
     if not IwbContainer(eContainer).IsElementEditable(Self) then
@@ -13895,7 +13889,7 @@ begin
       Element := cntElements[i];
       Def := Element.Def;
       if Assigned(Def) then begin
-        if Supports(Def, IwbSignatureDef, SigDef) and (mrDef.KnownSubRecordSignatures[ksrEditorID] = SigDef.DefaultSignature) then
+        if dfKeepInPartialForm in Def.DefFlags then
           Continue;
         if dfDontSave in Def.DefFlags then
           Continue;
@@ -14715,6 +14709,54 @@ begin
   Result := mrsHasVWDMesh in mrStates;
 end;
 
+function TwbMainRecord.GetIsInExterior: Boolean;
+var
+  lContainer : IwbContainer;
+  lGroup     : IwbGroupRecord;
+begin
+  lContainer := GetContainer;
+  while Assigned(lContainer) do begin
+    if Supports(lContainer, IwbGroupRecord, lGroup) then
+      case lGroup.GroupType of
+        0: Exit(TwbSignature(lGroup.GroupLabel) = 'WRLD');
+        1, 4, 5: Exit(True);
+        2, 3: Exit(False);
+      end;
+    lContainer := lContainer.Container;
+  end;
+  Result := False;
+end;
+
+function TwbMainRecord.GetNeedsVisibleWhenDistant: Boolean;
+var
+  lName : IwbContainerElementRef;
+  lBase : IwbMainRecord;
+begin
+  var lRefHold: TRefGuard;
+  RefShortHold(lRefHold, Self);
+  Result := (GetSignature = 'REFR') and not GetIsVisibleWhenDistant and GetIsInExterior and
+    Supports(GetRecordBySignature('NAME'), IwbContainerElementRef, lName) and
+    Supports(lName.LinksTo, IwbMainRecord, lBase) and lBase.HasVisibleWhenDistantMesh;
+end;
+
+function TwbMainRecord.ApplyNeededVisibleWhenDistant(const aReport: TProc<string>): Boolean;
+begin
+  var lRefHold: TRefGuard;
+  RefShortHold(lRefHold, Self);
+  Result := False;
+  if not GetNeedsVisibleWhenDistant then
+    Exit;
+  if not GetIsEditable then begin
+    if Assigned(aReport) then
+      aReport('Can''t change: ' + GetName);
+    Exit;
+  end;
+  if Assigned(aReport) then
+    aReport('Setting VWD: ' + GetName);
+  SetIsVisibleWhenDistant(True);
+  Result := True;
+end;
+
 function TwbMainRecord.GetHighestOverrideOrSelf(aMaxLoadOrder: Integer): IwbMainRecord;
 var
   Master : IwbMainRecord;
@@ -14991,8 +15033,7 @@ begin
       lMasters.Sorted := True;
       lMasters.Duplicates := dupIgnore;
       try
-        if not (mrsOverridesSorted in mrStates) then
-          GetOverride(0); {forces sorting of overrides}
+        SortOverrides;
 
         for i := Low(mrOverrides) to High(mrOverrides) do begin
           _File := mrOverrides[i]._File;
@@ -15145,11 +15186,7 @@ begin
   if (aIndex < 0) or (aIndex >= Length(mrOverrides)) then
     Exit(nil);
 
-  if not (mrsOverridesSorted in mrStates) then begin
-    wbMergeSortPtr(@mrOverrides[0], Length(mrOverrides), CompareOverrides);
-    Include(mrStates, mrsOverridesSorted);
-  end;
-
+  SortOverrides;
   Result := mrOverrides[aIndex];
 end;
 
@@ -15486,6 +15523,7 @@ begin
 
   var lRefHold: TRefGuard;
   RefShortHold(lRefHold, Self);
+  SortOverrides;
   for var lIndex := High(mrOverrides) downto Low(mrOverrides) do begin
     var lOverride := mrOverrides[lIndex];
     if not lOverride.IsPartialForm then
@@ -15940,9 +15978,7 @@ end;
 
 procedure TwbMainRecord.MakePartialForm;
 var
-  SelfRef     : IwbContainerElementRef;
-  BasePtr     : Pointer;
-  GroupRecord : IwbGroupRecord;
+  SelfRef : IwbContainerElementRef;
 begin
   if not GetCanBePartial then
     Exit;
@@ -15952,40 +15988,24 @@ begin
 
   BeginUpdate;
   try
-    var lEditorID := GetEditorID;
-
     SetModified(True);
     InvalidateStorage;
-    ReleaseElements;
+    for var i := High(cntElements) downto GetAdditionalElementCount do begin
+      var lDef: IwbDef := cntElements[i].Def;
+      var lHasSignature: IwbHasSignature;
+      if not Assigned(lDef) and Supports(cntElements[i], IwbHasSignature, lHasSignature) then begin
+        var lIndex := mrDef.GetMemberIndexFor(Self, lHasSignature.Signature, nil);
+        if (lIndex >= 0) and (lIndex < mrDef.MemberCount) then
+          lDef := mrDef.Members[lIndex];
+      end;
+      if not (Assigned(lDef) and (dfKeepInPartialForm in lDef.DefFlags)) then
+        RemoveElement(i, True);
+    end;
 
     MakeHeaderWriteable;
     GetFlagsPtr.SetDeleted(False);
     GetFlagsPtr.SetPartialForm(True);
     GetFlagsPtr.SetCompressed(False);
-
-    if Supports(Self.GetContainer, IwbGroupRecord, GroupRecord) then
-      if ContextObj.Settings.CreateContainedIn and (GroupRecord.GroupType in [1, 4..10]) then
-        with TwbContainedInElement.Create(Self) do begin
-          _AddRef; _Release;
-        end;
-    GroupRecord := nil;
-
-    BasePtr := dcBasePtr;
-    with TwbRecordHeaderStruct.Create(Self, BasePtr, PByte(BasePtr) + GameDefObj.SizeOfMainRecordStruct, mrDef.RecordHeaderStruct, '') do begin
-      Include(dcFlags, dcfDontSave);
-      SetSortOrder(-1);
-      SetMemoryOrder(Low(Integer));
-      _AddRef; _Release;
-    end;
-
-    if lEditorID <> '' then begin
-      var lMemberIndex := mrDef.KnownSubRecordMemberIndex[ksrEditorID];
-      if lMemberIndex >= 0 then begin
-        var lBaseRecordElement := Assign(lMemberIndex, nil, False);
-        if Assigned(lBaseRecordElement) then
-          lBaseRecordElement.EditValue := lEditorID;
-      end;
-    end;
 
     CollapseStorage(nil, True);
   finally
@@ -17008,6 +17028,7 @@ begin
     (lMaster as IwbMainRecordInternal).RemoveOverride(Self)
   else
     if Length(mrOverrides) > 0 then begin
+      SortOverrides;
       lMaster := mrOverrides[0];
       (lMaster as IwbMainRecordInternal).YouAreTheMaster(mrOverrides, mrReferencedBy, mrReferencedByCount);
     end;
@@ -17785,8 +17806,10 @@ begin
     if Assigned(mrMaster) then
       (IwbMainRecord(mrMaster) as IwbMainRecordInternal).RemoveOverride(Self)
     else
-      if Length(mrOverrides) > 0 then
+      if Length(mrOverrides) > 0 then begin
+        SortOverrides;
         (mrOverrides[0] as IwbMainRecordInternal).YouAreTheMaster(mrOverrides, mrReferencedBy, mrReferencedByCount);
+      end;
 
     mrMaster := nil;
     mrOverrides := nil;
@@ -17939,6 +17962,15 @@ begin
   Result := TwbFormID.Compare(IwbMainRecord(Item1).LoadOrderFormID , IwbMainRecord(Item2).LoadOrderFormID);
   if Result = 0 then
     Result := CompareReferencedByFile(Item1, Item2);
+end;
+
+procedure TwbMainRecord.SortOverrides;
+begin
+  if mrsOverridesSorted in mrStates then
+    Exit;
+  if Length(mrOverrides) > 1 then
+    wbMergeSortPtr(@mrOverrides[0], Length(mrOverrides), CompareOverrides);
+  Include(mrStates, mrsOverridesSorted);
 end;
 
 procedure TwbMainRecord.SortReferencedBy;
@@ -24294,6 +24326,22 @@ begin
   end;
 end;
 
+procedure TwbElement.PinContainer;
+begin
+  var lNew := IInterface(eContainer) as IwbContainerElementRef;
+  var lOld := AtomicExchange(PPointer(@eContainerRef)^, Pointer(lNew));
+  Pointer(lNew) := nil;
+  if Assigned(lOld) then
+    IInterface(lOld)._Release;
+end;
+
+procedure TwbElement.UnpinContainer;
+begin
+  var lOld := AtomicExchange(PPointer(@eContainerRef)^, nil);
+  if Assigned(lOld) then
+    IInterface(lOld)._Release;
+end;
+
 {$D-}
 function TwbElement._AddRef: Integer;
 label
@@ -24312,7 +24360,7 @@ begin
          jne  Skip
   end;
   {$ENDIF WIN32}
-  eContainerRef := IInterface(eContainer) as IwbContainerElementRef;
+  PinContainer;
 Skip:
 
   Result := inherited _AddRef;
@@ -24334,7 +24382,7 @@ begin
          jne  Skip
   end;
   {$ENDIF WIN32}
-  eContainerRef := nil;
+  UnpinContainer;
 Skip:
   Result := inherited _Release;
 end;
@@ -27306,12 +27354,17 @@ begin
   ForceClosed;
 end;
 
+function TwbLoadingGameContext.NewSaveStream(const aFileName: string): TStream;
+begin
+  Result := TBufferedFileStream.Create(aFileName, fmCreate, 1024 * 1024);
+end;
+
 function TwbLoadingGameContext.WriteSave(const aFile: IwbFile; const aSuffix: string; const aReport: TwbSaveMessageProc): TwbSaveWrite;
 const
   ResetModifiedFromBool : array[Boolean] of TwbResetModified = (rmNo, rmSetInternal);
 var
   lCRC    : TwbCRC32;
-  lStream : TBufferedFileStream;
+  lStream : TStream;
 begin
   Result := Default(TwbSaveWrite);
   Result.TargetName := aFile.FileNameOnDisk;
@@ -27332,7 +27385,8 @@ begin
   end;
 
   lCRC := aFile.CRC32;
-  lStream := TBufferedFileStream.Create(Settings.DataPath + Result.SaveName, fmCreate, 1024 * 1024);
+  var lWasUnsaved := esUnsaved in aFile.ElementStates;
+  lStream := NewSaveStream(Settings.DataPath + Result.SaveName);
   try
     try
       aReport('Saving: ' + Result.SaveName);
@@ -27360,6 +27414,10 @@ begin
       System.SysUtils.DeleteFile(Settings.DataPath + Result.SaveName);
       Result.Failed := True;
       Result.NeedsRename := False;
+      Result.TryDirectRename := False;
+      Result.Commit := False;
+      if lWasUnsaved then
+        aFile.SetElementState(esUnsaved);
       aReport('Error saving ' + Result.SaveName + ': ' + E.Message);
     end;
   end;
@@ -27367,7 +27425,7 @@ end;
 
 function TwbLoadingGameContext.WriteSave(aFile: TwbLocalizationFile; const aSuffix: string; const aReport: TwbSaveMessageProc): TwbSaveWrite;
 var
-  lStream : TBufferedFileStream;
+  lStream : TStream;
 begin
   Result := Default(TwbSaveWrite);
   Result.SaveName := aFile.FileName;
@@ -27386,17 +27444,17 @@ begin
         Result.SaveName := Result.TargetName + aSuffix + '_' + lIdx.ToString;
       end;
     end;
-    lStream := TBufferedFileStream.Create(Settings.DataPath + Result.SaveName, fmCreate, 1024 * 1024);
+    lStream := NewSaveStream(Settings.DataPath + Result.SaveName);
     try
       aReport('Saving: ' + Result.SaveName);
       aFile.WriteToStream(lStream);
-      Result.Saved := True;
-      Result.Commit := True;
-      Result.TryDirectRename := True;
-      aFile.Modified := False;
     finally
       lStream.Free;
     end;
+    Result.Saved := True;
+    Result.Commit := True;
+    Result.TryDirectRename := True;
+    aFile.Modified := False;
   except
     on E: Exception do begin
       Result.Failed := True;
