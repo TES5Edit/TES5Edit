@@ -2262,12 +2262,12 @@ procedure TwbBSArchive.Unpack(const aFileName, aSaveAs: string);
 var
   fs: TFileStream;
 begin
-  if not (stReading in fStates) then
-    raise Exception.Create('Archive is not loaded');
+  var FileData := Unpack(aFileName);
 
   fs := TFileStream.Create(aSaveAs, fmCreate);
   try
-    Unpack(aFileName, fs);
+    if Length(FileData) <> 0 then
+      fs.WriteBuffer(FileData, Length(FileData));
   finally
     fs.Free;
   end;
