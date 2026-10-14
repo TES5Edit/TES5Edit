@@ -8646,7 +8646,7 @@ begin
         wbFormIDCk('Keyword', [KYWD,NULL])
       ).SetCountPathOnValue(KSIZ, False)
        .SetRequired
-    ]).SetSummaryKey([1])
+    ]).SetSummaryKey([IfThen(aCounter, 1, 0)])
       .IncludeFlag(dfCollapsed, clpKeywords in DefineOptions.Collapse);
 end;
 
