@@ -25715,6 +25715,11 @@ end;
 procedure TwbCleanupInjectedPlan.Apply(const aReport: TProc<string>);
 begin
   for var lRecord in Records do begin
+    if Assigned(Target.ContainedRecordByLoadOrderFormID[lRecord.LoadOrderFormID, False]) then begin
+      if Assigned(aReport) then
+        aReport(lRecord.Name + ' was not cleaned: ' + Target.FileName + ' already has its own override.');
+      Continue;
+    end;
     Target.AddCopy(lRecord, [cfDeepCopy], wbNoCopyRules);
     if lRecord.RemoveInjected(False) and Assigned(aReport) then
       aReport('Injected references in ' + lRecord.Name + ' could not all be removed automatically.');
