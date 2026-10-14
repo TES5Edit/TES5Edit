@@ -2156,7 +2156,7 @@ begin
       baTES3: begin
         fStream.Position := fDataOffset + aFile.Offset;
         SetLength(Result, aFile.Size);
-        fStream.Read(Result, Length(Result));
+        fStream.ReadBuffer(Result, Length(Result));
       end;
 
       baTES4, baFO3, baSSE: begin
@@ -2173,13 +2173,13 @@ begin
           Dec(Size, SizeOf(Cardinal));
           if (Length(Result) > 0) and (Size > 0) then begin
             SetLength(Buffer, Size);
-            fStream.Read(Buffer, Length(Buffer));
+            fStream.ReadBuffer(Buffer, Length(Buffer));
             DecompressBuf(Buffer, Length(Buffer), Result, Length(Result));
           end;
         end
         else begin
           SetLength(Result, Size);
-          fStream.Read(Result, Length(Result));
+          fStream.ReadBuffer(Result, Length(Result));
         end;
       end;
 
@@ -2187,13 +2187,13 @@ begin
         fStream.Position := aFile.Offset;
         if aFile.Compressed then begin
           SetLength(Buffer, aFile.PackedSize);
-          fStream.Read(Buffer, Length(Buffer));
+          fStream.ReadBuffer(Buffer, Length(Buffer));
           SetLength(Result, aFile.Size);
           DecompressBuf(Buffer, Length(Buffer), Result, Length(Result));
         end
         else begin
           SetLength(Result, aFile.Size);
-          fStream.Read(Result, Length(Result));
+          fStream.ReadBuffer(Result, Length(Result));
         end;
       end;
 
@@ -2222,10 +2222,10 @@ begin
           fStream.Position := c.Offset;
           if c.Compressed then begin
             SetLength(Buffer, c.PackedSize);
-            fStream.Read(Buffer, Length(Buffer));
+            fStream.ReadBuffer(Buffer, Length(Buffer));
             DecompressBuf(Buffer, Length(Buffer), @Result[MipOffset], c.Size);
           end else
-            fStream.Read(Result[MipOffset], c.Size);
+            fStream.ReadBuffer(Result[MipOffset], c.Size);
 
           Inc(MipOffset, c.Size);
         end;
