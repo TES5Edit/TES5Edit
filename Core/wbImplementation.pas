@@ -736,6 +736,7 @@ type
     flEndPtr                 : Pointer;
     flBaseOffset             : NativeUInt;
     flCRC32                  : TwbCRC32;
+    flWrittenCRC32           : TwbCRC32;
 
     flMasters                : TwbFiles;
     flOldMasters             : TwbFiles;
@@ -9017,7 +9018,7 @@ begin
   MemoryStream := TMemoryStream.Create;
   try
     inherited WriteToStream(MemoryStream, aResetModified);
-    flCRC32 := TwbHash.CRC32(MemoryStream.Memory, MemoryStream.Size);
+    flWrittenCRC32 := TwbHash.CRC32(MemoryStream.Memory, MemoryStream.Size);
     MemoryStream.Position := 0;
     aStream.WriteBuffer(MemoryStream.Memory^, MemoryStream.Size);
   finally
@@ -27520,8 +27521,9 @@ begin
       lStream.Free;
     end;
 
+    var lWritten := TwbFile(aFile as TObject).flWrittenCRC32;
     if Result.NeedsRename then
-      if lCRC = aFile.CRC32 then begin
+      if lCRC = lWritten then begin
         System.SysUtils.DeleteFile(Settings.DataPath + Result.SaveName);
         Result.NeedsRename := False;
         Result.TryDirectRename := False;
@@ -27529,8 +27531,10 @@ begin
         aReport('File has not changed, removing: ' + Result.SaveName);
       end;
 
-    if Result.Commit then
+    if Result.Commit then begin
       Result.Saved := True;
+      (aFile as IwbFileInternal).SetCRC32(lWritten);
+    end;
   except
     on E: Exception do begin
       if lCreated then
