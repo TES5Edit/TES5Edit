@@ -18441,7 +18441,7 @@ var
       Stream.WriteBuffer(DataSize, SizeOf(DataSize));
 
       if Assigned(MS) then
-        aStream.Write(MS.Memory^, MS.Size)
+        aStream.WriteBuffer(MS.Memory^, MS.Size)
       else
         Stream.Position := Stream.Size;
 
