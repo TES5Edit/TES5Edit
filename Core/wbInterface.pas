@@ -27644,8 +27644,12 @@ var
   b: TBytes;
 begin
   Position := aStream.Position;
+  if Position + SizeOf(Integer) > aStream.Size then
+    raise Exception.CreateFmt('%s is damaged: a string''s length lies past the end of the file', [ExtractFileName(fFileName)]);
   p := @PByte(aStream.Memory)[Position];
   i := PInteger(p)^;
+  if (i < 0) or (Position + SizeOf(Integer) + Int64(i) > aStream.Size) then
+    raise Exception.CreateFmt('%s is damaged: a string runs past the end of the file', [ExtractFileName(fFileName)]);
   Inc(PInteger(p), 1);
   Dec(i);
   if i > 0 then begin
@@ -27704,14 +27708,16 @@ begin
   if aStream.Size < 8 then
     Exit;
 
-  aStream.Read(scount, 4); // number of strings
+  aStream.ReadBuffer(scount, 4); // number of strings
   aStream.Position := aStream.Position + 4; // skip dataSize
+  if 8 + Int64(scount) * 8 > aStream.Size then
+    raise Exception.CreateFmt('%s is damaged: its directory runs past the end of the file', [ExtractFileName(fFileName)]);
   if scount > 0 then
     for i := 0 to scount - 1 do begin
-      aStream.Read(id, 4); // string ID
-      aStream.Read(offset, 4); // offset of string relative to data (header + dirsize)
+      aStream.ReadBuffer(id, 4); // string ID
+      aStream.ReadBuffer(offset, 4); // offset of string relative to data (header + dirsize)
       oldPos := aStream.Position;
-      aStream.Position := 8 + scount*8 + offset; // header + dirsize + offset
+      aStream.Position := 8 + Int64(scount) * 8 + offset; // header + dirsize + offset
       if fFileType = lsString then
         s := ReadZString(aStream)
       else
