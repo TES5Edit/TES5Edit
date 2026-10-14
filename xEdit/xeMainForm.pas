@@ -141,6 +141,8 @@ type
 
   TwbSaveResult = (srAllDone, srNothingToDo, srAbort, srError);
 
+  TwbSeqFileResult = (sfrFailed, sfrSkipped, sfrCreated);
+
   TRefByListItem = class
   public
     Name: string;
@@ -1141,7 +1143,7 @@ type
                          const aValidCRCs : TDynCardinalArray;
                            out aFileCRC   : Cardinal)
                                           : Boolean;
-    function GenerateSEQFileForFile(aFile: IwbFile): Boolean;
+    function GenerateSEQFileForFile(aFile: IwbFile): TwbSeqFileResult;
 
     procedure UpdateActions; override; final;
 
@@ -3417,7 +3419,7 @@ begin
   end;
 end;
 
-function TfrmMain.GenerateSEQFileForFile(aFile: IwbFile): Boolean;
+function TfrmMain.GenerateSEQFileForFile(aFile: IwbFile): TwbSeqFileResult;
 var
   Group          : IwbGroupRecord;
   QustFlags      : IwbElement;
@@ -3427,7 +3429,7 @@ var
   p, s           : string;
   n              : Integer;
 begin
-      Result := False;
+      Result := sfrFailed;
 
       if aFile.LoadOrder = 0 then
         Exit;
@@ -3449,9 +3451,12 @@ begin
           end;
       end;
 
-      if Length(FormIDs) = 0 then
-        PostAddMessage('Skipped: ' + aFile.FileName + ' doesn''t need sequence file')
-      else try
+      if Length(FormIDs) = 0 then begin
+        PostAddMessage('Skipped: ' + aFile.FileName + ' doesn''t need sequence file');
+        Exit(sfrSkipped);
+      end;
+
+      try
         FileStream := nil;
         try
           p := xeContext.Settings.DataPath + 'Seq\';
@@ -3473,7 +3478,7 @@ begin
         end;
       end;
 
-      Result := True;
+      Result := sfrCreated;
 end;
 
 procedure TfrmMain.mniNavCreateSEQFileClick(Sender: TObject);
@@ -3482,12 +3487,14 @@ var
   NodeData       : PNavNodeData;
   _File          : IwbFile;
   i, Count       : Integer;
+  Created        : Integer;
 begin
   SelectedNodes := vstNav.GetSortedSelection(True);
   if Length(SelectedNodes) < 1 then
     Exit;
 
   Count := 0;
+  Created := 0;
 
   for i := Low(SelectedNodes) to High(SelectedNodes) do begin
     NodeData := vstNav.GetNodeData(SelectedNodes[i]);
@@ -3500,13 +3507,17 @@ begin
       if _File.LoadOrder = 0 then
         Continue;
 
-      if not GenerateSEQFileForFile(_File) then
-        Continue;
+      case GenerateSEQFileForFile(_File) of
+        sfrFailed:
+          Continue;
+        sfrCreated:
+          Inc(Created);
+      end;
 
       Inc(Count);
     end;
   end;
-  PostAddMessage('[Create SEQ file done] Processed Plugins: ' + IntToStr(Count) + ', SEQ Files Created: ' + IntToStr(Count));
+  PostAddMessage('[Create SEQ file done] Processed Plugins: ' + IntToStr(Count) + ', SEQ Files Created: ' + IntToStr(Created));
 end;
 
 procedure TfrmMain.mniNavDeleteModGroupsClick(Sender: TObject);
