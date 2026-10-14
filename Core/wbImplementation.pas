@@ -24764,7 +24764,8 @@ begin
         Assign(wbAssignAdd, nil, False);
       for i := Low(DEV) to High(DEV) do
         cntElements[i].EditValue := DEV[i];
-      Include(cntStates, csAsCreatedEmpty);
+      if Length(cntElements) > 0 then
+        Include(cntStates, csAsCreatedEmpty);
     end;
   finally
     eContainer := nil;
