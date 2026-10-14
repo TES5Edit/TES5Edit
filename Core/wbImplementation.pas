@@ -9004,7 +9004,7 @@ begin
     inherited WriteToStream(MemoryStream, aResetModified);
     flCRC32 := TwbHash.CRC32(MemoryStream.Memory, MemoryStream.Size);
     MemoryStream.Position := 0;
-    aStream.Write(MemoryStream.Memory^, MemoryStream.Size);
+    aStream.WriteBuffer(MemoryStream.Memory^, MemoryStream.Size);
   finally
     MemoryStream.Free;
   end;
@@ -27469,7 +27469,7 @@ end;
 
 function TwbLoadingGameContext.NewSaveStream(const aFileName: string): TStream;
 begin
-  Result := TBufferedFileStream.Create(aFileName, fmCreate, 1024 * 1024);
+  Result := TFileStream.Create(aFileName, fmCreate);
 end;
 
 function TwbLoadingGameContext.WriteSave(const aFile: IwbFile; const aSuffix: string; const aReport: TwbSaveMessageProc): TwbSaveWrite;
