@@ -12855,7 +12855,7 @@ begin
 
           for var lKnownSubRecordIdx := Low(TwbKnownSubRecord) to High(TwbKnownSubRecord) do
             if Sig = recKnownSRs[lKnownSubRecordIdx] then
-              recKnownSRMembers[lKnownSubRecordIdx] := lMemberIdx;
+              recKnownSRMembers[lKnownSubRecordIdx] := NewLength;
 
           if Sig = recKnownSRs[ksrBaseRecord] then begin
             var sRec : IwbSubRecordDef;
@@ -14501,19 +14501,15 @@ constructor TwbSubRecordStructDef.Create(aPriority       : TwbConflictPriority;
                                    const aName           : string;
                                    const aMembers        : array of IwbRecordMemberDef;
                                    const aSkipSigs       : TwbSignatures);
-var
-  FoundRequired : Boolean;
 begin
   srsSummaryDelimiter := ' ';
   srsSignatures := TwbFastStringListCS.CreateSorted(dupIgnore);
 
-  FoundRequired := False;
   SetLength(srsMembers, Length(aMembers));
   var NewLength := 0;
   for var i := Low(aMembers) to High(aMembers) do
     if Assigned(aMembers[i]) then begin
       srsMembers[NewLength] := (aMembers[i] as IwbDefInternal).SetParent(Self, False) as IwbRecordMemberDef;
-      FoundRequired := FoundRequired or (Assigned(srsMembers[i]) and srsMembers[i].Required);
       for var j := 0 to Pred(aMembers[i].SignatureCount) do
         srsSignatures.AddObject(aMembers[i].Signatures[j], Pointer(NewLength) );
       Inc(NewLength);
