@@ -1455,6 +1455,7 @@ type
     procedure SetIsPartialForm(aValue: Boolean);
     function GetCanBePartial: Boolean;
     function PartialFormKeeps(aIndex: Integer; const aElement: IwbElement): Boolean;
+    function DeletedKeeps(aIndex: Integer; const aElement: IwbElement): Boolean;
     function GetIsCompressed: Boolean;
     procedure SetIsCompressed(aValue: Boolean);
     function GetIsVisibleWhenDistant: Boolean;
@@ -11836,21 +11837,9 @@ begin
       raise Exception.Create(GetName + ' can not be assigned.');
 
   if GetIsDeleted then
-    if aIndex <> wbAssignThis then begin
-      var lDeleteShouldExit := True;
-      if (gcDeletedRecordKeepsBaseRecord in GameDefObj.Capabilities) and Assigned(mrDef) then begin
-        lDeleteShouldExit := mrDef.KnownSubRecordMemberIndex[ksrBaseRecord] <> aIndex;
-
-        if not lDeleteShouldExit and Assigned(aElement) then begin
-          var lHasSignature: IwbHasSignature;
-          if Supports(aElement, IwbHasSignature, lHasSignature) then
-            lDeleteShouldExit := mrDef.KnownSubRecordSignatures[ksrBaseRecord] <> lHasSignature.Signature;
-        end;
-      end;
-
-      if lDeleteShouldExit then
+    if aIndex <> wbAssignThis then
+      if not DeletedKeeps(aIndex, aElement) then
         Exit;
-    end;
 
   if GetIsPartialForm then
     if aIndex <> wbAssignThis then begin
@@ -12516,17 +12505,9 @@ begin
   end;
 
   if GetIsDeleted then
-    if aIndex <> wbAssignThis then begin
-      var lHasSignature: IwbHasSignature;
-      if (gcDeletedRecordKeepsBaseRecord in GameDefObj.Capabilities) and
-         Supports(aElement, IwbHasSignature, lHasSignature) and
-         Assigned(mrDef) and
-         (mrDef.KnownSubRecordSignatures[ksrBaseRecord] = lHasSignature.Signature)
-      then begin
-        //allow NAME in FO4, SSE, and newer for deleted records
-      end else
+    if aIndex <> wbAssignThis then
+      if not DeletedKeeps(aIndex, aElement) then
         Exit;
-    end;
 
   if GetIsPartialForm then
     if aIndex <> wbAssignThis then
@@ -13807,6 +13788,16 @@ begin
     Result := BaseRecord.Signature
   else
     Result := 'NULL';
+end;
+
+function TwbMainRecord.DeletedKeeps(aIndex: Integer; const aElement: IwbElement): Boolean;
+var
+  lHasSignature: IwbHasSignature;
+begin
+  Result := (gcDeletedRecordKeepsBaseRecord in GameDefObj.Capabilities) and Assigned(mrDef) and
+    (mrDef.KnownSubRecordMemberIndex[ksrBaseRecord] = aIndex);
+  if Result and Supports(aElement, IwbHasSignature, lHasSignature) then
+    Result := mrDef.KnownSubRecordSignatures[ksrBaseRecord] = lHasSignature.Signature;
 end;
 
 function TwbMainRecord.PartialFormKeeps(aIndex: Integer; const aElement: IwbElement): Boolean;
