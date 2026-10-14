@@ -378,13 +378,14 @@ begin
   end;
 
   // no buffering with full loading into memory
-  SrcSize := aSrc.Size;
+  SrcSize := aSrc.Size - aSrc.Position;
   // memory stream is already loaded
-  if aSrc is TCustomMemoryStream then
-    Src := TCustomMemoryStream(aSrc).Memory
-  else begin
+  if aSrc is TCustomMemoryStream then begin
+    Src := PByte(TCustomMemoryStream(aSrc).Memory) + aSrc.Position;
+    aSrc.Position := aSrc.Size;
+  end else begin
     SetLength(SrcBuf, SrcSize);
-    aSrc.Read(SrcBuf, SrcSize);
+    aSrc.ReadBuffer(SrcBuf, SrcSize);
     Src := SrcBuf;
   end;
   Compress(aType, Src, SrcSize, aDst, aCompressionLevel);
