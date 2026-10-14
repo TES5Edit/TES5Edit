@@ -9012,6 +9012,8 @@ procedure TwbFile.WriteToStream(aStream: TStream; aResetModified: TwbResetModifi
 var
   MemoryStream: TMemoryStream;
 begin
+  if aResetModified = rmYes then
+    aResetModified := rmSetInternal;
   MemoryStream := TMemoryStream.Create;
   try
     inherited WriteToStream(MemoryStream, aResetModified);
