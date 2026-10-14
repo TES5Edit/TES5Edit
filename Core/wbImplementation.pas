@@ -27476,9 +27476,11 @@ function TwbLoadingGameContext.WriteSave(const aFile: IwbFile; const aSuffix: st
 const
   ResetModifiedFromBool : array[Boolean] of TwbResetModified = (rmNo, rmSetInternal);
 var
-  lCRC    : TwbCRC32;
-  lStream : TStream;
+  lCRC     : TwbCRC32;
+  lStream  : TStream;
+  lCreated : Boolean;
 begin
+  lCreated := False;
   Result := Default(TwbSaveWrite);
   Result.TargetName := aFile.FileNameOnDisk;
   Result.SaveName := Result.TargetName;
@@ -27499,8 +27501,9 @@ begin
 
   lCRC := aFile.CRC32;
   var lWasUnsaved := esUnsaved in aFile.ElementStates;
-  lStream := NewSaveStream(Settings.DataPath + Result.SaveName);
   try
+    lStream := NewSaveStream(Settings.DataPath + Result.SaveName);
+    lCreated := True;
     try
       aReport('Saving: ' + Result.SaveName);
       aFile.WriteToStream(lStream, ResetModifiedFromBool[Settings.ResetModifiedOnSave]);
@@ -27524,7 +27527,8 @@ begin
       Result.Saved := True;
   except
     on E: Exception do begin
-      System.SysUtils.DeleteFile(Settings.DataPath + Result.SaveName);
+      if lCreated then
+        System.SysUtils.DeleteFile(Settings.DataPath + Result.SaveName);
       Result.Failed := True;
       Result.NeedsRename := False;
       Result.TryDirectRename := False;
