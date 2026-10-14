@@ -370,18 +370,10 @@ var
   SrcSize: Integer;
 begin
   // direct stream to stream buffered compression without loading entire data into memory
-  // todo: not implemented for LZ4
-  if aBuffered and not (aType in [ctNone, ctLZ4]) then begin
-    case aType of
-      ctZLib: begin
-        if aCompressionLevel = -1 then aCompressionLevel := ZLIB_COMPRESSION_LEVEL;
-        System.ZLib.ZCompressStream(aSrc, aDst, TZCompressionLevel(aCompressionLevel));
-      end;
-      ctLZ4F: begin
-        if aCompressionLevel = -1 then aCompressionLevel := LZ4_COMPRESSION_LEVEL;
-        LZ4FCompressStream(aSrc, aDst, aCompressionLevel);
-      end;
-    end;
+  // todo: not implemented for ZLib and LZ4
+  if aBuffered and (aType = ctLZ4F) then begin
+    if aCompressionLevel = -1 then aCompressionLevel := LZ4_COMPRESSION_LEVEL;
+    LZ4FCompressStream(aSrc, aDst, aCompressionLevel);
     Exit;
   end;
 
