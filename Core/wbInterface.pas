@@ -8665,6 +8665,8 @@ type
     sraDefaultEditValues : TwbStringArray;
     sraCountPaths        : TArray<string>;
     sraMaxCount          : UInt64;
+
+    procedure CheckMaxCount;
   public
     constructor Clone(const aSource: TwbDef); override; final;
     constructor Create(aPriority  : TwbConflictPriority;
@@ -9522,6 +9524,8 @@ type
     arSummaryPassthroughMaxCount  : Integer;
     arSummaryPassthroughMaxLength : Integer;
     arSummaryPassthroughMaxDepth  : Integer;
+
+    procedure CheckMaxCount;
   protected
     constructor Clone(const aSource: TwbDef); override; final;
 
@@ -14336,6 +14340,7 @@ begin
   SetLength(sraDefaultEditValues, Length(aValues));
   for i := Low(aValues) to High(aValues) do
     sraDefaultEditValues[i] := aValues[i];
+  CheckMaxCount;
 end;
 
 function TwbSubRecordArrayDef.SetIsSorted(const aIsSorted: TwbIsSortedCallback): IwbSubRecordArrayDef;
@@ -14354,6 +14359,15 @@ begin
 
   Result := Self;
   sraMaxCount := aMaxCount;
+  CheckMaxCount;
+end;
+
+procedure TwbSubRecordArrayDef.CheckMaxCount;
+begin
+  var lCreatedCount := Max(sraCount, Length(sraDefaultEditValues));
+  if (sraMaxCount > 0) and (UInt64(lCreatedCount) > sraMaxCount) then
+    raise Exception.Create(GetPath + ': a maximum of ' + UIntToStr(sraMaxCount) + ' entries is below the ' + IntToStr(lCreatedCount) +
+      ' it is created with');
 end;
 
 function TwbSubRecordArrayDef.GetMaxCount: UInt64;
@@ -16475,6 +16489,7 @@ begin
   SetLength(arLabels, arCount);
   for var lIdx := 0 to Pred(arCount) do
     arLabels[lIdx] := aEnum.Names[lIdx];
+  CheckMaxCount;
 end;
 
 function TwbArrayDef.SetCountPath(const aValue: string; aUseForCountCallback: Boolean): IwbArrayDef;
@@ -16539,6 +16554,7 @@ begin
   SetLength(arDefaultEditValues, Length(aValues));
   for i := Low(aValues) to High(aValues) do
     arDefaultEditValues[i] := aValues[i];
+  CheckMaxCount;
 end;
 
 procedure TwbArrayDef.SetPrefixCount(aBasePtr: Pointer; aValue: Cardinal);
@@ -16615,6 +16631,19 @@ begin
 
   Result := Self;
   arMaxCount := aMaxCount;
+  CheckMaxCount;
+end;
+
+procedure TwbArrayDef.CheckMaxCount;
+begin
+  var lCreatedCount := Max(arCount, Length(arDefaultEditValues));
+  if (arMaxCount > 0) and (UInt64(lCreatedCount) > arMaxCount) then begin
+    var lName := GetPath;
+    if lName = '' then
+      lName := GetDefTypeName;
+    raise Exception.Create(lName + ': a maximum of ' + UIntToStr(arMaxCount) + ' entries is below the ' + IntToStr(lCreatedCount) +
+      ' it is created with');
+  end;
 end;
 
 function TwbArrayDef.GetMaxCount: UInt64;
