@@ -703,6 +703,7 @@ type
     procedure UpdateIndexKeys(const aMainRecord: IwbMainRecord; const aChangedKeys: TwbChangedKeys);
     procedure AddAllMastersToSet(aMasters: TwbFilesSet);
     function flFindKeyInIndex(aIndex: TwbNamedIndex; const aKey: string; out aMainRecord: IwbMainRecord): Boolean;
+    procedure SetCRC32(aCRC32: TwbCRC32);
   end;
 
   TwbCachedEditInfo = record
@@ -986,6 +987,7 @@ type
     function GetBaseOffset: NativeUInt;
     procedure UpdateIndexKeys(const aMainRecord: IwbMainRecord; const aChangedKeys: TwbChangedKeys);
     procedure AddAllMastersToSet(aMasters: TwbFilesSet);
+    procedure SetCRC32(aCRC32: TwbCRC32);
 
     procedure Scan; virtual;
     procedure SortRecords;
@@ -6514,6 +6516,11 @@ begin
     Result := TwbHash.CRC32(flView, flSize);
     flCRC32 := Result;
   end;
+end;
+
+procedure TwbFile.SetCRC32(aCRC32: TwbCRC32);
+begin
+  flCRC32 := aCRC32;
 end;
 
 function TwbFile.GetElementBySignature(const aSignature: TwbSignature): IwbElement;
@@ -27524,6 +27531,7 @@ begin
       Result.Commit := False;
       if lWasUnsaved then
         aFile.SetElementState(esUnsaved);
+      (aFile as IwbFileInternal).SetCRC32(lCRC);
       aReport('Error saving ' + Result.SaveName + ': ' + E.Message);
     end;
   end;
@@ -27531,8 +27539,10 @@ end;
 
 function TwbLoadingGameContext.WriteSave(aFile: TwbLocalizationFile; const aSuffix: string; const aReport: TwbSaveMessageProc): TwbSaveWrite;
 var
-  lStream : TStream;
+  lStream  : TStream;
+  lCreated : Boolean;
 begin
+  lCreated := False;
   Result := Default(TwbSaveWrite);
   Result.SaveName := aFile.FileName;
   Result.NeedsRename := FileExists(Result.SaveName);
@@ -27551,6 +27561,7 @@ begin
       end;
     end;
     lStream := NewSaveStream(Settings.DataPath + Result.SaveName);
+    lCreated := True;
     try
       aReport('Saving: ' + Result.SaveName);
       aFile.WriteToStream(lStream);
@@ -27563,6 +27574,8 @@ begin
     aFile.Modified := False;
   except
     on E: Exception do begin
+      if lCreated then
+        System.SysUtils.DeleteFile(Settings.DataPath + Result.SaveName);
       Result.Failed := True;
       Result.NeedsRename := False;
       Result.Commit := False;
