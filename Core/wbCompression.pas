@@ -268,18 +268,18 @@ begin
     // Write Archive Header
     headerSize := {$IFDEF WIN64}LZ4F_compressBegin{$ELSE}_LZ4F_compressBegin{$ENDIF}(ctx, out_buff, outBuffSize, @prefs);
     LZ4FCheck('LZ4F file header generation failed: %s', headerSize);
-    aCompressed.Write(out_buff, headerSize);
+    aCompressed.WriteBuffer(out_buff, headerSize);
     readSize := aSource.Read(in_buff, blockSize);
     while readSize > 0 do begin
       outSize := {$IFDEF WIN64}LZ4F_compressUpdate{$ELSE}_LZ4F_compressUpdate{$ENDIF}(ctx, out_buff, outBuffSize, in_buff, readSize, nil);
       LZ4FCheck('LZ4F compression error: %s', outSize);
-      aCompressed.Write(out_buff, outSize);
+      aCompressed.WriteBuffer(out_buff, outSize);
       readSize := aSource.Read(in_buff, blockSize);
     end;
     // End of Stream mark
     headerSize := {$IFDEF WIN64}LZ4F_compressEnd{$ELSE}_LZ4F_compressEnd{$ENDIF}(ctx, out_buff, outBuffSize, nil);
     LZ4FCheck('LZ4F end of file generation failed: %s', headerSize);
-    aCompressed.Write(out_buff, headerSize);
+    aCompressed.WriteBuffer(out_buff, headerSize);
   finally
     if ctx <> nil then
       {$IFDEF WIN64}LZ4F_freeCompressionContext{$ELSE}_LZ4F_freeCompressionContext{$ENDIF}(ctx);
@@ -359,7 +359,7 @@ var
   DstSize: Integer;
 begin
   DstBuf := Compress(aType, aSrc, aSrcSize, DstSize, aCompressionLevel);
-  aDst.Write(DstBuf, DstSize);
+  aDst.WriteBuffer(DstBuf, DstSize);
 end;
 
 class procedure TwbCompression.Compress(aType: TwbCompressionType; const aSrc, aDst: TStream; aBuffered: Boolean = False;
