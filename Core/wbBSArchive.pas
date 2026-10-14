@@ -1793,7 +1793,7 @@ begin
   // reserve space for the header
   var buf: TBytes;
   SetLength(buf, fDataOffset);
-  fStream.Write(buf, Length(buf));
+  fStream.WriteBuffer(buf, Length(buf));
 end;
 
 procedure TwbBSArchive.Save;
@@ -1811,7 +1811,7 @@ begin
       fArchiveSize := fStream.Position;
       fStream.Position := 0;
       // write header
-      fStream.Write(fHeader.Magic, SizeOf(fHeader.Magic));
+      fStream.WriteBuffer(fHeader.Magic, SizeOf(fHeader.Magic));
       fStream.WriteCardinal(fHeader.HashOffset);
       fStream.WriteCardinal(fHeader.FileCount);
       // file sizes/offsets
@@ -1840,7 +1840,7 @@ begin
       fArchiveSize := fStream.Position;
       fStream.Position := 0;
       // write header
-      fStream.Write(fHeader.Magic, SizeOf(fHeader.Magic));
+      fStream.WriteBuffer(fHeader.Magic, SizeOf(fHeader.Magic));
       fStream.WriteCardinal(fHeader.Version);
       fStream.WriteCardinal(fHeader.FoldersOffset);
       fStream.WriteCardinal(fHeader.Flags);
@@ -1894,9 +1894,9 @@ begin
       fArchiveSize := fStream.Position;
       fStream.Position := 0;
       // write header
-      fStream.Write(fHeader.Magic, SizeOf(fHeader.Magic));
+      fStream.WriteBuffer(fHeader.Magic, SizeOf(fHeader.Magic));
       fStream.WriteCardinal(fHeader.Version);
-      fStream.Write(fHeader.Magic2, SizeOf(fHeader.Magic2));
+      fStream.WriteBuffer(fHeader.Magic2, SizeOf(fHeader.Magic2));
       fStream.WriteCardinal(fHeader.FileCount);
       fStream.WriteInt64(fHeader.FileTableOffset);
       // SF header
@@ -2009,7 +2009,7 @@ begin
       fStream.WriteCardinal(aUncompressedSize);
 
     // write file data
-    fStream.Write(aData^, aSize);
+    fStream.WriteBuffer(aData^, aSize);
 
     // updating file entry
     aChunk.Offset := StartPosition;
@@ -2255,7 +2255,7 @@ procedure TwbBSArchive.Unpack(const aFileName: string; aStream: TStream);
 begin
   var FileData := Unpack(aFileName);
   if Length(FileData) <> 0 then
-    aStream.Write(FileData, Length(FileData));
+    aStream.WriteBuffer(FileData, Length(FileData));
 end;
 
 procedure TwbBSArchive.Unpack(const aFileName, aSaveAs: string);
