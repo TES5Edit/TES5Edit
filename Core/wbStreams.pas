@@ -110,6 +110,8 @@ begin
   i := 0;
   repeat
     Inc(i);
+    if i > Length(s) then
+      SetLength(s, 2 * Length(s));
     ReadBuffer(s[i], 1);
   until s[i] = #0;
   SetLength(s, Pred(i));
