@@ -3422,7 +3422,7 @@ var
   Group          : IwbGroupRecord;
   QustFlags      : IwbElement;
   FormIDs        : TwbFormIDs;
-  FileStream     : TBufferedFileStream;
+  FileStream     : TFileStream;
   MainRecord     : IwbMainRecord;
   p, s           : string;
   n              : Integer;
@@ -3452,13 +3452,14 @@ begin
       if Length(FormIDs) = 0 then
         PostAddMessage('Skipped: ' + aFile.FileName + ' doesn''t need sequence file')
       else try
+        FileStream := nil;
         try
           p := xeContext.Settings.DataPath + 'Seq\';
           if not DirectoryExists(p) then
             if not ForceDirectories(p) then
               raise Exception.Create('Unable to create SEQ directory in game''s Data');
           s := p + ChangeFileExt(aFile.FileName, '.seq');
-          FileStream := TBufferedFileStream.Create(s, fmCreate);
+          FileStream := TFileStream.Create(s, fmCreate);
           FileStream.WriteBuffer(FormIDs[0], Length(FormIDs)*SizeOf(Cardinal));
           PostAddMessage('Created: ' + s);
         finally
@@ -5306,16 +5307,16 @@ end;
 procedure TfrmMain.SaveLog(const s: string; aAllowReplace: Boolean);
 var
   txt      : AnsiString;
-  fs       : TBufferedFileStream;
+  fs       : TFileStream;
 begin
   fs := nil;
   try
     try
       if FileExists(s) then begin
-        fs := TBufferedFileStream.Create(s, fmOpenReadWrite);
+        fs := TFileStream.Create(s, fmOpenReadWrite);
         fs.Seek(0, soFromEnd);
       end else
-        fs := TBufferedFileStream.Create(s, fmCreate);
+        fs := TFileStream.Create(s, fmCreate);
       if aAllowReplace then
         if fs.Size > 3 * 1024 * 1024 then // truncate log file at 3MB
           fs.Size := 0;

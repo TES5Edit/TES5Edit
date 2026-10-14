@@ -4921,7 +4921,7 @@ end;
 function TwbFile.BuildOrLoadRef(aOnlyLoad: Boolean): TwbBuildOrLoadRefResult;
 var
   CacheFileName : string;
-  FileStream    : TBufferedFileStream;
+  FileStream    : TFileStream;
   MemoryStream  : TMemoryStream;
   i             : Integer;
   StartTime,
@@ -5056,7 +5056,7 @@ begin
               MemoryStream.Position := 0;
               var lTempFileName := CacheFileName + '.' + IntToStr(GetCurrentProcessId) + '.' + IntToStr(GetCurrentThreadId) + '.tmp';
               try
-                FileStream := TBufferedFileStream.Create(lTempFileName, fmCreate);
+                FileStream := TFileStream.Create(lTempFileName, fmCreate);
                 try
                   TwbCompression.Compress(ctLZ4F, MemoryStream, FileStream, False, 6);
                 finally
