@@ -3805,7 +3805,7 @@ begin
   if not xeContext.Settings.BuildRefs then
     Exit;
 {$IFDEF XE_TEST_CONTROL_POINTS}
-  if xeTestSwitches.Conflicts or xeTestSwitches.NavCopy or (xeTestSwitches.ViewTreeFile <> '') then
+  if xeTestSwitches.Any or (xeTestSwitches.ViewTreeFile <> '') then
     Exit;
 {$ENDIF}
   if xeContext.Settings.DontCache then
