@@ -17117,7 +17117,7 @@ begin
           Exclude(mrStates, mrsFullNameFromCache);
         end else if SubRecord.Signature = mrDef.KnownSubRecordSignatures[ksrBaseRecord] then
           Exclude(mrStates, mrsBaseRecordChecked)
-        else if (SubRecord.Signature = mrDef.KnownSubRecordSignatures[ksrGridCell]) and (SubRecord.Container.Equals(Self)) then begin
+        else if SubRecord.Signature = mrDef.KnownSubRecordSignatures[ksrGridCell] then begin
           Exclude(mrStates, mrsHasGridCell);
           Include(mrStates, mrsGridCellChecked);
         end else
