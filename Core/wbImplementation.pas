@@ -4955,6 +4955,12 @@ begin
         finally
           FileStream.Free;
         end;
+        MemoryStream.Position := 0;
+        if (MemoryStream.Read(flRecordsCount, SizeOf(flRecordsCount)) <> SizeOf(flRecordsCount)) or
+           (flRecordsCount <> Length(flRecords)) then begin
+          FreeAndNil(MemoryStream);
+          System.SysUtils.DeleteFile(CacheFileName);
+        end;
       except
         FreeAndNil(MemoryStream);
         System.SysUtils.DeleteFile(CacheFileName);
@@ -4963,35 +4969,41 @@ begin
     if Assigned(MemoryStream) then begin
       Include(flStates, fsRefsBuild);
       try
-        MemoryStream.Position := 0;
-        MemoryStream.Read(flRecordsCount, SizeOf(flRecordsCount));
-        Assert(flRecordsCount = Length(flRecords), '[TwbFile.BuildOrLoadRef] flRecordsCount <> Length(flRecords)');
-        _RefBuilder := True;
         try
-          var lLaterIdx := TList<Integer>.Create;
-          var lLaterPos := TList<Int64>.Create;
+          _RefBuilder := True;
           try
-          for i := 0 to Pred(flRecordsCount) do begin
-            if wbParallelRefBuilds <> 0 then begin
-              var lPos := MemoryStream.Position;
-              if not RefLoadEntry(TwbMainRecord(flRecords[i] as TObject), MemoryStream, fsIsGameMaster in flStates, False) then begin
-                lLaterIdx.Add(i);
-                lLaterPos.Add(lPos);
-              end;
-            end else
-              (flRecords[i] as IwbMainRecordInternal).LoadRefsFromStream(MemoryStream, fsIsGameMaster in flStates);
-            wbTick;
-          end;
-          for var k := 0 to Pred(lLaterIdx.Count) do begin
-            MemoryStream.Position := lLaterPos[k];
-            RefLoadEntry(TwbMainRecord(flRecords[lLaterIdx[k]] as TObject), MemoryStream, fsIsGameMaster in flStates, True);
-          end;
+            var lLaterIdx := TList<Integer>.Create;
+            var lLaterPos := TList<Int64>.Create;
+            try
+            for i := 0 to Pred(flRecordsCount) do begin
+              if wbParallelRefBuilds <> 0 then begin
+                var lPos := MemoryStream.Position;
+                if not RefLoadEntry(TwbMainRecord(flRecords[i] as TObject), MemoryStream, fsIsGameMaster in flStates, False) then begin
+                  lLaterIdx.Add(i);
+                  lLaterPos.Add(lPos);
+                end;
+              end else
+                (flRecords[i] as IwbMainRecordInternal).LoadRefsFromStream(MemoryStream, fsIsGameMaster in flStates);
+              wbTick;
+            end;
+            for var k := 0 to Pred(lLaterIdx.Count) do begin
+              MemoryStream.Position := lLaterPos[k];
+              RefLoadEntry(TwbMainRecord(flRecords[lLaterIdx[k]] as TObject), MemoryStream, fsIsGameMaster in flStates, True);
+            end;
+            finally
+              lLaterIdx.Free;
+              lLaterPos.Free;
+            end;
           finally
-            lLaterIdx.Free;
-            lLaterPos.Free;
+            _RefBuilder := False;
           end;
-        finally
-          _RefBuilder := False;
+        except
+          on EAbort do
+            raise;
+          else begin
+            System.SysUtils.DeleteFile(CacheFileName);
+            raise;
+          end;
         end;
       finally
         MemoryStream.Free;
