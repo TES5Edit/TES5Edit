@@ -4647,7 +4647,7 @@ begin
     lSelFiles := nil;
     for var lSpec in xeTestSwitches.ChangeFormIDRecords.Split([',']) do begin
       if lSpec.StartsWith('@') and (SameText(xeTestSwitches.ChangeFormIDOp, 'setvwd') or
-         SameText(xeTestSwitches.ChangeFormIDOp, 'setvwdinto')) then begin
+         SameText(xeTestSwitches.ChangeFormIDOp, 'setvwdinto') or SameText(xeTestSwitches.ChangeFormIDOp, 'createseq')) then begin
         lSelFile := FindFile(lSpec.Substring(1));
         if not Assigned(lSelFile) then
           raise Exception.Create(lSpec.Substring(1) + ' is not loaded');
@@ -4802,6 +4802,8 @@ begin
       lMenuItem := mniNavCopyAsSpawnRateOverride
     else if SameText(xeTestSwitches.ChangeFormIDOp, 'copyrows') then
       lMenuItem := mniViewCopyMultipleToSelectedRecords
+    else if SameText(xeTestSwitches.ChangeFormIDOp, 'createseq') then
+      lMenuItem := mniNavCreateSEQFile
     else if lRefBy then
       lMenuItem := TestRefByMenuItem
     else
@@ -4862,6 +4864,8 @@ begin
           mniNavCopyIntoClick(lMenuItem)
         else if lMenuItem = mniViewCopyMultipleToSelectedRecords then
           mniViewCopyMultipleToSelectedRecordsClick(lMenuItem)
+        else if lMenuItem = mniNavCreateSEQFile then
+          mniNavCreateSEQFileClick(lMenuItem)
         else if lRefBy then begin
           if lMenuItem.Visible then
             lMenuItem.Click
