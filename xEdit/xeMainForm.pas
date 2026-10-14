@@ -2374,7 +2374,8 @@ begin
   if Supports(aElement, IwbMainRecord, MainRecord) then begin
 
     LeveledListEntries := MainRecord.ElementByName['Leveled List Entries'] as IwbContainerElementRef;
-    Assert(Assigned(LeveledListEntries));
+    if not Assigned(LeveledListEntries) then
+      Exit;
 
     for i := 0 to Pred(LeveledListEntries.ElementCount) do
       if Supports(LeveledListEntries.Elements[i], IwbContainerElementRef, LeveledListEntry) then begin
