@@ -2395,7 +2395,16 @@ begin
         LeveledListEntry := LeveledListEntries.Assign(Low(Integer), Entries[i], False) as IwbContainerElementRef;
         if Supports(LeveledListEntry.ElementBySignature['LVLO'], IwbContainerElementRef, EntryData) then
           LeveledListEntry := EntryData;
-        LeveledListEntry.ElementByName['Count'].NativeValue := Counts[j];
+        var lCount := LeveledListEntry.ElementByName['Count'];
+        if Assigned(lCount) and (lCount.Def.DefType = dtEmpty) then begin
+          var lLevel := LeveledListEntry.Elements[0].NativeValue;
+          var lObject := LeveledListEntry.Elements[2].NativeValue;
+          LeveledListEntry.SetToDefault;
+          LeveledListEntry.Elements[0].NativeValue := lLevel;
+          LeveledListEntry.Elements[2].NativeValue := lObject;
+          lCount := LeveledListEntry.ElementByName['Count'];
+        end;
+        lCount.NativeValue := Counts[j];
       end;
   end;
 end;
