@@ -635,7 +635,10 @@ begin
       else if (dwRBitMask = $F00) and (dwGBitMask = $F0) and (dwBBitMask = $F) and (dwABitMask = $0000) then
         Result := D3DFMT_X4R4G4B4
       else if (dwRBitMask = $E0) and (dwGBitMask = $1C) and (dwBBitMask = $3) and (dwABitMask = $FF00) then
-        Result := D3DFMT_A8R3G3B2
+        Result := D3DFMT_A8R3G3B2;
+    8:
+      if (dwRBitMask = $E0) and (dwGBitMask = $1C) and (dwBBitMask = $3) and (dwABitMask = $00) then
+        Result := D3DFMT_R3G3B2;
   end;
 end;
 
