@@ -611,6 +611,16 @@ var
   DDSHeader: PDDSHeader;
   DDSHeaderDX10: PDDSHeaderDX10;
   DDSHeaderXBOX: PDDSHeaderXBOX;
+
+  function LinearSize: Cardinal;
+  begin
+    var lSize := GetMipSize(aWidth, aHeight, aDXGI, 0);
+    if lSize > High(Cardinal) then
+      Result := High(Cardinal)
+    else
+      Result := lSize;
+  end;
+
 begin
   DDSHeader := aDDSData;
   DDSHeaderDX10 := HeaderDX10(aDDSData);
@@ -646,49 +656,49 @@ begin
       dwFlags := dwFlags or DDSD_LINEARSIZE;
       ddspf.dwFlags := DDPF_FOURCC;
       ddspf.dwFourCC := MAGIC_DXT1;
-      dwPitchOrLinearSize := dwWidth * dwHeight div 2;
+      dwPitchOrLinearSize := LinearSize;
     end;
     DXGI_FORMAT_BC2_UNORM: begin
       dwFlags := dwFlags or DDSD_LINEARSIZE;
       ddspf.dwFlags := DDPF_FOURCC;
       ddspf.dwFourCC := MAGIC_DXT3;
-      dwPitchOrLinearSize := dwWidth * dwHeight;
+      dwPitchOrLinearSize := LinearSize;
     end;
     DXGI_FORMAT_BC3_UNORM: begin
       dwFlags := dwFlags or DDSD_LINEARSIZE;
       ddspf.dwFlags := DDPF_FOURCC;
       ddspf.dwFourCC := MAGIC_DXT5;
-      dwPitchOrLinearSize := dwWidth * dwHeight;
+      dwPitchOrLinearSize := LinearSize;
     end;
     DXGI_FORMAT_BC4_SNORM: begin
       dwFlags := dwFlags or DDSD_LINEARSIZE;
       ddspf.dwFlags := DDPF_FOURCC;
       ddspf.dwFourCC := MAGIC_BC4S;
-      dwPitchOrLinearSize := dwWidth * dwHeight div 2;
+      dwPitchOrLinearSize := LinearSize;
     end;
     DXGI_FORMAT_BC4_UNORM: begin
       dwFlags := dwFlags or DDSD_LINEARSIZE;
       ddspf.dwFlags := DDPF_FOURCC;
       ddspf.dwFourCC := MAGIC_BC4U;
-      dwPitchOrLinearSize := dwWidth * dwHeight div 2;
+      dwPitchOrLinearSize := LinearSize;
     end;
     DXGI_FORMAT_BC5_SNORM: begin
       dwFlags := dwFlags or DDSD_LINEARSIZE;
       ddspf.dwFlags := DDPF_FOURCC;
       ddspf.dwFourCC := MAGIC_BC5S;
-      dwPitchOrLinearSize := dwWidth * dwHeight;
+      dwPitchOrLinearSize := LinearSize;
     end;
     DXGI_FORMAT_BC5_UNORM: begin
       dwFlags := dwFlags or DDSD_LINEARSIZE;
       ddspf.dwFlags := DDPF_FOURCC;
       ddspf.dwFourCC := MAGIC_BC5U;
-      dwPitchOrLinearSize := dwWidth * dwHeight;
+      dwPitchOrLinearSize := LinearSize;
     end;
     DXGI_FORMAT_BC1_UNORM_SRGB: begin
       dwFlags := dwFlags or DDSD_LINEARSIZE;
       ddspf.dwFlags := DDPF_FOURCC;
       ddspf.dwFourCC := MAGIC_DX10;
-      dwPitchOrLinearSize := dwWidth * dwHeight div 2;
+      dwPitchOrLinearSize := LinearSize;
     end;
     DXGI_FORMAT_BC2_UNORM_SRGB, DXGI_FORMAT_BC3_UNORM_SRGB,
     DXGI_FORMAT_BC6H_UF16, DXGI_FORMAT_BC6H_SF16,
@@ -696,7 +706,7 @@ begin
       dwFlags := dwFlags or DDSD_LINEARSIZE;
       ddspf.dwFlags := DDPF_FOURCC;
       ddspf.dwFourCC := MAGIC_DX10;
-      dwPitchOrLinearSize := dwWidth * dwHeight;
+      dwPitchOrLinearSize := LinearSize;
     end;
     DXGI_FORMAT_B8G8R8A8_UNORM_SRGB, DXGI_FORMAT_B8G8R8X8_UNORM_SRGB,
     DXGI_FORMAT_R8G8B8A8_UNORM_SRGB,
