@@ -530,6 +530,13 @@ class function TwbDDS.GetDXGI(aDDSData: Pointer): TDXGI;
 var
   DDSHeader: PDDSHeader;
   DDSHeaderDX10: PDDSHeaderDX10;
+
+  function IsBitMask(r, g, b, a: Cardinal): Boolean;
+  begin
+    with DDSHeader.ddspf do
+      Result := (dwRBitMask = r) and (dwGBitMask = g) and (dwBBitMask = b) and (dwABitMask = a);
+  end;
+
 begin
   Result := DXGI_FORMAT_UNKNOWN;
   DDSHeader := aDDSData;
@@ -549,26 +556,49 @@ begin
     if (DDSHeaderDX10.dxgiFormat > Ord(DXGI_FORMAT_UNKNOWN)) and (DDSHeaderDX10.dxgiFormat <= Ord(High(TDXGI))) then
       Result := TDXGI(DDSHeaderDX10.dxgiFormat);
   end else
-  if dwFlags and (DDPF_RGB or DDPF_LUMINANCE) <> 0 then case dwRGBBitCount of
+  // the legacy layouts as Microsoft's DDSTextureLoader maps them (GetDXGIFormat); a layout it maps to no format stays unknown
+  if dwFlags and DDPF_RGB <> 0 then case dwRGBBitCount of
     32:
-      if dwFlags and DDPF_ALPHAPIXELS = 0 then
-        Result := DXGI_FORMAT_B8G8R8X8_UNORM
-      else if dwRBitMask = $000000FF then
+      if IsBitMask($000000FF, $0000FF00, $00FF0000, $FF000000) then
         Result := DXGI_FORMAT_R8G8B8A8_UNORM
-      else
-        Result := DXGI_FORMAT_B8G8R8A8_UNORM;
+      else if IsBitMask($00FF0000, $0000FF00, $000000FF, $FF000000) then
+        Result := DXGI_FORMAT_B8G8R8A8_UNORM
+      else if IsBitMask($00FF0000, $0000FF00, $000000FF, 0) then
+        Result := DXGI_FORMAT_B8G8R8X8_UNORM
+      else if IsBitMask($3FF00000, $000FFC00, $000003FF, $C0000000) then
+        Result := DXGI_FORMAT_R10G10B10A2_UNORM
+      else if IsBitMask($0000FFFF, $FFFF0000, 0, 0) then
+        Result := DXGI_FORMAT_R16G16_UNORM
+      else if IsBitMask($FFFFFFFF, 0, 0, 0) then
+        Result := DXGI_FORMAT_R32_FLOAT;
     16:
-      if (dwRBitMask = $F800) and (dwGBitMask = $07E0) and (dwBBitMask = $001F) and (dwABitMask = $0000) then
-        Result := DXGI_FORMAT_B5G6R5_UNORM
-      else if (dwRBitMask = $7C00) and (dwGBitMask = $03E0) and (dwBBitMask = $001F) and (dwABitMask = $8000) then
+      if IsBitMask($7C00, $03E0, $001F, $8000) then
         Result := DXGI_FORMAT_B5G5R5A1_UNORM
-      else
+      else if IsBitMask($F800, $07E0, $001F, 0) then
+        Result := DXGI_FORMAT_B5G6R5_UNORM
+      else if IsBitMask($0F00, $00F0, $000F, $F000) then
+        Result := DXGI_FORMAT_B4G4R4A4_UNORM
+      else if IsBitMask($00FF, 0, 0, $FF00) then
+        Result := DXGI_FORMAT_R8G8_UNORM
+      else if IsBitMask($FFFF, 0, 0, 0) then
+        Result := DXGI_FORMAT_R16_UNORM;
+    8:
+      if IsBitMask($FF, 0, 0, 0) then
+        Result := DXGI_FORMAT_R8_UNORM
+      else if (dwFlags and DDPF_ALPHA <> 0) and IsBitMask(0, 0, 0, $FF) then
+        Result := DXGI_FORMAT_A8_UNORM;
+  end else
+  if dwFlags and DDPF_LUMINANCE <> 0 then case dwRGBBitCount of
+    16:
+      if IsBitMask($FFFF, 0, 0, 0) then
+        Result := DXGI_FORMAT_R16_UNORM
+      else if IsBitMask($00FF, 0, 0, $FF00) then
         Result := DXGI_FORMAT_R8G8_UNORM;
     8:
-      if dwFlags and DDPF_ALPHA <> 0 then
-        Result := DXGI_FORMAT_A8_UNORM
-      else
-        Result := DXGI_FORMAT_R8_UNORM;
+      if IsBitMask($FF, 0, 0, 0) then
+        Result := DXGI_FORMAT_R8_UNORM
+      else if IsBitMask($00FF, 0, 0, $FF00) then
+        Result := DXGI_FORMAT_R8G8_UNORM;
   end else
   if (dwFlags and DDPF_ALPHA <> 0) and (dwRGBBitCount = 8) then
     Result := DXGI_FORMAT_A8_UNORM;
