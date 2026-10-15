@@ -1692,7 +1692,7 @@ begin
       Items[i].Name := LowerCase(aFilesList[i]);
       Items[i].FileObject := aFilesList.Objects[i];
       Items[i].Compress := FileCompression(i);
-      if TwbAsset.SplitDirName(aFilesList[i], fdir, fname) = 0 then
+      if (TwbAsset.SplitDirName(aFilesList[i], fdir, fname) = 0) or (fdir = '') then
         raise Exception.Create('File is missing the folder part: ' + aFilesList[i]);
       if Length(AnsiString(fdir)) + 1 > High(Byte) then
         raise Exception.Create('Folder name is too long: ' + aFilesList[i]);
@@ -1707,7 +1707,7 @@ begin
     // create folders
     var prevdir: UInt64 := 0;
     for var f in Self do begin
-      if f.DirHash64 <> prevdir then begin
+      if (Length(fFoldersTES4) = 0) or (f.DirHash64 <> prevdir) then begin
         prevdir := f.DirHash64;
         TwbAsset.SplitDirName(f.Name, fdir, fname);
         SetLength(fFoldersTES4, Succ(Length(fFoldersTES4)));
