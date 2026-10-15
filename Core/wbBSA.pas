@@ -433,7 +433,7 @@ begin
     raise Exception.Create('Resource doesn''t exist in ' + aContainerName);
 
   // file name is provided instead of path
-  if TPath.HasExtension(aPathOut) then
+  if TPath.HasExtension(aPathOut) and not DirectoryExists(aPathOut) then
     fn := aPathOut
   // destination path is provided
   else
