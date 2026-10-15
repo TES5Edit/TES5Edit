@@ -2492,6 +2492,15 @@ begin
   if (fType = baTES3) and not fMultiThreaded then
     aFilesList.CustomSort(AlphabeticalSort);
 
+  var lCompressAll := False;
+  if fType = baSSE then begin
+    var lFlags, lFileFlags: Cardinal;
+    DetectFlags(fType, aFilesList, aFilesCompression, lFlags, lFileFlags);
+    if fArchiveFlags <> 0 then
+      lFlags := fArchiveFlags or ARCHIVE_DEFAULT;
+    lCompressAll := (lFileFlags = FILE_TEXTURES) and (lFlags and ARCHIVE_EMBEDNAME <> 0);
+  end;
+
   SetLength(fFiles, aFilesList.Count);
   prevf := nil;
   for i := 0 to Pred(aFilesList.Count) do begin
@@ -2503,6 +2512,10 @@ begin
       f.Compress := aFilesCompression[i]
     else
       f.Compress := False;
+    if fType = baTES3 then
+      f.Compress := False
+    else if lCompressAll then
+      f.Compress := True;
 
     if Assigned(prevf) then
       prevf.Next := f
