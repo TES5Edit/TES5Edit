@@ -458,22 +458,31 @@ class function TwbDDS.GetMipSize(aWidth, aHeight: Cardinal; aDXGI: TDXGI; aMip: 
 var
   lWidth, lHeight: Int64;
 begin
-  lWidth := aWidth;
-  lHeight := aHeight;
-  if aMip > 0 then begin
-    if aMip > 31 then
-      aMip := 31;
-    lWidth := lWidth shr aMip;
-    lHeight := lHeight shr aMip;
-    if lWidth = 0 then
-      lWidth := 1;
-    if lHeight = 0 then
-      lHeight := 1;
-  end;
-  if IsCompressed(aDXGI) then
-    Result := ((lWidth + 3) div 4) * ((lHeight + 3) div 4) * GetBitsPerPixel(aDXGI) * 2
+  if aMip > 31 then
+    aMip := 31;
+  lWidth := Int64(aWidth) shr aMip;
+  lHeight := Int64(aHeight) shr aMip;
+  if lWidth = 0 then
+    lWidth := 1;
+  if lHeight = 0 then
+    lHeight := 1;
+  case aDXGI of
+    DXGI_FORMAT_R8G8_B8G8_UNORM, DXGI_FORMAT_G8R8_G8B8_UNORM, DXGI_FORMAT_YUY2:
+      Result := ((lWidth + 1) shr 1) * 4 * lHeight;
+    DXGI_FORMAT_Y210, DXGI_FORMAT_Y216:
+      Result := ((lWidth + 1) shr 1) * 8 * lHeight;
+    DXGI_FORMAT_NV12, DXGI_FORMAT_420_OPAQUE:
+      Result := ((lWidth + 1) shr 1) * 2 * (lHeight + (lHeight + 1) shr 1);
+    DXGI_FORMAT_P010, DXGI_FORMAT_P016:
+      Result := ((lWidth + 1) shr 1) * 4 * (lHeight + (lHeight + 1) shr 1);
+    DXGI_FORMAT_NV11:
+      Result := ((lWidth + 3) shr 2) * 4 * lHeight * 2;
   else
-    Result := (lWidth * lHeight * GetBitsPerPixel(aDXGI)) shr 3;
+    if IsCompressed(aDXGI) then
+      Result := ((lWidth + 3) div 4) * ((lHeight + 3) div 4) * GetBitsPerPixel(aDXGI) * 2
+    else
+      Result := ((lWidth * GetBitsPerPixel(aDXGI) + 7) div 8) * lHeight;
+  end;
 end;
 
 class function TwbDDS.GetTileMode(aDDSData: Pointer): Integer;
