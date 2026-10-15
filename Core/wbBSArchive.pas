@@ -1688,6 +1688,8 @@ begin
       Items[i].Compress := FileCompression(i);
       if TwbAsset.SplitDirName(aFilesList[i], fdir, fname) = 0 then
         raise Exception.Create('File is missing the folder part: ' + aFilesList[i]);
+      if Length(AnsiString(fdir)) + 1 > High(Byte) then
+        raise Exception.Create('Folder name is too long: ' + aFilesList[i]);
       Items[i].DirHash64 := TwbHash._TES4(fdir, False, fType = baTES4) ;
       Items[i].NameHash64 := TwbHash._TES4(fname, True, fType = baTES4);
       // calculate file names length
@@ -1745,6 +1747,11 @@ begin
     // SSE crashing bug - textures with embedded names must be compressed
     else if not Assigned(fPacker) and (fType = baSSE) and (fHeader.Flags and ARCHIVE_EMBEDNAME <> 0) then
       for var f in Self do f.Compress := True;
+
+    if (fType in [baFO3, baSSE]) and (fHeader.Flags and ARCHIVE_EMBEDNAME <> 0) then
+      for var f in Self do
+        if Length(AnsiString(f.Name)) > High(Byte) then
+          raise Exception.Create('File name is too long to embed: ' + f.Name);
   end
 
   //--------------------------------------------------
@@ -1760,6 +1767,8 @@ begin
       end;
       if fdir = '' then
         raise Exception.Create('File is missing the folder part: ' + aFilesList[i]);
+      if Length(AnsiString(aFilesList[i])) > High(Word) then
+        raise Exception.Create('File name is too long: ' + aFilesList[i]);
       Items[i].Name := aFilesList[i];
       Items[i].FileObject := aFilesList.Objects[i];
       Items[i].Compress := FileCompression(i);
