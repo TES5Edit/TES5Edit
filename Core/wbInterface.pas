@@ -27488,6 +27488,7 @@ begin
   fFileName := aFileName;
   Init(aContext);
   // cache file in mem
+  fs := nil;
   fStream := TMemoryStream.Create;
   try
     fs := TFileStream.Create(aFileName, fmOpenRead or fmShareDenyNone);
