@@ -1004,6 +1004,14 @@ procedure TwbCustomBSArchive.CheckDDSFitsRecord(aDDSHeader: PDDSHeader; const aF
 begin
   if (aDDSHeader.dwWidth > High(Word)) or (aDDSHeader.dwHeight > High(Word)) or (aDDSHeader.dwMipMapCount > High(Byte)) then
     raise Exception.Create('Texture size or mip count does not fit an archive record: ' + aFileName);
+  var lNot2D := (aDDSHeader.dwCaps2 and DDSCAPS2_CUBEMAP_VOLUME <> 0) or
+    ((aDDSHeader.dwFlags and DDSD_DEPTH <> 0) and (aDDSHeader.dwDepth > 1));
+  if (aDDSHeader.ddspf.dwFourCC = MAGIC_DX10) or (aDDSHeader.ddspf.dwFourCC = MAGIC_XBOX) then begin
+    var lDX10 := TwbDDS.HeaderDX10(aDDSHeader);
+    lNot2D := lNot2D or (lDX10.resourceDimension <> DDS_DIMENSION_TEXTURE2D) or (lDX10.arraySize > 1);
+  end;
+  if lNot2D then
+    raise Exception.Create('Only a 2D texture or a cubemap fits an archive record: ' + aFileName);
 end;
 
 procedure TwbCustomBSArchive.SetMultiThreaded(aValue: Boolean);
