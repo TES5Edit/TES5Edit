@@ -151,6 +151,7 @@ type
     {$IFEND}
     procedure SetMultiThreaded(aValue: Boolean);
     function GetDDSMipChunkNum(aWidth, aHeight, aMipMaps: Integer): Integer;
+    procedure CheckDDSFitsRecord(aDDSHeader: PDDSHeader; const aFileName: string);
 
   public
   const
@@ -982,6 +983,12 @@ begin
     aWidth := aWidth div 2;
     aHeight := aHeight div 2;
   end;
+end;
+
+procedure TwbCustomBSArchive.CheckDDSFitsRecord(aDDSHeader: PDDSHeader; const aFileName: string);
+begin
+  if (aDDSHeader.dwWidth > High(Word)) or (aDDSHeader.dwHeight > High(Word)) or (aDDSHeader.dwMipMapCount > High(Byte)) then
+    raise Exception.Create('Texture size or mip count does not fit an archive record: ' + aFileName);
 end;
 
 procedure TwbCustomBSArchive.SetMultiThreaded(aValue: Boolean);
@@ -2111,6 +2118,7 @@ begin
   aFile.DDS.DXGIFormat := Byte(TwbDDS.GetDXGI(DDSHeader));
   if TDXGI(aFile.DDS.DXGIFormat) = DXGI_FORMAT_UNKNOWN then
     raise Exception.Create(cExceptionUnsupportedDDS);
+  CheckDDSFitsRecord(DDSHeader, aFile.Name);
   aFile.DDS.Width := DDSHeader.dwWidth;
   aFile.DDS.Height := DDSHeader.dwHeight;
   aFile.DDS.NumMips := DDSHeader.dwMipMapCount;
@@ -2607,6 +2615,7 @@ begin
       end;
       if TwbDDS.GetDXGI(DDSHeader) = DXGI_FORMAT_UNKNOWN then
         raise Exception.Create(cExceptionUnsupportedDDS);
+      CheckDDSFitsRecord(DDSHeader, aPackedFile.FileName);
 
       Off := TwbDDS.GetHeaderSize(DDSHeader);
       // chunk 0 is uncompressed DDS header
