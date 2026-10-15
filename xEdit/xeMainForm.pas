@@ -1806,7 +1806,7 @@ end;
 
 procedure TfrmMain.RefuseStart(const aMessage: string);
 begin
-  if xeAutoExit then begin
+  if xeAutoExit or (xeToolMode in wbPluginModes) then begin
     AddMessage('Error: ' + aMessage);
     CheckResult := 1;
   end else
@@ -4391,10 +4391,11 @@ begin
           Modules.DeactivateAll;
 
           if SameText(ExtractFilePath(ExpandFileName(xePluginToUse)), ExpandFileName(xeContext.Settings.DataPath)) then
-            xePluginToUse := ExtractFileName(xePluginToUse);
+            xePluginToUse := ExtractFileName(ExpandFileName(xePluginToUse));
           if (xePluginToUse <> '') or not xeQuickClean then
             with lModules.ModuleByName(xePluginToUse)^ do
               if IsValid then begin
+                xePluginToUse := miName;
                 Activate;
                 Include(miFlags, mfTaggedForPluginMode);
               end else begin

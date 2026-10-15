@@ -116,13 +116,10 @@ function xeFindNextValidCmdLineFileName(var aStartIndex  : Integer;
                                                          : Boolean;
 begin
   Result := wbFindCmdLineParam(aStartIndex, SwitchChars, aValue);
-  if Result and not FileExists(aValue) then
-    if (aDefaultPath<>'') then
-      if FileExists(aDefaultPath+'\'+aValue) then
-        aValue := ExpandFileName(aDefaultPath+'\'+aValue)
-      else
-        Result := False
-    else
+  if Result then
+    if (aDefaultPath <> '') and (FileExists(aDefaultPath+'\'+aValue) or FileExists(aDefaultPath+'\'+aValue+csDotGhost)) then
+      aValue := ExpandFileName(aDefaultPath+'\'+aValue)
+    else if not FileExists(aValue) then
       Result := False;
 end;
 
@@ -136,7 +133,7 @@ begin
   until not Result or wbIsModule(aValue, wbGameIdentities[xeGameMode].GameExeName);
   if Result  then
     if (AnsiCompareText(ExtractFilePath(ExpandFileName(aValue)), ExpandFileName(aDefaultPath)) = 0) then begin
-      aValue := ExtractFileName(aValue);
+      aValue := wbStripDotGhost(ExtractFileName(ExpandFileName(aValue)));
       if not Assigned(xeModulesToUse) then
         xeModulesToUse := TStringList.Create;
       xeModulesToUse.Add(aValue);
