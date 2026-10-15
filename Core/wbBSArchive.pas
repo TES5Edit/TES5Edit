@@ -151,6 +151,7 @@ type
     {$IFEND}
     procedure SetMultiThreaded(aValue: Boolean);
     function GetDDSMipChunkNum(aWidth, aHeight, aMipMaps: Integer): Integer;
+    function GetDDSMipsSize(aDDSHeader: PDDSHeader; aFirstMip: Integer): Int64;
     procedure CheckDDSFitsRecord(aDDSHeader: PDDSHeader; const aFileName: string);
 
   public
@@ -983,6 +984,19 @@ begin
     aWidth := aWidth div 2;
     aHeight := aHeight div 2;
   end;
+end;
+
+function TwbCustomBSArchive.GetDDSMipsSize(aDDSHeader: PDDSHeader; aFirstMip: Integer): Int64;
+begin
+  Result := 0;
+  var lDXGI := TwbDDS.GetDXGI(aDDSHeader);
+  var lMips := Integer(aDDSHeader.dwMipMapCount);
+  if lMips = 0 then
+    lMips := 1;
+  for var m := aFirstMip to Pred(lMips) do
+    Inc(Result, TwbDDS.GetMipSize(aDDSHeader.dwWidth, aDDSHeader.dwHeight, lDXGI, m));
+  if TwbDDS.IsCubeMap(aDDSHeader) then
+    Result := Result * 6;
 end;
 
 procedure TwbCustomBSArchive.CheckDDSFitsRecord(aDDSHeader: PDDSHeader; const aFileName: string);
@@ -2143,7 +2157,11 @@ begin
   // store chunks
   SetLength(aFile.DDS.TexChunks, chunks);
   for i := Low(aFile.DDS.TexChunks) to High(aFile.DDS.TexChunks) do begin
-    var lMipSize := TwbDDS.GetMipSize(aFile.DDS.Width, aFile.DDS.Height, TDXGI(aFile.DDS.DXGIFormat), i);
+    var lMipSize: Int64;
+    if i < High(aFile.DDS.TexChunks) then
+      lMipSize := TwbDDS.GetMipSize(aFile.DDS.Width, aFile.DDS.Height, TDXGI(aFile.DDS.DXGIFormat), i)
+    else
+      lMipSize := GetDDSMipsSize(DDSHeader, i);
     aFile.DDS.TexChunks[i] := TwbBSFileChunkTex.Create;
     aFile.DDS.TexChunks[i].StartMip := i;
     if not Assigned(fPacker) and (lMipSize > aSize - Off) then
@@ -2632,7 +2650,11 @@ begin
       var c := GetDDSMipChunkNum(DDSHeader.dwWidth, DDSHeader.dwHeight, DDSHeader.dwMipMapCount);
       if TwbDDS.IsCubeMap(DDSHeader) then c := 1; // cubemaps are not chunked
       for var i := 1 to c do begin
-        var lMipSize := TwbDDS.GetMipSize(DDSHeader.dwWidth, DDSHeader.dwHeight, TwbDDS.GetDXGI(DDSHeader), i - 1);
+        var lMipSize: Int64;
+        if i < c then
+          lMipSize := TwbDDS.GetMipSize(DDSHeader.dwWidth, DDSHeader.dwHeight, TwbDDS.GetDXGI(DDSHeader), i - 1)
+        else
+          lMipSize := GetDDSMipsSize(DDSHeader, i - 1);
         if lMipSize > Length(buf) - Off then
           raise Exception.Create('Texture data is shorter than its mipmaps: ' + aPackedFile.FileName);
         if i = c then lMipSize := Length(buf) - Off;
