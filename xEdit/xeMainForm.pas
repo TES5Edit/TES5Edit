@@ -1178,6 +1178,7 @@ type
     function IsPinned: Boolean;
 
     procedure AddMessage(const s: string);
+    procedure RefuseMissingPlugin(const aName: string);
     procedure ScrollToTheLastMessage;
     procedure AddFile(const aFile: IwbFile);
     procedure AddFileInternal(const aFile: IwbFile);
@@ -1800,6 +1801,16 @@ begin
 
   if pgMain.ActivePage <> tbsMessages then
     tbsMessages.Highlighted := True;
+end;
+
+procedure TfrmMain.RefuseMissingPlugin(const aName: string);
+begin
+  if xeAutoExit then begin
+    AddMessage('Error: Selected plugin "' + aName + '" does not exist');
+    CheckResult := 1;
+  end else
+    ShowMessage('Selected plugin "' + aName + '" does not exist');
+  Close;
 end;
 
 const
@@ -4379,8 +4390,7 @@ begin
                 Activate;
                 Include(miFlags, mfTaggedForPluginMode);
               end else begin
-                ShowMessage('Selected plugin "' + xePluginToUse + '" does not exist');  // which we checked previously anyway :(
-                frmMain.Close;
+                RefuseMissingPlugin(xePluginToUse);
                 Exit;
               end;
 
@@ -4391,8 +4401,7 @@ begin
                 Activate;
                 Include(miFlags, mfTaggedForPluginMode);
               end else begin
-                ShowMessage('Selected plugin "' + xePluginToUse + '" does not exist');  // which we checked previously anyway :(
-                frmMain.Close;
+                RefuseMissingPlugin(s);
                 Exit;
               end;
           end;
