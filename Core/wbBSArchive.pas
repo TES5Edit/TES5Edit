@@ -1506,7 +1506,7 @@ begin
       end;
 
       // read file names if present
-      if (fHeader.FileTableOffset <> 0) and (fHeader.FileTableOffset < fStream.Size) then begin
+      if (fHeader.FileTableOffset > 0) and (fHeader.FileTableOffset < fStream.Size) then begin
         fStream.Position := fHeader.FileTableOffset;
         for var f in Self do
           f.Name := StringReplace(fStream.ReadStringLen16, '/', '\', [rfReplaceAll]); // archive2.exe uses /
