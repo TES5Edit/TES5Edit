@@ -2218,6 +2218,7 @@ var
   Size, TexSize, MipOffset: Integer;
   Buffer: TBytes;
 begin
+  Result := nil;
   if not (stReading in fStates) then
     raise Exception.Create('Archive is not loaded');
 
