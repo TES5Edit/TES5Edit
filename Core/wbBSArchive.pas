@@ -1959,7 +1959,7 @@ begin
 
   SyncEndWrite;
   try
-    TwbCompression.Decompress(fCompressionType, aSrc, aSrcSize, aDst, aDstSize);
+    TwbCompression.Decompress(fCompressionType, aSrc, aSrcSize, aDst, aDstSize, True);
   finally
     SyncBeginWrite;
   end;

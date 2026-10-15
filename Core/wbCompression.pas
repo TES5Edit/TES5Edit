@@ -34,7 +34,8 @@ type
       aCompressionLevel: Integer = -1); overload;
     class procedure Compress(aType: TwbCompressionType; const aSrc, aDst: TStream; aBuffered: Boolean = False;
       aCompressionLevel: Integer = -1); overload;
-    class procedure Decompress(aType: TwbCompressionType; const aSrc: Pointer; aSrcSize: Integer; const aDst: Pointer; aDstSize: Integer); overload;
+    class procedure Decompress(aType: TwbCompressionType; const aSrc: Pointer; aSrcSize: Integer; const aDst: Pointer; aDstSize: Integer;
+      aZLibTrailerOptional: Boolean = False); overload;
     class procedure Decompress(aType: TwbCompressionType; const aSrc, aDst: TStream); overload;
 
     const
@@ -118,8 +119,27 @@ begin
   end;
 end;
 
+function LibDeflateDecompressWithoutTrailer(aDecompressor: libdeflate_decompressor; const InBuf: Pointer; InSize: Integer;
+  const OutBuf: Pointer; OutSize: Integer): Boolean;
+var
+  lCMF, lFLG : Byte;
+  lConsumed  : size_t;
+begin
+  Result := False;
+  if InSize < 2 then
+    Exit;
+  lCMF := PByte(InBuf)[0];
+  lFLG := PByte(InBuf)[1];
+  if (lCMF and $0F <> 8) or (lCMF shr 4 > 7) or ((lCMF * 256 + lFLG) mod 31 <> 0) or (lFLG and $20 <> 0) then
+    Exit;
+  lConsumed := 0;
+  if libdeflate_deflate_decompress_ex(aDecompressor, PByte(InBuf) + 2, InSize - 2, OutBuf, OutSize, @lConsumed) <> LIBDEFLATE_SUCCESS then
+    Exit;
+  Result := Int64(InSize) - 2 - Int64(lConsumed) < 4;
+end;
+
 procedure LibDeflateDecompress(const InBuf: Pointer; InSize: Integer;
-  const OutBuf: Pointer; OutSize: Integer);
+  const OutBuf: Pointer; OutSize: Integer; aTrailerOptional: Boolean);
 var
   VZlib: libdeflate_decompressor;
 begin
@@ -128,7 +148,11 @@ begin
     raise Exception.Create('LibDeflate error: Can''t create decompressor');
 
   try
-    LibDeflateCheck( libdeflate_zlib_decompress(VZlib, InBuf, InSize, OutBuf, OutSize) );
+    var lResult := libdeflate_zlib_decompress(VZlib, InBuf, InSize, OutBuf, OutSize);
+    if (lResult = LIBDEFLATE_BAD_DATA) and aTrailerOptional and
+       LibDeflateDecompressWithoutTrailer(VZlib, InBuf, InSize, OutBuf, OutSize) then
+      lResult := LIBDEFLATE_SUCCESS;
+    LibDeflateCheck(lResult);
   finally
     libdeflate_free_decompressor(VZlib);
   end;
@@ -301,10 +325,10 @@ begin
 end;
 
 class procedure TwbCompression.Decompress(aType: TwbCompressionType; const aSrc: Pointer; aSrcSize: Integer;
-  const aDst: Pointer; aDstSize: Integer);
+  const aDst: Pointer; aDstSize: Integer; aZLibTrailerOptional: Boolean);
 begin
   case aType of
-    ctZLib: LibDeflateDecompress(aSrc, aSrcSize, aDst, aDstSize);
+    ctZLib: LibDeflateDecompress(aSrc, aSrcSize, aDst, aDstSize, aZLibTrailerOptional);
     ctLZ4:  LZ4Decompress(aSrc, aSrcSize, aDst, aDstSize);
     ctLZ4F: LZ4FDecompress(aSrc, aSrcSize, aDst, aDstSize);
     {ctNone: begin
