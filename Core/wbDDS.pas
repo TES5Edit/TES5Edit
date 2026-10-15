@@ -971,10 +971,16 @@ begin
   DDSHeader.dwPitchOrLinearSize := DDSHeader.dwWidth * 4;
   src := PByte(aDDSData) + headersize;
   dst := @Result[headersize];
-  for var i := 1 to pixels do begin
+  for var i := 1 to pixels - 1 do begin
     PCardinal(dst)^ := PCardinal(src)^ or $FF000000;
     Inc(src, 3);
     Inc(dst, 4);
+  end;
+  if pixels > 0 then begin
+    dst[0] := src[0];
+    dst[1] := src[1];
+    dst[2] := src[2];
+    dst[3] := $FF;
   end;
 end;
 
