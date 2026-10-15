@@ -2171,7 +2171,9 @@ begin
           // allocate uncompressed size space
           SetLength(Result, fStream.ReadCardinal);
           Dec(Size, SizeOf(Cardinal));
-          if (Length(Result) > 0) and (Size > 0) then begin
+          if (Length(Result) > 0) and (Size <= 0) then
+            raise Exception.Create('Compressed data is missing for: ' + aFile.Name);
+          if Length(Result) > 0 then begin
             SetLength(Buffer, Size);
             fStream.ReadBuffer(Buffer, Length(Buffer));
             DecompressBuf(Buffer, Length(Buffer), Result, Length(Result));
