@@ -27609,9 +27609,9 @@ end;
 
 function TwbLocalizationFile.ReadZString(aStream: TMemoryStream): string;
 var
-  Position : Integer;
+  Position : Int64;
   p: PByte;
-  i, j: Integer;
+  i, j: Int64;
   b: TBytes;
 begin
   Position := aStream.Position;
@@ -27638,7 +27638,7 @@ end;
 
 function TwbLocalizationFile.ReadLenZString(aStream: TMemoryStream): string;
 var
-  Position : Integer;
+  Position : Int64;
   p: PByte;
   i: Integer;
   b: TBytes;
