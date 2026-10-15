@@ -274,6 +274,7 @@ type
     fDataOffset: Int64;
     fPackedData: array of TPackedDataIndex;
     fPackedDataCount: Integer;
+    fRetiredChunks: array of TwbBSFileChunk;
 
     function GetFileEntry(Index: NativeInt): TwbBSFileEntry;
     function GetFilesCount: NativeInt;
@@ -2155,6 +2156,17 @@ begin
   Off := TwbDDS.GetHeaderSize(DDSHeader); // offset to image data
 
   // store chunks
+  if Length(aFile.DDS.TexChunks) > 0 then begin
+    SyncBeginWrite;
+    try
+      for var c in aFile.DDS.TexChunks do
+        if Assigned(c) then
+          fRetiredChunks := fRetiredChunks + [c];
+    finally
+      SyncEndWrite;
+    end;
+    aFile.DDS.TexChunks := nil;
+  end;
   SetLength(aFile.DDS.TexChunks, chunks);
   for i := Low(aFile.DDS.TexChunks) to High(aFile.DDS.TexChunks) do begin
     var lMipSize: Int64;
@@ -2421,6 +2433,10 @@ begin
     SetLength(fPackedData, 0);
     fPackedDataCount := 0;
   end;
+
+  for var c in fRetiredChunks do
+    c.Free;
+  fRetiredChunks := nil;
 
   inherited;
 end;
