@@ -412,6 +412,8 @@ end;
 class function TwbDDS.IsCubeMap(aDDSData: Pointer): Boolean;
 begin
   Result := PDDSHeader(aDDSData).dwCaps2 and DDSCAPS2_CUBEMAP <> 0;
+  if not Result and ((PDDSHeader(aDDSData).ddspf.dwFourCC = MAGIC_DX10) or (PDDSHeader(aDDSData).ddspf.dwFourCC = MAGIC_XBOX)) then
+    Result := HeaderDX10(aDDSData).miscFlags and DDS_RESOURCE_MISC_TEXTURECUBE <> 0;
 end;
 
 class function TwbDDS.HasAlpha(aDXGI: TDXGI): Boolean;
