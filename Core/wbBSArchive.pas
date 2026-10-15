@@ -2427,6 +2427,7 @@ begin
   fLoadingCount := 0;
   fProcessCount := 0;
   fProcessTick := 0;
+  fErrorCount := 0;
   SetLength(fFiles, 0);
   for var bsa in fArchives do bsa.Free;
   SetLength(fArchives, 0);
