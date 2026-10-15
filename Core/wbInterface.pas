@@ -27650,8 +27650,10 @@ begin
   i := PInteger(p)^;
   if (i < 0) or (Position + SizeOf(Integer) + Int64(i) > aStream.Size) then
     raise Exception.CreateFmt('%s is damaged: a string runs past the end of the file', [ExtractFileName(fFileName)]);
+  aStream.Position := Position + SizeOf(Integer) + i;
   Inc(PInteger(p), 1);
-  Dec(i);
+  if (i > 0) and (p[Pred(i)] = 0) then
+    Dec(i);
   if i > 0 then begin
     b := BytesOf(p, i);
     try
@@ -27665,7 +27667,6 @@ begin
     end;
   end else
     Result := '';
-  aStream.Position := Position + Succ(i) + SizeOf(Integer);
 end;
 
 procedure TwbLocalizationFile.WriteZString(aStream: TMemoryStream; const aString: string);
