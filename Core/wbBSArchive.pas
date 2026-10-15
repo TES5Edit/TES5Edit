@@ -2119,7 +2119,7 @@ begin
     chunks := GetDDSMipChunkNum(aFile.DDS.Width, aFile.DDS.Height, aFile.DDS.NumMips);
 
   Off := TwbDDS.GetHeaderSize(DDSHeader); // offset to image data
-  MipSize := (aFile.DDS.Width * aFile.DDS.Height * TwbDDS.GetBitsPerPixel(TDXGI(aFile.DDS.DXGIFormat))) shr 3;
+  var lMipSize := TwbDDS.GetMipSize(aFile.DDS.Width, aFile.DDS.Height, TDXGI(aFile.DDS.DXGIFormat));
 
   // store chunks
   SetLength(aFile.DDS.TexChunks, chunks);
@@ -2131,18 +2131,22 @@ begin
     else begin
       // last chunk stores all remaining mipmaps
       aFile.DDS.TexChunks[i].EndMip := Pred(aFile.DDS.NumMips);
-      MipSize := aSize - Off;
+      lMipSize := aSize - Off;
     end;
 
     if Assigned(fPacker) then begin
       var d := nil; var s := 0; var u := 0;
       fPacker.GetChunk(aFile.Name, aFile.FileObject, d, s, u, i + 1);
       PackData(aFile, aFile.DDS.TexChunks[i], d, s, u);
-    end else
+    end else begin
+      if lMipSize > aSize - Off then
+        raise Exception.Create('Texture data is shorter than its mipmaps: ' + aFile.Name);
+      MipSize := lMipSize;
       PackData(aFile, aFile.DDS.TexChunks[i], PByte(aData) + Off, MipSize, MipSize);
+      Inc(Off, MipSize);
+    end;
 
-    Inc(Off, MipSize);
-    MipSize := MipSize div 4;
+    lMipSize := lMipSize div 4;
   end;
 
 end;
@@ -2590,16 +2594,19 @@ begin
         raise Exception.Create(cExceptionUnsupportedDDS);
 
       Off := TwbDDS.GetHeaderSize(DDSHeader);
-      MipSize := TwbDDS.GetMipSize(DDSHeader);
+      var lMipSize := TwbDDS.GetMipSize(DDSHeader);
       // chunk 0 is uncompressed DDS header
       AddChunk(Copy(buf, 0, Off), False);
       var c := GetDDSMipChunkNum(DDSHeader.dwWidth, DDSHeader.dwHeight, DDSHeader.dwMipMapCount);
       if TwbDDS.IsCubeMap(DDSHeader) then c := 1; // cubemaps are not chunked
       for var i := 1 to c do begin
-        if i = c then MipSize := Length(buf) - Off;
+        if i = c then lMipSize := Length(buf) - Off;
+        if lMipSize > Length(buf) - Off then
+          raise Exception.Create('Texture data is shorter than its mipmaps: ' + aPackedFile.FileName);
+        MipSize := lMipSize;
         AddChunk(Copy(buf, Off, MipSize), aPackedFile.Compress);
         Inc(Off, MipSize);
-        MipSize := MipSize div 4;
+        lMipSize := lMipSize div 4;
       end;
     end;
 
