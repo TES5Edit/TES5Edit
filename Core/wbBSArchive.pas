@@ -1582,6 +1582,12 @@ begin
   if stWriting in fStates then
     raise Exception.Create('Archive is already being created');
 
+  SetLength(fFoldersTES4, 0);
+  SetLength(fPackedData, 0);
+  fPackedDataCount := 0;
+  fArchiveSharedSize := 0;
+  fArchiveSharedFiles := 0;
+
   if not Assigned(aFilesList) or (aFilesList.Count = 0) then
     raise Exception.Create('Files list to pack is empty');
 
