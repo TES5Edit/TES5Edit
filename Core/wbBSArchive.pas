@@ -2610,7 +2610,7 @@ end;
 procedure TwbSplitPacker.LoadFile(aPackedFile: PPackedFile);
 var
   buf: TBytes;
-  Size, Off, MipSize: Integer;
+  Size, SharedSize, Off, MipSize: Integer;
   DDSHeader: PDDSHeader;
 
   procedure AddChunk(const aData: TBytes; aCompress: Boolean);
@@ -2632,6 +2632,7 @@ var
 
 begin
   Size := 0;
+  SharedSize := 0;
 
   Inc(fLoadingCount);
   SyncEndWrite;
@@ -2694,7 +2695,7 @@ begin
     while Assigned(f) do begin
       if (f.ShareSize = aPackedFile.ShareSize) and (f.Compress = aPackedFile.Compress) and
          TwbHash.SameLookupHash(f.ShareHash, aPackedFile.ShareHash) then begin
-        Size := 0;
+        SharedSize := Size;
         Break;
       end;
       f := f.Next;
@@ -2708,7 +2709,7 @@ begin
   // possible embedded file name
   if fType in [baFO3, baSSE] then
     Inc(Size, Length(aPackedFile.FileName));
-  Inc(fLoadedSize, Size);
+  Inc(fLoadedSize, Size - SharedSize);
 
   // time to create a new BSA if greater than split size
   if fLoadedSize > fSplitSize then begin
