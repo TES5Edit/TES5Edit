@@ -1321,6 +1321,8 @@ begin
         Inc(fArchiveSharedFiles);
       if aChunk.PackedSize <> 0 then
         Inc(fArchiveSharedSize, aChunk.PackedSize and not FILE_SIZE_COMPRESS)
+      else if fType in [baTES4, baFO3, baSSE] then
+        Inc(fArchiveSharedSize, aChunk.Size and not FILE_SIZE_COMPRESS)
       else
         Inc(fArchiveSharedSize, aChunk.Size);
 
