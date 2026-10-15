@@ -253,6 +253,7 @@ type
     TPackedDataIndex = record
       DataSize: Cardinal;
       Hash: TwbLookupHash;
+      Compress: Boolean;
       Offset: Int64;
       Size: Cardinal;
       PackedSize: Cardinal;
@@ -279,8 +280,8 @@ type
     function GetFileEntry(Index: NativeInt): TwbBSFileEntry;
     function GetFilesCount: NativeInt;
     procedure SetFilesCount(aCount: NativeInt);
-    function FindPackedData(aSize: Cardinal; aHash: TwbLookupHash; aChunk: TwbBSFileChunk): Boolean;
-    procedure AddPackedData(aSize: Cardinal; aHash: TwbLookupHash; aChunk: TwbBSFileChunk);
+    function FindPackedData(aSize: Cardinal; aHash: TwbLookupHash; aCompress: Boolean; aChunk: TwbBSFileChunk): Boolean;
+    procedure AddPackedData(aSize: Cardinal; aHash: TwbLookupHash; aCompress: Boolean; aChunk: TwbBSFileChunk);
     procedure PackData(aFile: TwbBSFileEntry; aChunk: TwbBSFileChunk;
       aData: Pointer; aSize, aUncompressedSize: Integer);
     procedure DecompressBuf(aSrc: Pointer; aSrcSize: Integer; aDst: Pointer; aDstSize: Integer);
@@ -1302,7 +1303,7 @@ begin
       end;
 end;
 
-function TwbBSArchive.FindPackedData(aSize: Cardinal; aHash: TwbLookupHash; aChunk: TwbBSFileChunk): Boolean;
+function TwbBSArchive.FindPackedData(aSize: Cardinal; aHash: TwbLookupHash; aCompress: Boolean; aChunk: TwbBSFileChunk): Boolean;
 begin
   Result := False;
 
@@ -1310,7 +1311,8 @@ begin
     Exit;
 
   for var i := 0 to Pred(fPackedDataCount) do
-    if (aSize = fPackedData[i].DataSize) and TwbHash.SameLookupHash(aHash, fPackedData[i].Hash) then begin
+    if (aSize = fPackedData[i].DataSize) and (aCompress = fPackedData[i].Compress) and
+       TwbHash.SameLookupHash(aHash, fPackedData[i].Hash) then begin
       aChunk.Offset := fPackedData[i].Offset;
       aChunk.Size := fPackedData[i].Size;
       aChunk.PackedSize := fPackedData[i].PackedSize;
@@ -1327,7 +1329,7 @@ begin
     end;
 end;
 
-procedure TwbBSArchive.AddPackedData(aSize: Cardinal; aHash: TwbLookupHash; aChunk: TwbBSFileChunk);
+procedure TwbBSArchive.AddPackedData(aSize: Cardinal; aHash: TwbLookupHash; aCompress: Boolean; aChunk: TwbBSFileChunk);
 begin
   if not fShareData then
     Exit;
@@ -1340,6 +1342,7 @@ begin
 
   fPackedData[fPackedDataCount].DataSize := aSize;
   fPackedData[fPackedDataCount].Hash := aHash;
+  fPackedData[fPackedDataCount].Compress := aCompress;
   fPackedData[fPackedDataCount].Offset := aChunk.Offset;
   fPackedData[fPackedDataCount].Size := aChunk.Size;
   fPackedData[fPackedDataCount].PackedSize := aChunk.PackedSize;
@@ -2042,7 +2045,7 @@ begin
 
   SyncBeginWrite;
   try
-    if FindPackedData(aUncompressedSize, DataHash, aChunk) then
+    if FindPackedData(aUncompressedSize, DataHash, aFile.Compress, aChunk) then
       Exit;
 
     // data compression (except data from Packer which is already compressed)
@@ -2058,7 +2061,7 @@ begin
       end;
       // try to find existing data again if multithreaded
       // maybe some other thread has written the same data while we've been busy compressing
-      if fMultiThreaded and FindPackedData(aUncompressedSize, DataHash, aChunk) then
+      if fMultiThreaded and FindPackedData(aUncompressedSize, DataHash, aFile.Compress, aChunk) then
         Exit;
     end;
 
@@ -2101,7 +2104,7 @@ begin
       end;
     end;
 
-    AddPackedData(aUncompressedSize, DataHash, aChunk);
+    AddPackedData(aUncompressedSize, DataHash, aFile.Compress, aChunk);
 
   finally
     SyncEndWrite;
