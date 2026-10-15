@@ -4390,6 +4390,8 @@ begin
         if ((xeToolMode in wbPluginModes) or xeQuickClean or xeQuickEdit or xeQuickSEQ) and not lGameDef.IsMorrowind then begin
           Modules.DeactivateAll;
 
+          if SameText(ExtractFilePath(ExpandFileName(xePluginToUse)), ExpandFileName(xeContext.Settings.DataPath)) then
+            xePluginToUse := ExtractFileName(xePluginToUse);
           if (xePluginToUse <> '') or not xeQuickClean then
             with lModules.ModuleByName(xePluginToUse)^ do
               if IsValid then begin
