@@ -2442,7 +2442,7 @@ var
   f, prevf: PPackedFile;
   bsa: TwbBSArchive;
 begin
-  if aFilesList.Count = 0 then
+  if not Assigned(aFilesList) or (aFilesList.Count = 0) then
     raise Exception.Create('Files list is empty');
 
   fFileName := aFileName;
