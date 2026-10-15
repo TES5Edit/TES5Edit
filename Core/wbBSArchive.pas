@@ -2210,6 +2210,8 @@ begin
 
         if aFile.Compressed then begin
           // allocate uncompressed size space
+          if Size < SizeOf(Cardinal) then
+            raise Exception.Create('Compressed data is missing for: ' + aFile.Name);
           SetLength(Result, fStream.ReadCardinal);
           Dec(Size, SizeOf(Cardinal));
           if (Length(Result) > 0) and (Size <= 0) then
