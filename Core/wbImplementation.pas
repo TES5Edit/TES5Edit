@@ -9032,9 +9032,14 @@ var
 begin
   SelfRef := Self as IwbContainerElementRef;
   PrepareSave;
-  inherited WriteToStreamInternal(aStream, aResetModified);
+  var lUnsaved := esUnsaved in eStates;
+  try
+    inherited WriteToStreamInternal(aStream, aResetModified);
+  finally
+    if lUnsaved then
+      Include(eStates, esUnsaved);
+  end;
 
-  Exclude(eStates, esUnsaved);
   case aResetModified of
     rmYes: begin
       Exclude(eStates, esModified);
@@ -27507,7 +27512,6 @@ begin
   end;
 
   lCRC := aFile.CRC32;
-  var lWasUnsaved := esUnsaved in aFile.ElementStates;
   try
     lStream := NewSaveStream(Settings.DataPath + Result.SaveName);
     lCreated := True;
@@ -27535,6 +27539,7 @@ begin
       Result.Saved := True;
       (aFile as IwbFileInternal).SetCRC32(lWritten);
     end;
+    aFile.SetElementState(esUnsaved, True);
   except
     on E: Exception do begin
       if lCreated then
@@ -27543,8 +27548,6 @@ begin
       Result.NeedsRename := False;
       Result.TryDirectRename := False;
       Result.Commit := False;
-      if lWasUnsaved then
-        aFile.SetElementState(esUnsaved);
       (aFile as IwbFileInternal).SetCRC32(lCRC);
       aReport('Error saving ' + Result.SaveName + ': ' + E.Message);
     end;

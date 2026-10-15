@@ -3162,6 +3162,7 @@ begin
         lStream := TMemoryStream.Create;
         try
           Files[i].WriteToStream(lStream, rmNo);
+          Files[i].SetElementState(esUnsaved, True);
           TestHost.TestDeltaPatchLines.Add('patchbytes' + #9 + IntToStr(lStream.Size) + #9 + IntToHex(TwbHash.XXH64(lStream.Memory, lStream.Size), 16));
           if xeTestSwitches.DeltaPatchSave <> '' then begin
             lStream.SaveToFile(xeTestSwitches.DeltaPatchSave);
@@ -3293,6 +3294,7 @@ begin
     lStream := TMemoryStream.Create;
     try
       lTarget.WriteToStream(lStream, rmNo);
+      lTarget.SetElementState(esUnsaved, True);
       lStream.SaveToFile(xeTestSwitches.MergeOut);
       TestHost.TestMergeLines.Add('merged' + #9 + xeTestSwitches.MergeOut + #9 + IntToStr(lStream.Size) + #9 +
         IntToHex(TwbHash.XXH64(lStream.Memory, lStream.Size), 16));
@@ -3583,6 +3585,7 @@ begin
       lStream := TMemoryStream.Create;
       try
         lTarget.WriteToStream(lStream, rmNo);
+        lTarget.SetElementState(esUnsaved, True);
         lStream.SaveToFile(xeTestSwitches.MergedPatchOut);
         TestHost.TestMergedPatchLines.Add('patch' + #9 + ExtractFileName(xeTestSwitches.MergedPatchOut) + #9 + IntToStr(lStream.Size) + #9 +
           IntToHex(TwbHash.XXH64(lStream.Memory, lStream.Size), 16));
@@ -3799,6 +3802,7 @@ begin
       lStream := TMemoryStream.Create;
       try
         lFile.WriteToStream(lStream, rmNo);
+        lFile.SetElementState(esUnsaved, True);
         lStream.SaveToFile(TPath.Combine(xeTestSwitches.CopyIntoOut, lFile.FileName));
         lLines.Add('written' + #9 + lFile.FileName + #9 + IntToStr(lStream.Size) + #9 +
           IntToHex(TwbHash.XXH64(lStream.Memory, lStream.Size), 16));
@@ -4250,6 +4254,7 @@ begin
         try
           try
             Files[i].WriteToStream(lStream, rmNo);
+            Files[i].SetElementState(esUnsaved, True);
             lStream.SaveToFile(TPath.Combine(xeTestSwitches.RenumberOut, Files[i].FileName));
             lLines.Add('written' + #9 + Files[i].FileName + #9 + IntToStr(lStream.Size) + #9 +
               IntToHex(TwbHash.XXH64(lStream.Memory, lStream.Size), 16));
@@ -5581,6 +5586,7 @@ begin
         try
           try
             Files[i].WriteToStream(lStream, rmNo);
+            Files[i].SetElementState(esUnsaved, True);
             lStream.SaveToFile(TPath.Combine(xeTestSwitches.ChangeFormIDOut, Files[i].FileName));
             lLines.Add('written' + #9 + Files[i].FileName + #9 + IntToStr(lStream.Size) + #9 +
               IntToHex(TwbHash.XXH64(lStream.Memory, lStream.Size), 16));
