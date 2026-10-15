@@ -422,12 +422,15 @@ begin
   if Length(res) = 0 then
     raise Exception.Create('Resource doesn''t exist');
 
-  residx := High(res);
+  residx := -1;
   for i := High(res) downto Low(res) do
     if (aContainerName = '') or SameText(res[i].Container.Name, aContainerName) then begin
       residx := i;
       Break;
     end;
+
+  if residx < 0 then
+    raise Exception.Create('Resource doesn''t exist in ' + aContainerName);
 
   // file name is provided instead of path
   if TPath.HasExtension(aPathOut) then
