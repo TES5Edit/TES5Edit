@@ -2087,13 +2087,17 @@ begin
           aChunk.Size := aChunk.Size or FILE_SIZE_COMPRESS;
         // this is purely for warnings check on newly created archives to signal that the file was compressed
         if aFile.Compress then
-          aChunk.PackedSize := aSize;
+          aChunk.PackedSize := aSize
+        else
+          aChunk.PackedSize := 0;
       end;
       // baFO4, bfFO4dds, baSF, baSFdds
       else begin
         aChunk.Size := aUncompressedSize;
         if aFile.Compress then
-          aChunk.PackedSize := aSize;
+          aChunk.PackedSize := aSize
+        else
+          aChunk.PackedSize := 0;
       end;
     end;
 
