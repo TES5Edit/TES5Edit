@@ -2227,8 +2227,11 @@ begin
 
         // offset to image data (total size of DDS header)
         MipOffset := TexSize;
-        for var c in aFile.DDS.TexChunks do Inc(TexSize, c.Size);
-        SetLength(Result, TexSize);
+        var lTexSize: Int64 := TexSize;
+        for var c in aFile.DDS.TexChunks do Inc(lTexSize, c.Size);
+        if lTexSize > High(Integer) then
+          raise Exception.Create('Invalid texture size ' + IntToStr(lTexSize) + ' for: ' + aFile.Name);
+        SetLength(Result, lTexSize);
 
         // set up DDS header
         TwbDDS.SetUpHeader(Result, TDXGI(aFile.DDS.DXGIFormat), aFile.DDS.Width, aFile.DDS.Height, aFile.DDS.NumMips, aFile.IsCubeMap, IsXBox);
