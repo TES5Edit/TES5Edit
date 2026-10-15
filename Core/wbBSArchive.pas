@@ -978,8 +978,7 @@ begin
   if aMipMaps = 0 then Inc(aMipMaps);
   while (Result < aMipMaps) and
         (Result < fMaxChunkCount) and
-        (aWidth >= fSingleMipChunkX) and
-        (aHeight >= fSingleMipChunkY)
+        (Int64(aWidth) * aHeight >= Int64(fSingleMipChunkX) * fSingleMipChunkY)
   do begin
     Inc(Result);
     aWidth := aWidth div 2;
