@@ -49,6 +49,9 @@ const
 
 implementation
 
+uses
+  System.SysUtils;
+
 function TwbBaseCachedFileStream.ReadCardinal: Cardinal;
 begin
   ReadBuffer(Result, SizeOf(Result));
@@ -158,6 +161,8 @@ begin
   else
     s := AnsiString(aValue);
 
+  if Length(s) > High(Len) then
+    raise Exception.CreateFmt('String of %d bytes is too long for its length field', [Length(s)]);
   Len := Length(s);
   WriteBuffer(Len, SizeOf(Len));
   WriteBuffer(s[1], Length(s));
@@ -169,6 +174,8 @@ var
   s   : AnsiString;
 begin
   s := AnsiString(aValue);
+  if Length(s) > High(Len) then
+    raise Exception.CreateFmt('String of %d bytes is too long for its length field', [Length(s)]);
   Len := Length(s);
   WriteBuffer(Len, SizeOf(Len));
   WriteBuffer(s[1], Length(s));
