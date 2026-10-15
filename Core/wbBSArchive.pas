@@ -2164,8 +2164,11 @@ begin
         Size := aFile.Size;
 
         // skip embedded file name + length prefix
-        if (fType in [baFO3, baSSE]) and (fHeader.Flags and ARCHIVE_EMBEDNAME <> 0) then
-          Dec(Size, Length(fStream.ReadStringLen(False)) + 1);
+        if (fType in [baFO3, baSSE]) and (fHeader.Flags and ARCHIVE_EMBEDNAME <> 0) then begin
+          var lNameLength := fStream.ReadByte;
+          fStream.Position := fStream.Position + lNameLength;
+          Dec(Size, lNameLength + 1);
+        end;
 
         if aFile.Compressed then begin
           // allocate uncompressed size space
