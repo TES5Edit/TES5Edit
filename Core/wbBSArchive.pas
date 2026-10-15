@@ -2179,6 +2179,8 @@ begin
         // skip embedded file name + length prefix
         if (fType in [baFO3, baSSE]) and (fHeader.Flags and ARCHIVE_EMBEDNAME <> 0) then begin
           var lNameLength := fStream.ReadByte;
+          if (lNameLength + 1 > Size) or (fStream.Position + lNameLength > fStream.Size) then
+            raise Exception.Create('Invalid file name length ' + IntToStr(lNameLength) + ' for: ' + aFile.Name);
           fStream.Position := fStream.Position + lNameLength;
           Dec(Size, lNameLength + 1);
         end;
