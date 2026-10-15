@@ -251,10 +251,11 @@ type
     TArchiveState = (stReading, stWriting);
     TArchiveStates = set of TArchiveState;
     TPackedDataIndex = record
-      Chunk: TwbBSFileChunk;
-      Size: Cardinal;
+      DataSize: Cardinal;
       Hash: TwbLookupHash;
-      Compress: Boolean;
+      Offset: Int64;
+      Size: Cardinal;
+      PackedSize: Cardinal;
     end;
     TwbBSFolderTES4 = record
       Hash: UInt64;
@@ -274,7 +275,6 @@ type
     fDataOffset: Int64;
     fPackedData: array of TPackedDataIndex;
     fPackedDataCount: Integer;
-    fRetiredChunks: array of TwbBSFileChunk;
 
     function GetFileEntry(Index: NativeInt): TwbBSFileEntry;
     function GetFilesCount: NativeInt;
@@ -1311,10 +1311,10 @@ begin
     Exit;
 
   for var i := 0 to Pred(fPackedDataCount) do
-    if (aSize = fPackedData[i].Size) and TwbHash.SameLookupHash(aHash, fPackedData[i].Hash) then begin
-      aChunk.Offset := fPackedData[i].Chunk.Offset;
-      aChunk.Size := fPackedData[i].Chunk.Size;
-      aChunk.PackedSize := fPackedData[i].Chunk.PackedSize;
+    if (aSize = fPackedData[i].DataSize) and TwbHash.SameLookupHash(aHash, fPackedData[i].Hash) then begin
+      aChunk.Offset := fPackedData[i].Offset;
+      aChunk.Size := fPackedData[i].Size;
+      aChunk.PackedSize := fPackedData[i].PackedSize;
       // in DDS archives count shared files for the first 0 mipmap chunk only
       if not ( (aChunk is TwbBSFileChunkTex) and (TwbBSFileChunkTex(aChunk).StartMip <> 0) ) then
         Inc(fArchiveSharedFiles);
@@ -1339,9 +1339,11 @@ begin
     else
       SetLength(fPackedData, Length(fPackedData) * 2);
 
-  fPackedData[fPackedDataCount].Size := aSize;
+  fPackedData[fPackedDataCount].DataSize := aSize;
   fPackedData[fPackedDataCount].Hash := aHash;
-  fPackedData[fPackedDataCount].Chunk := aChunk;
+  fPackedData[fPackedDataCount].Offset := aChunk.Offset;
+  fPackedData[fPackedDataCount].Size := aChunk.Size;
+  fPackedData[fPackedDataCount].PackedSize := aChunk.PackedSize;
   Inc(fPackedDataCount);
 end;
 
@@ -2166,17 +2168,9 @@ begin
   Off := TwbDDS.GetHeaderSize(DDSHeader); // offset to image data
 
   // store chunks
-  if Length(aFile.DDS.TexChunks) > 0 then begin
-    SyncBeginWrite;
-    try
-      for var c in aFile.DDS.TexChunks do
-        if Assigned(c) then
-          fRetiredChunks := fRetiredChunks + [c];
-    finally
-      SyncEndWrite;
-    end;
-    aFile.DDS.TexChunks := nil;
-  end;
+  for var c in aFile.DDS.TexChunks do
+    c.Free;
+  aFile.DDS.TexChunks := nil;
   SetLength(aFile.DDS.TexChunks, chunks);
   for i := Low(aFile.DDS.TexChunks) to High(aFile.DDS.TexChunks) do begin
     var lMipSize := TwbDDS.GetMipSize(aFile.DDS.Width, aFile.DDS.Height, TDXGI(aFile.DDS.DXGIFormat), i);
@@ -2437,10 +2431,6 @@ begin
     SetLength(fPackedData, 0);
     fPackedDataCount := 0;
   end;
-
-  for var c in fRetiredChunks do
-    c.Free;
-  fRetiredChunks := nil;
 
   inherited;
 end;
