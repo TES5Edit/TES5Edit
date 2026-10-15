@@ -546,7 +546,8 @@ begin
   if dwFourCC = MAGIC_BC5S then Result := DXGI_FORMAT_BC5_SNORM else
   if (dwFourCC = MAGIC_DX10) or (dwFourCC = MAGIC_XBOX) then begin
     DDSHeaderDX10 := Pointer(PByte(DDSHeader) + SizeOf(DDSHeader^));
-    Result := TDXGI(DDSHeaderDX10.dxgiFormat);
+    if (DDSHeaderDX10.dxgiFormat > Ord(DXGI_FORMAT_UNKNOWN)) and (DDSHeaderDX10.dxgiFormat <= Ord(High(TDXGI))) then
+      Result := TDXGI(DDSHeaderDX10.dxgiFormat);
   end else
   if dwFlags and (DDPF_RGB or DDPF_LUMINANCE) <> 0 then case dwRGBBitCount of
     32:
