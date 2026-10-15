@@ -19061,7 +19061,8 @@ begin
         if xeQuickSEQ then begin
           for i := High(Files) downto Low(Files) do
             if SameText(Files[i].FileName, xePluginToUse) then begin
-              GenerateSEQFileForFile(Files[i]);
+              if GenerateSEQFileForFile(Files[i]) = sfrFailed then
+                CheckResult := 1;
               if xeAutoExit then
                 tmrShutdown.Enabled := True;
               break;
