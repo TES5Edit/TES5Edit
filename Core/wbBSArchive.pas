@@ -2132,6 +2132,8 @@ begin
   for i := Low(aFile.DDS.TexChunks) to High(aFile.DDS.TexChunks) do begin
     aFile.DDS.TexChunks[i] := TwbBSFileChunkTex.Create;
     aFile.DDS.TexChunks[i].StartMip := i;
+    if not Assigned(fPacker) and (lMipSize > aSize - Off) then
+      raise Exception.Create('Texture data is shorter than its mipmaps: ' + aFile.Name);
     if i < High(aFile.DDS.TexChunks) then
       aFile.DDS.TexChunks[i].EndMip := i
     else begin
@@ -2145,8 +2147,6 @@ begin
       fPacker.GetChunk(aFile.Name, aFile.FileObject, d, s, u, i + 1);
       PackData(aFile, aFile.DDS.TexChunks[i], d, s, u);
     end else begin
-      if lMipSize > aSize - Off then
-        raise Exception.Create('Texture data is shorter than its mipmaps: ' + aFile.Name);
       MipSize := lMipSize;
       PackData(aFile, aFile.DDS.TexChunks[i], PByte(aData) + Off, MipSize, MipSize);
       Inc(Off, MipSize);
@@ -2617,9 +2617,9 @@ begin
       var c := GetDDSMipChunkNum(DDSHeader.dwWidth, DDSHeader.dwHeight, DDSHeader.dwMipMapCount);
       if TwbDDS.IsCubeMap(DDSHeader) then c := 1; // cubemaps are not chunked
       for var i := 1 to c do begin
-        if i = c then lMipSize := Length(buf) - Off;
         if lMipSize > Length(buf) - Off then
           raise Exception.Create('Texture data is shorter than its mipmaps: ' + aPackedFile.FileName);
+        if i = c then lMipSize := Length(buf) - Off;
         MipSize := lMipSize;
         AddChunk(Copy(buf, Off, MipSize), aPackedFile.Compress);
         Inc(Off, MipSize);
