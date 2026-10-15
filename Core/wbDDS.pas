@@ -556,7 +556,6 @@ begin
     if (DDSHeaderDX10.dxgiFormat > Ord(DXGI_FORMAT_UNKNOWN)) and (DDSHeaderDX10.dxgiFormat <= Ord(High(TDXGI))) then
       Result := TDXGI(DDSHeaderDX10.dxgiFormat);
   end else
-  // the legacy layouts as Microsoft's DDSTextureLoader maps them (GetDXGIFormat); a layout it maps to no format stays unknown
   if dwFlags and DDPF_RGB <> 0 then case dwRGBBitCount of
     32:
       if IsBitMask($000000FF, $0000FF00, $00FF0000, $FF000000) then
