@@ -2125,11 +2125,11 @@ begin
     chunks := GetDDSMipChunkNum(aFile.DDS.Width, aFile.DDS.Height, aFile.DDS.NumMips);
 
   Off := TwbDDS.GetHeaderSize(DDSHeader); // offset to image data
-  var lMipSize := TwbDDS.GetMipSize(aFile.DDS.Width, aFile.DDS.Height, TDXGI(aFile.DDS.DXGIFormat));
 
   // store chunks
   SetLength(aFile.DDS.TexChunks, chunks);
   for i := Low(aFile.DDS.TexChunks) to High(aFile.DDS.TexChunks) do begin
+    var lMipSize := TwbDDS.GetMipSize(aFile.DDS.Width, aFile.DDS.Height, TDXGI(aFile.DDS.DXGIFormat), i);
     aFile.DDS.TexChunks[i] := TwbBSFileChunkTex.Create;
     aFile.DDS.TexChunks[i].StartMip := i;
     if not Assigned(fPacker) and (lMipSize > aSize - Off) then
@@ -2151,8 +2151,6 @@ begin
       PackData(aFile, aFile.DDS.TexChunks[i], PByte(aData) + Off, MipSize, MipSize);
       Inc(Off, MipSize);
     end;
-
-    lMipSize := lMipSize div 4;
   end;
 
 end;
@@ -2611,19 +2609,18 @@ begin
         raise Exception.Create(cExceptionUnsupportedDDS);
 
       Off := TwbDDS.GetHeaderSize(DDSHeader);
-      var lMipSize := TwbDDS.GetMipSize(DDSHeader);
       // chunk 0 is uncompressed DDS header
       AddChunk(Copy(buf, 0, Off), False);
       var c := GetDDSMipChunkNum(DDSHeader.dwWidth, DDSHeader.dwHeight, DDSHeader.dwMipMapCount);
       if TwbDDS.IsCubeMap(DDSHeader) then c := 1; // cubemaps are not chunked
       for var i := 1 to c do begin
+        var lMipSize := TwbDDS.GetMipSize(DDSHeader.dwWidth, DDSHeader.dwHeight, TwbDDS.GetDXGI(DDSHeader), i - 1);
         if lMipSize > Length(buf) - Off then
           raise Exception.Create('Texture data is shorter than its mipmaps: ' + aPackedFile.FileName);
         if i = c then lMipSize := Length(buf) - Off;
         MipSize := lMipSize;
         AddChunk(Copy(buf, Off, MipSize), aPackedFile.Compress);
         Inc(Off, MipSize);
-        lMipSize := lMipSize div 4;
       end;
     end;
 

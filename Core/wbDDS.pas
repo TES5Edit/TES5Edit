@@ -233,7 +233,7 @@ type
     class function HeaderXBOX(aDDSData: Pointer): PDDSHeaderXBOX;
     class function GetHeaderSize(aDDSData: Pointer): Integer;
     class function GetMipSize(aDDSData: Pointer): Int64; overload;
-    class function GetMipSize(aWidth, aHeight: Cardinal; aDXGI: TDXGI): Int64; overload;
+    class function GetMipSize(aWidth, aHeight: Cardinal; aDXGI: TDXGI; aMip: Integer): Int64; overload;
     class function GetTileMode(aDDSData: Pointer): Integer;
     class function GetDXGIFormatName(aDXGI: TDXGI): string;
     class function GetDXGI(aDDSData: Pointer): TDXGI;
@@ -451,12 +451,29 @@ var
   DDSHeader: PDDSHeader;
 begin
   DDSHeader := aDDSData;
-  Result := GetMipSize(DDSHeader.dwWidth, DDSHeader.dwHeight, GetDXGI(aDDSData));
+  Result := GetMipSize(DDSHeader.dwWidth, DDSHeader.dwHeight, GetDXGI(aDDSData), 0);
 end;
 
-class function TwbDDS.GetMipSize(aWidth, aHeight: Cardinal; aDXGI: TDXGI): Int64;
+class function TwbDDS.GetMipSize(aWidth, aHeight: Cardinal; aDXGI: TDXGI; aMip: Integer): Int64;
+var
+  lWidth, lHeight: Int64;
 begin
-  Result := (Int64(aWidth) * aHeight * GetBitsPerPixel(aDXGI)) shr 3;
+  lWidth := aWidth;
+  lHeight := aHeight;
+  if aMip > 0 then begin
+    if aMip > 31 then
+      aMip := 31;
+    lWidth := lWidth shr aMip;
+    lHeight := lHeight shr aMip;
+    if lWidth = 0 then
+      lWidth := 1;
+    if lHeight = 0 then
+      lHeight := 1;
+  end;
+  if IsCompressed(aDXGI) then
+    Result := ((lWidth + 3) div 4) * ((lHeight + 3) div 4) * GetBitsPerPixel(aDXGI) * 2
+  else
+    Result := (lWidth * lHeight * GetBitsPerPixel(aDXGI)) shr 3;
 end;
 
 class function TwbDDS.GetTileMode(aDDSData: Pointer): Integer;
