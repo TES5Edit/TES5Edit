@@ -309,6 +309,7 @@ var
   Res : TDynResources;
   i   : Integer;
 begin
+  Result := nil;
   Res := OpenResource(aFileName);
 
   if Length(Res) = 0 then
