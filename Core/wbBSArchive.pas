@@ -2176,12 +2176,16 @@ begin
   try
     case fType of
       baTES3: begin
+        if fDataOffset + aFile.Offset + aFile.Size > fStream.Size then
+          raise Exception.Create('Invalid file size ' + IntToStr(aFile.Size) + ' for: ' + aFile.Name);
         fStream.Position := fDataOffset + aFile.Offset;
         SetLength(Result, aFile.Size);
         fStream.ReadBuffer(Result, Length(Result));
       end;
 
       baTES4, baFO3, baSSE: begin
+        if (aFile.Size > Cardinal(High(Integer))) or (aFile.Offset + aFile.Size > fStream.Size) then
+          raise Exception.Create('Invalid file size ' + IntToStr(aFile.Size) + ' for: ' + aFile.Name);
         fStream.Position := aFile.Offset;
         Size := aFile.Size;
 
@@ -2213,6 +2217,12 @@ begin
       end;
 
       baFO4, baSF: begin
+        var lStored: Int64 := aFile.Size;
+        if aFile.Compressed then
+          lStored := aFile.PackedSize;
+        if (aFile.Offset < 0) or (lStored > High(Integer)) or (aFile.Size > Cardinal(High(Integer))) or
+          (aFile.Offset + lStored > fStream.Size) then
+          raise Exception.Create('Invalid file size ' + IntToStr(lStored) + ' for: ' + aFile.Name);
         fStream.Position := aFile.Offset;
         if aFile.Compressed then begin
           SetLength(Buffer, aFile.PackedSize);
@@ -2242,6 +2252,13 @@ begin
         for var c in aFile.DDS.TexChunks do Inc(lTexSize, c.Size);
         if lTexSize > High(Integer) then
           raise Exception.Create('Invalid texture size ' + IntToStr(lTexSize) + ' for: ' + aFile.Name);
+        for var c in aFile.DDS.TexChunks do begin
+          var lStored: Int64 := c.Size;
+          if c.Compressed then
+            lStored := c.PackedSize;
+          if (c.Offset < 0) or (lStored > High(Integer)) or (c.Offset + lStored > fStream.Size) then
+            raise Exception.Create('Invalid chunk size ' + IntToStr(lStored) + ' for: ' + aFile.Name);
+        end;
         SetLength(Result, lTexSize);
 
         // set up DDS header
