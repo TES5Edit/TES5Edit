@@ -2120,10 +2120,11 @@ begin
     aSize := Length(buf);
     DDSHeader := aData;
   end;
-  aFile.DDS.DXGIFormat := Byte(TwbDDS.GetDXGI(DDSHeader));
-  if TDXGI(aFile.DDS.DXGIFormat) = DXGI_FORMAT_UNKNOWN then
+  var lDXGI := TwbDDS.GetDXGI(DDSHeader);
+  if lDXGI = DXGI_FORMAT_UNKNOWN then
     raise Exception.Create(cExceptionUnsupportedDDS);
   CheckDDSFitsRecord(DDSHeader, aFile.Name);
+  aFile.DDS.DXGIFormat := Byte(lDXGI);
   aFile.DDS.Width := DDSHeader.dwWidth;
   aFile.DDS.Height := DDSHeader.dwHeight;
   aFile.DDS.NumMips := DDSHeader.dwMipMapCount;
