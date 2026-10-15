@@ -563,6 +563,7 @@ function TwbFolder.OpenResource(const aFileName: string): IwbResource;
 var
   s: string;
 begin
+  Result := nil;
   s := fPath + aFileName;
   if FileExists(s) then
     Result := TwbFolderResource.Create(Self, s);
