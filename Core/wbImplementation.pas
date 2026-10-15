@@ -4859,25 +4859,25 @@ var
   i       : Integer;
   b       : Boolean;
 begin
-  aStream.Read(lFormID, SizeOf(TwbFormID));
+  aStream.ReadBuffer(lFormID, SizeOf(TwbFormID));
   Assert(lFormID = aRec.mrStruct.mrsFormID(True)^);
-  aStream.Read(i, SizeOf(i));
+  aStream.ReadBuffer(i, SizeOf(i));
   aStream.Seek(Int64(i) * SizeOf(TwbFormID), soCurrent);
-  aStream.Read(i, SizeOf(i));
+  aStream.ReadBuffer(i, SizeOf(i));
   aStream.Seek(Int64(i) * SizeOf(Char), soCurrent);
-  aStream.Read(i, SizeOf(i));
+  aStream.ReadBuffer(i, SizeOf(i));
   aStream.Seek(Int64(i) * SizeOf(Char), soCurrent);
   aStream.Seek(Int64(SizeOf(aRec.mrBaseRecordID)), soCurrent);
-  aStream.ReadData(b);
+  aStream.ReadBuffer(b, SizeOf(b));
   if b then begin
-    aStream.ReadData(b);
+    aStream.ReadBuffer(b, SizeOf(b));
     if b then
       aStream.Seek(Int64(SizeOf(TwbGridCell)), soCurrent);
   end;
   if aLoadNames then begin
-    aStream.Read(i, SizeOf(i));
+    aStream.ReadBuffer(i, SizeOf(i));
     aStream.Seek(Int64(i) * SizeOf(Char), soCurrent);
-    aStream.Read(i, SizeOf(i));
+    aStream.ReadBuffer(i, SizeOf(i));
     aStream.Seek(Int64(i) * SizeOf(Char), soCurrent);
   end;
 end;
@@ -15932,52 +15932,52 @@ begin
   lComplex := gcComplexFileFileID in lCapabilities;
 
   Assert(Length(mrReferences)=0);
-  aStream.Read(lFormID, SizeOf(TwbFormID));
+  aStream.ReadBuffer(lFormID, SizeOf(TwbFormID));
   Assert(lFormID = mrStruct.mrsFormID(True)^);
-  aStream.Read(i, SizeOf(i));
+  aStream.ReadBuffer(i, SizeOf(i));
   if i>0 then begin
     SetLength(mrReferences, i);
-    aStream.Read(mrReferences[0], SizeOf(TwbFormID) * i);
+    aStream.ReadBuffer(mrReferences[0], SizeOf(TwbFormID) * i);
   end;
 
-  aStream.Read(i, SizeOf(i));
+  aStream.ReadBuffer(i, SizeOf(i));
   SetLength(mrEditorID, i);
   if i>0 then
-    aStream.Read(mrEditorID[1], SizeOf(Char) * i);
+    aStream.ReadBuffer(mrEditorID[1], SizeOf(Char) * i);
   Include(mrStates, mrsEditorIDFromCache);
 
-  aStream.Read(i, SizeOf(i));
+  aStream.ReadBuffer(i, SizeOf(i));
   SetLength(mrFullName, i);
   if i>0 then
-    aStream.Read(mrFullName[1], SizeOf(Char) * i);
+    aStream.ReadBuffer(mrFullName[1], SizeOf(Char) * i);
   Include(mrStates, mrsFullNameFromCache);
 
-  aStream.Read(mrBaseRecordID, SizeOf(mrBaseRecordID));
+  aStream.ReadBuffer(mrBaseRecordID, SizeOf(mrBaseRecordID));
   Include(mrStates, mrsBaseRecordChecked);
 
   mrStates := mrStates - [mrsGridCellChecked, mrsHasGridCell];
   var b : Boolean;
-  aStream.ReadData(b);
+  aStream.ReadBuffer(b, SizeOf(b));
   if b then begin
     Include(mrStates, mrsGridCellChecked);
-    aStream.ReadData(b);
+    aStream.ReadBuffer(b, SizeOf(b));
     if b then begin
       Include(mrStates, mrsHasGridCell);
-      aStream.ReadData<TwbGridCell>(mrGridCell);
+      aStream.ReadBuffer(mrGridCell, SizeOf(mrGridCell));
     end;
   end;
 
   if aLoadNames then begin
     (**)
-    aStream.Read(i, SizeOf(i));
+    aStream.ReadBuffer(i, SizeOf(i));
     SetLength(mrName, i);
     if i>0 then
-      aStream.Read(mrName[1], SizeOf(Char) * i);
+      aStream.ReadBuffer(mrName[1], SizeOf(Char) * i);
     (**)
-    aStream.Read(i, SizeOf(i));
+    aStream.ReadBuffer(i, SizeOf(i));
     SetLength(mrShortName, i);
     if i>0 then
-      aStream.Read(mrShortName[1], SizeOf(Char) * i);
+      aStream.ReadBuffer(mrShortName[1], SizeOf(Char) * i);
     (** )
     aStream.Read(i, SizeOf(i));
     SetLength(mrDisplayName, i);
