@@ -2172,6 +2172,8 @@ begin
 end;
 
 function TwbBSArchive.Unpack(aFile: TwbBSFileEntry): TBytes;
+const
+  cMaxExpansion = 1032;
 var
   Size, TexSize, MipOffset: Integer;
   Buffer: TBytes;
@@ -2212,10 +2214,13 @@ begin
           // allocate uncompressed size space
           if Size < SizeOf(Cardinal) then
             raise Exception.Create('Compressed data is missing for: ' + aFile.Name);
-          SetLength(Result, fStream.ReadCardinal);
+          var lUnpacked := fStream.ReadCardinal;
           Dec(Size, SizeOf(Cardinal));
-          if (Length(Result) > 0) and (Size <= 0) then
+          if (lUnpacked > 0) and (Size <= 0) then
             raise Exception.Create('Compressed data is missing for: ' + aFile.Name);
+          if lUnpacked > Int64(Size) * cMaxExpansion then
+            raise Exception.Create('Invalid unpacked size ' + IntToStr(lUnpacked) + ' for: ' + aFile.Name);
+          SetLength(Result, lUnpacked);
           if Length(Result) > 0 then begin
             SetLength(Buffer, Size);
             fStream.ReadBuffer(Buffer, Length(Buffer));
@@ -2235,6 +2240,8 @@ begin
         if (aFile.Offset < 0) or (lStored > fStream.Size - aFile.Offset) or
           (aFile.Compressed and ((lStored > High(Integer)) or (aFile.Size > Cardinal(High(Integer))))) then
           raise Exception.Create('Invalid file size ' + IntToStr(lStored) + ' for: ' + aFile.Name);
+        if aFile.Compressed and (aFile.Size > lStored * cMaxExpansion) then
+          raise Exception.Create('Invalid unpacked size ' + IntToStr(aFile.Size) + ' for: ' + aFile.Name);
         fStream.Position := aFile.Offset;
         if aFile.Compressed then begin
           SetLength(Buffer, aFile.PackedSize);
@@ -2270,6 +2277,8 @@ begin
             lStored := c.PackedSize;
           if (c.Offset < 0) or (lStored > High(Integer)) or (lStored > fStream.Size - c.Offset) then
             raise Exception.Create('Invalid chunk size ' + IntToStr(lStored) + ' for: ' + aFile.Name);
+          if c.Compressed and (c.Size > lStored * cMaxExpansion) then
+            raise Exception.Create('Invalid unpacked size ' + IntToStr(c.Size) + ' for: ' + aFile.Name);
         end;
         SetLength(Result, lTexSize);
 
