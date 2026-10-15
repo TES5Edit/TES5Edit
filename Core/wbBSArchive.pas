@@ -2488,6 +2488,8 @@ end;
 
 procedure TwbSplitPacker.Save;
 begin
+  if fErrorCount <> 0 then
+    raise Exception.Create('Archives can not be saved after a packing error');
   for var bsa in fArchives do bsa.Save;
 end;
 
