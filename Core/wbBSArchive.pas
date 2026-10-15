@@ -1354,6 +1354,8 @@ begin
       // read header
       fHeader.HashOffset := fStream.ReadCardinal;
       fHeader.FileCount := fStream.ReadCardinal;
+      if Int64(fHeader.FileCount) * 8 > fStream.Size then
+        raise Exception.Create('Invalid files count ' + IntToStr(fHeader.FileCount));
       Count := fHeader.FileCount;
       // read file records
       for var f in Self do begin
@@ -1384,13 +1386,22 @@ begin
       fHeader.FileFlags := fStream.ReadCardinal;
       fArchiveFlags := fHeader.Flags;
       fFileFlags := fHeader.FileFlags;
+      if Int64(fHeader.FolderCount) * 16 > fStream.Size then
+        raise Exception.Create('Invalid folders count ' + IntToStr(fHeader.FolderCount));
+      if Int64(fHeader.FileCount) * 16 > fStream.Size then
+        raise Exception.Create('Invalid files count ' + IntToStr(fHeader.FileCount));
 
       // read folder records
       fStream.Position := fHeader.FoldersOffset;
       SetLength(fFoldersTES4, fHeader.FolderCount);
+      var lFolderFiles: Int64 := 0;
       for var i := Low(fFoldersTES4) to High(fFoldersTES4) do begin
         fFoldersTES4[i].Hash := fStream.ReadUInt64;
-        SetLength(fFoldersTES4[i].Files, fStream.ReadCardinal); // FileCount
+        var lFolderFileCount := fStream.ReadCardinal;
+        Inc(lFolderFiles, lFolderFileCount);
+        if lFolderFiles > fHeader.FileCount then
+          raise Exception.Create('Invalid files count ' + IntToStr(lFolderFiles) + ' in folders');
+        SetLength(fFoldersTES4[i].Files, lFolderFileCount);
         if fType = baSSE then fStream.ReadCardinal; // padding
         fFoldersTES4[i].Offset := fStream.ReadCardinal;
         if fType = baSSE then fStream.ReadCardinal; // padding
@@ -1435,6 +1446,8 @@ begin
         baSF : fType := baSFdds;
       end;
       fHeader.FileCount := fStream.ReadCardinal;
+      if Int64(fHeader.FileCount) * 24 > fStream.Size then
+        raise Exception.Create('Invalid files count ' + IntToStr(fHeader.FileCount));
       fHeader.FileTableOffset := fStream.ReadInt64;
       // SF header
       if fType in [baSF, baSFdds] then begin
