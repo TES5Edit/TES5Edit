@@ -624,6 +624,20 @@ var
       Result := lSize;
   end;
 
+  function RowPitch: Cardinal;
+  begin
+    case aDXGI of
+      DXGI_FORMAT_NV12, DXGI_FORMAT_420_OPAQUE:
+        Result := ((Cardinal(aWidth) + 1) shr 1) * 2;
+      DXGI_FORMAT_P010, DXGI_FORMAT_P016:
+        Result := ((Cardinal(aWidth) + 1) shr 1) * 4;
+      DXGI_FORMAT_NV11:
+        Result := ((Cardinal(aWidth) + 3) shr 2) * 4;
+    else
+      Result := GetMipSize(aWidth, 1, aDXGI, 0);
+    end;
+  end;
+
 begin
   DDSHeader := aDDSData;
   DDSHeaderDX10 := HeaderDX10(aDDSData);
@@ -803,10 +817,15 @@ begin
     end
     // the rest of DXGI formats, unsupported by Bethesda?
     else begin
-      dwFlags := dwFlags or DDSD_PITCH;
       ddspf.dwFlags := DDPF_FOURCC;
       ddspf.dwFourCC := MAGIC_DX10;
-      dwPitchOrLinearSize := (dwWidth * TwbDDS.GetBitsPerPixel(aDXGI)) shr 3;
+      if IsCompressed(aDXGI) then begin
+        dwFlags := dwFlags or DDSD_LINEARSIZE;
+        dwPitchOrLinearSize := LinearSize;
+      end else begin
+        dwFlags := dwFlags or DDSD_PITCH;
+        dwPitchOrLinearSize := RowPitch;
+      end;
     end;
   end;
 
