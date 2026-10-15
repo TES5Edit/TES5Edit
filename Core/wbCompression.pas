@@ -238,6 +238,8 @@ begin
         @Options
       );
       LZ4FCheck('LZ4F decompression error: %s', r);
+      if (r <> 0) and (Compressed = 0) and (Decompressed = 0) then
+        raise Exception.Create('LZ4F decompression error: incomplete frame');
       Inc(CompressedTotal, Compressed);
       Inc(DecompressedTotal, Decompressed);
     until r = 0;
