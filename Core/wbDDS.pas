@@ -569,7 +569,9 @@ begin
         Result := DXGI_FORMAT_A8_UNORM
       else
         Result := DXGI_FORMAT_R8_UNORM;
-  end;
+  end else
+  if (dwFlags and DDPF_ALPHA <> 0) and (dwRGBBitCount = 8) then
+    Result := DXGI_FORMAT_A8_UNORM;
 end;
 
 class function TwbDDS.GetD3DFMT(aDDSData: Pointer): TD3DFORMAT;
