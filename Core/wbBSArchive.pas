@@ -2690,7 +2690,8 @@ begin
   if fShareData then begin
     var f := fLoaded;
     while Assigned(f) do begin
-      if (f.ShareSize = aPackedFile.ShareSize) and TwbHash.SameLookupHash(f.ShareHash, aPackedFile.ShareHash) then begin
+      if (f.ShareSize = aPackedFile.ShareSize) and (f.Compress = aPackedFile.Compress) and
+         TwbHash.SameLookupHash(f.ShareHash, aPackedFile.ShareHash) then begin
         Size := 0;
         Break;
       end;
