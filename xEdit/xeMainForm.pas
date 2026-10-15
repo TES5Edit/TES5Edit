@@ -3452,7 +3452,15 @@ begin
       end;
 
       if Length(FormIDs) = 0 then begin
-        PostAddMessage('Skipped: ' + aFile.FileName + ' doesn''t need sequence file');
+        s := xeContext.Settings.DataPath + 'Seq\' + ChangeFileExt(aFile.FileName, '.seq');
+        if not FileExists(s) then
+          PostAddMessage('Skipped: ' + aFile.FileName + ' doesn''t need sequence file')
+        else if System.SysUtils.DeleteFile(s) then
+          PostAddMessage('Removed: ' + s + ', ' + aFile.FileName + ' doesn''t need sequence file')
+        else begin
+          PostAddMessage('Error: Can''t remove ' + s + ', ' + SysErrorMessage(GetLastError));
+          Exit;
+        end;
         Exit(sfrSkipped);
       end;
 
