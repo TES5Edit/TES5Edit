@@ -1178,6 +1178,7 @@ type
     function IsPinned: Boolean;
 
     procedure AddMessage(const s: string);
+    procedure RefuseStart(const aMessage: string);
     procedure RefuseMissingPlugin(const aName: string);
     procedure ScrollToTheLastMessage;
     procedure AddFile(const aFile: IwbFile);
@@ -1803,14 +1804,19 @@ begin
     tbsMessages.Highlighted := True;
 end;
 
-procedure TfrmMain.RefuseMissingPlugin(const aName: string);
+procedure TfrmMain.RefuseStart(const aMessage: string);
 begin
   if xeAutoExit then begin
-    AddMessage('Error: Selected plugin "' + aName + '" does not exist');
+    AddMessage('Error: ' + aMessage);
     CheckResult := 1;
   end else
-    ShowMessage('Selected plugin "' + aName + '" does not exist');
+    ShowMessage(aMessage);
   Close;
+end;
+
+procedure TfrmMain.RefuseMissingPlugin(const aName: string);
+begin
+  RefuseStart('Selected plugin "' + aName + '" does not exist');
 end;
 
 const
@@ -4405,6 +4411,10 @@ begin
                 Exit;
               end;
           end;
+          if s <> '' then begin
+            RefuseMissingPlugin(s);
+            Exit;
+          end;
         end;
 
         sl.Clear;
@@ -4412,8 +4422,7 @@ begin
           if (xeToolMode in wbPluginModes) or (xeAutoLoad and ({$IFDEF XE_TEST_CONTROL_POINTS}xeTestSwitches.Conflicts or {$ENDIF}(GetAsyncKeyState(VK_CONTROL) >= 0))) then try
             if xeQuickClean then
               if Length(lModules.ModulesByLoadOrder(False).FilteredByFlag(mfTaggedForPluginMode)) <> 1 then begin
-                ShowMessage('Exactly one module must be selected for Quick Clean mode.');
-                frmMain.Close;
+                RefuseStart('Exactly one module must be selected for Quick Clean mode.');
                 Exit;
               end;
 
