@@ -2230,7 +2230,7 @@ begin
           Dec(Size, SizeOf(Cardinal));
           if (lUnpacked > 0) and (Size <= 0) then
             raise Exception.Create('Compressed data is missing for: ' + aFile.Name);
-          if lUnpacked > Int64(Size) * cMaxExpansion then
+          if (lUnpacked > Cardinal(High(Integer))) or (lUnpacked > Int64(Size) * cMaxExpansion) then
             raise Exception.Create('Invalid unpacked size ' + IntToStr(lUnpacked) + ' for: ' + aFile.Name);
           SetLength(Result, lUnpacked);
           if Length(Result) > 0 then begin
