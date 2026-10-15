@@ -1917,8 +1917,13 @@ begin
       for var f in Self do begin
         if (fHeader.Magic2 = MAGIC_GNRL) and (f.Offset = 0) then
           raise Exception.Create('Packed file has no data: ' + f.Name);
-        if (fHeader.Magic2 = MAGIC_DX10) and (Length(f.DDS.TexChunks) = 0) then
-          raise Exception.Create('Packed file has no data: ' + f.Name);
+        if fHeader.Magic2 = MAGIC_DX10 then begin
+          if Length(f.DDS.TexChunks) = 0 then
+            raise Exception.Create('Packed file has no data: ' + f.Name);
+          for var c in f.DDS.TexChunks do
+            if not Assigned(c) or (c.Offset = 0) then
+              raise Exception.Create('Packed file has no data: ' + f.Name);
+        end;
       end;
 
       // file names table at the end of file
