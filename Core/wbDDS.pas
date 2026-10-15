@@ -615,19 +615,21 @@ begin
   with DDSHeader.ddspf do
   if dwFlags and DDPF_RGB <> 0 then case dwRGBBitCount of
     32:
-      if (dwFlags and DDPF_ALPHA <> 0) and (dwRBitMask = $FF0000) and (dwGBitMask = $FF00) and (dwBBitMask = $FF) and (dwABitMask = $FF000000) then
+      if (dwFlags and DDPF_ALPHAPIXELS <> 0) and (dwRBitMask = $FF0000) and (dwGBitMask = $FF00) and (dwBBitMask = $FF) and (dwABitMask = $FF000000) then
         Result := D3DFMT_A8R8G8B8
-      else if (dwFlags and DDPF_ALPHA = 0) and (dwRBitMask = $FF0000) and (dwGBitMask = $FF00) and (dwBBitMask = $FF) then
+      else if (dwFlags and DDPF_ALPHAPIXELS = 0) and (dwRBitMask = $FF0000) and (dwGBitMask = $FF00) and (dwBBitMask = $FF) then
         Result := D3DFMT_X8R8G8B8
-      else if (dwFlags and DDPF_ALPHA = 0) and (dwRBitMask = $FF) and (dwGBitMask = $FF00) and (dwBBitMask = $FF0000) then
+      else if (dwFlags and DDPF_ALPHAPIXELS = 0) and (dwRBitMask = $FF) and (dwGBitMask = $FF00) and (dwBBitMask = $FF0000) then
         Result := D3DFMT_X8B8G8R8
-      else if (dwFlags and DDPF_ALPHA <> 0) and (dwRBitMask = $3FF00000) and (dwGBitMask = $FFC00) and (dwBBitMask = $3FF) and (dwABitMask = $C0000000) then
+      else if (dwFlags and DDPF_ALPHAPIXELS <> 0) and (dwRBitMask = $3FF00000) and (dwGBitMask = $FFC00) and (dwBBitMask = $3FF) and (dwABitMask = $C0000000) then
         Result := D3DFMT_A2R10G10B10;
     24:
       if (dwRBitMask = $FF0000) and (dwGBitMask = $FF00) and (dwBBitMask = $FF) and (dwABitMask = $00) then
         Result := D3DFMT_R8G8B8;
     16:
       if (dwRBitMask = $7C00) and (dwGBitMask = $03E0) and (dwBBitMask = $001F) and (dwABitMask = $8000) then
+        Result := D3DFMT_A1R5G5B5
+      else if (dwRBitMask = $7C00) and (dwGBitMask = $03E0) and (dwBBitMask = $001F) and (dwABitMask = $0000) then
         Result := D3DFMT_X1R5G5B5
       else if (dwRBitMask = $F00) and (dwGBitMask = $F0) and (dwBBitMask = $F) and (dwABitMask = $F000) then
         Result := D3DFMT_A4R4G4B4
