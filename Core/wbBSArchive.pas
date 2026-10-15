@@ -1639,7 +1639,7 @@ begin
       Items[i].Name := LowerCase(aFilesList[i]);
       Items[i].FileObject := aFilesList.Objects[i];
       Items[i].NameHash64 := TwbHash.TES3(Items[i].Name);
-      Inc(len, Length(Items[i].Name) + 1); // including terminator
+      Inc(len, Length(AnsiString(Items[i].Name)) + 1); // including terminator
     end;
     // sort files by hashes
     fFiles.Sort(HashSortTES3);
@@ -1678,7 +1678,7 @@ begin
       Items[i].DirHash64 := TwbHash._TES4(fdir, False, fType = baTES4) ;
       Items[i].NameHash64 := TwbHash._TES4(fname, True, fType = baTES4);
       // calculate file names length
-      Inc(fHeader.FileNamesLength, Length(fname) + 1); // + terminator
+      Inc(fHeader.FileNamesLength, Length(AnsiString(fname)) + 1); // + terminator
     end;
     // sort files by hashes
     fFiles.Sort(HashSortTES4);
@@ -1693,7 +1693,7 @@ begin
         fFoldersTES4[High(fFoldersTES4)].Name := fdir;
         fFoldersTES4[High(fFoldersTES4)].Hash := f.DirHash64;
         // calculate folder names length
-        Inc(fHeader.FolderNamesLength, Length(fdir) + 1); // + terminator only, length prefix is not counted
+        Inc(fHeader.FolderNamesLength, Length(AnsiString(fdir)) + 1); // + terminator only, length prefix is not counted
       end;
       fFoldersTES4[High(fFoldersTES4)].Files := fFoldersTES4[High(fFoldersTES4)].Files + [f];
     end;
@@ -1712,7 +1712,7 @@ begin
     for i := Low(fFoldersTES4) to High(fFoldersTES4) do begin
       fFoldersTES4[i].Offset := fDataOffset;
       // add folder name length
-      Inc(fDataOffset, Length(fFoldersTES4[i].Name) + 2); // + length prefix + terminator
+      Inc(fDataOffset, Length(AnsiString(fFoldersTES4[i].Name)) + 2); // + length prefix + terminator
       // add file records length
       Inc(fDataOffset, 16 * Length(fFoldersTES4[i].Files));
     end;
@@ -1823,7 +1823,7 @@ begin
       var i := 0;
       for var f in Self do begin
         fStream.WriteCardinal(i);
-        Inc(i, Length(f.Name) + 1); // including terminator
+        Inc(i, Length(AnsiString(f.Name)) + 1); // including terminator
       end;
       // Filename records
       for var f in Self do fStream.WriteStringTerm(f.Name);
