@@ -2230,8 +2230,8 @@ begin
         var lStored: Int64 := aFile.Size;
         if aFile.Compressed then
           lStored := aFile.PackedSize;
-        if (aFile.Offset < 0) or (lStored > High(Integer)) or (aFile.Size > Cardinal(High(Integer))) or
-          (aFile.Offset + lStored > fStream.Size) then
+        if (aFile.Offset < 0) or (lStored > fStream.Size - aFile.Offset) or
+          (aFile.Compressed and ((lStored > High(Integer)) or (aFile.Size > Cardinal(High(Integer))))) then
           raise Exception.Create('Invalid file size ' + IntToStr(lStored) + ' for: ' + aFile.Name);
         fStream.Position := aFile.Offset;
         if aFile.Compressed then begin
@@ -2266,7 +2266,7 @@ begin
           var lStored: Int64 := c.Size;
           if c.Compressed then
             lStored := c.PackedSize;
-          if (c.Offset < 0) or (lStored > High(Integer)) or (c.Offset + lStored > fStream.Size) then
+          if (c.Offset < 0) or (lStored > High(Integer)) or (lStored > fStream.Size - c.Offset) then
             raise Exception.Create('Invalid chunk size ' + IntToStr(lStored) + ' for: ' + aFile.Name);
         end;
         SetLength(Result, lTexSize);
