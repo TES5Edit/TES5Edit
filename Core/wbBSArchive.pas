@@ -153,6 +153,7 @@ type
     function GetDDSMipChunkNum(aWidth, aHeight, aMipMaps: Integer): Integer;
     function GetDDSMipsSize(aDDSHeader: PDDSHeader; aFirstMip: Integer): Int64;
     procedure CheckDDSFitsRecord(aDDSHeader: PDDSHeader; const aFileName: string);
+    class function IsCubemapName(const aFileName: string): Boolean; static;
 
   public
   const
@@ -254,6 +255,7 @@ type
       DataSize: Cardinal;
       Hash: TwbLookupHash;
       Compress: Boolean;
+      Cubemap: Boolean;
       Offset: Int64;
       Size: Cardinal;
       PackedSize: Cardinal;
@@ -280,8 +282,8 @@ type
     function GetFileEntry(Index: NativeInt): TwbBSFileEntry;
     function GetFilesCount: NativeInt;
     procedure SetFilesCount(aCount: NativeInt);
-    function FindPackedData(aSize: Cardinal; aHash: TwbLookupHash; aCompress: Boolean; aChunk: TwbBSFileChunk): Boolean;
-    procedure AddPackedData(aSize: Cardinal; aHash: TwbLookupHash; aCompress: Boolean; aChunk: TwbBSFileChunk);
+    function FindPackedData(aSize: Cardinal; aHash: TwbLookupHash; aCompress, aCubemap: Boolean; aChunk: TwbBSFileChunk): Boolean;
+    procedure AddPackedData(aSize: Cardinal; aHash: TwbLookupHash; aCompress, aCubemap: Boolean; aChunk: TwbBSFileChunk);
     procedure PackData(aFile: TwbBSFileEntry; aChunk: TwbBSFileChunk;
       aData: Pointer; aSize, aUncompressedSize: Integer);
     procedure DecompressBuf(aSrc: Pointer; aSrcSize: Integer; aDst: Pointer; aDstSize: Integer);
@@ -340,6 +342,7 @@ type
       ArchiveIndex: Integer;
       ShareSize: Integer;
       ShareHash: TwbLookupHash;
+      ShareCubemap: Boolean;
       Chunks: array of record
         UncompressedSize: Integer;
         Data: TBytes;
@@ -1303,7 +1306,12 @@ begin
       end;
 end;
 
-function TwbBSArchive.FindPackedData(aSize: Cardinal; aHash: TwbLookupHash; aCompress: Boolean; aChunk: TwbBSFileChunk): Boolean;
+class function TwbCustomBSArchive.IsCubemapName(const aFileName: string): Boolean;
+begin
+  Result := Pos('_e.dd', LowerCase(aFileName)) > 0;
+end;
+
+function TwbBSArchive.FindPackedData(aSize: Cardinal; aHash: TwbLookupHash; aCompress, aCubemap: Boolean; aChunk: TwbBSFileChunk): Boolean;
 begin
   Result := False;
 
@@ -1311,7 +1319,7 @@ begin
     Exit;
 
   for var i := 0 to Pred(fPackedDataCount) do
-    if (aSize = fPackedData[i].DataSize) and (aCompress = fPackedData[i].Compress) and
+    if (aSize = fPackedData[i].DataSize) and (aCompress = fPackedData[i].Compress) and (aCubemap = fPackedData[i].Cubemap) and
        TwbHash.SameLookupHash(aHash, fPackedData[i].Hash) then begin
       aChunk.Offset := fPackedData[i].Offset;
       aChunk.Size := fPackedData[i].Size;
@@ -1331,7 +1339,7 @@ begin
     end;
 end;
 
-procedure TwbBSArchive.AddPackedData(aSize: Cardinal; aHash: TwbLookupHash; aCompress: Boolean; aChunk: TwbBSFileChunk);
+procedure TwbBSArchive.AddPackedData(aSize: Cardinal; aHash: TwbLookupHash; aCompress, aCubemap: Boolean; aChunk: TwbBSFileChunk);
 begin
   if not fShareData then
     Exit;
@@ -1345,6 +1353,7 @@ begin
   fPackedData[fPackedDataCount].DataSize := aSize;
   fPackedData[fPackedDataCount].Hash := aHash;
   fPackedData[fPackedDataCount].Compress := aCompress;
+  fPackedData[fPackedDataCount].Cubemap := aCubemap;
   fPackedData[fPackedDataCount].Offset := aChunk.Offset;
   fPackedData[fPackedDataCount].Size := aChunk.Size;
   fPackedData[fPackedDataCount].PackedSize := aChunk.PackedSize;
@@ -2041,13 +2050,17 @@ var
   buf: TBytes;
   DataHash: TwbLookupHash;
   StartPosition: Int64;
+  Cubemap: Boolean;
 begin
-  if fShareData then
+  Cubemap := False;
+  if fShareData then begin
     DataHash := TwbHash.LookupHash(aData, aSize);
+    Cubemap := (fType in [baFO3, baSSE]) and (fHeader.Flags and ARCHIVE_EMBEDNAME <> 0) and IsCubemapName(aFile.Name);
+  end;
 
   SyncBeginWrite;
   try
-    if FindPackedData(aUncompressedSize, DataHash, aFile.Compress, aChunk) then
+    if FindPackedData(aUncompressedSize, DataHash, aFile.Compress, Cubemap, aChunk) then
       Exit;
 
     // data compression (except data from Packer which is already compressed)
@@ -2063,7 +2076,7 @@ begin
       end;
       // try to find existing data again if multithreaded
       // maybe some other thread has written the same data while we've been busy compressing
-      if fMultiThreaded and FindPackedData(aUncompressedSize, DataHash, aFile.Compress, aChunk) then
+      if fMultiThreaded and FindPackedData(aUncompressedSize, DataHash, aFile.Compress, Cubemap, aChunk) then
         Exit;
     end;
 
@@ -2106,7 +2119,7 @@ begin
       end;
     end;
 
-    AddPackedData(aUncompressedSize, DataHash, aFile.Compress, aChunk);
+    AddPackedData(aUncompressedSize, DataHash, aFile.Compress, Cubemap, aChunk);
 
   finally
     SyncEndWrite;
@@ -2696,6 +2709,7 @@ begin
     if fShareData then begin
       aPackedFile.ShareSize := Length(buf);
       aPackedFile.ShareHash := TwbHash.LookupHash(buf, Length(buf));
+      aPackedFile.ShareCubemap := (fType in [baFO3, baSSE]) and IsCubemapName(aPackedFile.FileName);
     end;
 
   finally
@@ -2707,7 +2721,7 @@ begin
     var f := fLoaded;
     while Assigned(f) do begin
       if (f.ShareSize = aPackedFile.ShareSize) and (f.Compress = aPackedFile.Compress) and
-         TwbHash.SameLookupHash(f.ShareHash, aPackedFile.ShareHash) then begin
+         (f.ShareCubemap = aPackedFile.ShareCubemap) and TwbHash.SameLookupHash(f.ShareHash, aPackedFile.ShareHash) then begin
         SharedSize := Size;
         Break;
       end;
