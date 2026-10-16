@@ -391,6 +391,7 @@ const
   DDPF_RGB         = $00000040;
   DDPF_YUV         = $00000200;
   DDPF_LUMINANCE   = $00020000;
+  DDPF_BUMPDUDV    = $00080000;
 
   // DX10
   DDS_DIMENSION_TEXTURE2D       = $00000003;
@@ -627,8 +628,20 @@ begin
       else if IsBitMask($00FF, 0, 0, $FF00) then
         Result := DXGI_FORMAT_R8G8_UNORM;
   end else
-  if (dwFlags and DDPF_ALPHA <> 0) and (dwRGBBitCount = 8) then
-    Result := DXGI_FORMAT_A8_UNORM;
+  if dwFlags and DDPF_ALPHA <> 0 then begin
+    if dwRGBBitCount = 8 then
+      Result := DXGI_FORMAT_A8_UNORM;
+  end else
+  if dwFlags and DDPF_BUMPDUDV <> 0 then case dwRGBBitCount of
+    32:
+      if IsBitMask($000000FF, $0000FF00, $00FF0000, $FF000000) then
+        Result := DXGI_FORMAT_R8G8B8A8_SNORM
+      else if IsBitMask($0000FFFF, $FFFF0000, 0, 0) then
+        Result := DXGI_FORMAT_R16G16_SNORM;
+    16:
+      if IsBitMask($00FF, $FF00, 0, 0) then
+        Result := DXGI_FORMAT_R8G8_SNORM;
+  end;
 end;
 
 class function TwbDDS.GetD3DFMT(aDDSData: Pointer): TD3DFORMAT;
