@@ -690,6 +690,7 @@ type
     procedure RemoveMainRecord(const aRecord: IwbMainRecord);
     procedure InjectMainRecord(const aRecord: IwbMainRecord);
     procedure RemoveInjectedMainRecord(const aRecord: IwbMainRecord);
+    function InjectionTarget(const aFormID: TwbFormID): IwbFileInternal;
     procedure ReleaseRecords;
     procedure ForceClosed;
     function ContextObj: TwbGameContext;
@@ -983,6 +984,7 @@ type
     procedure RemoveMainRecord(const aRecord: IwbMainRecord);
     procedure InjectMainRecord(const aRecord: IwbMainRecord);
     procedure RemoveInjectedMainRecord(const aRecord: IwbMainRecord);
+    function InjectionTarget(const aFormID: TwbFormID): IwbFileInternal;
     procedure ReleaseRecords;
     procedure ForceClosed;
     procedure GetMasters(aMasters: TStrings); virtual;
@@ -8131,6 +8133,15 @@ begin
   IncGeneration;
 end;
 
+function TwbFile.InjectionTarget(const aFormID: TwbFormID): IwbFileInternal;
+begin
+  Result := nil;
+  if aFormID.IsHardcoded and not (fsIsGameMaster in flStates) then
+    Supports(flContextObj.GameMasterFile, IwbFileInternal, Result)
+  else
+    Supports(GetMasterForFileID(aFormID.FileID[flContextObj.SlotLayout], True, False), IwbFileInternal, Result);
+end;
+
 procedure TwbFile.flRegisterWithMaster(const aRecord: IwbMainRecord; const aFormID: TwbFormID);
 begin
   var lFileID := aFormID.FileID[flContextObj.SlotLayout];
@@ -8165,12 +8176,9 @@ begin
     if Assigned(lMaster) then
       (lMaster as IwbMainRecordInternal).AddOverride(aRecord)
     else begin
-      if aFormID.IsHardcoded and not (fsIsGameMaster in flStates) then begin
-        var lGameMasterFile: IwbFileInternal;
-        if Supports(flContextObj.GameMasterFile, IwbFileInternal, lGameMasterFile) then
-          lGameMasterFile.InjectMainRecord(aRecord);
-      end else
-        (GetMasterForFileID(lFileId, True, False) as IwbFileInternal).InjectMainRecord(aRecord);
+      var lTarget := InjectionTarget(aFormID);
+      if Assigned(lTarget) then
+        lTarget.InjectMainRecord(aRecord);
     end;
   except
     on E: Exception do
@@ -8197,12 +8205,11 @@ begin
     var lMaster := GetMasterRecordByFormID(aFormID, True, True);
     if Assigned(lMaster) and ((lMaster as IwbElement) <> (aRecord as IwbElement)) then
       (lMaster as IwbMainRecordInternal).RemoveOverride(aRecord)
-    else if aFormID.IsHardcoded and not (fsIsGameMaster in flStates) then begin
-      var lGameMasterFile: IwbFileInternal;
-      if Supports(flContextObj.GameMasterFile, IwbFileInternal, lGameMasterFile) then
-        lGameMasterFile.RemoveInjectedMainRecord(aRecord);
-    end else
-      (GetMasterForFileID(lFileID, True, False) as IwbFileInternal).RemoveInjectedMainRecord(aRecord);
+    else begin
+      var lTarget := InjectionTarget(aFormID);
+      if Assigned(lTarget) then
+        lTarget.RemoveInjectedMainRecord(aRecord);
+    end;
   except
     on E: Exception do
       if wbHasProgressCallback then
@@ -18667,10 +18674,10 @@ begin
   if not Assigned(lFile) then
     Exit;
 
-  var lMasterFile := lFile.GetMasterForFileID(GetFormID.FileID[ContextObj.SlotLayout], GetMastersUpdated, False);
+  var lMasterFile := (lFile as IwbFileInternal).InjectionTarget(GetFixedFormID);
   if not Assigned(lMasterFile) then
     Exit;
-  (lMasterFile as IwbFileInternal).InjectMainRecord(Self);
+  lMasterFile.InjectMainRecord(Self);
 
   Include(mrStates, mrsIsInjectedChecked);
   Include(mrStates, mrsIsInjected);
@@ -18718,11 +18725,8 @@ begin
   if lIsInjected then begin
     var lInjectionMaster: IwbFileInternal;
     var lFile := GetFile;
-    if Assigned(lFile) then begin
-      var lFormID := GetFixedFormID;
-      var lFileID := lFormID.FileID[ContextObj.SlotLayout];
-      lInjectionMaster := lFile.GetMasterForFileID(lFileId, True, False) as IwbFileInternal;
-    end;
+    if Assigned(lFile) then
+      lInjectionMaster := (lFile as IwbFileInternal).InjectionTarget(GetFixedFormID);
     if Assigned(lInjectionMaster) then
       lInjectionMaster.InjectMainRecord(Self);
   end;
@@ -18741,11 +18745,8 @@ begin
 
   if lIsInjected then begin
     var lFile := GetFile;
-    if Assigned(lFile) then begin
-      var lFormID := GetFixedFormID;
-      var lFileID := lFormID.FileID[ContextObj.SlotLayout];
-      lInjectionMaster := lFile.GetMasterForFileID(lFileId, True, False) as IwbFileInternal;
-    end;
+    if Assigned(lFile) then
+      lInjectionMaster := (lFile as IwbFileInternal).InjectionTarget(GetFixedFormID);
   end;
 
   Assert(Assigned(aMaster));
