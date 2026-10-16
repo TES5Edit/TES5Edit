@@ -836,6 +836,7 @@ type
     function flFindKeyInIndex(aIndex: TwbNamedIndex; const aKey: string; out aMainRecord: IwbMainRecord): Boolean;
 
     procedure flActivateIndices;
+    procedure flRegisterWithMaster(const aRecord: IwbMainRecord; const aFormID: TwbFormID);
     procedure flUnregisterFromMaster(const aRecord: IwbMainRecord; aFormID: TwbFormID);
     procedure flUnregisterRecords;
 
@@ -2544,8 +2545,6 @@ const
 var
   FormID    : TwbFormID;
   i         : Integer;
-  Master    : IwbMainRecord;
-  GameMasterFile : IwbFileInternal;
 begin
   if not Assigned(aRecord) then
     Exit;
@@ -2588,48 +2587,21 @@ begin
 
     end;
 
-    var lFileID := FormID.FileID[flContextObj.SlotLayout];
-    if IsNewRecord(lFileID, True) and not (fsIsCompareLoad in flStates) and not (FormID.IsHardcoded and not (fsIsGameMaster in flStates))  then begin
-
-      if not flComplexFileFileID then begin
-
-        if (FormID.ToCardinal and $00FFF000) <> 0 then begin
-          Exclude(flStates, fsLightCompatible);
-          if wbHasProgressCallback then
-            if GetIsLight or flLoadOrderFileID.IsLightSlot then
-              wbProgressCallback('<Error: ' + aRecord.Name + ' has invalid ObjectID ' + IntToHex64((FormID.ToCardinal and $00FFFFFF),6) + ' for a light module. You will not be able to save this file with the Light flag active.>');
-        end;
-
-        if (FormID.ToCardinal and $00FF0000) <> 0 then begin
-          Exclude(flStates, fsMediumCompatible);
-          if wbHasProgressCallback then
-            if GetIsMedium or flLoadOrderFileID.IsMediumSlot then
-              wbProgressCallback('<Error: ' + aRecord.Name + ' has invalid ObjectID ' + IntToHex64((FormID.ToCardinal and $00FFFFFF),6) + ' for a medium module. You will not be able to save this file with the Medium flag active.>');
-        end;
-
-      end;
-
-      Exclude(flStates, fsUpdateCompatible);
-      if wbHasProgressCallback then
-        if GetIsUpdate then
-          wbProgressCallback('<Error: ' + aRecord.Name + ' has invalid ObjectID ' + IntToHex64((FormID.ToCardinal and $00FFFFFF),6) + ' for an update module. You will not be able to save this file with the Update flag active.>');
-
-      {new record...}
-    end else try
-      Master := GetMasterRecordByFormID(FormID, True, True);
-      if Assigned(Master) then
-        (Master as IwbMainRecordInternal).AddOverride(aRecord)
-      else begin
-        if FormID.IsHardcoded and not (fsIsGameMaster in flStates) then begin
-          if Supports(flContextObj.GameMasterFile, IwbFileInternal, GameMasterFile) then
-            GameMasterFile.InjectMainRecord(aRecord);
-        end else
-          (GetMasterForFileID(lFileId, True, False) as IwbFileInternal).InjectMainRecord(aRecord);
-      end;
+    try
+      flRegisterWithMaster(aRecord, FormID);
     except
-      on E: Exception do
-        if wbHasProgressCallback then
-          wbProgressCallback('Error: <' + e.Message + '> while trying to determine master record for ' + aRecord.Name);
+      if flFormIDsSorted then begin
+        flRecords[i] := nil;
+        if i < High(flRecords) then begin
+          Move(flRecords[Succ(i)], flRecords[i], SizeOf(Pointer) * (High(flRecords) - i));
+          Pointer(flRecords[High(flRecords)]) := nil;
+        end;
+        SetLength(flRecords, Pred(Length(flRecords)));
+      end else begin
+        Dec(flRecordsCount);
+        flRecords[flRecordsCount] := nil;
+      end;
+      raise;
     end;
   end;
 
@@ -8157,6 +8129,54 @@ begin
     flRemoveKeysFromIndices(aRecord, aRecord.DeactivateIndexKeys);
 
   IncGeneration;
+end;
+
+procedure TwbFile.flRegisterWithMaster(const aRecord: IwbMainRecord; const aFormID: TwbFormID);
+begin
+  var lFileID := aFormID.FileID[flContextObj.SlotLayout];
+  if IsNewRecord(lFileID, True) and not (fsIsCompareLoad in flStates) and not (aFormID.IsHardcoded and not (fsIsGameMaster in flStates))  then begin
+
+    if not flComplexFileFileID then begin
+
+      if (aFormID.ToCardinal and $00FFF000) <> 0 then begin
+        Exclude(flStates, fsLightCompatible);
+        if wbHasProgressCallback then
+          if GetIsLight or flLoadOrderFileID.IsLightSlot then
+            wbProgressCallback('<Error: ' + aRecord.Name + ' has invalid ObjectID ' + IntToHex64((aFormID.ToCardinal and $00FFFFFF),6) + ' for a light module. You will not be able to save this file with the Light flag active.>');
+      end;
+
+      if (aFormID.ToCardinal and $00FF0000) <> 0 then begin
+        Exclude(flStates, fsMediumCompatible);
+        if wbHasProgressCallback then
+          if GetIsMedium or flLoadOrderFileID.IsMediumSlot then
+            wbProgressCallback('<Error: ' + aRecord.Name + ' has invalid ObjectID ' + IntToHex64((aFormID.ToCardinal and $00FFFFFF),6) + ' for a medium module. You will not be able to save this file with the Medium flag active.>');
+      end;
+
+    end;
+
+    Exclude(flStates, fsUpdateCompatible);
+    if wbHasProgressCallback then
+      if GetIsUpdate then
+        wbProgressCallback('<Error: ' + aRecord.Name + ' has invalid ObjectID ' + IntToHex64((aFormID.ToCardinal and $00FFFFFF),6) + ' for an update module. You will not be able to save this file with the Update flag active.>');
+
+    {new record...}
+  end else try
+    var lMaster := GetMasterRecordByFormID(aFormID, True, True);
+    if Assigned(lMaster) then
+      (lMaster as IwbMainRecordInternal).AddOverride(aRecord)
+    else begin
+      if aFormID.IsHardcoded and not (fsIsGameMaster in flStates) then begin
+        var lGameMasterFile: IwbFileInternal;
+        if Supports(flContextObj.GameMasterFile, IwbFileInternal, lGameMasterFile) then
+          lGameMasterFile.InjectMainRecord(aRecord);
+      end else
+        (GetMasterForFileID(lFileId, True, False) as IwbFileInternal).InjectMainRecord(aRecord);
+    end;
+  except
+    on E: Exception do
+      if wbHasProgressCallback then
+        wbProgressCallback('Error: <' + e.Message + '> while trying to determine master record for ' + aRecord.Name);
+  end;
 end;
 
 procedure TwbFile.flUnregisterFromMaster(const aRecord: IwbMainRecord; aFormID: TwbFormID);
