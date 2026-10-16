@@ -6647,6 +6647,8 @@ function TwbFile.GetFullMaster(aIndex: Integer; aNew: Boolean): IwbFile;
 begin
   //not very optimized... but should work for now
   Result := nil;
+  if aIndex < 0 then
+    Exit;
   for var lMasterIndex := 0 to Pred(GetMasterCount(aNew)) do
   begin
     Result := GetMaster(lMasterIndex, aNew);
@@ -6654,9 +6656,9 @@ begin
       Dec(aIndex);
       if aIndex < 0 then
         Exit;
-    end else
-      Result := nil;
+    end;
   end;
+  Result := nil;
 end;
 
 function TwbFile.GetFullMasterCount(aNew: Boolean): Integer;
@@ -6983,6 +6985,8 @@ function TwbFile.GetLightMaster(aIndex: Integer; aNew: Boolean): IwbFile;
 begin
   //not very optimized... but should work for now
   Result := nil;
+  if aIndex < 0 then
+    Exit;
   for var lMasterIndex := 0 to Pred(GetMasterCount(aNew)) do
   begin
     Result := GetMaster(lMasterIndex, aNew);
@@ -6990,9 +6994,9 @@ begin
       Dec(aIndex);
       if aIndex < 0 then
         Exit;
-    end else
-      Result := nil;
+    end;
   end;
+  Result := nil;
 end;
 
 function TwbFile.GetLightMasterCount(aNew: Boolean): Integer;
@@ -7199,6 +7203,8 @@ function TwbFile.GetMediumMaster(aIndex: Integer; aNew: Boolean): IwbFile;
 begin
   //not very optimized... but should work for now
   Result := nil;
+  if aIndex < 0 then
+    Exit;
   for var lMasterIndex := 0 to Pred(GetMasterCount(aNew)) do
   begin
     Result := GetMaster(lMasterIndex, aNew);
@@ -7206,9 +7212,9 @@ begin
       Dec(aIndex);
       if aIndex < 0 then
         Exit;
-    end else
-      Result := nil;
+    end;
   end;
+  Result := nil;
 end;
 
 function TwbFile.GetMediumMasterCount(aNew: Boolean): Integer;
