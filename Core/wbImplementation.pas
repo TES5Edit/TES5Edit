@@ -18708,6 +18708,7 @@ begin
   mrReferencedBy := aReferencedBy;
   mrReferencedBySize := Length(mrReferencedBy);
   mrReferencedByCount := aReferencedByCount;
+  mrReferencedByUnsorted := True;
 
   for var lReferenceByIndex := 0 to Pred(mrReferencedByCount) do
     (mrReferencedBy[lReferenceByIndex] as IwbMainRecordInternal).SetReferencesInjected(True);
@@ -18757,6 +18758,7 @@ begin
   mrReferencedBy := aReferencedBy;
   mrReferencedBySize := Length(mrReferencedBy);
   mrReferencedByCount := aReferencedByCount;
+  mrReferencedByUnsorted := True;
 
   var lFile: IwbFileInternal;
   if Supports(GetFile, IwbFileInternal, lFile) then begin
