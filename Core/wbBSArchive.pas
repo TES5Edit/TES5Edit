@@ -1107,7 +1107,11 @@ begin
   if aType = baTES4 then
     aArchiveFlags := aArchiveFlags or ARCHIVE_EMBEDNAME or ARCHIVE_XMEM or ARCHIVE_UNKNOWN10;
 
+  aTexturesOnly := aFilesList.Count > 0;
   for var i := 0 to Pred(aFilesList.Count) do begin
+    if not (aFilesList[i].EndsWith('.dds', True) or aFilesList[i].EndsWith('.ddx', True)) then
+      aTexturesOnly := False;
+
     var AssetType := TwbAsset.AssetTypeByFolder(aFilesList[i]);
     if AssetType = atNone then
       AssetType := TwbAsset.AssetTypeByExtension(aFilesList[i]);
@@ -1145,8 +1149,6 @@ begin
   end;
 
   // final flags detection
-
-  aTexturesOnly := aFileFlags = FILE_TEXTURES;
 
   // menus, shaders and fonts are Oblivion only
   if aType <> baTES4 then
