@@ -1277,6 +1277,7 @@ end;
 
 function TwbBSArchive.Warnings: TArray<string>;
 begin
+  Result := nil;
   if fType = baTES3 then
     for var f in Self do
       if TwbAsset.AssetTypeByFolder(f.Name) in [atSound, atMusic, atVideo, atFont, atSplash] then begin
