@@ -1807,7 +1807,10 @@ procedure TfrmMain.RefuseStart(const aMessage: string);
 begin
   if xeUnattended then begin
     AddMessage('Error: ' + aMessage);
-    CheckResult := 1;
+    if xeToolMode in wbPluginModes then
+      CheckResult := 255
+    else
+      CheckResult := 1;
   end else
     ShowMessage(aMessage);
   Close;

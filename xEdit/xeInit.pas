@@ -1064,7 +1064,7 @@ begin
         ShowMessage(xeToolName+' mode requires a valid plugin name!')
       else begin
         xeSaveLogs('Error: Selected plugin "' + xePluginToUse + '" does not exist', True);
-        ExitCode := 1;
+        ExitCode := 255;
       end;
       Exit(False);
     end;
