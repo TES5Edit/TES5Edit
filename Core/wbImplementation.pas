@@ -18719,10 +18719,10 @@ begin
   var lMasterFile := (lFile as IwbFileInternal).InjectionTarget(GetFixedFormID);
   if not Assigned(lMasterFile) then
     Exit;
-  lMasterFile.InjectMainRecord(Self);
+  if not lMasterFile.HoldsInjected(Self) then
+    lMasterFile.InjectMainRecord(Self);
 
-  Include(mrStates, mrsIsInjectedChecked);
-  Include(mrStates, mrsIsInjected);
+  Exclude(mrStates, mrsIsInjectedChecked);
 end;
 
 procedure TwbMainRecord.YouAreTheMaster(const aOldMaster: IwbMainRecord; const aOverrides, aReferencedBy: TDynMainRecords; aReferencedByCount: Integer);
