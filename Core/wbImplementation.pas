@@ -5535,6 +5535,7 @@ begin
           MastersUpdated(Old, New, lOldCount, lNewCount);
         end;
         SortRecords;
+        flInvalidateReferencesInjected;
       end;
       flProgress(Format('Removed %d unused masters.', [lRemovedCount]));
     finally
