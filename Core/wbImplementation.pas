@@ -17338,6 +17338,7 @@ begin
   DoInit(False);
 
   Result := False;
+  InvalidateReferencesInjected;
   if GetReferencesInjected then begin
     if GetSignature = 'SCPT' then begin
       Element := GetElementByName('References');
