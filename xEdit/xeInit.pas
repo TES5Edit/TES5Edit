@@ -121,7 +121,7 @@ begin
   if Result then
     if (aDefaultPath <> '') and (FileExists(aDefaultPath+'\'+aValue) or FileExists(aDefaultPath+'\'+aValue+csDotGhost)) then
       aValue := ExpandFileName(aDefaultPath+'\'+aValue)
-    else if not (FileExists(aValue) or FileExists(aValue+csDotGhost)) then
+    else if not FileExists(aValue) then
       Result := False;
 end;
 
@@ -133,6 +133,8 @@ begin
   repeat
     Result := xeFindNextValidCmdLineFileName(aStartIndex, aValue, aDefaultPath);
   until not Result or wbIsModule(aValue, wbGameIdentities[xeGameMode].GameExeName);
+  if not Result and (aValue <> '') and FileExists(aValue+csDotGhost) then
+    Result := wbIsModule(aValue, wbGameIdentities[xeGameMode].GameExeName);
   if Result  then
     if (AnsiCompareText(ExtractFilePath(ExpandFileName(aValue)), ExpandFileName(aDefaultPath)) = 0) then begin
       aValue := wbStripDotGhost(ExtractFileName(ExpandFileName(aValue)));
@@ -1060,9 +1062,10 @@ begin
 
   if xeToolMode in wbPluginModes then // look for the file name
     if not xeFindNextValidCmdLineModule(xeParamIndex, xePluginToUse, xeContext.Settings.DataPath) then begin
-      if xePluginToUse = '' then
-        ShowMessage(xeToolName+' mode requires a valid plugin name!')
-      else begin
+      if xePluginToUse = '' then begin
+        ExitCode := 255;
+        ShowMessage(xeToolName+' mode requires a valid plugin name!');
+      end else begin
         xeSaveLogs('Error: Selected plugin "' + xePluginToUse + '" does not exist', True);
         ExitCode := 255;
       end;
