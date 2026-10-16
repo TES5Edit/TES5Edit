@@ -154,6 +154,7 @@ type
     function GetDDSMipsSize(aDDSHeader: PDDSHeader; aFirstMip: Integer): Int64;
     procedure CheckDDSFitsRecord(aDDSHeader: PDDSHeader; const aFileName: string);
     class function IsCubemapName(const aFileName: string): Boolean; static;
+    class function IsTextureName(const aFileName: string): Boolean; static;
 
   public
   const
@@ -1109,7 +1110,7 @@ begin
 
   aTexturesOnly := aFilesList.Count > 0;
   for var i := 0 to Pred(aFilesList.Count) do begin
-    if not (aFilesList[i].EndsWith('.dds', True) or aFilesList[i].EndsWith('.ddx', True)) then
+    if not IsTextureName(aFilesList[i]) then
       aTexturesOnly := False;
 
     var AssetType := TwbAsset.AssetTypeByFolder(aFilesList[i]);
@@ -1308,7 +1309,7 @@ begin
 
   if (fType in [baFO3, baSSE]) and (fHeader.Flags and ARCHIVE_EMBEDNAME <> 0) then
     for var f in Self do
-      if not (f.Name.EndsWith('.dds', True) or f.Name.EndsWith('.ddx', True)) then begin
+      if not IsTextureName(f.Name) then begin
         Result := Result + ['Contains non texture files which may crash the game when packed with Embedded File Names flag'];
         Break;
       end;
@@ -1327,6 +1328,11 @@ end;
 class function TwbCustomBSArchive.IsCubemapName(const aFileName: string): Boolean;
 begin
   Result := Pos('_e.dd', LowerCase(aFileName)) > 0;
+end;
+
+class function TwbCustomBSArchive.IsTextureName(const aFileName: string): Boolean;
+begin
+  Result := aFileName.EndsWith('.dds', True) or aFileName.EndsWith('.ddx', True);
 end;
 
 function TwbBSArchive.FindPackedData(aSize: Cardinal; aHash: TwbLookupHash; aCompress, aCubemap: Boolean; aChunk: TwbBSFileChunk): Boolean;
@@ -2536,7 +2542,12 @@ begin
     DetectFlags(fType, aFilesList, aFilesCompression, lFlags, lFileFlags, lTexturesOnly);
     if fArchiveFlags <> 0 then
       lFlags := fArchiveFlags or ARCHIVE_DEFAULT;
-    fMayEmbedNames := (lFileFlags and FILE_TEXTURES <> 0) and ((fArchiveFlags = 0) or (lFlags and ARCHIVE_EMBEDNAME <> 0));
+    if (fArchiveFlags = 0) or (lFlags and ARCHIVE_EMBEDNAME <> 0) then
+      for var lFileName in aFilesList do
+        if IsTextureName(lFileName) then begin
+          fMayEmbedNames := True;
+          Break;
+        end;
     lCompressAll := (fType = baSSE) and lTexturesOnly and (lFlags and ARCHIVE_EMBEDNAME <> 0);
   end;
 
