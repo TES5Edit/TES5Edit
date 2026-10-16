@@ -2628,7 +2628,6 @@ begin
   SetLength(flMasters, Succ(Length(flMasters)));
   flMasters[High(flMasters)] := aFile;
   UpdateModuleMasters;
-  flInvalidateReferencesInjected;
 end;
 
 procedure TwbFile.AddMasterIfMissing(const aMaster: string; aSortMasters: Boolean = True; aSilent: Boolean = False);
@@ -4069,6 +4068,7 @@ begin;
   finally
     lMasters.Free;
     flOldMasters := nil;
+    flInvalidateReferencesInjected;
   end;
 end;
 
@@ -5535,11 +5535,11 @@ begin
           MastersUpdated(Old, New, lOldCount, lNewCount);
         end;
         SortRecords;
-        flInvalidateReferencesInjected;
       end;
       flProgress(Format('Removed %d unused masters.', [lRemovedCount]));
     finally
       flOldMasters := nil;
+      flInvalidateReferencesInjected;
     end;
   end
   else flProgress('Has no masters.');
