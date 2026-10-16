@@ -691,6 +691,8 @@ type
     procedure InjectMainRecord(const aRecord: IwbMainRecord);
     procedure RemoveInjectedMainRecord(const aRecord: IwbMainRecord);
     function InjectionTarget(const aFormID: TwbFormID): IwbFileInternal;
+    function IsOwnFormID(const aFormID: TwbFormID; aNew: Boolean): Boolean;
+    function HoldsInjected(const aRecord: IwbMainRecord): Boolean;
     procedure ReleaseRecords;
     procedure ForceClosed;
     function ContextObj: TwbGameContext;
@@ -985,6 +987,8 @@ type
     procedure InjectMainRecord(const aRecord: IwbMainRecord);
     procedure RemoveInjectedMainRecord(const aRecord: IwbMainRecord);
     function InjectionTarget(const aFormID: TwbFormID): IwbFileInternal;
+    function IsOwnFormID(const aFormID: TwbFormID; aNew: Boolean): Boolean;
+    function HoldsInjected(const aRecord: IwbMainRecord): Boolean;
     procedure ReleaseRecords;
     procedure ForceClosed;
     procedure GetMasters(aMasters: TStrings); virtual;
@@ -1167,6 +1171,7 @@ type
     procedure YouAreTheMaster(const aOverrides, aReferencedBy: TDynMainRecords; aReferencedByCount: Integer); overload;
     procedure YouAreTheMaster(const aOldMaster: IwbMainRecord; const aOverrides, aReferencedBy: TDynMainRecords; aReferencedByCount: Integer); overload;
     procedure YouGotAMaster(const aMaster: IwbMainRecord);
+    function ListedInjectedIn: IwbFileInternal;
     procedure SetChildGroup(const aGroup: IwbGroupRecord);
     procedure RemoveChildGroup(const aGroup: IwbGroupRecord);
     procedure SetReferencesInjected(aValue: Boolean);
@@ -1528,6 +1533,7 @@ type
     procedure YouAreTheMaster(const aOverrides, aReferencedBy: TDynMainRecords; aReferencedByCount: Integer); overload;
     procedure YouAreTheMaster(const aOldMaster: IwbMainRecord; const aOverrides, aReferencedBy: TDynMainRecords; aReferencedByCount: Integer); overload;
     procedure YouGotAMaster(const aMaster: IwbMainRecord);
+    function ListedInjectedIn: IwbFileInternal;
     procedure SetChildGroup(const aGroup: IwbGroupRecord);
     procedure RemoveChildGroup(const aGroup: IwbGroupRecord);
     procedure SetReferencesInjected(aValue: Boolean);
@@ -8150,10 +8156,22 @@ begin
     Result := nil;
 end;
 
+function TwbFile.IsOwnFormID(const aFormID: TwbFormID; aNew: Boolean): Boolean;
+begin
+  Result := IsNewRecord(aFormID.FileID[flContextObj.SlotLayout], aNew) and not (fsIsCompareLoad in flStates) and
+    not (aFormID.IsHardcoded and not (fsIsGameMaster in flStates));
+end;
+
+function TwbFile.HoldsInjected(const aRecord: IwbMainRecord): Boolean;
+var
+  i: Integer;
+begin
+  Result := (Length(flInjectedRecords) > 0) and FindInjectedID(aRecord.FixedFormID, i) and aRecord.Equals(flInjectedRecords[i]);
+end;
+
 procedure TwbFile.flRegisterWithMaster(const aRecord: IwbMainRecord; const aFormID: TwbFormID);
 begin
-  var lFileID := aFormID.FileID[flContextObj.SlotLayout];
-  if IsNewRecord(lFileID, True) and not (fsIsCompareLoad in flStates) and not (aFormID.IsHardcoded and not (fsIsGameMaster in flStates))  then begin
+  if IsOwnFormID(aFormID, True) then begin
 
     if not flComplexFileFileID then begin
 
@@ -15044,14 +15062,23 @@ begin
   Result := GetFlags.IsInitiallyDisabled;
 end;
 
+function TwbMainRecord.ListedInjectedIn: IwbFileInternal;
+begin
+  Result := nil;
+  if Assigned(mrMaster) then
+    Exit;
+  var lFile: IwbFileInternal;
+  if not Supports(GetFile, IwbFileInternal, lFile) then
+    Exit;
+  var lFormID := GetFixedFormID;
+  if lFormID.IsNull or lFile.IsOwnFormID(lFormID, GetMastersUpdated) then
+    Exit;
+  Result := lFile.InjectionTarget(lFormID);
+  if Assigned(Result) and not Result.HoldsInjected(Self) then
+    Result := nil;
+end;
+
 function TwbMainRecord.GetIsInjected: Boolean;
-
-  function InjectedAsHardcoded(const aFile: IwbFile; const aFormID: TwbFormID): Boolean;
-  begin
-    Result := aFormID.IsHardcoded and not (fsIsGameMaster in aFile.FileStates) and
-      Assigned((aFile as IwbFileInternal).InjectionTarget(aFormID));
-  end;
-
 begin
   var lRefHold: TRefGuard;
   RefShortHold(lRefHold, Self);
@@ -15059,11 +15086,9 @@ begin
     var _File := GetFile;
     var FormID := GetFixedFormID;
     if Assigned(_File) and
-       not Assigned(mrMaster) and
-       not FormID.IsNull and
-       (not _File.IsNewRecord(FormID, GetMastersUpdated) or InjectedAsHardcoded(_File, FormID)) and
        not (fsIsHardcoded in _File.FileStates) and
-       ((gcFormIDInRecordHeader in GameDefObj.Capabilities) or (FormID.FileID[ContextObj.SlotLayout].FullSlot > 0)) then
+       ((gcFormIDInRecordHeader in GameDefObj.Capabilities) or (FormID.FileID[ContextObj.SlotLayout].FullSlot > 0)) and
+       (ListedInjectedIn <> nil) then
       Include(mrStates, mrsIsInjected)
     else
       Exclude(mrStates, mrsIsInjected);
@@ -17994,7 +18019,7 @@ begin
 
     _File.AddMainRecord(Self);
   
-    if Assigned(Master) and Master.IsInjected and not Assigned(mrMaster) then
+    if Assigned(Master) and not Assigned(mrMaster) and ((Master as IwbMainRecordInternal).ListedInjectedIn <> nil) then
       (Master as IwbMainRecordInternal).YouGotAMaster(Self);
 
     ResetConflict;
@@ -18733,20 +18758,21 @@ begin
   mrReferencedBySize := Length(mrReferencedBy);
   mrReferencedByCount := aReferencedByCount;
 
+  var lFile: IwbFileInternal;
+  if Supports(GetFile, IwbFileInternal, lFile) then begin
+    var lFormID := GetFixedFormID;
+    if not lFormID.IsNull and not lFile.IsOwnFormID(lFormID, GetMastersUpdated) then begin
+      var lInjectionMaster := lFile.InjectionTarget(lFormID);
+      if Assigned(lInjectionMaster) and not lInjectionMaster.HoldsInjected(Self) then
+        lInjectionMaster.InjectMainRecord(Self);
+    end;
+  end;
+
   Exclude(mrStates, mrsIsInjectedChecked);
   var lIsInjected := GetIsInjected;
 
   for var lRefByIdx := 0 to Pred(mrReferencedByCount) do
     (mrReferencedBy[lRefByIdx] as IwbMainRecordInternal).SetReferencesInjected(lIsInjected);
-
-  if lIsInjected then begin
-    var lInjectionMaster: IwbFileInternal;
-    var lFile := GetFile;
-    if Assigned(lFile) then
-      lInjectionMaster := (lFile as IwbFileInternal).InjectionTarget(GetFixedFormID);
-    if Assigned(lInjectionMaster) then
-      lInjectionMaster.InjectMainRecord(Self);
-  end;
 end;
 
 procedure TwbMainRecord.YouGotAMaster(const aMaster: IwbMainRecord);
@@ -18757,17 +18783,9 @@ begin
 
   var lSelfRef := Self as IwbMainRecord;
 
-  var lIsInjected := GetIsInjected;
-  var lInjectionMaster: IwbFileInternal;
-
-  if lIsInjected then begin
-    var lFile := GetFile;
-    if Assigned(lFile) then
-      lInjectionMaster := (lFile as IwbFileInternal).InjectionTarget(GetFixedFormID);
-  end;
-
   Assert(Assigned(aMaster));
   Assert(not Assigned(mrMaster));
+  var lInjectionMaster := ListedInjectedIn;
   if Assigned(lInjectionMaster) then
     lInjectionMaster.RemoveInjectedMainRecord(Self);
 
