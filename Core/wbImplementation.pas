@@ -18705,20 +18705,18 @@ begin
   mrReferencedByCount := aReferencedByCount;
   mrReferencedByUnsorted := True;
 
+  var lFile := GetFile;
+  if Assigned(lFile) then begin
+    var lMasterFile := (lFile as IwbFileInternal).InjectionTarget(GetFixedFormID);
+    if Assigned(lMasterFile) then begin
+      if not lMasterFile.HoldsInjected(Self) then
+        lMasterFile.InjectMainRecord(Self);
+      Exclude(mrStates, mrsIsInjectedChecked);
+    end;
+  end;
+
   for var lReferenceByIndex := 0 to Pred(mrReferencedByCount) do
     (mrReferencedBy[lReferenceByIndex] as IwbMainRecordInternal).InvalidateReferencesInjected;
-
-  var lFile := GetFile;
-  if not Assigned(lFile) then
-    Exit;
-
-  var lMasterFile := (lFile as IwbFileInternal).InjectionTarget(GetFixedFormID);
-  if not Assigned(lMasterFile) then
-    Exit;
-  if not lMasterFile.HoldsInjected(Self) then
-    lMasterFile.InjectMainRecord(Self);
-
-  Exclude(mrStates, mrsIsInjectedChecked);
 end;
 
 procedure TwbMainRecord.YouAreTheMaster(const aOldMaster: IwbMainRecord; const aOverrides, aReferencedBy: TDynMainRecords; aReferencedByCount: Integer);
