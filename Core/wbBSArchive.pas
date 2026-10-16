@@ -2760,10 +2760,11 @@ begin
   // very rough archive size (over)estimation, don't need to be precize
   // reserve space for all service data per file in BSA
   Inc(Size, 200);
-  Inc(Size, Length(aPackedFile.FileName));
+  var lNameSize := Length(AnsiString(aPackedFile.FileName));
+  Inc(Size, lNameSize);
   // possible embedded file name
   if fType in [baFO3, baSSE] then
-    Inc(Size, Length(aPackedFile.FileName));
+    Inc(Size, lNameSize);
   Inc(fLoadedSize, Size - SharedSize);
 
   // time to create a new BSA if greater than split size
