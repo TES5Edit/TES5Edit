@@ -4067,16 +4067,31 @@ begin
       Free;
     end;
 
-  if FileExists(xeScriptToRun) then begin
+  var lScript := '';
+  var lReadError := '';
+  var lRead := False;
+  if FileExists(xeScriptToRun) then
     with TStringList.Create do try
-      LoadFromFile(xeScriptToRun);
-      SelectRootNodes(vstNav);
-      ApplyScript(xeScriptToRun, Text);
+      try
+        LoadFromFile(xeScriptToRun);
+        lScript := Text;
+        lRead := True;
+      except
+        on E: Exception do begin
+          if not xeUnattended then
+            raise;
+          lReadError := ' (' + E.Message + ')';
+        end;
+      end;
     finally
       Free;
     end;
+
+  if lRead then begin
+    SelectRootNodes(vstNav);
+    ApplyScript(xeScriptToRun, lScript);
   end else begin
-    PostAddMessage('Could not open script: ' + xeScriptToRun);
+    PostAddMessage('Could not open script: ' + xeScriptToRun + lReadError);
     if xeUnattended then
       CheckResult := 1;
   end;
