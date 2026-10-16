@@ -836,6 +836,8 @@ type
     function flFindKeyInIndex(aIndex: TwbNamedIndex; const aKey: string; out aMainRecord: IwbMainRecord): Boolean;
 
     procedure flActivateIndices;
+    procedure flUnregisterFromMaster(const aRecord: IwbMainRecord; aFormID: TwbFormID);
+    procedure flUnregisterRecords;
 
     {---IwbFile---}
     function GetFileName: string;
@@ -5623,7 +5625,12 @@ begin
     end;
   except end;
 
-  Scan;
+  try
+    Scan;
+  except
+    flUnregisterRecords;
+    raise;
+  end;
 
   if Assigned(flModule) then begin
     if flModule.miOfficialIndex < High(Integer) then
@@ -8139,35 +8146,47 @@ begin
       SetLength(flRecords, Pred(Length(flRecords)));
     end;
 
-    var lIsHardcoded := lFormID.ObjectID[flContextObj.SlotLayout] < $800;
-    if lIsHardcoded then
-      if GetAllowHardcodedRangeUse then
-        lIsHardcoded := lFormID.IsHardcoded;
-
-    if lIsHardcoded and (flLoadOrderFileID.FullSlot = 0) then
-      lIsHardcoded := False;
-
-    var lFileID := lFormID.FileID[flContextObj.SlotLayout];
-
-    if not lIsHardcoded and IsNewRecord(lFileID, True) then begin
-      {record for this file}
-    end else try
-      var lMaster := GetMasterRecordByFormID(lFormID, True, True);
-      if Assigned(lMaster) and ((lMaster as IwbElement) <> (aRecord as IwbElement)) then
-        (lMaster as IwbMainRecordInternal).RemoveOverride(aRecord)
-      else
-        (GetMasterForFileID(lFileID, True, False) as IwbFileInternal).RemoveInjectedMainRecord(aRecord);
-    except
-      on E: Exception do
-        if wbHasProgressCallback then
-          wbProgressCallback('Error: <' + e.Message + '> while trying to determine master record for ' + aRecord.Name);
-    end;
+    flUnregisterFromMaster(aRecord, lFormID);
   end;
 
   if flIndicesActive then
     flRemoveKeysFromIndices(aRecord, aRecord.DeactivateIndexKeys);
 
   IncGeneration;
+end;
+
+procedure TwbFile.flUnregisterFromMaster(const aRecord: IwbMainRecord; aFormID: TwbFormID);
+begin
+  var lIsHardcoded := aFormID.ObjectID[flContextObj.SlotLayout] < $800;
+  if lIsHardcoded then
+    if GetAllowHardcodedRangeUse then
+      lIsHardcoded := aFormID.IsHardcoded;
+
+  if lIsHardcoded and (flLoadOrderFileID.FullSlot = 0) then
+    lIsHardcoded := False;
+
+  var lFileID := aFormID.FileID[flContextObj.SlotLayout];
+
+  if not lIsHardcoded and IsNewRecord(lFileID, True) then begin
+    {record for this file}
+  end else try
+    var lMaster := GetMasterRecordByFormID(aFormID, True, True);
+    if Assigned(lMaster) and ((lMaster as IwbElement) <> (aRecord as IwbElement)) then
+      (lMaster as IwbMainRecordInternal).RemoveOverride(aRecord)
+    else
+      (GetMasterForFileID(lFileID, True, False) as IwbFileInternal).RemoveInjectedMainRecord(aRecord);
+  except
+    on E: Exception do
+      if wbHasProgressCallback then
+        wbProgressCallback('Error: <' + e.Message + '> while trying to determine master record for ' + aRecord.Name);
+  end;
+end;
+
+procedure TwbFile.flUnregisterRecords;
+begin
+  for var lRecord in flRecords do
+    if Assigned(lRecord) and not lRecord.FixedFormID.IsNull then
+      flUnregisterFromMaster(lRecord, lRecord.FixedFormID);
 end;
 
 procedure TwbFile.Scan;
