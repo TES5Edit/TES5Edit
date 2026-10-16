@@ -134,6 +134,7 @@ type
   private
     fPath : string;
     procedure AddFiles(const aRelPath: string; aList: TStrings; aDict: TwbResourceDict);
+    procedure ListFiles(aFolder: string; aList: TStrings; aDict: TwbResourceDict);
   protected
     {---IwbResourceContainer---}
     function GetName: string;
@@ -581,6 +582,7 @@ end;
 
 const
   FIND_FIRST_EX_LARGE_FETCH = 2;
+  cSkippedFolder = '.git';
 
 procedure TwbFolder.AddFiles(const aRelPath: string; aList: TStrings; aDict: TwbResourceDict);
 var
@@ -594,7 +596,7 @@ begin
     repeat
       var lName := string(PChar(@lData.cFileName[0]));
       if lData.dwFileAttributes and FILE_ATTRIBUTE_DIRECTORY <> 0 then begin
-        if (lName <> '.') and (lName <> '..') and not SameText(lName, '.git') then
+        if (lName <> '.') and (lName <> '..') and not SameText(lName, cSkippedFolder) then
           AddFiles(aRelPath + lName + '\', aList, aDict);
       end else begin
         var lFileName := LowerCase(aRelPath + lName);
@@ -609,14 +611,21 @@ begin
   end;
 end;
 
-procedure TwbFolder.ResourceDict(const aDict: TwbResourceDict; aFolder: string);
+procedure TwbFolder.ListFiles(aFolder: string; aList: TStrings; aDict: TwbResourceDict);
 begin
-  if not Assigned(aDict) then
-    Exit;
   aFolder := aFolder.Replace('/', '\');
   if aFolder <> '' then
     aFolder := IncludeTrailingPathDelimiter(aFolder);
-  AddFiles(aFolder, nil, aDict);
+  for var lPart in aFolder.Split(['\']) do
+    if SameText(lPart, cSkippedFolder) then
+      Exit;
+  AddFiles(aFolder, aList, aDict);
+end;
+
+procedure TwbFolder.ResourceDict(const aDict: TwbResourceDict; aFolder: string);
+begin
+  if Assigned(aDict) then
+    ListFiles(aFolder, nil, aDict);
 end;
 
 function TwbFolder.ResourceExists(const aFileName: string): Boolean;
@@ -626,12 +635,8 @@ end;
 
 procedure TwbFolder.ResourceList(const aList: TStrings; aFolder: string = '');
 begin
-  if not Assigned(aList) then
-    Exit;
-  aFolder := aFolder.Replace('/', '\');
-  if aFolder <> '' then
-    aFolder := IncludeTrailingPathDelimiter(aFolder);
-  AddFiles(aFolder, aList, nil);
+  if Assigned(aList) then
+    ListFiles(aFolder, aList, nil);
 end;
 
 procedure TwbFolder.ResolveHash(const aHash: Int64; var Results: TDynStrings);
