@@ -347,8 +347,6 @@ const
   MAGIC_BC5U: TMagic4 = 'BC5U';
   MAGIC_DX10: TMagic4 = 'DX10';
   MAGIC_XBOX: TMagic4 = 'XBOX';
-  MAGIC_DXT2: TMagic4 = 'DXT2';
-  MAGIC_DXT4: TMagic4 = 'DXT4';
   MAGIC_RGBG: TMagic4 = 'RGBG';
   MAGIC_GRGB: TMagic4 = 'GRGB';
   MAGIC_YUY2: TMagic4 = 'YUY2';
@@ -550,6 +548,12 @@ var
       Result := (dwRBitMask = r) and (dwGBitMask = g) and (dwBBitMask = b) and (dwABitMask = a);
   end;
 
+  function IsFourCC(const aMagic: TMagic4): Boolean;
+  begin
+    with DDSHeader.ddspf do
+      Result := (dwFlags and DDPF_FOURCC <> 0) and (dwFourCC = aMagic);
+  end;
+
 begin
   Result := DXGI_FORMAT_UNKNOWN;
   DDSHeader := aDDSData;
@@ -564,19 +568,17 @@ begin
   if dwFourCC = MAGIC_ATI2 then Result := DXGI_FORMAT_BC5_UNORM else
   if dwFourCC = MAGIC_BC5U then Result := DXGI_FORMAT_BC5_UNORM else
   if dwFourCC = MAGIC_BC5S then Result := DXGI_FORMAT_BC5_SNORM else
-  if dwFourCC = MAGIC_DXT2 then Result := DXGI_FORMAT_BC2_UNORM else
-  if dwFourCC = MAGIC_DXT4 then Result := DXGI_FORMAT_BC3_UNORM else
-  if dwFourCC = MAGIC_RGBG then Result := DXGI_FORMAT_R8G8_B8G8_UNORM else
-  if dwFourCC = MAGIC_GRGB then Result := DXGI_FORMAT_G8R8_G8B8_UNORM else
-  if dwFourCC = MAGIC_YUY2 then Result := DXGI_FORMAT_YUY2 else
-  if dwFourCC = MAGIC_A16B16G16R16 then Result := DXGI_FORMAT_R16G16B16A16_UNORM else
-  if dwFourCC = MAGIC_Q16W16V16U16 then Result := DXGI_FORMAT_R16G16B16A16_SNORM else
-  if dwFourCC = MAGIC_R16F then Result := DXGI_FORMAT_R16_FLOAT else
-  if dwFourCC = MAGIC_G16R16F then Result := DXGI_FORMAT_R16G16_FLOAT else
-  if dwFourCC = MAGIC_A16B16G16R16F then Result := DXGI_FORMAT_R16G16B16A16_FLOAT else
-  if dwFourCC = MAGIC_R32F then Result := DXGI_FORMAT_R32_FLOAT else
-  if dwFourCC = MAGIC_G32R32F then Result := DXGI_FORMAT_R32G32_FLOAT else
-  if dwFourCC = MAGIC_A32B32G32R32F then Result := DXGI_FORMAT_R32G32B32A32_FLOAT else
+  if IsFourCC(MAGIC_RGBG) then Result := DXGI_FORMAT_R8G8_B8G8_UNORM else
+  if IsFourCC(MAGIC_GRGB) then Result := DXGI_FORMAT_G8R8_G8B8_UNORM else
+  if IsFourCC(MAGIC_YUY2) then Result := DXGI_FORMAT_YUY2 else
+  if IsFourCC(MAGIC_A16B16G16R16) then Result := DXGI_FORMAT_R16G16B16A16_UNORM else
+  if IsFourCC(MAGIC_Q16W16V16U16) then Result := DXGI_FORMAT_R16G16B16A16_SNORM else
+  if IsFourCC(MAGIC_R16F) then Result := DXGI_FORMAT_R16_FLOAT else
+  if IsFourCC(MAGIC_G16R16F) then Result := DXGI_FORMAT_R16G16_FLOAT else
+  if IsFourCC(MAGIC_A16B16G16R16F) then Result := DXGI_FORMAT_R16G16B16A16_FLOAT else
+  if IsFourCC(MAGIC_R32F) then Result := DXGI_FORMAT_R32_FLOAT else
+  if IsFourCC(MAGIC_G32R32F) then Result := DXGI_FORMAT_R32G32_FLOAT else
+  if IsFourCC(MAGIC_A32B32G32R32F) then Result := DXGI_FORMAT_R32G32B32A32_FLOAT else
   if (dwFourCC = MAGIC_DX10) or (dwFourCC = MAGIC_XBOX) then begin
     DDSHeaderDX10 := Pointer(PByte(DDSHeader) + SizeOf(DDSHeader^));
     if (DDSHeaderDX10.dxgiFormat > Ord(DXGI_FORMAT_UNKNOWN)) and (DDSHeaderDX10.dxgiFormat <= Ord(High(TDXGI))) then
