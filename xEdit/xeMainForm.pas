@@ -1160,7 +1160,6 @@ type
     procedure ScopedDispatch(const aProc: TWndMethod; var Message: TMessage);
     procedure vstCreateEditor(const aElement: IwbElement; out EditLink: IVTEditLink);
 
-    procedure SaveLog(const s: string; aAllowReplace: Boolean);
     procedure SaveLogs(aAllowReplace: Boolean);
     procedure UpdateActiveFromPluggyLink;
   public
@@ -1808,9 +1807,12 @@ end;
 
 procedure TfrmMain.RefuseStart(const aMessage: string);
 begin
-  if xeAutoExit then begin
+  if xeUnattended then begin
     AddMessage('Error: ' + aMessage);
-    CheckResult := 1;
+    if xeToolMode in wbPluginModes then
+      CheckResult := 255
+    else
+      CheckResult := 1;
   end else
     ShowMessage(aMessage);
   Close;
@@ -4056,7 +4058,7 @@ begin
   else if not TPath.IsPathRooted(ExtractFilePath(xeScriptToRun)) then
     xeScriptToRun := xeContext.Settings.ScriptsPath + xeScriptToRun;
 
-  if not FileExists(xeScriptToRun) then
+  if not FileExists(xeScriptToRun) and not xeUnattended then
     with TOpenDialog.Create(Self) do try
       Title := 'Select a script to execute';
       Filter := 'Script files (*.pas)|*.pas';
@@ -4075,8 +4077,11 @@ begin
     finally
       Free;
     end;
-  end else
+  end else begin
     PostAddMessage('Could not open script: ' + xeScriptToRun);
+    if xeUnattended then
+      CheckResult := 1;
+  end;
 
   PostAddMessage('You can close this application now.');
 end;
@@ -4393,10 +4398,11 @@ begin
           Modules.DeactivateAll;
 
           if SameText(ExtractFilePath(ExpandFileName(xePluginToUse)), ExpandFileName(xeContext.Settings.DataPath)) then
-            xePluginToUse := ExtractFileName(xePluginToUse);
+            xePluginToUse := ExtractFileName(ExpandFileName(xePluginToUse));
           if (xePluginToUse <> '') or not xeQuickClean then
             with lModules.ModuleByName(xePluginToUse)^ do
               if IsValid then begin
+                xePluginToUse := miName;
                 Activate;
                 Include(miFlags, mfTaggedForPluginMode);
               end else begin
@@ -4431,7 +4437,13 @@ begin
               end;
 
             sl.AddStrings(lModules.SimulateLoad(lModules.ModulesByLoadOrder(False)).ToStrings(False));
-          except end;
+          except
+            on E: Exception do
+              if xeUnattended then begin
+                RefuseStart(E.Message);
+                Exit;
+              end;
+          end;
 
           if sl.Count < 1 then
             with TfrmModuleSelect.Create(Self) do try
@@ -5345,37 +5357,9 @@ begin
     Result := nil;
 end;
 
-procedure TfrmMain.SaveLog(const s: string; aAllowReplace: Boolean);
-var
-  txt      : AnsiString;
-  fs       : TFileStream;
-begin
-  fs := nil;
-  try
-    try
-      if FileExists(s) then begin
-        fs := TFileStream.Create(s, fmOpenReadWrite);
-        fs.Seek(0, soFromEnd);
-      end else
-        fs := TFileStream.Create(s, fmCreate);
-      if aAllowReplace then
-        if fs.Size > 3 * 1024 * 1024 then // truncate log file at 3MB
-          fs.Size := 0;
-      txt := AnsiString(mmoMessages.Lines.Text) + #13#10;
-      fs.WriteBuffer(txt[1], Length(txt));
-    // suppress log saving errors, it is not critical for xEdit
-    except end;
-  finally
-    if Assigned(fs) then
-      FreeAndNil(fs);
-  end;
-end;
-
 procedure TfrmMain.SaveLogs(aAllowReplace: Boolean);
 begin
-  SaveLog(wbProgramPath + xeContext.GameDefObj.AppName + xeToolName + '_log.txt', aAllowReplace);
-  if xeLogFile <> '' then
-    SaveLog(xeLogFile, aAllowReplace);
+  xeSaveLogs(mmoMessages.Lines.Text, aAllowReplace);
 end;
 
 procedure TfrmMain.SaveModGroupsSelection(const aModGroups: TwbModGroupPtrs);
@@ -15652,6 +15636,10 @@ begin
   end;
 end;
 
+const
+  cLoadReportModes = [tmOnamUpdate, tmMasterUpdate, tmMasterRestore, tmESMify, tmESPify, tmSortAndCleanMasters, tmCheckForITM,
+    tmCheckForDR, tmCheckForErrors];
+
 procedure TfrmMain.tmrMessagesTimer(Sender: TObject);
 var
   ChangesMade : Boolean;
@@ -15728,8 +15716,7 @@ begin
     frmMain.Close;   // Wait until NewMessages are processed.
   end;
 
-  if (xeToolMode in [tmOnamUpdate, tmMasterUpdate, tmMasterRestore, tmESMify, tmESPify, tmSortAndCleanMasters, tmCheckForITM,
-        tmCheckForDR, tmCheckForErrors]) and xeContext.LoaderDone and not xeMasterUpdateDone and not InNestedLoop then begin
+  if (xeToolMode in cLoadReportModes) and xeContext.LoaderDone and not xeMasterUpdateDone and not InNestedLoop then begin
     xeMasterUpdateDone := True;
     ChangesMade := False;
     if xeContext.LoaderError then begin
@@ -15745,6 +15732,8 @@ begin
       PostAddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] Loading and saving the problematic module in CS/GECK/CK can sometimes produce');
       PostAddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] a working version. But it is recommended to contact the author of the module');
       PostAddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] to get the original fixed.');
+      if xeUnattended then
+        AutoDone := True;
     end else try
 {$IFDEF XE_TEST_CONTROL_POINTS}
       if xeTestSwitches.FileLists <> '' then
@@ -18905,6 +18894,15 @@ begin
               tmrShutdown.Enabled := True;
           end else
 {$ENDIF}
+          if xeUnattended then begin
+            PostAddMessage('Error: An error occured while loading modules.');
+            if xeToolMode in wbPluginModes then
+              CheckResult := 255
+            else
+              CheckResult := 1;
+            if not (xeToolMode in cLoadReportModes) then
+              AutoDone := True;
+          end else
             ShowMessage('An error occured while loading modules. Editing is disabled. Check the message log and correct the error.');
           Exit;
         end;
@@ -19685,8 +19683,7 @@ begin
 
         if lGameDef.DefinedOptions.DecodeTextureHashes then begin
           LoaderProgress('Start building resources cache...');
-          xeContext.ContainerHandler.EnsureCache;
-          LoaderProgress('...resources cache finished building');
+          xeContext.ContainerHandler.StartCache;
         end;
 
         if gcWwiseSoundBanks in lGameDef.Capabilities then begin

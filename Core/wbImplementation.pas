@@ -836,6 +836,8 @@ type
     function flFindKeyInIndex(aIndex: TwbNamedIndex; const aKey: string; out aMainRecord: IwbMainRecord): Boolean;
 
     procedure flActivateIndices;
+    procedure flUnregisterFromMaster(const aRecord: IwbMainRecord; aFormID: TwbFormID);
+    procedure flUnregisterRecords;
 
     {---IwbFile---}
     function GetFileName: string;
@@ -1115,6 +1117,7 @@ type
     function GetDisplaySignature: string; virtual;
     procedure ScanData; virtual; abstract;
     procedure InformPrevMainRecord(const aPrevMainRecord : IwbMainRecord); virtual;
+    class procedure CheckWithinStorage(const aFile: IwbFile; aBasePtr: Pointer; aSize: UInt64); static;
   public
     class function CreateForPtr(var aPtr            : Pointer;
                                 var aEndPtr         : Pointer;
@@ -5622,7 +5625,12 @@ begin
     end;
   except end;
 
-  Scan;
+  try
+    Scan;
+  except
+    flUnregisterRecords;
+    raise;
+  end;
 
   if Assigned(flModule) then begin
     if flModule.miOfficialIndex < High(Integer) then
@@ -8140,35 +8148,47 @@ begin
       SetLength(flRecords, Pred(Length(flRecords)));
     end;
 
-    var lIsHardcoded := lFormID.ObjectID[flContextObj.SlotLayout] < $800;
-    if lIsHardcoded then
-      if GetAllowHardcodedRangeUse then
-        lIsHardcoded := lFormID.IsHardcoded;
-
-    if lIsHardcoded and (flLoadOrderFileID.FullSlot = 0) then
-      lIsHardcoded := False;
-
-    var lFileID := lFormID.FileID[flContextObj.SlotLayout];
-
-    if not lIsHardcoded and IsNewRecord(lFileID, True) then begin
-      {record for this file}
-    end else try
-      var lMaster := GetMasterRecordByFormID(lFormID, True, True);
-      if Assigned(lMaster) and ((lMaster as IwbElement) <> (aRecord as IwbElement)) then
-        (lMaster as IwbMainRecordInternal).RemoveOverride(aRecord)
-      else
-        (GetMasterForFileID(lFileID, True, False) as IwbFileInternal).RemoveInjectedMainRecord(aRecord);
-    except
-      on E: Exception do
-        if wbHasProgressCallback then
-          wbProgressCallback('Error: <' + e.Message + '> while trying to determine master record for ' + aRecord.Name);
-    end;
+    flUnregisterFromMaster(aRecord, lFormID);
   end;
 
   if flIndicesActive then
     flRemoveKeysFromIndices(aRecord, aRecord.DeactivateIndexKeys);
 
   IncGeneration;
+end;
+
+procedure TwbFile.flUnregisterFromMaster(const aRecord: IwbMainRecord; aFormID: TwbFormID);
+begin
+  var lIsHardcoded := aFormID.ObjectID[flContextObj.SlotLayout] < $800;
+  if lIsHardcoded then
+    if GetAllowHardcodedRangeUse then
+      lIsHardcoded := aFormID.IsHardcoded;
+
+  if lIsHardcoded and (flLoadOrderFileID.FullSlot = 0) then
+    lIsHardcoded := False;
+
+  var lFileID := aFormID.FileID[flContextObj.SlotLayout];
+
+  if not lIsHardcoded and IsNewRecord(lFileID, True) then begin
+    {record for this file}
+  end else try
+    var lMaster := GetMasterRecordByFormID(aFormID, True, True);
+    if Assigned(lMaster) and ((lMaster as IwbElement) <> (aRecord as IwbElement)) then
+      (lMaster as IwbMainRecordInternal).RemoveOverride(aRecord)
+    else
+      (GetMasterForFileID(lFileID, True, False) as IwbFileInternal).RemoveInjectedMainRecord(aRecord);
+  except
+    on E: Exception do
+      if wbHasProgressCallback then
+        wbProgressCallback('Error: <' + e.Message + '> while trying to determine master record for ' + aRecord.Name);
+  end;
+end;
+
+procedure TwbFile.flUnregisterRecords;
+begin
+  for var lRecord in flRecords do
+    if Assigned(lRecord) and not lRecord.FixedFormID.IsNull then
+      flUnregisterFromMaster(lRecord, lRecord.FixedFormID);
 end;
 
 procedure TwbFile.Scan;
@@ -11486,9 +11506,15 @@ var
   Dummy: Integer;
 begin
   inherited Create(aContainer, aBasePtr, aEndPtr, aPrevMainRecord);
-  recSkipped := recSkipped or ContextObj.RecordToSkip.Find(GetSignature, Dummy);
-  InformPrevMainRecord(aPrevMainRecord);
-  ScanData;
+  try
+    recSkipped := recSkipped or ContextObj.RecordToSkip.Find(GetSignature, Dummy);
+    InformPrevMainRecord(aPrevMainRecord);
+    ScanData;
+  except
+    if Assigned(aContainer) then
+      aContainer.RemoveElement(Self);
+    raise;
+  end;
   if aBasePtr <> dcDataEndPtr then begin
     Assert( (gcReferencesEmbeddedInCell in GameDefObj.Capabilities) and (GetSignature = 'CELL') or (GetSignature = 'REFR') );
     if GetSignature = 'CELL' then
@@ -11504,6 +11530,11 @@ class function TwbRecord.CreateForPtr(var aPtr            : Pointer;
                                           aContextObj     : TwbGameContext)
                                                           : IwbRecord;
 begin
+  if NativeUInt(aEndPtr) - NativeUInt(aPtr) < SizeOf(TwbSignature) then
+    if Assigned(aContainer) then
+      CheckWithinStorage(aContainer.GetFile, aPtr, SizeOf(TwbSignature))
+    else
+      CheckWithinStorage(nil, aPtr, SizeOf(TwbSignature));
   try
     if Assigned(aContainer) and (aContainer.ElementType = etMainRecord) then
       Result := TwbSubRecord.Create(aContainer, aPtr, aEndPtr, aPrevMainRecord)
@@ -11530,6 +11561,22 @@ begin
       Result := nil;
     end;
   end;
+end;
+
+class procedure TwbRecord.CheckWithinStorage(const aFile: IwbFile; aBasePtr: Pointer; aSize: UInt64);
+var
+  lFile: TwbFile;
+begin
+  lFile := nil;
+  if Assigned(aFile) and (aFile is TwbFile) then
+    lFile := aFile as TwbFile;
+  if Assigned(lFile) and (NativeUInt(aBasePtr) >= NativeUInt(lFile.flView)) and (NativeUInt(aBasePtr) < NativeUInt(lFile.flEndPtr)) then begin
+    if aSize > NativeUInt(lFile.flEndPtr) - NativeUInt(aBasePtr) then
+      raise Exception.CreateFmt('[%s] The record at offset %d runs past the end of the file', [lFile.flFileName, NativeUInt(aBasePtr) - NativeUInt(lFile.flView)]);
+  end else if Assigned(aFile) then
+    raise Exception.CreateFmt('[%s] A record runs past the end of the data that holds it', [aFile.FileName])
+  else
+    raise Exception.Create('A record runs past the end of the data that holds it');
 end;
 
 function TwbRecord.GetDisplaySignature: string;
@@ -15626,7 +15673,13 @@ begin
       dcBasePtr := p;
       dcEndPtr := nil;
     end else begin
-      dcDataBasePtr := PByte(dcBasePtr) + mrGameDefObj.SizeOfMainRecordStruct;
+      var lHeaderSize := mrGameDefObj.SizeOfMainRecordStruct;
+      var lAvailable := NativeUInt(dcEndPtr) - NativeUInt(dcBasePtr);
+      if lAvailable < NativeUInt(lHeaderSize) then
+        CheckWithinStorage(GetFile, dcBasePtr, lHeaderSize);
+      if lAvailable < UInt64(lHeaderSize) + mrStruct.mrsDataSize then
+        CheckWithinStorage(GetFile, dcBasePtr, UInt64(lHeaderSize) + mrStruct.mrsDataSize);
+      dcDataBasePtr := PByte(dcBasePtr) + lHeaderSize;
       dcDataEndPtr := PByte(dcDataBasePtr) + mrStruct.mrsDataSize;
       dcEndPtr := dcDataEndPtr;
     end;
@@ -19846,7 +19899,13 @@ var
 begin
   var lSize32Bit := gcSubrecordSize32Bit in GameDefObj.Capabilities;
   if Assigned(dcBasePtr) then begin
-    dcDataBasePtr := PByte(dcBasePtr) + TwbSubRecordHeaderStruct.SizeOf(lSize32Bit);
+    var lHeaderSize := TwbSubRecordHeaderStruct.SizeOf(lSize32Bit);
+    var lAvailable: NativeUInt := High(NativeUInt);
+    if Assigned(dcEndPtr) then
+      lAvailable := NativeUInt(dcEndPtr) - NativeUInt(dcBasePtr);
+    if lAvailable < NativeUInt(lHeaderSize) then
+      CheckWithinStorage(GetFile, dcBasePtr, lHeaderSize);
+    dcDataBasePtr := PByte(dcBasePtr) + lHeaderSize;
 
     lDataSize := srStruct.srsDataSize[lSize32Bit];
 
@@ -19863,6 +19922,8 @@ begin
       end;
     end;
 
+    if lAvailable < UInt64(lHeaderSize) + lDataSize then
+      CheckWithinStorage(GetFile, dcBasePtr, UInt64(lHeaderSize) + lDataSize);
     dcDataEndPtr := PByte(dcDataBasePtr) + lDataSize;
     dcEndPtr := dcDataEndPtr;
   end else begin
@@ -21745,10 +21806,15 @@ var
 begin
   if Assigned(dcEndPtr) then begin
     var lSizeOfMainRecordStruct := GameDefObj.SizeOfMainRecordStruct;
+    var lAvailable := NativeUInt(dcEndPtr) - NativeUInt(dcBasePtr);
+    if lAvailable < NativeUInt(lSizeOfMainRecordStruct) then
+      CheckWithinStorage(GetFile, dcBasePtr, lSizeOfMainRecordStruct);
     dcDataBasePtr := PByte(dcBasePtr) + lSizeOfMainRecordStruct;
     if grStruct.grsGroupSize < Cardinal(lSizeOfMainRecordStruct) then
       raise Exception.CreateFmt('[%s] %s size is invalid.', [GetFile.FileName, GetName]);
 
+    if lAvailable < grStruct.grsGroupSize then
+      CheckWithinStorage(GetFile, dcBasePtr, grStruct.grsGroupSize);
     dcDataEndPtr := PByte(dcBasePtr) + grStruct.grsGroupSize;
     dcEndPtr := dcDataEndPtr;
     if not recSkipped then

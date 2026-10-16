@@ -65,6 +65,8 @@ function xeLoadMOHookFile: Boolean;
 function xeDoInit: Boolean;
 procedure xeInitStyles;
 function xeNexusModsUrl: string;
+function xeUnattended: Boolean;
+procedure xeSaveLogs(const aText: string; aAllowReplace: Boolean);
 
 implementation
 
@@ -116,13 +118,10 @@ function xeFindNextValidCmdLineFileName(var aStartIndex  : Integer;
                                                          : Boolean;
 begin
   Result := wbFindCmdLineParam(aStartIndex, SwitchChars, aValue);
-  if Result and not FileExists(aValue) then
-    if (aDefaultPath<>'') then
-      if FileExists(aDefaultPath+'\'+aValue) then
-        aValue := ExpandFileName(aDefaultPath+'\'+aValue)
-      else
-        Result := False
-    else
+  if Result then
+    if (aDefaultPath <> '') and (FileExists(aDefaultPath+'\'+aValue) or FileExists(aDefaultPath+'\'+aValue+csDotGhost)) then
+      aValue := ExpandFileName(aDefaultPath+'\'+aValue)
+    else if not FileExists(aValue) then
       Result := False;
 end;
 
@@ -134,9 +133,11 @@ begin
   repeat
     Result := xeFindNextValidCmdLineFileName(aStartIndex, aValue, aDefaultPath);
   until not Result or wbIsModule(aValue, wbGameIdentities[xeGameMode].GameExeName);
+  if not Result and (aValue <> '') and FileExists(aValue+csDotGhost) then
+    Result := wbIsModule(aValue, wbGameIdentities[xeGameMode].GameExeName);
   if Result  then
     if (AnsiCompareText(ExtractFilePath(ExpandFileName(aValue)), ExpandFileName(aDefaultPath)) = 0) then begin
-      aValue := ExtractFileName(aValue);
+      aValue := wbStripDotGhost(ExtractFileName(ExpandFileName(aValue)));
       if not Assigned(xeModulesToUse) then
         xeModulesToUse := TStringList.Create;
       xeModulesToUse.Add(aValue);
@@ -1061,7 +1062,13 @@ begin
 
   if xeToolMode in wbPluginModes then // look for the file name
     if not xeFindNextValidCmdLineModule(xeParamIndex, xePluginToUse, xeContext.Settings.DataPath) then begin
-      ShowMessage(xeToolName+' mode requires a valid plugin name!');
+      if xePluginToUse = '' then begin
+        ExitCode := 255;
+        ShowMessage(xeToolName+' mode requires a valid plugin name!');
+      end else begin
+        xeSaveLogs('Error: Selected plugin "' + xePluginToUse + '" does not exist', True);
+        ExitCode := 255;
+      end;
       Exit(False);
     end;
 
@@ -1191,6 +1198,45 @@ begin
   Result := xeContext.GameDefObj.NexusModsUrl;
   if (xeToolMode = tmLODgen) and (xeContext.GameDefObj.LODGenNexusModsUrl <> '') then
     Result := xeContext.GameDefObj.LODGenNexusModsUrl;
+end;
+
+function xeUnattended: Boolean;
+begin
+  Result := xeAutoExit or (xeToolMode in wbPluginModes);
+end;
+
+procedure xeSaveLogs(const aText: string; aAllowReplace: Boolean);
+
+  procedure SaveLog(const s: string);
+  var
+    txt      : AnsiString;
+    fs       : TFileStream;
+  begin
+    fs := nil;
+    try
+      try
+        if FileExists(s) then begin
+          fs := TFileStream.Create(s, fmOpenReadWrite);
+          fs.Seek(0, soFromEnd);
+        end else
+          fs := TFileStream.Create(s, fmCreate);
+        if aAllowReplace then
+          if fs.Size > 3 * 1024 * 1024 then // truncate log file at 3MB
+            fs.Size := 0;
+        txt := AnsiString(aText) + #13#10;
+        fs.WriteBuffer(txt[1], Length(txt));
+      // suppress log saving errors, it is not critical for xEdit
+      except end;
+    finally
+      if Assigned(fs) then
+        FreeAndNil(fs);
+    end;
+  end;
+
+begin
+  SaveLog(wbProgramPath + xeContext.GameDefObj.AppName + xeToolName + '_log.txt');
+  if xeLogFile <> '' then
+    SaveLog(xeLogFile);
 end;
 
 procedure xeDumpInitState(const aFileName: string);

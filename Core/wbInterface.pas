@@ -3615,6 +3615,7 @@ type
     function ResourceCount(const aFileName: string; aContainers: TStrings = nil): Integer;
     procedure ResourceCopy(const aContainerName, aFileName, aPathOut: string);
 
+    procedure StartCache;
     procedure EnsureCache;
 
     function ResolveFolderHash(const aHash: Int64): string;

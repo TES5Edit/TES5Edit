@@ -496,6 +496,17 @@ const
   MAGIC_BC5U: TMagic4 = 'BC5U';
   MAGIC_DX10: TMagic4 = 'DX10';
   MAGIC_XBOX: TMagic4 = 'XBOX';
+  MAGIC_RGBG: TMagic4 = 'RGBG';
+  MAGIC_GRGB: TMagic4 = 'GRGB';
+  MAGIC_YUY2: TMagic4 = 'YUY2';
+  MAGIC_A16B16G16R16: TMagic4 = #36#0#0#0;
+  MAGIC_Q16W16V16U16: TMagic4 = #110#0#0#0;
+  MAGIC_R16F: TMagic4 = #111#0#0#0;
+  MAGIC_G16R16F: TMagic4 = #112#0#0#0;
+  MAGIC_A16B16G16R16F: TMagic4 = #113#0#0#0;
+  MAGIC_R32F: TMagic4 = #114#0#0#0;
+  MAGIC_G32R32F: TMagic4 = #115#0#0#0;
+  MAGIC_A32B32G32R32F: TMagic4 = #116#0#0#0;
 
   DDSD_CAPS        = $00000001;
   DDSD_HEIGHT      = $00000002;
@@ -529,6 +540,7 @@ const
   DDPF_RGB         = $00000040;
   DDPF_YUV         = $00000200;
   DDPF_LUMINANCE   = $00020000;
+  DDPF_BUMPDUDV    = $00080000;
 
   // DX10
   DDS_DIMENSION_TEXTURE2D       = $00000003;
@@ -695,6 +707,12 @@ var
       Result := (dwRBitMask = r) and (dwGBitMask = g) and (dwBBitMask = b) and (dwABitMask = a);
   end;
 
+  function IsFourCC(const aMagic: TMagic4): Boolean;
+  begin
+    with DDSHeader.ddspf do
+      Result := (dwFlags and DDPF_FOURCC <> 0) and (dwFourCC = aMagic);
+  end;
+
 begin
   Result := DXGI_FORMAT_UNKNOWN;
   DDSHeader := aDDSData;
@@ -709,6 +727,17 @@ begin
   if dwFourCC = MAGIC_ATI2 then Result := DXGI_FORMAT_BC5_UNORM else
   if dwFourCC = MAGIC_BC5U then Result := DXGI_FORMAT_BC5_UNORM else
   if dwFourCC = MAGIC_BC5S then Result := DXGI_FORMAT_BC5_SNORM else
+  if IsFourCC(MAGIC_RGBG) then Result := DXGI_FORMAT_R8G8_B8G8_UNORM else
+  if IsFourCC(MAGIC_GRGB) then Result := DXGI_FORMAT_G8R8_G8B8_UNORM else
+  if IsFourCC(MAGIC_YUY2) then Result := DXGI_FORMAT_YUY2 else
+  if IsFourCC(MAGIC_A16B16G16R16) then Result := DXGI_FORMAT_R16G16B16A16_UNORM else
+  if IsFourCC(MAGIC_Q16W16V16U16) then Result := DXGI_FORMAT_R16G16B16A16_SNORM else
+  if IsFourCC(MAGIC_R16F) then Result := DXGI_FORMAT_R16_FLOAT else
+  if IsFourCC(MAGIC_G16R16F) then Result := DXGI_FORMAT_R16G16_FLOAT else
+  if IsFourCC(MAGIC_A16B16G16R16F) then Result := DXGI_FORMAT_R16G16B16A16_FLOAT else
+  if IsFourCC(MAGIC_R32F) then Result := DXGI_FORMAT_R32_FLOAT else
+  if IsFourCC(MAGIC_G32R32F) then Result := DXGI_FORMAT_R32G32_FLOAT else
+  if IsFourCC(MAGIC_A32B32G32R32F) then Result := DXGI_FORMAT_R32G32B32A32_FLOAT else
   if (dwFourCC = MAGIC_DX10) or (dwFourCC = MAGIC_XBOX) then begin
     DDSHeaderDX10 := Pointer(PByte(DDSHeader) + SizeOf(DDSHeader^));
     if (DDSHeaderDX10.dxgiFormat > Ord(DXGI_FORMAT_UNKNOWN)) and (DDSHeaderDX10.dxgiFormat <= Ord(High(TDXGI))) then
@@ -757,8 +786,20 @@ begin
       else if IsBitMask($00FF, 0, 0, $FF00) then
         Result := DXGI_FORMAT_R8G8_UNORM;
   end else
-  if (dwFlags and DDPF_ALPHA <> 0) and (dwRGBBitCount = 8) then
-    Result := DXGI_FORMAT_A8_UNORM;
+  if dwFlags and DDPF_ALPHA <> 0 then begin
+    if dwRGBBitCount = 8 then
+      Result := DXGI_FORMAT_A8_UNORM;
+  end else
+  if dwFlags and DDPF_BUMPDUDV <> 0 then case dwRGBBitCount of
+    32:
+      if IsBitMask($000000FF, $0000FF00, $00FF0000, $FF000000) then
+        Result := DXGI_FORMAT_R8G8B8A8_SNORM
+      else if IsBitMask($0000FFFF, $FFFF0000, 0, 0) then
+        Result := DXGI_FORMAT_R16G16_SNORM;
+    16:
+      if IsBitMask($00FF, $FF00, 0, 0) then
+        Result := DXGI_FORMAT_R8G8_SNORM;
+  end;
 end;
 
 class function TwbDDS.GetD3DFMT(aDDSData: Pointer): TD3DFORMAT;
