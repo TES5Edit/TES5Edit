@@ -326,6 +326,7 @@ type
     procedure GetChunk(const aFileName: string; aFileObject: Pointer;
       out aBuffer: Pointer; out aSize, aUncompressedSize: Integer;
       aChunkIndex: Integer = 0); virtual; abstract;
+    procedure CompressFile(aFileObject: Pointer); virtual; abstract;
   end;
 
 
@@ -384,6 +385,7 @@ type
     procedure GetChunk(const aFileName: string; aFileObject: Pointer;
       out aBuffer: Pointer; out aSize, aUncompressedSize: Integer;
       aChunkIndex: Integer = 0); override; final;
+    procedure CompressFile(aFileObject: Pointer); override; final;
     procedure Process;
     property ProcessCount: Integer read fProcessCount;
     property SplitSize: Int64 read fSplitSize write fSplitSize;
@@ -1797,8 +1799,13 @@ begin
     if not bTexturesOnly then
       fHeader.Flags := fHeader.Flags and not ARCHIVE_EMBEDNAME
     // SSE crashing bug - textures with embedded names must be compressed
-    else if not Assigned(fPacker) and (fType = baSSE) and (fHeader.Flags and ARCHIVE_EMBEDNAME <> 0) then
-      for var f in Self do f.Compress := True;
+    else if (fType = baSSE) and (fHeader.Flags and ARCHIVE_EMBEDNAME <> 0) then
+      for var f in Self do
+        if not f.Compress then begin
+          if Assigned(fPacker) then
+            fPacker.CompressFile(f.FileObject);
+          f.Compress := True;
+        end;
 
     if (fType in [baFO3, baSSE]) and (fHeader.Flags and ARCHIVE_EMBEDNAME <> 0) then
       for var f in Self do
@@ -2572,6 +2579,24 @@ begin
   aBuffer := f.Chunks[aChunkIndex].Data;
   aSize := Length(f.Chunks[aChunkIndex].Data);
   aUncompressedSize := f.Chunks[aChunkIndex].UncompressedSize;
+end;
+
+procedure TwbSplitPacker.CompressFile(aFileObject: Pointer);
+var
+  f: PPackedFile;
+  zSize: Integer;
+begin
+  f := aFileObject;
+  if f.Compress then
+    Exit;
+  if fCompressionType = ctNone then
+    raise Exception.Create('Undefined compression type');
+  for var i := Low(f.Chunks) to High(f.Chunks) do begin
+    var zBuf := TwbCompression.Compress(fCompressionType, f.Chunks[i].Data, Length(f.Chunks[i].Data), zSize);
+    SetLength(zBuf, zSize);
+    f.Chunks[i].Data := zBuf;
+  end;
+  f.Compress := True;
 end;
 
 function TwbSplitPacker.NewArchiveName: string;
