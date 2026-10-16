@@ -7056,15 +7056,19 @@ begin
   if aAllowSelf and IsNewRecord(aFileID, aNew) then
     Exit(Self);
 
+  Result := nil;
   if flComplexFileFileID then case aFileID.ModuleType of
     mtLight:
-      Exit(GetLightMaster(aFileID.LightSlot, True));
+      Result := GetLightMaster(aFileID.LightSlot, True);
     mtMedium:
-      Exit(GetMediumMaster(aFileID.MediumSlot, True));
+      Result := GetMediumMaster(aFileID.MediumSlot, True);
     mtFull:
-      Exit(GetFullMaster(aFileID.FullSlot, True));
-  end else
-    Exit(GetMaster(aFileID.FullSlot, True));
+      Result := GetFullMaster(aFileID.FullSlot, True);
+  end else if (aFileID.FullSlot >= 0) and (aFileID.FullSlot < GetMasterCount(True)) then
+    Result := GetMaster(aFileID.FullSlot, True);
+
+  if not Assigned(Result) and (fsIsCompareLoad in flStates) and (GetMasterCount(True) > 0) then
+    Result := GetMaster(Pred(GetMasterCount(True)), True);
 end;
 
 function TwbFile.GetMasterIndexForFileID(const aFileID: TwbFileID; aNew: Boolean): Integer;
