@@ -8171,7 +8171,7 @@ begin
 
   var lFileID := aFormID.FileID[flContextObj.SlotLayout];
 
-  if not lIsHardcoded and IsNewRecord(lFileID, True) then begin
+  if not lIsHardcoded and IsNewRecord(lFileID, True) and not (fsIsCompareLoad in flStates) then begin
     {record for this file}
   end else try
     var lMaster := GetMasterRecordByFormID(aFormID, True, True);
