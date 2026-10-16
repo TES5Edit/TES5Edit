@@ -121,7 +121,7 @@ begin
   if Result then
     if (aDefaultPath <> '') and (FileExists(aDefaultPath+'\'+aValue) or FileExists(aDefaultPath+'\'+aValue+csDotGhost)) then
       aValue := ExpandFileName(aDefaultPath+'\'+aValue)
-    else if not FileExists(aValue) then
+    else if not (FileExists(aValue) or FileExists(aValue+csDotGhost)) then
       Result := False;
 end;
 
