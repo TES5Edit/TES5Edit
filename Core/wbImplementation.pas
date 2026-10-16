@@ -18726,16 +18726,18 @@ begin
   mrReferencedByUnsorted := True;
 
   var lFile := GetFile;
-  if Assigned(lFile) then begin
-    var lMasterFile := (lFile as IwbFileInternal).InjectionTarget(GetFixedFormID);
-    if Assigned(lMasterFile) then begin
-      if not lMasterFile.HoldsInjected(Self) then
-        lMasterFile.InjectMainRecord(Self);
-      Exclude(mrStates, mrsIsInjectedChecked);
+  try
+    if Assigned(lFile) then begin
+      var lMasterFile := (lFile as IwbFileInternal).InjectionTarget(GetFixedFormID);
+      if Assigned(lMasterFile) then begin
+        if not lMasterFile.HoldsInjected(Self) then
+          lMasterFile.InjectMainRecord(Self);
+        Exclude(mrStates, mrsIsInjectedChecked);
+      end;
     end;
+  finally
+    InvalidateReferencers;
   end;
-
-  InvalidateReferencers;
 end;
 
 procedure TwbMainRecord.YouAreTheMaster(const aOldMaster: IwbMainRecord; const aOverrides, aReferencedBy: TDynMainRecords; aReferencedByCount: Integer);
@@ -18773,18 +18775,20 @@ begin
   mrReferencedByUnsorted := True;
 
   var lFile: IwbFileInternal;
-  if Supports(GetFile, IwbFileInternal, lFile) then begin
-    var lFormID := GetFixedFormID;
-    if not lFormID.IsNull and not lFile.IsOwnFormID(lFormID, GetMastersUpdated) then begin
-      var lInjectionMaster := lFile.InjectionTarget(lFormID);
-      if Assigned(lInjectionMaster) and not lInjectionMaster.HoldsInjected(Self) then
-        lInjectionMaster.InjectMainRecord(Self);
+  try
+    if Supports(GetFile, IwbFileInternal, lFile) then begin
+      var lFormID := GetFixedFormID;
+      if not lFormID.IsNull and not lFile.IsOwnFormID(lFormID, GetMastersUpdated) then begin
+        var lInjectionMaster := lFile.InjectionTarget(lFormID);
+        if Assigned(lInjectionMaster) and not lInjectionMaster.HoldsInjected(Self) then
+          lInjectionMaster.InjectMainRecord(Self);
+      end;
     end;
+
+    Exclude(mrStates, mrsIsInjectedChecked);
+  finally
+    InvalidateReferencers;
   end;
-
-  Exclude(mrStates, mrsIsInjectedChecked);
-
-  InvalidateReferencers;
 end;
 
 procedure TwbMainRecord.YouGotAMaster(const aMaster: IwbMainRecord);
