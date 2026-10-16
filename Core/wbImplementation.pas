@@ -8173,7 +8173,11 @@ begin
     var lMaster := GetMasterRecordByFormID(aFormID, True, True);
     if Assigned(lMaster) and ((lMaster as IwbElement) <> (aRecord as IwbElement)) then
       (lMaster as IwbMainRecordInternal).RemoveOverride(aRecord)
-    else
+    else if aFormID.IsHardcoded and not (fsIsGameMaster in flStates) then begin
+      var lGameMasterFile: IwbFileInternal;
+      if Supports(flContextObj.GameMasterFile, IwbFileInternal, lGameMasterFile) then
+        lGameMasterFile.RemoveInjectedMainRecord(aRecord);
+    end else
       (GetMasterForFileID(lFileID, True, False) as IwbFileInternal).RemoveInjectedMainRecord(aRecord);
   except
     on E: Exception do
