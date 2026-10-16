@@ -609,9 +609,9 @@ end;
 
 procedure TwbFolder.ListFiles(aFolder: string; aList: TStrings; aDict: TwbResourceDict);
 begin
-  aFolder := aFolder.Replace('/', '\');
+  aFolder := aFolder.Replace('/', '\').TrimRight(['\']);
   if aFolder <> '' then
-    aFolder := IncludeTrailingPathDelimiter(aFolder);
+    aFolder := aFolder + '\';
   for var lPart in aFolder.Split(['\']) do
     if SameText(lPart, cSkippedFolder) then
       Exit;
