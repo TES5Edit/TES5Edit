@@ -7043,16 +7043,16 @@ begin
   Result := nil;
   if flComplexFileFileID then case aFileID.ModuleType of
     mtLight:
-      Result := GetLightMaster(aFileID.LightSlot, True);
+      Result := GetLightMaster(aFileID.LightSlot, aNew);
     mtMedium:
-      Result := GetMediumMaster(aFileID.MediumSlot, True);
+      Result := GetMediumMaster(aFileID.MediumSlot, aNew);
     mtFull:
-      Result := GetFullMaster(aFileID.FullSlot, True);
-  end else if (aFileID.FullSlot >= 0) and (aFileID.FullSlot < GetMasterCount(True)) then
-    Result := GetMaster(aFileID.FullSlot, True);
+      Result := GetFullMaster(aFileID.FullSlot, aNew);
+  end else if (aFileID.FullSlot >= 0) and (aFileID.FullSlot < GetMasterCount(aNew)) then
+    Result := GetMaster(aFileID.FullSlot, aNew);
 
-  if not Assigned(Result) and (fsIsCompareLoad in flStates) and (GetMasterCount(True) > 0) then
-    Result := GetMaster(Pred(GetMasterCount(True)), True);
+  if not Assigned(Result) and (fsIsCompareLoad in flStates) and (GetMasterCount(aNew) > 0) then
+    Result := GetMaster(Pred(GetMasterCount(aNew)), aNew);
 end;
 
 function TwbFile.GetMasterIndexForFileID(const aFileID: TwbFileID; aNew: Boolean): Integer;
@@ -7332,7 +7332,7 @@ end;
 function TwbFile.GetResolvedLoadOrderFileID(aNew: Boolean): TwbFileID;
 begin
   if fsIsCompareLoad in flStates then begin
-    if GetMasterCount(True) > 0 then
+    if GetMasterCount(aNew) > 0 then
       Result := GetMaster(Pred(GetMasterCount(aNew)), aNew).ResolvedLoadOrderFileID[True]
     else
       Result := TwbFileID.Invalid;
