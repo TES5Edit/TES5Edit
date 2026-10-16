@@ -110,6 +110,8 @@ type
     destructor Destroy; override; final;
     function DXGIFormatName: string;
     function IsCubeMap: Boolean;
+    function IsXbox: Boolean;
+    function DDSHeaderSize: Integer;
     function Unpack: TBytes;
     function Info: string;
     property Compressed: Boolean read GetCompressed;
@@ -893,6 +895,22 @@ end;
 function TwbBSFileEntry.IsCubeMap: Boolean;
 begin
   Result := DDS.Flags and DDS_FLAG_CUBEMAP <> 0;
+end;
+
+function TwbBSFileEntry.IsXbox: Boolean;
+begin
+  Result := LowerCase(Archive.FileName).Contains('_xbox.');
+end;
+
+function TwbBSFileEntry.DDSHeaderSize: Integer;
+begin
+  Result := SizeOf(TDDSHeader);
+  var lXbox := IsXbox;
+  if lXbox or not (TDXGI(DDS.DXGIFormat) in TwbDDS.DXGI_DX9) then begin
+    Inc(Result, SizeOf(TDDSHeaderDX10));
+    if lXbox then
+      Inc(Result, SizeOf(TDDSHeaderXBOX));
+  end;
 end;
 
 function TwbBSFileEntry.Unpack: TBytes;
@@ -2347,14 +2365,9 @@ begin
       end;
 
       baFO4dds, baSFdds: begin
-        var IsXBox := LowerCase(FileName).Contains('_xbox.');
+        var IsXBox := aFile.IsXbox;
         // allocate space for total DDS size
-        TexSize := SizeOf(TDDSHeader);
-        if IsXBox or not (TDXGI(aFile.DDS.DXGIFormat) in TwbDDS.DXGI_DX9) then begin
-          Inc(TexSize, SizeOf(TDDSHeaderDX10));
-          if IsXBox then
-            Inc(TexSize, SizeOf(TDDSHeaderXBOX));
-        end;
+        TexSize := aFile.DDSHeaderSize;
 
         // offset to image data (total size of DDS header)
         MipOffset := TexSize;
