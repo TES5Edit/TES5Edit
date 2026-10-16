@@ -1158,7 +1158,6 @@ type
     procedure ScopedDispatch(const aProc: TWndMethod; var Message: TMessage);
     procedure vstCreateEditor(const aElement: IwbElement; out EditLink: IVTEditLink);
 
-    procedure SaveLog(const s: string; aAllowReplace: Boolean);
     procedure SaveLogs(aAllowReplace: Boolean);
     procedure UpdateActiveFromPluggyLink;
   public
@@ -1806,7 +1805,7 @@ end;
 
 procedure TfrmMain.RefuseStart(const aMessage: string);
 begin
-  if xeAutoExit or (xeToolMode in wbPluginModes) then begin
+  if xeUnattended then begin
     AddMessage('Error: ' + aMessage);
     CheckResult := 1;
   end else
@@ -4430,7 +4429,13 @@ begin
               end;
 
             sl.AddStrings(lModules.SimulateLoad(lModules.ModulesByLoadOrder(False)).ToStrings(False));
-          except end;
+          except
+            on E: Exception do
+              if xeUnattended then begin
+                RefuseStart(E.Message);
+                Exit;
+              end;
+          end;
 
           if sl.Count < 1 then
             with TfrmModuleSelect.Create(Self) do try
@@ -5344,37 +5349,9 @@ begin
     Result := nil;
 end;
 
-procedure TfrmMain.SaveLog(const s: string; aAllowReplace: Boolean);
-var
-  txt      : AnsiString;
-  fs       : TFileStream;
-begin
-  fs := nil;
-  try
-    try
-      if FileExists(s) then begin
-        fs := TFileStream.Create(s, fmOpenReadWrite);
-        fs.Seek(0, soFromEnd);
-      end else
-        fs := TFileStream.Create(s, fmCreate);
-      if aAllowReplace then
-        if fs.Size > 3 * 1024 * 1024 then // truncate log file at 3MB
-          fs.Size := 0;
-      txt := AnsiString(mmoMessages.Lines.Text) + #13#10;
-      fs.WriteBuffer(txt[1], Length(txt));
-    // suppress log saving errors, it is not critical for xEdit
-    except end;
-  finally
-    if Assigned(fs) then
-      FreeAndNil(fs);
-  end;
-end;
-
 procedure TfrmMain.SaveLogs(aAllowReplace: Boolean);
 begin
-  SaveLog(wbProgramPath + xeContext.GameDefObj.AppName + xeToolName + '_log.txt', aAllowReplace);
-  if xeLogFile <> '' then
-    SaveLog(xeLogFile, aAllowReplace);
+  xeSaveLogs(mmoMessages.Lines.Text, aAllowReplace);
 end;
 
 procedure TfrmMain.SaveModGroupsSelection(const aModGroups: TwbModGroupPtrs);

@@ -65,6 +65,8 @@ function xeLoadMOHookFile: Boolean;
 function xeDoInit: Boolean;
 procedure xeInitStyles;
 function xeNexusModsUrl: string;
+function xeUnattended: Boolean;
+procedure xeSaveLogs(const aText: string; aAllowReplace: Boolean);
 
 implementation
 
@@ -1058,7 +1060,12 @@ begin
 
   if xeToolMode in wbPluginModes then // look for the file name
     if not xeFindNextValidCmdLineModule(xeParamIndex, xePluginToUse, xeContext.Settings.DataPath) then begin
-      ShowMessage(xeToolName+' mode requires a valid plugin name!');
+      if xePluginToUse = '' then
+        ShowMessage(xeToolName+' mode requires a valid plugin name!')
+      else begin
+        xeSaveLogs('Error: Selected plugin "' + xePluginToUse + '" does not exist', True);
+        ExitCode := 1;
+      end;
       Exit(False);
     end;
 
@@ -1188,6 +1195,45 @@ begin
   Result := xeContext.GameDefObj.NexusModsUrl;
   if (xeToolMode = tmLODgen) and (xeContext.GameDefObj.LODGenNexusModsUrl <> '') then
     Result := xeContext.GameDefObj.LODGenNexusModsUrl;
+end;
+
+function xeUnattended: Boolean;
+begin
+  Result := xeAutoExit or (xeToolMode in wbPluginModes);
+end;
+
+procedure xeSaveLogs(const aText: string; aAllowReplace: Boolean);
+
+  procedure SaveLog(const s: string);
+  var
+    txt      : AnsiString;
+    fs       : TFileStream;
+  begin
+    fs := nil;
+    try
+      try
+        if FileExists(s) then begin
+          fs := TFileStream.Create(s, fmOpenReadWrite);
+          fs.Seek(0, soFromEnd);
+        end else
+          fs := TFileStream.Create(s, fmCreate);
+        if aAllowReplace then
+          if fs.Size > 3 * 1024 * 1024 then // truncate log file at 3MB
+            fs.Size := 0;
+        txt := AnsiString(aText) + #13#10;
+        fs.WriteBuffer(txt[1], Length(txt));
+      // suppress log saving errors, it is not critical for xEdit
+      except end;
+    finally
+      if Assigned(fs) then
+        FreeAndNil(fs);
+    end;
+  end;
+
+begin
+  SaveLog(wbProgramPath + xeContext.GameDefObj.AppName + xeToolName + '_log.txt');
+  if xeLogFile <> '' then
+    SaveLog(xeLogFile);
 end;
 
 procedure xeDumpInitState(const aFileName: string);
