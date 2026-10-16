@@ -221,7 +221,9 @@ type
     class function DefaultCompression(aType: TwbBSArchiveType): TwbCompressionType; inline;
     class function SupportsCompression(aType: TwbBSArchiveType; aCType: TwbCompressionType): Boolean;
     class procedure DetectFlags(aType: TwbBSArchiveType; aFilesList: TStrings;
-      const aFilesCompression: TArray<Boolean>; out aArchiveFlags, aFileFlags: Cardinal);
+      const aFilesCompression: TArray<Boolean>; out aArchiveFlags, aFileFlags: Cardinal); overload;
+    class procedure DetectFlags(aType: TwbBSArchiveType; aFilesList: TStrings;
+      const aFilesCompression: TArray<Boolean>; out aArchiveFlags, aFileFlags: Cardinal; out aTexturesOnly: Boolean); overload;
     constructor Create; virtual;
     destructor Destroy; override;
     procedure SyncBeginWrite; inline;
@@ -1091,6 +1093,14 @@ end;
 
 class procedure TwbCustomBSArchive.DetectFlags(aType: TwbBSArchiveType; aFilesList: TStrings;
   const aFilesCompression: TArray<Boolean>; out aArchiveFlags, aFileFlags: Cardinal);
+var
+  lTexturesOnly: Boolean;
+begin
+  DetectFlags(aType, aFilesList, aFilesCompression, aArchiveFlags, aFileFlags, lTexturesOnly);
+end;
+
+class procedure TwbCustomBSArchive.DetectFlags(aType: TwbBSArchiveType; aFilesList: TStrings;
+  const aFilesCompression: TArray<Boolean>; out aArchiveFlags, aFileFlags: Cardinal; out aTexturesOnly: Boolean);
 begin
   aFileFlags := 0;
   aArchiveFlags := ARCHIVE_DEFAULT;
@@ -1136,6 +1146,8 @@ begin
 
   // final flags detection
 
+  aTexturesOnly := aFileFlags = FILE_TEXTURES;
+
   // menus, shaders and fonts are Oblivion only
   if aType <> baTES4 then
     aFileFlags := aFileFlags and not (FILE_MENUS or FILE_SHADERS or FILE_FONTS);
@@ -1145,7 +1157,7 @@ begin
     aFileFlags := aFileFlags and not FILE_MISC;
 
   // embedded names flag in textures only archives
-  if aFileFlags = FILE_TEXTURES then
+  if aTexturesOnly then
     aArchiveFlags := aArchiveFlags or ARCHIVE_EMBEDNAME;
 
   // startupstr flag in archives with meshes
@@ -1787,8 +1799,8 @@ begin
     end;
 
     // flags detection
-    DetectFlags(fType, aFilesList, aFilesCompression, fHeader.Flags, fHeader.FileFlags);
-    var bTexturesOnly := fHeader.FileFlags = FILE_TEXTURES;
+    var bTexturesOnly: Boolean;
+    DetectFlags(fType, aFilesList, aFilesCompression, fHeader.Flags, fHeader.FileFlags, bTexturesOnly);
 
     // flags override
     if fArchiveFlags <> 0 then fHeader.Flags := fArchiveFlags or ARCHIVE_DEFAULT;
@@ -2517,11 +2529,12 @@ begin
   fMayEmbedNames := False;
   if fType in [baFO3, baSSE] then begin
     var lFlags, lFileFlags: Cardinal;
-    DetectFlags(fType, aFilesList, aFilesCompression, lFlags, lFileFlags);
+    var lTexturesOnly: Boolean;
+    DetectFlags(fType, aFilesList, aFilesCompression, lFlags, lFileFlags, lTexturesOnly);
     if fArchiveFlags <> 0 then
       lFlags := fArchiveFlags or ARCHIVE_DEFAULT;
     fMayEmbedNames := (lFileFlags and FILE_TEXTURES <> 0) and ((fArchiveFlags = 0) or (lFlags and ARCHIVE_EMBEDNAME <> 0));
-    lCompressAll := (fType = baSSE) and (lFileFlags = FILE_TEXTURES) and (lFlags and ARCHIVE_EMBEDNAME <> 0);
+    lCompressAll := (fType = baSSE) and lTexturesOnly and (lFlags and ARCHIVE_EMBEDNAME <> 0);
   end;
 
   SetLength(fFiles, aFilesList.Count);
