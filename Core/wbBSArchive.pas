@@ -1286,14 +1286,14 @@ begin
   // Seems like crashing on anything but textures
   if (fType in [baTES4, baFO3, baSSE]) and (fHeader.Flags and ARCHIVE_EMBEDNAME = 0) then
     for var f in Self do
-      if f.Name.EndsWith('_e.dds', True) then begin
+      if IsCubemapName(f.Name) then begin
         Result := Result + ['Contains cubemap _e.dds textures which aren''t loaded properly in the game without Embedded File Names flag'];
         Break;
       end;
 
   if (fType in [baFO3, baSSE]) and (fHeader.Flags and ARCHIVE_EMBEDNAME <> 0) then
     for var f in Self do
-      if not f.Name.EndsWith('.dds', True) then begin
+      if not (f.Name.EndsWith('.dds', True) or f.Name.EndsWith('.ddx', True)) then begin
         Result := Result + ['Contains non texture files which may crash the game when packed with Embedded File Names flag'];
         Break;
       end;
