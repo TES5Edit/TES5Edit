@@ -1174,7 +1174,7 @@ type
     function ListedInjectedIn: IwbFileInternal;
     procedure SetChildGroup(const aGroup: IwbGroupRecord);
     procedure RemoveChildGroup(const aGroup: IwbGroupRecord);
-    procedure SetReferencesInjected(aValue: Boolean);
+    procedure InvalidateReferencesInjected;
     procedure ClearForRelease;
     function DoBuildRef(aRemove: Boolean): Boolean;
 
@@ -1536,7 +1536,7 @@ type
     function ListedInjectedIn: IwbFileInternal;
     procedure SetChildGroup(const aGroup: IwbGroupRecord);
     procedure RemoveChildGroup(const aGroup: IwbGroupRecord);
-    procedure SetReferencesInjected(aValue: Boolean);
+    procedure InvalidateReferencesInjected;
     procedure ClearForRelease;
     procedure SaveRefsToStream(aStream: TStream; aSaveNames: Boolean);
     procedure LoadRefsFromStream(aStream: TStream; aLoadNames: Boolean);
@@ -18128,15 +18128,10 @@ begin
   mrePrev := Pointer(aEntry);
 end;
 
-procedure TwbMainRecord.SetReferencesInjected(aValue: Boolean);
+procedure TwbMainRecord.InvalidateReferencesInjected;
 begin
-  if aValue then begin
-    Include(mrStates, mrsReferencesInjectedChecked);
-    Include(mrStates, mrsReferencesInjected);
-  end else begin
-    Exclude(mrStates, mrsReferencesInjectedChecked);
-    Exclude(mrStates, mrsReferencesInjected);
-  end;
+  Exclude(mrStates, mrsReferencesInjectedChecked);
+  Exclude(mrStates, mrsReferencesInjected);
 end;
 
 function CompareReferencedByFile(Item1, Item2: Pointer): Integer;
@@ -18711,7 +18706,7 @@ begin
   mrReferencedByUnsorted := True;
 
   for var lReferenceByIndex := 0 to Pred(mrReferencedByCount) do
-    (mrReferencedBy[lReferenceByIndex] as IwbMainRecordInternal).SetReferencesInjected(True);
+    (mrReferencedBy[lReferenceByIndex] as IwbMainRecordInternal).InvalidateReferencesInjected;
 
   var lFile := GetFile;
   if not Assigned(lFile) then
@@ -18771,10 +18766,9 @@ begin
   end;
 
   Exclude(mrStates, mrsIsInjectedChecked);
-  var lIsInjected := GetIsInjected;
 
   for var lRefByIdx := 0 to Pred(mrReferencedByCount) do
-    (mrReferencedBy[lRefByIdx] as IwbMainRecordInternal).SetReferencesInjected(lIsInjected);
+    (mrReferencedBy[lRefByIdx] as IwbMainRecordInternal).InvalidateReferencesInjected;
 end;
 
 procedure TwbMainRecord.YouGotAMaster(const aMaster: IwbMainRecord);
