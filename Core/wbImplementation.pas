@@ -842,6 +842,7 @@ type
     procedure flRegisterWithMaster(const aRecord: IwbMainRecord; const aFormID: TwbFormID);
     procedure flUnregisterFromMaster(const aRecord: IwbMainRecord; aFormID: TwbFormID);
     procedure flUnregisterRecords;
+    procedure flInvalidateReferencesInjected;
 
     {---IwbFile---}
     function GetFileName: string;
@@ -2626,6 +2627,7 @@ begin
   SetLength(flMasters, Succ(Length(flMasters)));
   flMasters[High(flMasters)] := aFile;
   UpdateModuleMasters;
+  flInvalidateReferencesInjected;
 end;
 
 procedure TwbFile.AddMasterIfMissing(const aMaster: string; aSortMasters: Boolean = True; aSilent: Boolean = False);
@@ -5532,6 +5534,7 @@ begin
           MastersUpdated(Old, New, lOldCount, lNewCount);
         end;
         SortRecords;
+        flInvalidateReferencesInjected;
       end;
       flProgress(Format('Removed %d unused masters.', [lRemovedCount]));
     finally
@@ -8241,6 +8244,13 @@ begin
       if wbHasProgressCallback then
         wbProgressCallback('Error: <' + e.Message + '> while trying to determine master record for ' + aRecord.Name);
   end;
+end;
+
+procedure TwbFile.flInvalidateReferencesInjected;
+begin
+  for var lRecord in flRecords do
+    if Assigned(lRecord) then
+      (lRecord as IwbMainRecordInternal).InvalidateReferencesInjected;
 end;
 
 procedure TwbFile.flUnregisterRecords;
