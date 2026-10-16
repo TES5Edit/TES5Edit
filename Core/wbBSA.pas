@@ -33,30 +33,48 @@ uses
 type
   TwbHashToStringDict = TDictionary<Int64, string>;
 
-  PwbContainerCache = ^TwbContainerCache;
-  TwbContainerCache = record
-    ccAll             : TwbResourceDict;
-    ccFiles           : TwbResourceDict;
-    ccFolders         : TwbResourceDict;
-    ccFileHashes      : TwbHashToStringDict;
-    ccFolderHashes    : TwbHashToStringDict;
+  TwbContainerCache = class
+  private
+    ccFileHashes   : TwbHashToStringDict;
+    ccFolderHashes : TwbHashToStringDict;
+  public
+    constructor Create;
+    destructor Destroy; override;
+
+    procedure Build(const aContainers: TArray<IwbResourceContainer>; aGameDef: TwbGameDef);
 
     function ResolveFolderHash(const aHash: Int64): string;
     function ResolveFileHash(const aHash: Int64): string;
   end;
 
+  TwbContainerCacheBuilder = class(TThread)
+  private
+    cbContainers : TArray<IwbResourceContainer>;
+    cbGameDef    : TwbGameDef;
+    cbCache      : TwbContainerCache;
+    cbError      : TObject;
+  protected
+    procedure Execute; override;
+  public
+    constructor Create(const aContainers: TArray<IwbResourceContainer>; aGameDef: TwbGameDef);
+    destructor Destroy; override;
+  end;
+
   TwbContainerHandler = class(TInterfacedObject, IwbContainerHandler)
   private
-    chContainers : array of IwbResourceContainer;
-    chCache      : TwbContainerCache;
-    chGameDef    : TwbGameDef;
+    chContainers   : TArray<IwbResourceContainer>;
+    chCache        : TwbContainerCache;
+    chCacheBuilder : TwbContainerCacheBuilder;
+    chGameDef      : TwbGameDef;
   public
     constructor Create(aGameDef: TwbGameDef);
+    destructor Destroy; override;
   protected
     function AddContainer(aContainer: IwbResourceContainer): IwbResourceContainer;
 
-    procedure BuildCache;
     procedure InvalidateCache;
+
+    procedure StartCache;
     procedure EnsureCache;
 
     {---IwbContainerHandler---}
@@ -178,6 +196,12 @@ begin
   chGameDef := aGameDef;
 end;
 
+destructor TwbContainerHandler.Destroy;
+begin
+  InvalidateCache;
+  inherited;
+end;
+
 function TwbContainerHandler.AddContainer(aContainer: IwbResourceContainer): IwbResourceContainer;
 begin
   Result := aContainer;
@@ -230,71 +254,14 @@ begin
   InvalidateCache;
 end;
 
-const
-  _AllCount = 1000000;
-  _OtherCount = 500000;
-
-procedure TwbContainerHandler.BuildCache;
-  function CalcHash(const aStr: string): Int64;
-  begin
-    if gcResourceKeyCRC32NoExtension in chGameDef.Capabilities then
-      Result := TwbHash.BSCRC32(aStr)
-    else
-      Result := TwbHash.TES4(aStr, True);
-  end;
-
+procedure TwbContainerHandler.StartCache;
 begin
-  InvalidateCache;
-  with chCache do begin
-    ccAll := TwbResourceDict.Create(_AllCount);
-    ccFiles := TwbResourceDict.Create(_OtherCount);
-    ccFolders := TwbResourceDict.Create(_OtherCount);
-    ccFileHashes := TwbHashToStringDict.Create(_OtherCount);
-    ccFolderHashes := TwbHashToStringDict.Create(_OtherCount);
-
-    ContainerResourceDict('', ccAll, '');
-
-    var lPath :=  IncludeTrailingPathDelimiter(ExtractFilePath(ParamStr(0)));
-    var lHashSeedName := lPath + chGameDef.GameName + '.HashSeed.txt';
-
-    if FileExists(lHashSeedName) then
-    with TStringList.Create do try
-      try
-        LoadFromFile(lHashSeedName);
-        for var lHashSeedIdx := Pred(Count) downto 0 do begin
-          var lHashSeed := Strings[lHashSeedIdx].ToLowerInvariant.Replace('/', '\');
-          if not ccAll.TryAdd(lHashSeed, wbNothing) then
-            Delete(lHashSeedIdx);
-        end;
-        SaveToFile(lHashSeedName + '2');
-      except
-        on EStreamError do ;
-      end;
-    finally
-      Free;
-    end;
-
-    for var lFullName in ccAll.Keys do begin
-      var lFolder := ExcludeTrailingBackslash(ExtractFilePath(lFullName)).ToLowerInvariant.Replace('/', '\');
-      if ccFolders.TryAdd(lFolder, wbNothing) then begin
-        ccFolderHashes.TryAdd(CalcHash(lFolder), lFolder);
-      end;
-
-      var lFile := ExtractFileName(lFullName).ToLowerInvariant;
-      if gcResourceKeyCRC32NoExtension in chGameDef.Capabilities then
-        lFile := ChangeFileExt(lFile, '');
-
-      if ccFiles.TryAdd(lFile, wbNothing) then begin
-        ccFileHashes.TryAdd(CalcHash(lFile), lFile);
-
-        if gcTextureDDXAlias in chGameDef.Capabilities then
-          if ExtractFileExt(lFile) = '.dds' then
-            lFile := ChangeFileExt(lFile, '.ddx');
-            if ccFiles.TryAdd(lFile, wbNothing) then begin
-              ccFileHashes.TryAdd(CalcHash(lFile), lFile);
-            end;
-      end;
-    end;
+  TMonitor.Enter(Self);
+  try
+    if not Assigned(chCache) and not Assigned(chCacheBuilder) then
+      chCacheBuilder := TwbContainerCacheBuilder.Create(Copy(chContainers), chGameDef);
+  finally
+    TMonitor.Exit(Self);
   end;
 end;
 
@@ -363,18 +330,47 @@ end;
 
 procedure TwbContainerHandler.EnsureCache;
 begin
-  if not Assigned(chCache.ccAll) then
-    BuildCache;
+  if Assigned(chCache) then
+    Exit;
+  TMonitor.Enter(Self);
+  try
+    if Assigned(chCache) then
+      Exit;
+    if Assigned(chCacheBuilder) then begin
+      WaitForSingleObject(chCacheBuilder.Handle, INFINITE);
+      var lError := chCacheBuilder.cbError;
+      chCacheBuilder.cbError := nil;
+      chCache := chCacheBuilder.cbCache;
+      chCacheBuilder.cbCache := nil;
+      FreeAndNil(chCacheBuilder);
+      if not Assigned(chCache) then
+        chCache := TwbContainerCache.Create;
+      if Assigned(lError) then
+        raise lError;
+    end else begin
+      var lCache := TwbContainerCache.Create;
+      try
+        lCache.Build(chContainers, chGameDef);
+      finally
+        chCache := lCache;
+      end;
+    end;
+  finally
+    TMonitor.Exit(Self);
+  end;
 end;
 
 procedure TwbContainerHandler.InvalidateCache;
 begin
-  with chCache do begin
-    FreeAndNil(ccAll);
-    FreeAndNil(ccFiles);
-    FreeAndNil(ccFolders);
-    FreeAndNil(ccFileHashes);
-    FreeAndNil(ccFolderHashes);
+  TMonitor.Enter(Self);
+  try
+    if Assigned(chCacheBuilder) then begin
+      WaitForSingleObject(chCacheBuilder.Handle, INFINITE);
+      FreeAndNil(chCacheBuilder);
+    end;
+    FreeAndNil(chCache);
+  finally
+    TMonitor.Exit(Self);
   end;
 end;
 
@@ -676,16 +672,126 @@ end;
 
 { TwbContainerCache }
 
+const
+  _AllCount = 1000000;
+  _OtherCount = 500000;
+
+constructor TwbContainerCache.Create;
+begin
+  inherited Create;
+  ccFileHashes := TwbHashToStringDict.Create(_OtherCount);
+  ccFolderHashes := TwbHashToStringDict.Create(_OtherCount);
+end;
+
+destructor TwbContainerCache.Destroy;
+begin
+  ccFolderHashes.Free;
+  ccFileHashes.Free;
+  inherited;
+end;
+
+procedure TwbContainerCache.Build(const aContainers: TArray<IwbResourceContainer>; aGameDef: TwbGameDef);
+  function CalcHash(const aStr: string): Int64;
+  begin
+    if gcResourceKeyCRC32NoExtension in aGameDef.Capabilities then
+      Result := TwbHash.BSCRC32(aStr)
+    else
+      Result := TwbHash.TES4(aStr, True);
+  end;
+
+begin
+  var lAll := TwbResourceDict.Create(_AllCount);
+  var lFiles := TwbResourceDict.Create(_OtherCount);
+  var lFolders := TwbResourceDict.Create(_OtherCount);
+  try
+    for var lContainer in aContainers do
+      lContainer.ResourceDict(lAll, '');
+
+    var lPath :=  IncludeTrailingPathDelimiter(ExtractFilePath(ParamStr(0)));
+    var lHashSeedName := lPath + aGameDef.GameName + '.HashSeed.txt';
+
+    if FileExists(lHashSeedName) then
+    with TStringList.Create do try
+      try
+        LoadFromFile(lHashSeedName);
+        for var lHashSeedIdx := Pred(Count) downto 0 do begin
+          var lHashSeed := Strings[lHashSeedIdx].ToLowerInvariant.Replace('/', '\');
+          if not lAll.TryAdd(lHashSeed, wbNothing) then
+            Delete(lHashSeedIdx);
+        end;
+        SaveToFile(lHashSeedName + '2');
+      except
+        on EStreamError do ;
+      end;
+    finally
+      Free;
+    end;
+
+    for var lFullName in lAll.Keys do begin
+      var lFolder := ExcludeTrailingBackslash(ExtractFilePath(lFullName)).ToLowerInvariant.Replace('/', '\');
+      if lFolders.TryAdd(lFolder, wbNothing) then begin
+        ccFolderHashes.TryAdd(CalcHash(lFolder), lFolder);
+      end;
+
+      var lFile := ExtractFileName(lFullName).ToLowerInvariant;
+      if gcResourceKeyCRC32NoExtension in aGameDef.Capabilities then
+        lFile := ChangeFileExt(lFile, '');
+
+      if lFiles.TryAdd(lFile, wbNothing) then begin
+        ccFileHashes.TryAdd(CalcHash(lFile), lFile);
+
+        if gcTextureDDXAlias in aGameDef.Capabilities then
+          if ExtractFileExt(lFile) = '.dds' then
+            lFile := ChangeFileExt(lFile, '.ddx');
+            if lFiles.TryAdd(lFile, wbNothing) then begin
+              ccFileHashes.TryAdd(CalcHash(lFile), lFile);
+            end;
+      end;
+    end;
+  finally
+    lFolders.Free;
+    lFiles.Free;
+    lAll.Free;
+  end;
+end;
+
 function TwbContainerCache.ResolveFileHash(const aHash: Int64): string;
 begin
-  if not (Assigned(ccFileHashes) and ccFileHashes.TryGetValue(aHash, Result)) then
+  if not ccFileHashes.TryGetValue(aHash, Result) then
     Result := '';
 end;
 
 function TwbContainerCache.ResolveFolderHash(const aHash: Int64): string;
 begin
-  if not (Assigned(ccFolderHashes) and ccFolderHashes.TryGetValue(aHash, Result)) then
+  if not ccFolderHashes.TryGetValue(aHash, Result) then
     Result := '';
+end;
+
+{ TwbContainerCacheBuilder }
+
+constructor TwbContainerCacheBuilder.Create(const aContainers: TArray<IwbResourceContainer>; aGameDef: TwbGameDef);
+begin
+  cbContainers := aContainers;
+  cbGameDef := aGameDef;
+  inherited Create(False);
+end;
+
+destructor TwbContainerCacheBuilder.Destroy;
+begin
+  inherited;
+  cbError.Free;
+  cbCache.Free;
+end;
+
+procedure TwbContainerCacheBuilder.Execute;
+begin
+  try
+    cbCache := TwbContainerCache.Create;
+    cbCache.Build(cbContainers, cbGameDef);
+  except
+    cbError := AcquireExceptionObject;
+  end;
+  cbContainers := nil;
 end;
 
 { TwbBA2File }

@@ -19653,8 +19653,7 @@ begin
 
         if lGameDef.DefinedOptions.DecodeTextureHashes then begin
           LoaderProgress('Start building resources cache...');
-          xeContext.ContainerHandler.EnsureCache;
-          LoaderProgress('...resources cache finished building');
+          xeContext.ContainerHandler.StartCache;
         end;
 
         if gcWwiseSoundBanks in lGameDef.Capabilities then begin
