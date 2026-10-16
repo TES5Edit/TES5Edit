@@ -5843,16 +5843,16 @@ function TwbFile.FileFileIDtoLoadOrderFileID(const aFileID: TwbFileID; aNew: Boo
 begin
   if flComplexFileFileID then case aFileID.ModuleType of
     mtLight:
-      if aFileID.LightSlot < GetLightMasterCount(aNew) then
+      if (aFileID.LightSlot >= 0) and (aFileID.LightSlot < GetLightMasterCount(aNew)) then
       Exit(GetLightMaster(aFileID.LightSlot, aNew).LoadOrderFileID);
     mtMedium:
-      if aFileID.MediumSlot < GetMediumMasterCount(aNew) then
+      if (aFileID.MediumSlot >= 0) and (aFileID.MediumSlot < GetMediumMasterCount(aNew)) then
         Exit(GetMediumMaster(aFileID.MediumSlot, aNew).LoadOrderFileID);
     mtFull:
-      if aFileID.FullSlot < GetFullMasterCount(aNew) then
+      if (aFileID.FullSlot >= 0) and (aFileID.FullSlot < GetFullMasterCount(aNew)) then
         Exit(GetFullMaster(aFileID.FullSlot, aNew).LoadOrderFileID);
   end else
-    if aFileID.FullSlot < GetMasterCount(aNew) then
+    if (aFileID.FullSlot >= 0) and (aFileID.FullSlot < GetMasterCount(aNew)) then
       Exit(GetMaster(aFileID.FullSlot, aNew).LoadOrderFileID);
 
   Result := GetResolvedLoadOrderFileID(aNew);
