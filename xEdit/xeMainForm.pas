@@ -15620,6 +15620,10 @@ begin
   end;
 end;
 
+const
+  cLoadReportModes = [tmOnamUpdate, tmMasterUpdate, tmMasterRestore, tmESMify, tmESPify, tmSortAndCleanMasters, tmCheckForITM,
+    tmCheckForDR, tmCheckForErrors];
+
 procedure TfrmMain.tmrMessagesTimer(Sender: TObject);
 var
   ChangesMade : Boolean;
@@ -15696,8 +15700,7 @@ begin
     frmMain.Close;   // Wait until NewMessages are processed.
   end;
 
-  if (xeToolMode in [tmOnamUpdate, tmMasterUpdate, tmMasterRestore, tmESMify, tmESPify, tmSortAndCleanMasters, tmCheckForITM,
-        tmCheckForDR, tmCheckForErrors]) and xeContext.LoaderDone and not xeMasterUpdateDone and not InNestedLoop then begin
+  if (xeToolMode in cLoadReportModes) and xeContext.LoaderDone and not xeMasterUpdateDone and not InNestedLoop then begin
     xeMasterUpdateDone := True;
     ChangesMade := False;
     if xeContext.LoaderError then begin
@@ -15713,6 +15716,8 @@ begin
       PostAddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] Loading and saving the problematic module in CS/GECK/CK can sometimes produce');
       PostAddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] a working version. But it is recommended to contact the author of the module');
       PostAddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] to get the original fixed.');
+      if xeUnattended then
+        AutoDone := True;
     end else try
 {$IFDEF XE_TEST_CONTROL_POINTS}
       if xeTestSwitches.FileLists <> '' then
@@ -18873,6 +18878,15 @@ begin
               tmrShutdown.Enabled := True;
           end else
 {$ENDIF}
+          if xeUnattended then begin
+            PostAddMessage('Error: An error occured while loading modules.');
+            if xeToolMode in wbPluginModes then
+              CheckResult := 255
+            else
+              CheckResult := 1;
+            if not (xeToolMode in cLoadReportModes) then
+              AutoDone := True;
+          end else
             ShowMessage('An error occured while loading modules. Editing is disabled. Check the message log and correct the error.');
           Exit;
         end;
