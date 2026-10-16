@@ -113,7 +113,6 @@ begin
     chkReset.Width := 200;
     chkReset.Caption := 'Reset modified status';
     chkReset.Checked := False; // ini.ReadBool('Settings', 'ResetModified', chkReset.Checked);
-    chkReset.Visible := False; // doesn't work properly
 
     btnOk := TButton.Create(frm); btnOk.Parent := frm;
     btnOk.Caption := 'OK';

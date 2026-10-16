@@ -143,6 +143,8 @@ type
 
   TwbSaveResult = (srAllDone, srNothingToDo, srAbort, srError);
 
+  TwbSeqFileResult = (sfrFailed, sfrSkipped, sfrCreated);
+
   TRefByListItem = class
   public
     Name: string;
@@ -1143,7 +1145,7 @@ type
                          const aValidCRCs : TDynCardinalArray;
                            out aFileCRC   : Cardinal)
                                           : Boolean;
-    function GenerateSEQFileForFile(aFile: IwbFile): Boolean;
+    function GenerateSEQFileForFile(aFile: IwbFile): TwbSeqFileResult;
 
     procedure UpdateActions; override; final;
 
@@ -1178,6 +1180,8 @@ type
     function IsPinned: Boolean;
 
     procedure AddMessage(const s: string);
+    procedure RefuseStart(const aMessage: string);
+    procedure RefuseMissingPlugin(const aName: string);
     procedure ScrollToTheLastMessage;
     procedure AddFile(const aFile: IwbFile);
     procedure AddFileInternal(const aFile: IwbFile);
@@ -1802,6 +1806,21 @@ begin
     tbsMessages.Highlighted := True;
 end;
 
+procedure TfrmMain.RefuseStart(const aMessage: string);
+begin
+  if xeAutoExit then begin
+    AddMessage('Error: ' + aMessage);
+    CheckResult := 1;
+  end else
+    ShowMessage(aMessage);
+  Close;
+end;
+
+procedure TfrmMain.RefuseMissingPlugin(const aName: string);
+begin
+  RefuseStart('Selected plugin "' + aName + '" does not exist');
+end;
+
 const
   InvalidFileNameChars = '\/*?:"<>|';
 
@@ -2376,7 +2395,8 @@ begin
   if Supports(aElement, IwbMainRecord, MainRecord) then begin
 
     LeveledListEntries := MainRecord.ElementByName['Leveled List Entries'] as IwbContainerElementRef;
-    Assert(Assigned(LeveledListEntries));
+    if not Assigned(LeveledListEntries) then
+      Exit;
 
     for i := 0 to Pred(LeveledListEntries.ElementCount) do
       if Supports(LeveledListEntries.Elements[i], IwbContainerElementRef, LeveledListEntry) then begin
@@ -2396,7 +2416,16 @@ begin
         LeveledListEntry := LeveledListEntries.Assign(Low(Integer), Entries[i], False) as IwbContainerElementRef;
         if Supports(LeveledListEntry.ElementBySignature['LVLO'], IwbContainerElementRef, EntryData) then
           LeveledListEntry := EntryData;
-        LeveledListEntry.ElementByName['Count'].NativeValue := Counts[j];
+        var lCount := LeveledListEntry.ElementByName['Count'];
+        if Assigned(lCount) and (lCount.Def.DefType = dtEmpty) then begin
+          var lLevel := LeveledListEntry.Elements[0].NativeValue;
+          var lObject := LeveledListEntry.Elements[2].NativeValue;
+          LeveledListEntry.SetToDefault;
+          LeveledListEntry.Elements[0].NativeValue := lLevel;
+          LeveledListEntry.Elements[2].NativeValue := lObject;
+          lCount := LeveledListEntry.ElementByName['Count'];
+        end;
+        lCount.NativeValue := Counts[j];
       end;
   end;
 end;
@@ -3409,17 +3438,17 @@ begin
   end;
 end;
 
-function TfrmMain.GenerateSEQFileForFile(aFile: IwbFile): Boolean;
+function TfrmMain.GenerateSEQFileForFile(aFile: IwbFile): TwbSeqFileResult;
 var
   Group          : IwbGroupRecord;
   QustFlags      : IwbElement;
   FormIDs        : TwbFormIDs;
-  FileStream     : TBufferedFileStream;
+  FileStream     : TFileStream;
   MainRecord     : IwbMainRecord;
   p, s           : string;
   n              : Integer;
 begin
-      Result := False;
+      Result := sfrFailed;
 
       if aFile.LoadOrder = 0 then
         Exit;
@@ -3441,16 +3470,28 @@ begin
           end;
       end;
 
-      if Length(FormIDs) = 0 then
-        PostAddMessage('Skipped: ' + aFile.FileName + ' doesn''t need sequence file')
-      else try
+      if Length(FormIDs) = 0 then begin
+        s := xeContext.Settings.DataPath + 'Seq\' + ChangeFileExt(aFile.FileName, '.seq');
+        if not FileExists(s) then
+          PostAddMessage('Skipped: ' + aFile.FileName + ' doesn''t need sequence file')
+        else if System.SysUtils.DeleteFile(s) then
+          PostAddMessage('Removed: ' + s + ', ' + aFile.FileName + ' doesn''t need sequence file')
+        else begin
+          PostAddMessage('Error: Can''t remove ' + s + ', ' + SysErrorMessage(GetLastError));
+          Exit;
+        end;
+        Exit(sfrSkipped);
+      end;
+
+      try
+        FileStream := nil;
         try
           p := xeContext.Settings.DataPath + 'Seq\';
           if not DirectoryExists(p) then
             if not ForceDirectories(p) then
               raise Exception.Create('Unable to create SEQ directory in game''s Data');
           s := p + ChangeFileExt(aFile.FileName, '.seq');
-          FileStream := TBufferedFileStream.Create(s, fmCreate);
+          FileStream := TFileStream.Create(s, fmCreate);
           FileStream.WriteBuffer(FormIDs[0], Length(FormIDs)*SizeOf(Cardinal));
           PostAddMessage('Created: ' + s);
         finally
@@ -3464,7 +3505,7 @@ begin
         end;
       end;
 
-      Result := True;
+      Result := sfrCreated;
 end;
 
 procedure TfrmMain.mniNavCreateSEQFileClick(Sender: TObject);
@@ -3473,12 +3514,14 @@ var
   NodeData       : PNavNodeData;
   _File          : IwbFile;
   i, Count       : Integer;
+  Created        : Integer;
 begin
   SelectedNodes := vstNav.GetSortedSelection(True);
   if Length(SelectedNodes) < 1 then
     Exit;
 
   Count := 0;
+  Created := 0;
 
   for i := Low(SelectedNodes) to High(SelectedNodes) do begin
     NodeData := vstNav.GetNodeData(SelectedNodes[i]);
@@ -3491,13 +3534,17 @@ begin
       if _File.LoadOrder = 0 then
         Continue;
 
-      if not GenerateSEQFileForFile(_File) then
-        Continue;
+      case GenerateSEQFileForFile(_File) of
+        sfrFailed:
+          Continue;
+        sfrCreated:
+          Inc(Created);
+      end;
 
       Inc(Count);
     end;
   end;
-  PostAddMessage('[Create SEQ file done] Processed Plugins: ' + IntToStr(Count) + ', SEQ Files Created: ' + IntToStr(Count));
+  PostAddMessage('[Create SEQ file done] Processed Plugins: ' + IntToStr(Count) + ', SEQ Files Created: ' + IntToStr(Created));
 end;
 
 procedure TfrmMain.mniNavDeleteModGroupsClick(Sender: TObject);
@@ -3806,7 +3853,7 @@ begin
   if not xeContext.Settings.BuildRefs then
     Exit;
 {$IFDEF XE_TEST_CONTROL_POINTS}
-  if xeTestSwitches.Conflicts or xeTestSwitches.NavCopy or (xeTestSwitches.ViewTreeFile <> '') then
+  if xeTestSwitches.Any or (xeTestSwitches.ViewTreeFile <> '') then
     Exit;
 {$ENDIF}
   if xeContext.Settings.DontCache then
@@ -4345,14 +4392,15 @@ begin
         if ((xeToolMode in wbPluginModes) or xeQuickClean or xeQuickEdit or xeQuickSEQ) and not lGameDef.IsMorrowind then begin
           Modules.DeactivateAll;
 
+          if SameText(ExtractFilePath(ExpandFileName(xePluginToUse)), ExpandFileName(xeContext.Settings.DataPath)) then
+            xePluginToUse := ExtractFileName(xePluginToUse);
           if (xePluginToUse <> '') or not xeQuickClean then
             with lModules.ModuleByName(xePluginToUse)^ do
               if IsValid then begin
                 Activate;
                 Include(miFlags, mfTaggedForPluginMode);
               end else begin
-                ShowMessage('Selected plugin "' + xePluginToUse + '" does not exist');  // which we checked previously anyway :(
-                frmMain.Close;
+                RefuseMissingPlugin(xePluginToUse);
                 Exit;
               end;
 
@@ -4363,10 +4411,13 @@ begin
                 Activate;
                 Include(miFlags, mfTaggedForPluginMode);
               end else begin
-                ShowMessage('Selected plugin "' + xePluginToUse + '" does not exist');  // which we checked previously anyway :(
-                frmMain.Close;
+                RefuseMissingPlugin(s);
                 Exit;
               end;
+          end;
+          if s <> '' then begin
+            RefuseMissingPlugin(s);
+            Exit;
           end;
         end;
 
@@ -4375,8 +4426,7 @@ begin
           if (xeToolMode in wbPluginModes) or (xeAutoLoad and ({$IFDEF XE_TEST_CONTROL_POINTS}xeTestSwitches.Conflicts or {$ENDIF}(GetAsyncKeyState(VK_CONTROL) >= 0))) then try
             if xeQuickClean then
               if Length(lModules.ModulesByLoadOrder(False).FilteredByFlag(mfTaggedForPluginMode)) <> 1 then begin
-                ShowMessage('Exactly one module must be selected for Quick Clean mode.');
-                frmMain.Close;
+                RefuseStart('Exactly one module must be selected for Quick Clean mode.');
                 Exit;
               end;
 
@@ -5298,16 +5348,16 @@ end;
 procedure TfrmMain.SaveLog(const s: string; aAllowReplace: Boolean);
 var
   txt      : AnsiString;
-  fs       : TBufferedFileStream;
+  fs       : TFileStream;
 begin
   fs := nil;
   try
     try
       if FileExists(s) then begin
-        fs := TBufferedFileStream.Create(s, fmOpenReadWrite);
+        fs := TFileStream.Create(s, fmOpenReadWrite);
         fs.Seek(0, soFromEnd);
       end else
-        fs := TBufferedFileStream.Create(s, fmCreate);
+        fs := TFileStream.Create(s, fmCreate);
       if aAllowReplace then
         if fs.Size > 3 * 1024 * 1024 then // truncate log file at 3MB
           fs.Size := 0;
@@ -19044,7 +19094,8 @@ begin
         if xeQuickSEQ then begin
           for i := High(Files) downto Low(Files) do
             if SameText(Files[i].FileName, xePluginToUse) then begin
-              GenerateSEQFileForFile(Files[i]);
+              if GenerateSEQFileForFile(Files[i]) = sfrFailed then
+                CheckResult := 1;
               if xeAutoExit then
                 tmrShutdown.Enabled := True;
               break;

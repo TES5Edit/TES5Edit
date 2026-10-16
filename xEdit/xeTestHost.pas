@@ -600,16 +600,16 @@ begin
             SameText(ChangeFormIDOp, 'setvwd') or SameText(ChangeFormIDOp, 'setvwdinto') or
             SameText(ChangeFormIDOp, 'copyidle') or SameText(ChangeFormIDOp, 'copyrows') or
             SameText(ChangeFormIDOp, 'copyspawnrate') or SameText(ChangeFormIDOp, 'viewadd') or
-            ChangeFormIDOp.StartsWith('refby', True)) or
+            SameText(ChangeFormIDOp, 'createseq') or ChangeFormIDOp.StartsWith('refby', True)) or
        ((SameText(ChangeFormIDOp, 'copyrows') or ChangeFormIDOp.StartsWith('refby', True)) and (ChangeFormIDView = '')) or
        (SameText(ChangeFormIDOp, 'viewadd') and ((ChangeFormIDTarget = '') or (ChangeFormIDRow = ''))) or
        ((SameText(ChangeFormIDOp, 'batchrefs') or SameText(ChangeFormIDOp, 'localize') or
          SameText(ChangeFormIDOp, 'copyspawnrate')) and (ChangeFormIDTarget = '')) then begin
       ShowMessage('testchangeformid requires -testchangeformid:<filename> -testchangeformidrecords:<EditorID>@<module>[,...] ' +
-        '(setvwd, setvwdinto: also @<module>, the file''s node) -testchangeformidout:<folder> ' +
+        '(setvwd, setvwdinto, createseq: also @<module>, the file''s node) -testchangeformidout:<folder> ' +
         '[-testchangeformidop:<changeformid|changerefs|batchrefs|cleanupinjected|localize|locview|setvwd|setvwdinto|copyidle|copyrows|' +
-        'copyspawnrate|viewadd>] (copyspawnrate: Copy as Spawn Rate Override into -testchangeformidtarget, the copy''s leveled entries ' +
-        'reported) ' +
+        'copyspawnrate|viewadd|createseq>] (copyspawnrate: Copy as Spawn Rate Override into -testchangeformidtarget, the copy''s leveled ' +
+        'entries reported) (createseq: Create SEQ File on the selected files) ' +
         '(viewadd: each record shown in the View tab, the row named by -testchangeformidrow:<element name> focused in the column of ' +
         '-testchangeformidtarget:<module>, whether Add is offered, and Add clicked when it is) ' +
         '(copyrows: the records compared in the view, the source column the record -testchangeformidview names; the subrecord ' +

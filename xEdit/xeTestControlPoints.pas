@@ -3162,6 +3162,7 @@ begin
         lStream := TMemoryStream.Create;
         try
           Files[i].WriteToStream(lStream, rmNo);
+          Files[i].SetElementState(esUnsaved, True);
           TestHost.TestDeltaPatchLines.Add('patchbytes' + #9 + IntToStr(lStream.Size) + #9 + IntToHex(TwbHash.XXH64(lStream.Memory, lStream.Size), 16));
           if xeTestSwitches.DeltaPatchSave <> '' then begin
             lStream.SaveToFile(xeTestSwitches.DeltaPatchSave);
@@ -3293,6 +3294,7 @@ begin
     lStream := TMemoryStream.Create;
     try
       lTarget.WriteToStream(lStream, rmNo);
+      lTarget.SetElementState(esUnsaved, True);
       lStream.SaveToFile(xeTestSwitches.MergeOut);
       TestHost.TestMergeLines.Add('merged' + #9 + xeTestSwitches.MergeOut + #9 + IntToStr(lStream.Size) + #9 +
         IntToHex(TwbHash.XXH64(lStream.Memory, lStream.Size), 16));
@@ -3583,6 +3585,7 @@ begin
       lStream := TMemoryStream.Create;
       try
         lTarget.WriteToStream(lStream, rmNo);
+        lTarget.SetElementState(esUnsaved, True);
         lStream.SaveToFile(xeTestSwitches.MergedPatchOut);
         TestHost.TestMergedPatchLines.Add('patch' + #9 + ExtractFileName(xeTestSwitches.MergedPatchOut) + #9 + IntToStr(lStream.Size) + #9 +
           IntToHex(TwbHash.XXH64(lStream.Memory, lStream.Size), 16));
@@ -3799,6 +3802,7 @@ begin
       lStream := TMemoryStream.Create;
       try
         lFile.WriteToStream(lStream, rmNo);
+        lFile.SetElementState(esUnsaved, True);
         lStream.SaveToFile(TPath.Combine(xeTestSwitches.CopyIntoOut, lFile.FileName));
         lLines.Add('written' + #9 + lFile.FileName + #9 + IntToStr(lStream.Size) + #9 +
           IntToHex(TwbHash.XXH64(lStream.Memory, lStream.Size), 16));
@@ -4250,6 +4254,7 @@ begin
         try
           try
             Files[i].WriteToStream(lStream, rmNo);
+            Files[i].SetElementState(esUnsaved, True);
             lStream.SaveToFile(TPath.Combine(xeTestSwitches.RenumberOut, Files[i].FileName));
             lLines.Add('written' + #9 + Files[i].FileName + #9 + IntToStr(lStream.Size) + #9 +
               IntToHex(TwbHash.XXH64(lStream.Memory, lStream.Size), 16));
@@ -4647,7 +4652,7 @@ begin
     lSelFiles := nil;
     for var lSpec in xeTestSwitches.ChangeFormIDRecords.Split([',']) do begin
       if lSpec.StartsWith('@') and (SameText(xeTestSwitches.ChangeFormIDOp, 'setvwd') or
-         SameText(xeTestSwitches.ChangeFormIDOp, 'setvwdinto')) then begin
+         SameText(xeTestSwitches.ChangeFormIDOp, 'setvwdinto') or SameText(xeTestSwitches.ChangeFormIDOp, 'createseq')) then begin
         lSelFile := FindFile(lSpec.Substring(1));
         if not Assigned(lSelFile) then
           raise Exception.Create(lSpec.Substring(1) + ' is not loaded');
@@ -4802,6 +4807,8 @@ begin
       lMenuItem := mniNavCopyAsSpawnRateOverride
     else if SameText(xeTestSwitches.ChangeFormIDOp, 'copyrows') then
       lMenuItem := mniViewCopyMultipleToSelectedRecords
+    else if SameText(xeTestSwitches.ChangeFormIDOp, 'createseq') then
+      lMenuItem := mniNavCreateSEQFile
     else if lRefBy then
       lMenuItem := TestRefByMenuItem
     else
@@ -4862,6 +4869,8 @@ begin
           mniNavCopyIntoClick(lMenuItem)
         else if lMenuItem = mniViewCopyMultipleToSelectedRecords then
           mniViewCopyMultipleToSelectedRecordsClick(lMenuItem)
+        else if lMenuItem = mniNavCreateSEQFile then
+          mniNavCreateSEQFileClick(lMenuItem)
         else if lRefBy then begin
           if lMenuItem.Visible then
             lMenuItem.Click
@@ -4993,10 +5002,37 @@ procedure TxeTestFormHelper.TestChangeFormIDViewAdd(aLines: TStrings);
 var
   lColumn : Integer;
   lRow    : PVirtualNode;
+  lRows   : Integer;
   lTarget : IwbMainRecord;
   lCell   : IwbMainRecord;
+  lBefore : IwbElement;
   lAdded  : IwbElement;
+  lPath   : TArray<string>;
+
+  function NodeNamed(aNode: PVirtualNode; const aName: string): Boolean;
+  begin
+    for var c := Low(ActiveRecords) to High(ActiveRecords) do
+      if Assigned(ViewCells(aNode)[c].Element) and SameText(ViewCells(aNode)[c].Element.Name, aName) then
+        Exit(True);
+    Result := False;
+  end;
+
+  function NodeAtPath(aNode: PVirtualNode): Boolean;
+  begin
+    if Integer(vstView.GetNodeLevel(aNode)) <> High(lPath) then
+      Exit(False);
+    for var i := High(lPath) downto Low(lPath) do begin
+      if not NodeNamed(aNode, lPath[i]) then
+        Exit(False);
+      aNode := aNode.Parent;
+    end;
+    Result := True;
+  end;
+
 begin
+  lPath := xeTestSwitches.ChangeFormIDRow.Split(['\']);
+  for var i := Low(lPath) to High(lPath) do
+    lPath[i] := lPath[i].Trim;
   for var lRecord in TestHost.TestChangeFormIDRecords do begin
     DoSetActiveRecord(IwbMainRecord(nil));
     DoSetActiveRecord(lRecord, True);
@@ -5013,19 +5049,20 @@ begin
       Continue;
     end;
     lRow := nil;
-    for var lNode in vstView.Nodes(False) do begin
-      for var c := Low(ActiveRecords) to High(ActiveRecords) do
-        if Assigned(ViewCells(lNode)[c].Element) and SameText(ViewCells(lNode)[c].Element.Name, xeTestSwitches.ChangeFormIDRow) then
-          lRow := lNode;
-      if Assigned(lRow) then
-        Break;
-    end;
-    if not Assigned(lRow) then begin
-      aLines.Add('viewadd' + #9 + lRecord.EditorID + #9 + 'no row ' + xeTestSwitches.ChangeFormIDRow);
+    lRows := 0;
+    for var lNode in vstView.Nodes(False) do
+      if NodeAtPath(lNode) then begin
+        lRow := lNode;
+        Inc(lRows);
+      end;
+    if lRows <> 1 then begin
+      aLines.Add('viewadd' + #9 + lRecord.EditorID + #9 + IntToStr(lRows) + ' rows at ' + xeTestSwitches.ChangeFormIDRow);
       Continue;
     end;
+    lBefore := lTarget.ElementByPath[xeTestSwitches.ChangeFormIDRow];
     aLines.Add('viewadd' + #9 + lRecord.EditorID + #9 + 'column ' + IntToStr(lColumn) + ' of ' + IntToStr(Length(ActiveRecords)) + #9 +
-      'partial ' + BoolToStr(lTarget.IsPartialForm, True) + #9 + 'cell ' + IfThen(Assigned(ViewCells(lRow)[lColumn].Element), 'E', '-'));
+      'partial ' + BoolToStr(lTarget.IsPartialForm, True) + #9 + 'cell ' + IfThen(Assigned(ViewCells(lRow)[lColumn].Element), 'E', '-') +
+      #9 + 'had ' + BoolToStr(Assigned(lBefore), True));
     vstViewFocusedNode := lRow;
     vstView.FocusedColumn := Succ(lColumn);
     pmuViewPopup(nil);
@@ -5036,8 +5073,9 @@ begin
         mniViewAdd.Items[0].Click
       else
         mniViewAdd.Click;
-    lAdded := lTarget.ElementByName[xeTestSwitches.ChangeFormIDRow];
-    aLines.Add('viewadd' + #9 + lRecord.EditorID + #9 + 'after' + #9 + 'has ' + BoolToStr(Assigned(lAdded), True) + #9 + 'partial ' +
+    lAdded := lTarget.ElementByPath[xeTestSwitches.ChangeFormIDRow];
+    aLines.Add('viewadd' + #9 + lRecord.EditorID + #9 + 'after' + #9 + 'has ' + BoolToStr(Assigned(lAdded), True) + #9 + 'new ' +
+      BoolToStr(Assigned(lAdded) and not (Assigned(lBefore) and lBefore.Equals(lAdded)), True) + #9 + 'partial ' +
       BoolToStr(lTarget.IsPartialForm, True) + #9 + 'modified ' + BoolToStr(lTarget.Modified, True) + #9 + 'elements ' +
       IntToStr(lTarget.ElementCount));
   end;
@@ -5548,6 +5586,7 @@ begin
         try
           try
             Files[i].WriteToStream(lStream, rmNo);
+            Files[i].SetElementState(esUnsaved, True);
             lStream.SaveToFile(TPath.Combine(xeTestSwitches.ChangeFormIDOut, Files[i].FileName));
             lLines.Add('written' + #9 + Files[i].FileName + #9 + IntToStr(lStream.Size) + #9 +
               IntToHex(TwbHash.XXH64(lStream.Memory, lStream.Size), 16));

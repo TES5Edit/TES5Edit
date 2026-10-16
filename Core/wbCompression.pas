@@ -34,7 +34,8 @@ type
       aCompressionLevel: Integer = -1); overload;
     class procedure Compress(aType: TwbCompressionType; const aSrc, aDst: TStream; aBuffered: Boolean = False;
       aCompressionLevel: Integer = -1); overload;
-    class procedure Decompress(aType: TwbCompressionType; const aSrc: Pointer; aSrcSize: Integer; const aDst: Pointer; aDstSize: Integer); overload;
+    class procedure Decompress(aType: TwbCompressionType; const aSrc: Pointer; aSrcSize: Integer; const aDst: Pointer; aDstSize: Integer;
+      aZLibTrailerOptional: Boolean = False); overload;
     class procedure Decompress(aType: TwbCompressionType; const aSrc, aDst: TStream); overload;
 
     const
@@ -118,8 +119,27 @@ begin
   end;
 end;
 
+function LibDeflateDecompressWithoutTrailer(aDecompressor: libdeflate_decompressor; const InBuf: Pointer; InSize: Integer;
+  const OutBuf: Pointer; OutSize: Integer): Boolean;
+var
+  lCMF, lFLG : Byte;
+  lConsumed  : size_t;
+begin
+  Result := False;
+  if InSize < 2 then
+    Exit;
+  lCMF := PByte(InBuf)[0];
+  lFLG := PByte(InBuf)[1];
+  if (lCMF and $0F <> 8) or (lCMF shr 4 > 7) or ((lCMF * 256 + lFLG) mod 31 <> 0) or (lFLG and $20 <> 0) then
+    Exit;
+  lConsumed := 0;
+  if libdeflate_deflate_decompress_ex(aDecompressor, PByte(InBuf) + 2, InSize - 2, OutBuf, OutSize, @lConsumed) <> LIBDEFLATE_SUCCESS then
+    Exit;
+  Result := Int64(InSize) - 2 - Int64(lConsumed) < 4;
+end;
+
 procedure LibDeflateDecompress(const InBuf: Pointer; InSize: Integer;
-  const OutBuf: Pointer; OutSize: Integer);
+  const OutBuf: Pointer; OutSize: Integer; aTrailerOptional: Boolean);
 var
   VZlib: libdeflate_decompressor;
 begin
@@ -128,7 +148,11 @@ begin
     raise Exception.Create('LibDeflate error: Can''t create decompressor');
 
   try
-    LibDeflateCheck( libdeflate_zlib_decompress(VZlib, InBuf, InSize, OutBuf, OutSize) );
+    var lResult := libdeflate_zlib_decompress(VZlib, InBuf, InSize, OutBuf, OutSize);
+    if (lResult = LIBDEFLATE_BAD_DATA) and aTrailerOptional and
+       LibDeflateDecompressWithoutTrailer(VZlib, InBuf, InSize, OutBuf, OutSize) then
+      lResult := LIBDEFLATE_SUCCESS;
+    LibDeflateCheck(lResult);
   finally
     libdeflate_free_decompressor(VZlib);
   end;
@@ -214,6 +238,8 @@ begin
         @Options
       );
       LZ4FCheck('LZ4F decompression error: %s', r);
+      if (r <> 0) and (Compressed = 0) and (Decompressed = 0) then
+        raise Exception.Create('LZ4F decompression error: incomplete frame');
       Inc(CompressedTotal, Compressed);
       Inc(DecompressedTotal, Decompressed);
     until r = 0;
@@ -268,18 +294,18 @@ begin
     // Write Archive Header
     headerSize := {$IFDEF WIN64}LZ4F_compressBegin{$ELSE}_LZ4F_compressBegin{$ENDIF}(ctx, out_buff, outBuffSize, @prefs);
     LZ4FCheck('LZ4F file header generation failed: %s', headerSize);
-    aCompressed.Write(out_buff, headerSize);
+    aCompressed.WriteBuffer(out_buff, headerSize);
     readSize := aSource.Read(in_buff, blockSize);
     while readSize > 0 do begin
       outSize := {$IFDEF WIN64}LZ4F_compressUpdate{$ELSE}_LZ4F_compressUpdate{$ENDIF}(ctx, out_buff, outBuffSize, in_buff, readSize, nil);
       LZ4FCheck('LZ4F compression error: %s', outSize);
-      aCompressed.Write(out_buff, outSize);
+      aCompressed.WriteBuffer(out_buff, outSize);
       readSize := aSource.Read(in_buff, blockSize);
     end;
     // End of Stream mark
     headerSize := {$IFDEF WIN64}LZ4F_compressEnd{$ELSE}_LZ4F_compressEnd{$ENDIF}(ctx, out_buff, outBuffSize, nil);
     LZ4FCheck('LZ4F end of file generation failed: %s', headerSize);
-    aCompressed.Write(out_buff, headerSize);
+    aCompressed.WriteBuffer(out_buff, headerSize);
   finally
     if ctx <> nil then
       {$IFDEF WIN64}LZ4F_freeCompressionContext{$ELSE}_LZ4F_freeCompressionContext{$ENDIF}(ctx);
@@ -301,10 +327,10 @@ begin
 end;
 
 class procedure TwbCompression.Decompress(aType: TwbCompressionType; const aSrc: Pointer; aSrcSize: Integer;
-  const aDst: Pointer; aDstSize: Integer);
+  const aDst: Pointer; aDstSize: Integer; aZLibTrailerOptional: Boolean);
 begin
   case aType of
-    ctZLib: LibDeflateDecompress(aSrc, aSrcSize, aDst, aDstSize);
+    ctZLib: LibDeflateDecompress(aSrc, aSrcSize, aDst, aDstSize, aZLibTrailerOptional);
     ctLZ4:  LZ4Decompress(aSrc, aSrcSize, aDst, aDstSize);
     ctLZ4F: LZ4FDecompress(aSrc, aSrcSize, aDst, aDstSize);
     {ctNone: begin
@@ -359,7 +385,7 @@ var
   DstSize: Integer;
 begin
   DstBuf := Compress(aType, aSrc, aSrcSize, DstSize, aCompressionLevel);
-  aDst.Write(DstBuf, DstSize);
+  aDst.WriteBuffer(DstBuf, DstSize);
 end;
 
 class procedure TwbCompression.Compress(aType: TwbCompressionType; const aSrc, aDst: TStream; aBuffered: Boolean = False;
@@ -370,29 +396,22 @@ var
   SrcSize: Integer;
 begin
   // direct stream to stream buffered compression without loading entire data into memory
-  // todo: not implemented for LZ4
-  if aBuffered and not (aType in [ctNone, ctLZ4]) then begin
-    case aType of
-      ctZLib: begin
-        if aCompressionLevel = -1 then aCompressionLevel := ZLIB_COMPRESSION_LEVEL;
-        System.ZLib.ZCompressStream(aSrc, aDst, TZCompressionLevel(aCompressionLevel));
-      end;
-      ctLZ4F: begin
-        if aCompressionLevel = -1 then aCompressionLevel := LZ4_COMPRESSION_LEVEL;
-        LZ4FCompressStream(aSrc, aDst, aCompressionLevel);
-      end;
-    end;
+  // todo: not implemented for ZLib and LZ4
+  if aBuffered and (aType = ctLZ4F) then begin
+    if aCompressionLevel = -1 then aCompressionLevel := LZ4_COMPRESSION_LEVEL;
+    LZ4FCompressStream(aSrc, aDst, aCompressionLevel);
     Exit;
   end;
 
   // no buffering with full loading into memory
-  SrcSize := aSrc.Size;
+  SrcSize := aSrc.Size - aSrc.Position;
   // memory stream is already loaded
-  if aSrc is TCustomMemoryStream then
-    Src := TCustomMemoryStream(aSrc).Memory
-  else begin
+  if aSrc is TCustomMemoryStream then begin
+    Src := PByte(TCustomMemoryStream(aSrc).Memory) + aSrc.Position;
+    aSrc.Position := aSrc.Size;
+  end else begin
     SetLength(SrcBuf, SrcSize);
-    aSrc.Read(SrcBuf, SrcSize);
+    aSrc.ReadBuffer(SrcBuf, SrcSize);
     Src := SrcBuf;
   end;
   Compress(aType, Src, SrcSize, aDst, aCompressionLevel);

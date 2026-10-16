@@ -232,7 +232,8 @@ type
     class function HeaderDX10(aDDSData: Pointer): PDDSHeaderDX10;
     class function HeaderXBOX(aDDSData: Pointer): PDDSHeaderXBOX;
     class function GetHeaderSize(aDDSData: Pointer): Integer;
-    class function GetMipSize(aDDSData: Pointer): Integer;
+    class function GetMipSize(aDDSData: Pointer): Int64; overload;
+    class function GetMipSize(aWidth, aHeight: Cardinal; aDXGI: TDXGI; aMip: Integer): Int64; overload;
     class function GetTileMode(aDDSData: Pointer): Integer;
     class function GetDXGIFormatName(aDXGI: TDXGI): string;
     class function GetDXGI(aDDSData: Pointer): TDXGI;
@@ -569,6 +570,8 @@ end;
 class function TwbDDS.IsCubeMap(aDDSData: Pointer): Boolean;
 begin
   Result := PDDSHeader(aDDSData).dwCaps2 and DDSCAPS2_CUBEMAP <> 0;
+  if not Result and ((PDDSHeader(aDDSData).ddspf.dwFourCC = MAGIC_DX10) or (PDDSHeader(aDDSData).ddspf.dwFourCC = MAGIC_XBOX)) then
+    Result := HeaderDX10(aDDSData).miscFlags and DDS_RESOURCE_MISC_TEXTURECUBE <> 0;
 end;
 
 class function TwbDDS.HasAlpha(aDXGI: TDXGI): Boolean;
@@ -603,12 +606,43 @@ begin
   Result := PDDSHeaderXBOX(PByte(aDDSData) + SizeOf(TDDSHeader) + SizeOf(TDDSHeaderDX10));
 end;
 
-class function TwbDDS.GetMipSize(aDDSData: Pointer): Integer;
+class function TwbDDS.GetMipSize(aDDSData: Pointer): Int64;
 var
   DDSHeader: PDDSHeader;
 begin
   DDSHeader := aDDSData;
-  Result := (DDSHeader.dwWidth * DDSHeader.dwHeight * GetBitsPerPixel(DDSHeader)) shr 3;
+  Result := GetMipSize(DDSHeader.dwWidth, DDSHeader.dwHeight, GetDXGI(aDDSData), 0);
+end;
+
+class function TwbDDS.GetMipSize(aWidth, aHeight: Cardinal; aDXGI: TDXGI; aMip: Integer): Int64;
+var
+  lWidth, lHeight: Int64;
+begin
+  if aMip > 31 then
+    aMip := 31;
+  lWidth := Int64(aWidth) shr aMip;
+  lHeight := Int64(aHeight) shr aMip;
+  if lWidth = 0 then
+    lWidth := 1;
+  if lHeight = 0 then
+    lHeight := 1;
+  case aDXGI of
+    DXGI_FORMAT_R8G8_B8G8_UNORM, DXGI_FORMAT_G8R8_G8B8_UNORM, DXGI_FORMAT_YUY2:
+      Result := ((lWidth + 1) shr 1) * 4 * lHeight;
+    DXGI_FORMAT_Y210, DXGI_FORMAT_Y216:
+      Result := ((lWidth + 1) shr 1) * 8 * lHeight;
+    DXGI_FORMAT_NV12, DXGI_FORMAT_420_OPAQUE:
+      Result := ((lWidth + 1) shr 1) * 2 * (lHeight + (lHeight + 1) shr 1);
+    DXGI_FORMAT_P010, DXGI_FORMAT_P016:
+      Result := ((lWidth + 1) shr 1) * 4 * (lHeight + (lHeight + 1) shr 1);
+    DXGI_FORMAT_NV11:
+      Result := ((lWidth + 3) shr 2) * 4 * lHeight * 2;
+  else
+    if IsCompressed(aDXGI) then
+      Result := ((lWidth + 3) div 4) * ((lHeight + 3) div 4) * GetBitsPerPixel(aDXGI) * 2
+    else
+      Result := ((lWidth * GetBitsPerPixel(aDXGI) + 7) div 8) * lHeight;
+  end;
 end;
 
 class function TwbDDS.GetTileMode(aDDSData: Pointer): Integer;
@@ -654,6 +688,13 @@ class function TwbDDS.GetDXGI(aDDSData: Pointer): TDXGI;
 var
   DDSHeader: PDDSHeader;
   DDSHeaderDX10: PDDSHeaderDX10;
+
+  function IsBitMask(r, g, b, a: Cardinal): Boolean;
+  begin
+    with DDSHeader.ddspf do
+      Result := (dwRBitMask = r) and (dwGBitMask = g) and (dwBBitMask = b) and (dwABitMask = a);
+  end;
+
 begin
   Result := DXGI_FORMAT_UNKNOWN;
   DDSHeader := aDDSData;
@@ -670,29 +711,54 @@ begin
   if dwFourCC = MAGIC_BC5S then Result := DXGI_FORMAT_BC5_SNORM else
   if (dwFourCC = MAGIC_DX10) or (dwFourCC = MAGIC_XBOX) then begin
     DDSHeaderDX10 := Pointer(PByte(DDSHeader) + SizeOf(DDSHeader^));
-    Result := TDXGI(DDSHeaderDX10.dxgiFormat);
+    if (DDSHeaderDX10.dxgiFormat > Ord(DXGI_FORMAT_UNKNOWN)) and (DDSHeaderDX10.dxgiFormat <= Ord(High(TDXGI))) then
+      Result := TDXGI(DDSHeaderDX10.dxgiFormat);
   end else
-  if dwFlags and (DDPF_RGB or DDPF_LUMINANCE) <> 0 then case dwRGBBitCount of
+  if dwFlags and DDPF_RGB <> 0 then case dwRGBBitCount of
     32:
-      if dwFlags and DDPF_ALPHAPIXELS = 0 then
-        Result := DXGI_FORMAT_B8G8R8X8_UNORM
-      else if dwRBitMask = $000000FF then
+      if IsBitMask($000000FF, $0000FF00, $00FF0000, $FF000000) then
         Result := DXGI_FORMAT_R8G8B8A8_UNORM
-      else
-        Result := DXGI_FORMAT_B8G8R8A8_UNORM;
+      else if IsBitMask($00FF0000, $0000FF00, $000000FF, $FF000000) then
+        Result := DXGI_FORMAT_B8G8R8A8_UNORM
+      else if IsBitMask($00FF0000, $0000FF00, $000000FF, 0) then
+        Result := DXGI_FORMAT_B8G8R8X8_UNORM
+      else if IsBitMask($3FF00000, $000FFC00, $000003FF, $C0000000) then
+        Result := DXGI_FORMAT_R10G10B10A2_UNORM
+      else if IsBitMask($0000FFFF, $FFFF0000, 0, 0) then
+        Result := DXGI_FORMAT_R16G16_UNORM
+      else if IsBitMask($FFFFFFFF, 0, 0, 0) then
+        Result := DXGI_FORMAT_R32_FLOAT;
     16:
-      if (dwRBitMask = $F800) and (dwGBitMask = $07E0) and (dwBBitMask = $001F) and (dwABitMask = $0000) then
-        Result := DXGI_FORMAT_B5G6R5_UNORM
-      else if (dwRBitMask = $7C00) and (dwGBitMask = $03E0) and (dwBBitMask = $001F) and (dwABitMask = $8000) then
+      if IsBitMask($7C00, $03E0, $001F, $8000) then
         Result := DXGI_FORMAT_B5G5R5A1_UNORM
-      else
+      else if IsBitMask($F800, $07E0, $001F, 0) then
+        Result := DXGI_FORMAT_B5G6R5_UNORM
+      else if IsBitMask($0F00, $00F0, $000F, $F000) then
+        Result := DXGI_FORMAT_B4G4R4A4_UNORM
+      else if IsBitMask($00FF, 0, 0, $FF00) then
+        Result := DXGI_FORMAT_R8G8_UNORM
+      else if IsBitMask($FFFF, 0, 0, 0) then
+        Result := DXGI_FORMAT_R16_UNORM;
+    8:
+      if IsBitMask($FF, 0, 0, 0) then
+        Result := DXGI_FORMAT_R8_UNORM
+      else if (dwFlags and DDPF_ALPHA <> 0) and IsBitMask(0, 0, 0, $FF) then
+        Result := DXGI_FORMAT_A8_UNORM;
+  end else
+  if dwFlags and DDPF_LUMINANCE <> 0 then case dwRGBBitCount of
+    16:
+      if IsBitMask($FFFF, 0, 0, 0) then
+        Result := DXGI_FORMAT_R16_UNORM
+      else if IsBitMask($00FF, 0, 0, $FF00) then
         Result := DXGI_FORMAT_R8G8_UNORM;
     8:
-      if dwFlags and DDPF_ALPHA <> 0 then
-        Result := DXGI_FORMAT_A8_UNORM
-      else
-        Result := DXGI_FORMAT_R8_UNORM;
-  end;
+      if IsBitMask($FF, 0, 0, 0) then
+        Result := DXGI_FORMAT_R8_UNORM
+      else if IsBitMask($00FF, 0, 0, $FF00) then
+        Result := DXGI_FORMAT_R8G8_UNORM;
+  end else
+  if (dwFlags and DDPF_ALPHA <> 0) and (dwRGBBitCount = 8) then
+    Result := DXGI_FORMAT_A8_UNORM;
 end;
 
 class function TwbDDS.GetD3DFMT(aDDSData: Pointer): TD3DFORMAT;
@@ -706,26 +772,31 @@ begin
   with DDSHeader.ddspf do
   if dwFlags and DDPF_RGB <> 0 then case dwRGBBitCount of
     32:
-      if (dwFlags and DDPF_ALPHA <> 0) and (dwRBitMask = $FF0000) and (dwGBitMask = $FF00) and (dwBBitMask = $FF) and (dwABitMask = $FF000000) then
+      if (dwFlags and DDPF_ALPHAPIXELS <> 0) and (dwRBitMask = $FF0000) and (dwGBitMask = $FF00) and (dwBBitMask = $FF) and (dwABitMask = $FF000000) then
         Result := D3DFMT_A8R8G8B8
-      else if (dwFlags and DDPF_ALPHA = 0) and (dwRBitMask = $FF0000) and (dwGBitMask = $FF00) and (dwBBitMask = $FF) then
+      else if (dwFlags and DDPF_ALPHAPIXELS = 0) and (dwRBitMask = $FF0000) and (dwGBitMask = $FF00) and (dwBBitMask = $FF) then
         Result := D3DFMT_X8R8G8B8
-      else if (dwFlags and DDPF_ALPHA = 0) and (dwRBitMask = $FF) and (dwGBitMask = $FF00) and (dwBBitMask = $FF0000) then
+      else if (dwFlags and DDPF_ALPHAPIXELS = 0) and (dwRBitMask = $FF) and (dwGBitMask = $FF00) and (dwBBitMask = $FF0000) then
         Result := D3DFMT_X8B8G8R8
-      else if (dwFlags and DDPF_ALPHA <> 0) and (dwRBitMask = $3FF00000) and (dwGBitMask = $FFC00) and (dwBBitMask = $3FF) and (dwABitMask = $C0000000) then
+      else if (dwFlags and DDPF_ALPHAPIXELS <> 0) and (dwRBitMask = $3FF00000) and (dwGBitMask = $FFC00) and (dwBBitMask = $3FF) and (dwABitMask = $C0000000) then
         Result := D3DFMT_A2R10G10B10;
     24:
       if (dwRBitMask = $FF0000) and (dwGBitMask = $FF00) and (dwBBitMask = $FF) and (dwABitMask = $00) then
         Result := D3DFMT_R8G8B8;
     16:
       if (dwRBitMask = $7C00) and (dwGBitMask = $03E0) and (dwBBitMask = $001F) and (dwABitMask = $8000) then
+        Result := D3DFMT_A1R5G5B5
+      else if (dwRBitMask = $7C00) and (dwGBitMask = $03E0) and (dwBBitMask = $001F) and (dwABitMask = $0000) then
         Result := D3DFMT_X1R5G5B5
       else if (dwRBitMask = $F00) and (dwGBitMask = $F0) and (dwBBitMask = $F) and (dwABitMask = $F000) then
         Result := D3DFMT_A4R4G4B4
       else if (dwRBitMask = $F00) and (dwGBitMask = $F0) and (dwBBitMask = $F) and (dwABitMask = $0000) then
         Result := D3DFMT_X4R4G4B4
       else if (dwRBitMask = $E0) and (dwGBitMask = $1C) and (dwBBitMask = $3) and (dwABitMask = $FF00) then
-        Result := D3DFMT_A8R3G3B2
+        Result := D3DFMT_A8R3G3B2;
+    8:
+      if (dwRBitMask = $E0) and (dwGBitMask = $1C) and (dwBBitMask = $3) and (dwABitMask = $00) then
+        Result := D3DFMT_R3G3B2;
   end;
 end;
 
@@ -735,6 +806,30 @@ var
   DDSHeader: PDDSHeader;
   DDSHeaderDX10: PDDSHeaderDX10;
   DDSHeaderXBOX: PDDSHeaderXBOX;
+
+  function LinearSize: Cardinal;
+  begin
+    var lSize := GetMipSize(aWidth, aHeight, aDXGI, 0);
+    if lSize > High(Cardinal) then
+      Result := High(Cardinal)
+    else
+      Result := lSize;
+  end;
+
+  function RowPitch: Cardinal;
+  begin
+    case aDXGI of
+      DXGI_FORMAT_NV12, DXGI_FORMAT_420_OPAQUE:
+        Result := ((Cardinal(aWidth) + 1) shr 1) * 2;
+      DXGI_FORMAT_P010, DXGI_FORMAT_P016:
+        Result := ((Cardinal(aWidth) + 1) shr 1) * 4;
+      DXGI_FORMAT_NV11:
+        Result := ((Cardinal(aWidth) + 3) shr 2) * 4;
+    else
+      Result := GetMipSize(aWidth, 1, aDXGI, 0);
+    end;
+  end;
+
 begin
   DDSHeader := aDDSData;
   DDSHeaderDX10 := HeaderDX10(aDDSData);
@@ -770,49 +865,49 @@ begin
       dwFlags := dwFlags or DDSD_LINEARSIZE;
       ddspf.dwFlags := DDPF_FOURCC;
       ddspf.dwFourCC := MAGIC_DXT1;
-      dwPitchOrLinearSize := dwWidth * dwHeight div 2;
+      dwPitchOrLinearSize := LinearSize;
     end;
     DXGI_FORMAT_BC2_UNORM: begin
       dwFlags := dwFlags or DDSD_LINEARSIZE;
       ddspf.dwFlags := DDPF_FOURCC;
       ddspf.dwFourCC := MAGIC_DXT3;
-      dwPitchOrLinearSize := dwWidth * dwHeight;
+      dwPitchOrLinearSize := LinearSize;
     end;
     DXGI_FORMAT_BC3_UNORM: begin
       dwFlags := dwFlags or DDSD_LINEARSIZE;
       ddspf.dwFlags := DDPF_FOURCC;
       ddspf.dwFourCC := MAGIC_DXT5;
-      dwPitchOrLinearSize := dwWidth * dwHeight;
+      dwPitchOrLinearSize := LinearSize;
     end;
     DXGI_FORMAT_BC4_SNORM: begin
       dwFlags := dwFlags or DDSD_LINEARSIZE;
       ddspf.dwFlags := DDPF_FOURCC;
       ddspf.dwFourCC := MAGIC_BC4S;
-      dwPitchOrLinearSize := dwWidth * dwHeight div 2;
+      dwPitchOrLinearSize := LinearSize;
     end;
     DXGI_FORMAT_BC4_UNORM: begin
       dwFlags := dwFlags or DDSD_LINEARSIZE;
       ddspf.dwFlags := DDPF_FOURCC;
       ddspf.dwFourCC := MAGIC_BC4U;
-      dwPitchOrLinearSize := dwWidth * dwHeight div 2;
+      dwPitchOrLinearSize := LinearSize;
     end;
     DXGI_FORMAT_BC5_SNORM: begin
       dwFlags := dwFlags or DDSD_LINEARSIZE;
       ddspf.dwFlags := DDPF_FOURCC;
       ddspf.dwFourCC := MAGIC_BC5S;
-      dwPitchOrLinearSize := dwWidth * dwHeight;
+      dwPitchOrLinearSize := LinearSize;
     end;
     DXGI_FORMAT_BC5_UNORM: begin
       dwFlags := dwFlags or DDSD_LINEARSIZE;
       ddspf.dwFlags := DDPF_FOURCC;
       ddspf.dwFourCC := MAGIC_BC5U;
-      dwPitchOrLinearSize := dwWidth * dwHeight;
+      dwPitchOrLinearSize := LinearSize;
     end;
     DXGI_FORMAT_BC1_UNORM_SRGB: begin
       dwFlags := dwFlags or DDSD_LINEARSIZE;
       ddspf.dwFlags := DDPF_FOURCC;
       ddspf.dwFourCC := MAGIC_DX10;
-      dwPitchOrLinearSize := dwWidth * dwHeight div 2;
+      dwPitchOrLinearSize := LinearSize;
     end;
     DXGI_FORMAT_BC2_UNORM_SRGB, DXGI_FORMAT_BC3_UNORM_SRGB,
     DXGI_FORMAT_BC6H_UF16, DXGI_FORMAT_BC6H_SF16,
@@ -820,7 +915,7 @@ begin
       dwFlags := dwFlags or DDSD_LINEARSIZE;
       ddspf.dwFlags := DDPF_FOURCC;
       ddspf.dwFourCC := MAGIC_DX10;
-      dwPitchOrLinearSize := dwWidth * dwHeight;
+      dwPitchOrLinearSize := LinearSize;
     end;
     DXGI_FORMAT_B8G8R8A8_UNORM_SRGB, DXGI_FORMAT_B8G8R8X8_UNORM_SRGB,
     DXGI_FORMAT_R8G8B8A8_UNORM_SRGB,
@@ -914,10 +1009,15 @@ begin
     end
     // the rest of DXGI formats, unsupported by Bethesda?
     else begin
-      dwFlags := dwFlags or DDSD_PITCH;
       ddspf.dwFlags := DDPF_FOURCC;
       ddspf.dwFourCC := MAGIC_DX10;
-      dwPitchOrLinearSize := (dwWidth * TwbDDS.GetBitsPerPixel(aDXGI)) shr 3;
+      if IsCompressed(aDXGI) then begin
+        dwFlags := dwFlags or DDSD_LINEARSIZE;
+        dwPitchOrLinearSize := LinearSize;
+      end else begin
+        dwFlags := dwFlags or DDSD_PITCH;
+        dwPitchOrLinearSize := RowPitch;
+      end;
     end;
   end;
 
@@ -1106,10 +1206,16 @@ begin
   DDSHeader.dwPitchOrLinearSize := DDSHeader.dwWidth * 4;
   src := PByte(aDDSData) + headersize;
   dst := @Result[headersize];
-  for var i := 1 to pixels do begin
+  for var i := 1 to pixels - 1 do begin
     PCardinal(dst)^ := PCardinal(src)^ or $FF000000;
     Inc(src, 3);
     Inc(dst, 4);
+  end;
+  if pixels > 0 then begin
+    dst[0] := src[0];
+    dst[1] := src[1];
+    dst[2] := src[2];
+    dst[3] := $FF;
   end;
 end;
 

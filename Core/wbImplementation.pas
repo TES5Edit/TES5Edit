@@ -703,6 +703,7 @@ type
     procedure UpdateIndexKeys(const aMainRecord: IwbMainRecord; const aChangedKeys: TwbChangedKeys);
     procedure AddAllMastersToSet(aMasters: TwbFilesSet);
     function flFindKeyInIndex(aIndex: TwbNamedIndex; const aKey: string; out aMainRecord: IwbMainRecord): Boolean;
+    procedure SetCRC32(aCRC32: TwbCRC32);
   end;
 
   TwbCachedEditInfo = record
@@ -735,6 +736,7 @@ type
     flEndPtr                 : Pointer;
     flBaseOffset             : NativeUInt;
     flCRC32                  : TwbCRC32;
+    flWrittenCRC32           : TwbCRC32;
 
     flMasters                : TwbFiles;
     flOldMasters             : TwbFiles;
@@ -986,6 +988,7 @@ type
     function GetBaseOffset: NativeUInt;
     procedure UpdateIndexKeys(const aMainRecord: IwbMainRecord; const aChangedKeys: TwbChangedKeys);
     procedure AddAllMastersToSet(aMasters: TwbFilesSet);
+    procedure SetCRC32(aCRC32: TwbCRC32);
 
     procedure Scan; virtual;
     procedure SortRecords;
@@ -1453,6 +1456,7 @@ type
     procedure SetIsPartialForm(aValue: Boolean);
     function GetCanBePartial: Boolean;
     function PartialFormKeeps(aIndex: Integer; const aElement: IwbElement): Boolean;
+    function DeletedKeeps(aIndex: Integer; const aElement: IwbElement): Boolean;
     function GetIsCompressed: Boolean;
     procedure SetIsCompressed(aValue: Boolean);
     function GetIsVisibleWhenDistant: Boolean;
@@ -4855,25 +4859,25 @@ var
   i       : Integer;
   b       : Boolean;
 begin
-  aStream.Read(lFormID, SizeOf(TwbFormID));
+  aStream.ReadBuffer(lFormID, SizeOf(TwbFormID));
   Assert(lFormID = aRec.mrStruct.mrsFormID(True)^);
-  aStream.Read(i, SizeOf(i));
+  aStream.ReadBuffer(i, SizeOf(i));
   aStream.Seek(Int64(i) * SizeOf(TwbFormID), soCurrent);
-  aStream.Read(i, SizeOf(i));
+  aStream.ReadBuffer(i, SizeOf(i));
   aStream.Seek(Int64(i) * SizeOf(Char), soCurrent);
-  aStream.Read(i, SizeOf(i));
+  aStream.ReadBuffer(i, SizeOf(i));
   aStream.Seek(Int64(i) * SizeOf(Char), soCurrent);
   aStream.Seek(Int64(SizeOf(aRec.mrBaseRecordID)), soCurrent);
-  aStream.ReadData(b);
+  aStream.ReadBuffer(b, SizeOf(b));
   if b then begin
-    aStream.ReadData(b);
+    aStream.ReadBuffer(b, SizeOf(b));
     if b then
       aStream.Seek(Int64(SizeOf(TwbGridCell)), soCurrent);
   end;
   if aLoadNames then begin
-    aStream.Read(i, SizeOf(i));
+    aStream.ReadBuffer(i, SizeOf(i));
     aStream.Seek(Int64(i) * SizeOf(Char), soCurrent);
-    aStream.Read(i, SizeOf(i));
+    aStream.ReadBuffer(i, SizeOf(i));
     aStream.Seek(Int64(i) * SizeOf(Char), soCurrent);
   end;
 end;
@@ -4919,7 +4923,7 @@ end;
 function TwbFile.BuildOrLoadRef(aOnlyLoad: Boolean): TwbBuildOrLoadRefResult;
 var
   CacheFileName : string;
-  FileStream    : TBufferedFileStream;
+  FileStream    : TFileStream;
   MemoryStream  : TMemoryStream;
   i             : Integer;
   StartTime,
@@ -4952,6 +4956,12 @@ begin
         finally
           FileStream.Free;
         end;
+        MemoryStream.Position := 0;
+        if (MemoryStream.Read(flRecordsCount, SizeOf(flRecordsCount)) <> SizeOf(flRecordsCount)) or
+           (flRecordsCount <> Length(flRecords)) then begin
+          FreeAndNil(MemoryStream);
+          System.SysUtils.DeleteFile(CacheFileName);
+        end;
       except
         FreeAndNil(MemoryStream);
         System.SysUtils.DeleteFile(CacheFileName);
@@ -4960,35 +4970,41 @@ begin
     if Assigned(MemoryStream) then begin
       Include(flStates, fsRefsBuild);
       try
-        MemoryStream.Position := 0;
-        MemoryStream.Read(flRecordsCount, SizeOf(flRecordsCount));
-        Assert(flRecordsCount = Length(flRecords), '[TwbFile.BuildOrLoadRef] flRecordsCount <> Length(flRecords)');
-        _RefBuilder := True;
         try
-          var lLaterIdx := TList<Integer>.Create;
-          var lLaterPos := TList<Int64>.Create;
+          _RefBuilder := True;
           try
-          for i := 0 to Pred(flRecordsCount) do begin
-            if wbParallelRefBuilds <> 0 then begin
-              var lPos := MemoryStream.Position;
-              if not RefLoadEntry(TwbMainRecord(flRecords[i] as TObject), MemoryStream, fsIsGameMaster in flStates, False) then begin
-                lLaterIdx.Add(i);
-                lLaterPos.Add(lPos);
-              end;
-            end else
-              (flRecords[i] as IwbMainRecordInternal).LoadRefsFromStream(MemoryStream, fsIsGameMaster in flStates);
-            wbTick;
-          end;
-          for var k := 0 to Pred(lLaterIdx.Count) do begin
-            MemoryStream.Position := lLaterPos[k];
-            RefLoadEntry(TwbMainRecord(flRecords[lLaterIdx[k]] as TObject), MemoryStream, fsIsGameMaster in flStates, True);
-          end;
+            var lLaterIdx := TList<Integer>.Create;
+            var lLaterPos := TList<Int64>.Create;
+            try
+            for i := 0 to Pred(flRecordsCount) do begin
+              if wbParallelRefBuilds <> 0 then begin
+                var lPos := MemoryStream.Position;
+                if not RefLoadEntry(TwbMainRecord(flRecords[i] as TObject), MemoryStream, fsIsGameMaster in flStates, False) then begin
+                  lLaterIdx.Add(i);
+                  lLaterPos.Add(lPos);
+                end;
+              end else
+                (flRecords[i] as IwbMainRecordInternal).LoadRefsFromStream(MemoryStream, fsIsGameMaster in flStates);
+              wbTick;
+            end;
+            for var k := 0 to Pred(lLaterIdx.Count) do begin
+              MemoryStream.Position := lLaterPos[k];
+              RefLoadEntry(TwbMainRecord(flRecords[lLaterIdx[k]] as TObject), MemoryStream, fsIsGameMaster in flStates, True);
+            end;
+            finally
+              lLaterIdx.Free;
+              lLaterPos.Free;
+            end;
           finally
-            lLaterIdx.Free;
-            lLaterPos.Free;
+            _RefBuilder := False;
           end;
-        finally
-          _RefBuilder := False;
+        except
+          on EAbort do
+            raise;
+          else begin
+            System.SysUtils.DeleteFile(CacheFileName);
+            raise;
+          end;
         end;
       finally
         MemoryStream.Free;
@@ -5054,7 +5070,7 @@ begin
               MemoryStream.Position := 0;
               var lTempFileName := CacheFileName + '.' + IntToStr(GetCurrentProcessId) + '.' + IntToStr(GetCurrentThreadId) + '.tmp';
               try
-                FileStream := TBufferedFileStream.Create(lTempFileName, fmCreate);
+                FileStream := TFileStream.Create(lTempFileName, fmCreate);
                 try
                   TwbCompression.Compress(ctLZ4F, MemoryStream, FileStream, False, 6);
                 finally
@@ -6516,6 +6532,11 @@ begin
     Result := TwbHash.CRC32(flView, flSize);
     flCRC32 := Result;
   end;
+end;
+
+procedure TwbFile.SetCRC32(aCRC32: TwbCRC32);
+begin
+  flCRC32 := aCRC32;
 end;
 
 function TwbFile.GetElementBySignature(const aSignature: TwbSignature): IwbElement;
@@ -8994,12 +9015,14 @@ procedure TwbFile.WriteToStream(aStream: TStream; aResetModified: TwbResetModifi
 var
   MemoryStream: TMemoryStream;
 begin
+  if aResetModified = rmYes then
+    aResetModified := rmSetInternal;
   MemoryStream := TMemoryStream.Create;
   try
     inherited WriteToStream(MemoryStream, aResetModified);
-    flCRC32 := TwbHash.CRC32(MemoryStream.Memory, MemoryStream.Size);
+    flWrittenCRC32 := TwbHash.CRC32(MemoryStream.Memory, MemoryStream.Size);
     MemoryStream.Position := 0;
-    aStream.Write(MemoryStream.Memory^, MemoryStream.Size);
+    aStream.WriteBuffer(MemoryStream.Memory^, MemoryStream.Size);
   finally
     MemoryStream.Free;
   end;
@@ -9011,9 +9034,14 @@ var
 begin
   SelfRef := Self as IwbContainerElementRef;
   PrepareSave;
-  inherited WriteToStreamInternal(aStream, aResetModified);
+  var lUnsaved := esUnsaved in eStates;
+  try
+    inherited WriteToStreamInternal(aStream, aResetModified);
+  finally
+    if lUnsaved then
+      Include(eStates, esUnsaved);
+  end;
 
-  Exclude(eStates, esUnsaved);
   case aResetModified of
     rmYes: begin
       Exclude(eStates, esModified);
@@ -11831,26 +11859,15 @@ begin
       raise Exception.Create(GetName + ' can not be assigned.');
 
   if GetIsDeleted then
-    if aIndex <> wbAssignThis then begin
-      var lDeleteShouldExit := True;
-      if (gcDeletedRecordKeepsBaseRecord in GameDefObj.Capabilities) and Assigned(mrDef) then begin
-        lDeleteShouldExit := mrDef.KnownSubRecordMemberIndex[ksrBaseRecord] <> aIndex;
-
-        if not lDeleteShouldExit and Assigned(aElement) then begin
-          var lHasSignature: IwbHasSignature;
-          if Supports(aElement, IwbHasSignature, lHasSignature) then
-            lDeleteShouldExit := mrDef.KnownSubRecordSignatures[ksrBaseRecord] <> lHasSignature.Signature;
-        end;
-      end;
-
-      if lDeleteShouldExit then
+    if aIndex <> wbAssignThis then
+      if not DeletedKeeps(aIndex, aElement) then
         Exit;
-    end;
 
   if GetIsPartialForm then
     if aIndex <> wbAssignThis then begin
       var lPartialShouldExit := not PartialFormKeeps(aIndex, aElement);
-      if lPartialShouldExit and Assigned(mrDef) and (lContext.Settings.FillINOM or lContext.Settings.FillINOA) and (GetSignature = 'DIAL') then begin
+      if lPartialShouldExit and Assigned(mrDef) and (aIndex >= 0) and (aIndex < mrDef.MemberCount) and
+         (lContext.Settings.FillINOM or lContext.Settings.FillINOA) and (GetSignature = 'DIAL') then begin
         var lDIALMember := mrDef.Members[aIndex];
         if Assigned(lDIALMember) then begin
           if (lContext.Settings.FillINOM and (lDIALMember.DefaultSignature = 'INOM')) or
@@ -12510,17 +12527,9 @@ begin
   end;
 
   if GetIsDeleted then
-    if aIndex <> wbAssignThis then begin
-      var lHasSignature: IwbHasSignature;
-      if (gcDeletedRecordKeepsBaseRecord in GameDefObj.Capabilities) and
-         Supports(aElement, IwbHasSignature, lHasSignature) and
-         Assigned(mrDef) and
-         (mrDef.KnownSubRecordSignatures[ksrBaseRecord] = lHasSignature.Signature)
-      then begin
-        //allow NAME in FO4, SSE, and newer for deleted records
-      end else
+    if aIndex <> wbAssignThis then
+      if not DeletedKeeps(aIndex, aElement) then
         Exit;
-    end;
 
   if GetIsPartialForm then
     if aIndex <> wbAssignThis then
@@ -13801,6 +13810,16 @@ begin
     Result := BaseRecord.Signature
   else
     Result := 'NULL';
+end;
+
+function TwbMainRecord.DeletedKeeps(aIndex: Integer; const aElement: IwbElement): Boolean;
+var
+  lHasSignature: IwbHasSignature;
+begin
+  Result := (gcDeletedRecordKeepsBaseRecord in GameDefObj.Capabilities) and Assigned(mrDef) and
+    (mrDef.KnownSubRecordMemberIndex[ksrBaseRecord] = aIndex);
+  if Result and Supports(aElement, IwbHasSignature, lHasSignature) then
+    Result := mrDef.KnownSubRecordSignatures[ksrBaseRecord] = lHasSignature.Signature;
 end;
 
 function TwbMainRecord.PartialFormKeeps(aIndex: Integer; const aElement: IwbElement): Boolean;
@@ -15920,52 +15939,52 @@ begin
   lComplex := gcComplexFileFileID in lCapabilities;
 
   Assert(Length(mrReferences)=0);
-  aStream.Read(lFormID, SizeOf(TwbFormID));
+  aStream.ReadBuffer(lFormID, SizeOf(TwbFormID));
   Assert(lFormID = mrStruct.mrsFormID(True)^);
-  aStream.Read(i, SizeOf(i));
+  aStream.ReadBuffer(i, SizeOf(i));
   if i>0 then begin
     SetLength(mrReferences, i);
-    aStream.Read(mrReferences[0], SizeOf(TwbFormID) * i);
+    aStream.ReadBuffer(mrReferences[0], SizeOf(TwbFormID) * i);
   end;
 
-  aStream.Read(i, SizeOf(i));
+  aStream.ReadBuffer(i, SizeOf(i));
   SetLength(mrEditorID, i);
   if i>0 then
-    aStream.Read(mrEditorID[1], SizeOf(Char) * i);
+    aStream.ReadBuffer(mrEditorID[1], SizeOf(Char) * i);
   Include(mrStates, mrsEditorIDFromCache);
 
-  aStream.Read(i, SizeOf(i));
+  aStream.ReadBuffer(i, SizeOf(i));
   SetLength(mrFullName, i);
   if i>0 then
-    aStream.Read(mrFullName[1], SizeOf(Char) * i);
+    aStream.ReadBuffer(mrFullName[1], SizeOf(Char) * i);
   Include(mrStates, mrsFullNameFromCache);
 
-  aStream.Read(mrBaseRecordID, SizeOf(mrBaseRecordID));
+  aStream.ReadBuffer(mrBaseRecordID, SizeOf(mrBaseRecordID));
   Include(mrStates, mrsBaseRecordChecked);
 
   mrStates := mrStates - [mrsGridCellChecked, mrsHasGridCell];
   var b : Boolean;
-  aStream.ReadData(b);
+  aStream.ReadBuffer(b, SizeOf(b));
   if b then begin
     Include(mrStates, mrsGridCellChecked);
-    aStream.ReadData(b);
+    aStream.ReadBuffer(b, SizeOf(b));
     if b then begin
       Include(mrStates, mrsHasGridCell);
-      aStream.ReadData<TwbGridCell>(mrGridCell);
+      aStream.ReadBuffer(mrGridCell, SizeOf(mrGridCell));
     end;
   end;
 
   if aLoadNames then begin
     (**)
-    aStream.Read(i, SizeOf(i));
+    aStream.ReadBuffer(i, SizeOf(i));
     SetLength(mrName, i);
     if i>0 then
-      aStream.Read(mrName[1], SizeOf(Char) * i);
+      aStream.ReadBuffer(mrName[1], SizeOf(Char) * i);
     (**)
-    aStream.Read(i, SizeOf(i));
+    aStream.ReadBuffer(i, SizeOf(i));
     SetLength(mrShortName, i);
     if i>0 then
-      aStream.Read(mrShortName[1], SizeOf(Char) * i);
+      aStream.ReadBuffer(mrShortName[1], SizeOf(Char) * i);
     (** )
     aStream.Read(i, SizeOf(i));
     SetLength(mrDisplayName, i);
@@ -17111,7 +17130,7 @@ begin
           Exclude(mrStates, mrsFullNameFromCache);
         end else if SubRecord.Signature = mrDef.KnownSubRecordSignatures[ksrBaseRecord] then
           Exclude(mrStates, mrsBaseRecordChecked)
-        else if (SubRecord.Signature = mrDef.KnownSubRecordSignatures[ksrGridCell]) and (SubRecord.Container.Equals(Self)) then begin
+        else if SubRecord.Signature = mrDef.KnownSubRecordSignatures[ksrGridCell] then begin
           Exclude(mrStates, mrsHasGridCell);
           Include(mrStates, mrsGridCellChecked);
         end else
@@ -18444,7 +18463,7 @@ var
       Stream.WriteBuffer(DataSize, SizeOf(DataSize));
 
       if Assigned(MS) then
-        aStream.Write(MS.Memory^, MS.Size)
+        aStream.WriteBuffer(MS.Memory^, MS.Size)
       else
         Stream.Position := Stream.Size;
 
@@ -24758,7 +24777,8 @@ begin
         Assign(wbAssignAdd, nil, False);
       for i := Low(DEV) to High(DEV) do
         cntElements[i].EditValue := DEV[i];
-      Include(cntStates, csAsCreatedEmpty);
+      if (Length(cntElements) = 1) and (Length(DEV) = 0) then
+        Include(cntStates, csAsCreatedEmpty);
     end;
   finally
     eContainer := nil;
@@ -27463,16 +27483,18 @@ end;
 
 function TwbLoadingGameContext.NewSaveStream(const aFileName: string): TStream;
 begin
-  Result := TBufferedFileStream.Create(aFileName, fmCreate, 1024 * 1024);
+  Result := TFileStream.Create(aFileName, fmCreate);
 end;
 
 function TwbLoadingGameContext.WriteSave(const aFile: IwbFile; const aSuffix: string; const aReport: TwbSaveMessageProc): TwbSaveWrite;
 const
   ResetModifiedFromBool : array[Boolean] of TwbResetModified = (rmNo, rmSetInternal);
 var
-  lCRC    : TwbCRC32;
-  lStream : TStream;
+  lCRC     : TwbCRC32;
+  lStream  : TStream;
+  lCreated : Boolean;
 begin
+  lCreated := False;
   Result := Default(TwbSaveWrite);
   Result.TargetName := aFile.FileNameOnDisk;
   Result.SaveName := Result.TargetName;
@@ -27492,9 +27514,9 @@ begin
   end;
 
   lCRC := aFile.CRC32;
-  var lWasUnsaved := esUnsaved in aFile.ElementStates;
-  lStream := NewSaveStream(Settings.DataPath + Result.SaveName);
   try
+    lStream := NewSaveStream(Settings.DataPath + Result.SaveName);
+    lCreated := True;
     try
       aReport('Saving: ' + Result.SaveName);
       aFile.WriteToStream(lStream, ResetModifiedFromBool[Settings.ResetModifiedOnSave]);
@@ -27505,8 +27527,9 @@ begin
       lStream.Free;
     end;
 
+    var lWritten := TwbFile(aFile as TObject).flWrittenCRC32;
     if Result.NeedsRename then
-      if lCRC = aFile.CRC32 then begin
+      if lCRC = lWritten then begin
         System.SysUtils.DeleteFile(Settings.DataPath + Result.SaveName);
         Result.NeedsRename := False;
         Result.TryDirectRename := False;
@@ -27514,17 +27537,20 @@ begin
         aReport('File has not changed, removing: ' + Result.SaveName);
       end;
 
-    if Result.Commit then
+    if Result.Commit then begin
       Result.Saved := True;
+      (aFile as IwbFileInternal).SetCRC32(lWritten);
+    end;
+    aFile.SetElementState(esUnsaved, True);
   except
     on E: Exception do begin
-      System.SysUtils.DeleteFile(Settings.DataPath + Result.SaveName);
+      if lCreated then
+        System.SysUtils.DeleteFile(Settings.DataPath + Result.SaveName);
       Result.Failed := True;
       Result.NeedsRename := False;
       Result.TryDirectRename := False;
       Result.Commit := False;
-      if lWasUnsaved then
-        aFile.SetElementState(esUnsaved);
+      (aFile as IwbFileInternal).SetCRC32(lCRC);
       aReport('Error saving ' + Result.SaveName + ': ' + E.Message);
     end;
   end;
@@ -27532,8 +27558,10 @@ end;
 
 function TwbLoadingGameContext.WriteSave(aFile: TwbLocalizationFile; const aSuffix: string; const aReport: TwbSaveMessageProc): TwbSaveWrite;
 var
-  lStream : TStream;
+  lStream  : TStream;
+  lCreated : Boolean;
 begin
+  lCreated := False;
   Result := Default(TwbSaveWrite);
   Result.SaveName := aFile.FileName;
   Result.NeedsRename := FileExists(Result.SaveName);
@@ -27552,6 +27580,7 @@ begin
       end;
     end;
     lStream := NewSaveStream(Settings.DataPath + Result.SaveName);
+    lCreated := True;
     try
       aReport('Saving: ' + Result.SaveName);
       aFile.WriteToStream(lStream);
@@ -27564,6 +27593,8 @@ begin
     aFile.Modified := False;
   except
     on E: Exception do begin
+      if lCreated then
+        System.SysUtils.DeleteFile(Settings.DataPath + Result.SaveName);
       Result.Failed := True;
       Result.NeedsRename := False;
       Result.Commit := False;
