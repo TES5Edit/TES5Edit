@@ -347,6 +347,19 @@ const
   MAGIC_BC5U: TMagic4 = 'BC5U';
   MAGIC_DX10: TMagic4 = 'DX10';
   MAGIC_XBOX: TMagic4 = 'XBOX';
+  MAGIC_DXT2: TMagic4 = 'DXT2';
+  MAGIC_DXT4: TMagic4 = 'DXT4';
+  MAGIC_RGBG: TMagic4 = 'RGBG';
+  MAGIC_GRGB: TMagic4 = 'GRGB';
+  MAGIC_YUY2: TMagic4 = 'YUY2';
+  MAGIC_A16B16G16R16: TMagic4 = #36#0#0#0;
+  MAGIC_Q16W16V16U16: TMagic4 = #110#0#0#0;
+  MAGIC_R16F: TMagic4 = #111#0#0#0;
+  MAGIC_G16R16F: TMagic4 = #112#0#0#0;
+  MAGIC_A16B16G16R16F: TMagic4 = #113#0#0#0;
+  MAGIC_R32F: TMagic4 = #114#0#0#0;
+  MAGIC_G32R32F: TMagic4 = #115#0#0#0;
+  MAGIC_A32B32G32R32F: TMagic4 = #116#0#0#0;
 
   DDSD_CAPS        = $00000001;
   DDSD_HEIGHT      = $00000002;
@@ -551,6 +564,19 @@ begin
   if dwFourCC = MAGIC_ATI2 then Result := DXGI_FORMAT_BC5_UNORM else
   if dwFourCC = MAGIC_BC5U then Result := DXGI_FORMAT_BC5_UNORM else
   if dwFourCC = MAGIC_BC5S then Result := DXGI_FORMAT_BC5_SNORM else
+  if dwFourCC = MAGIC_DXT2 then Result := DXGI_FORMAT_BC2_UNORM else
+  if dwFourCC = MAGIC_DXT4 then Result := DXGI_FORMAT_BC3_UNORM else
+  if dwFourCC = MAGIC_RGBG then Result := DXGI_FORMAT_R8G8_B8G8_UNORM else
+  if dwFourCC = MAGIC_GRGB then Result := DXGI_FORMAT_G8R8_G8B8_UNORM else
+  if dwFourCC = MAGIC_YUY2 then Result := DXGI_FORMAT_YUY2 else
+  if dwFourCC = MAGIC_A16B16G16R16 then Result := DXGI_FORMAT_R16G16B16A16_UNORM else
+  if dwFourCC = MAGIC_Q16W16V16U16 then Result := DXGI_FORMAT_R16G16B16A16_SNORM else
+  if dwFourCC = MAGIC_R16F then Result := DXGI_FORMAT_R16_FLOAT else
+  if dwFourCC = MAGIC_G16R16F then Result := DXGI_FORMAT_R16G16_FLOAT else
+  if dwFourCC = MAGIC_A16B16G16R16F then Result := DXGI_FORMAT_R16G16B16A16_FLOAT else
+  if dwFourCC = MAGIC_R32F then Result := DXGI_FORMAT_R32_FLOAT else
+  if dwFourCC = MAGIC_G32R32F then Result := DXGI_FORMAT_R32G32_FLOAT else
+  if dwFourCC = MAGIC_A32B32G32R32F then Result := DXGI_FORMAT_R32G32B32A32_FLOAT else
   if (dwFourCC = MAGIC_DX10) or (dwFourCC = MAGIC_XBOX) then begin
     DDSHeaderDX10 := Pointer(PByte(DDSHeader) + SizeOf(DDSHeader^));
     if (DDSHeaderDX10.dxgiFormat > Ord(DXGI_FORMAT_UNKNOWN)) and (DDSHeaderDX10.dxgiFormat <= Ord(High(TDXGI))) then
