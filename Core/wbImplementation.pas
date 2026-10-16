@@ -15043,6 +15043,16 @@ begin
 end;
 
 function TwbMainRecord.GetIsInjected: Boolean;
+
+  function InjectedAsHardcoded(const aFile: IwbFile; const aFormID: TwbFormID): Boolean;
+  begin
+    Result := aFormID.IsHardcoded and not (fsIsGameMaster in aFile.FileStates);
+    if Result then begin
+      var lTarget := (aFile as IwbFileInternal).InjectionTarget(aFormID);
+      Result := Assigned(lTarget) and not aFile.Equals(lTarget);
+    end;
+  end;
+
 begin
   var lRefHold: TRefGuard;
   RefShortHold(lRefHold, Self);
@@ -15052,7 +15062,7 @@ begin
     if Assigned(_File) and
        not Assigned(mrMaster) and
        not FormID.IsNull and
-           (not _File.IsNewRecord(FormID, GetMastersUpdated)) and
+       (not _File.IsNewRecord(FormID, GetMastersUpdated) or InjectedAsHardcoded(_File, FormID)) and
        not (fsIsHardcoded in _File.FileStates) and
        ((gcFormIDInRecordHeader in GameDefObj.Capabilities) or (FormID.FileID[ContextObj.SlotLayout].FullSlot > 0)) then
       Include(mrStates, mrsIsInjected)
