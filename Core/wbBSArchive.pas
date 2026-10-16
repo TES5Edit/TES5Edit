@@ -2447,7 +2447,9 @@ end;
 
 function TwbBSArchive.FilesByFolder(const aFolder: string): TwbBSFileEntries;
 begin
-  var Folder := ExcludeTrailingPathDelimiter(aFolder);
+  var Folder := ExcludeTrailingPathDelimiter(aFolder.Replace('/', '\'));
+  if Folder <> '' then
+    Folder := Folder + '\';
   var j := 0;
   SetLength(Result, Count);
   for var f in Self do
