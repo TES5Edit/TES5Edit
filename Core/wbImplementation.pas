@@ -8146,6 +8146,8 @@ begin
     Supports(flContextObj.GameMasterFile, IwbFileInternal, Result)
   else
     Supports(GetMasterForFileID(aFormID.FileID[flContextObj.SlotLayout], True, False), IwbFileInternal, Result);
+  if Assigned(Result) and Equals(Result) then
+    Result := nil;
 end;
 
 procedure TwbFile.flRegisterWithMaster(const aRecord: IwbMainRecord; const aFormID: TwbFormID);
@@ -15046,11 +15048,8 @@ function TwbMainRecord.GetIsInjected: Boolean;
 
   function InjectedAsHardcoded(const aFile: IwbFile; const aFormID: TwbFormID): Boolean;
   begin
-    Result := aFormID.IsHardcoded and not (fsIsGameMaster in aFile.FileStates);
-    if Result then begin
-      var lTarget := (aFile as IwbFileInternal).InjectionTarget(aFormID);
-      Result := Assigned(lTarget) and not aFile.Equals(lTarget);
-    end;
+    Result := aFormID.IsHardcoded and not (fsIsGameMaster in aFile.FileStates) and
+      Assigned((aFile as IwbFileInternal).InjectionTarget(aFormID));
   end;
 
 begin
