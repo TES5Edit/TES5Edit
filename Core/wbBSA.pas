@@ -20,6 +20,8 @@ function wbCreateContainerHandler(aGameDef: TwbGameDef): IwbContainerHandler;
 implementation
 
 uses
+  Winapi.Windows,
+
   System.Classes,
   System.Generics.Collections,
   System.IOUtils,
@@ -131,6 +133,7 @@ type
   TwbFolder = class(TInterfacedObject, IwbResourceContainer, IwbFolder, IwbFolderInternal)
   private
     fPath : string;
+    procedure AddFiles(const aRelPath: string; aList: TStrings; aDict: TwbResourceDict);
   protected
     {---IwbResourceContainer---}
     function GetName: string;
@@ -572,18 +575,44 @@ begin
     Result := TwbFolderResource.Create(Self, s);
 end;
 
-procedure TwbFolder.ResourceDict(const aDict: TwbResourceDict; aFolder: string);
+const
+  FIND_FIRST_EX_LARGE_FETCH = 2;
+
+procedure TwbFolder.AddFiles(const aRelPath: string; aList: TStrings; aDict: TwbResourceDict);
 var
-  FileName: string;
+  lData: TWin32FindData;
+begin
+  var lHandle := FindFirstFileEx(PChar(fPath + aRelPath + '*'), FindExInfoBasic, @lData, FindExSearchNameMatch, nil,
+    FIND_FIRST_EX_LARGE_FETCH);
+  if lHandle = INVALID_HANDLE_VALUE then
+    Exit;
+  try
+    repeat
+      var lName := string(PChar(@lData.cFileName[0]));
+      if lData.dwFileAttributes and FILE_ATTRIBUTE_DIRECTORY <> 0 then begin
+        if (lName <> '.') and (lName <> '..') and not SameText(lName, '.git') then
+          AddFiles(aRelPath + lName + '\', aList, aDict);
+      end else begin
+        var lFileName := LowerCase(aRelPath + lName);
+        if Assigned(aDict) then
+          aDict.TryAdd(lFileName, wbNothing);
+        if Assigned(aList) then
+          aList.Add(lFileName);
+      end;
+    until not FindNextFile(lHandle, lData);
+  finally
+    Winapi.Windows.FindClose(lHandle);
+  end;
+end;
+
+procedure TwbFolder.ResourceDict(const aDict: TwbResourceDict; aFolder: string);
 begin
   if not Assigned(aDict) then
     Exit;
   aFolder := aFolder.Replace('/', '\');
-  if TDirectory.Exists(fPath + aFolder) then
-    for FileName in TDirectory.GetFiles(fPath + aFolder, '*.*', TSearchOption.soAllDirectories) do begin
-      var lFileName := LowerCase(Copy(FileName, Length(fPath) + 1, Length(FileName)));
-      aDict.TryAdd(lFileName, wbNothing);
-    end;
+  if aFolder <> '' then
+    aFolder := IncludeTrailingPathDelimiter(aFolder);
+  AddFiles(aFolder, nil, aDict);
 end;
 
 function TwbFolder.ResourceExists(const aFileName: string): Boolean;
@@ -592,15 +621,13 @@ begin
 end;
 
 procedure TwbFolder.ResourceList(const aList: TStrings; aFolder: string = '');
-var
-  FileName: string;
 begin
   if not Assigned(aList) then
     Exit;
   aFolder := aFolder.Replace('/', '\');
-  if TDirectory.Exists(fPath + aFolder) then
-    for FileName in TDirectory.GetFiles(fPath + aFolder, '*.*', TSearchOption.soAllDirectories) do
-      aList.Add(LowerCase(Copy(FileName, Length(fPath) + 1, Length(FileName))));
+  if aFolder <> '' then
+    aFolder := IncludeTrailingPathDelimiter(aFolder);
+  AddFiles(aFolder, aList, nil);
 end;
 
 procedure TwbFolder.ResolveHash(const aHash: Int64; var Results: TDynStrings);
