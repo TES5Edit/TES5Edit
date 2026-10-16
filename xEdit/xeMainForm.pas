@@ -4056,7 +4056,7 @@ begin
   else if not TPath.IsPathRooted(ExtractFilePath(xeScriptToRun)) then
     xeScriptToRun := xeContext.Settings.ScriptsPath + xeScriptToRun;
 
-  if not FileExists(xeScriptToRun) then
+  if not FileExists(xeScriptToRun) and not xeUnattended then
     with TOpenDialog.Create(Self) do try
       Title := 'Select a script to execute';
       Filter := 'Script files (*.pas)|*.pas';
@@ -4075,8 +4075,11 @@ begin
     finally
       Free;
     end;
-  end else
+  end else begin
     PostAddMessage('Could not open script: ' + xeScriptToRun);
+    if xeUnattended then
+      CheckResult := 1;
+  end;
 
   PostAddMessage('You can close this application now.');
 end;
