@@ -8185,8 +8185,10 @@ end;
 procedure TwbFile.flUnregisterRecords;
 begin
   for var lRecord in flRecords do
-    if Assigned(lRecord) and not lRecord.FixedFormID.IsNull then
+    if Assigned(lRecord) and not lRecord.FixedFormID.IsNull then try
       flUnregisterFromMaster(lRecord, lRecord.FixedFormID);
+    except
+    end;
 end;
 
 procedure TwbFile.Scan;
