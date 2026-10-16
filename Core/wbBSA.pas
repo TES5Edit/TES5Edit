@@ -255,7 +255,7 @@ end;
 
 function TwbContainerHandler.AddFolder(const aPath: string): IwbResourceContainer;
 begin
-  if not ContainerExists(aPath, Result) then
+  if not ContainerExists(IncludeTrailingPathDelimiter(aPath), Result) then
     Result := AddContainer(TwbFolder.Create(aPath));
   InvalidateCache;
 end;
