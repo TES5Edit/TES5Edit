@@ -516,8 +516,9 @@ end;
 
 procedure TwbBSAFile.ResourceDict(const aDict: TwbResourceDict; aFolder: string);
 begin
-for var f in bfArchive.FilesByFolder(aFolder) do
-  aDict.TryAdd(f.Name, wbNothing);
+  if Assigned(aDict) then
+    for var f in bfArchive.FilesByFolder(aFolder) do
+      aDict.TryAdd(f.Name, wbNothing);
 end;
 
 function TwbBSAFile.ResourceExists(const aFileName: string): Boolean;
@@ -527,8 +528,9 @@ end;
 
 procedure TwbBSAFile.ResourceList(const aList: TStrings; aFolder: string = '');
 begin
-  for var f in bfArchive.FilesByFolder(aFolder) do
-    aList.Add(f.Name);
+  if Assigned(aList) then
+    for var f in bfArchive.FilesByFolder(aFolder) do
+      aList.Add(f.Name);
 end;
 
 { TwbBSAResource }
