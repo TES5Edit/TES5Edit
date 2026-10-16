@@ -899,7 +899,7 @@ end;
 
 function TwbBSFileEntry.IsXbox: Boolean;
 begin
-  Result := LowerCase(Archive.FileName).Contains('_xbox.');
+  Result := LowerCase(ExtractFileName(Archive.FileName)).Contains('_xbox.');
 end;
 
 function TwbBSFileEntry.DDSHeaderSize: Integer;
