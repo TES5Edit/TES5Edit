@@ -1428,6 +1428,7 @@ type
     procedure AddReferencedBy(const aMainRecord: IwbMainRecord);
     procedure RemoveReferencedBy(const aMainRecord: IwbMainRecord);
     procedure SortReferencedBy;
+    procedure InvalidateReferencers;
     function GetReferencedBy(aIndex: Integer): IwbMainRecord;
     function GetReferencedByCount: Integer;
     function GetReference(aIndex: Integer): IwbMainRecord;
@@ -17228,7 +17229,8 @@ begin
       SortOverrides;
       lMaster := mrOverrides[0];
       (lMaster as IwbMainRecordInternal).YouAreTheMaster(mrOverrides, mrReferencedBy, mrReferencedByCount);
-    end;
+    end else
+      InvalidateReferencers;
 
   mrMaster := nil;
   mrOverrides := nil;
@@ -18006,7 +18008,8 @@ begin
       if Length(mrOverrides) > 0 then begin
         SortOverrides;
         (mrOverrides[0] as IwbMainRecordInternal).YouAreTheMaster(mrOverrides, mrReferencedBy, mrReferencedByCount);
-      end;
+      end else
+        InvalidateReferencers;
 
     mrMaster := nil;
     mrOverrides := nil;
@@ -18163,6 +18166,12 @@ begin
   if Length(mrOverrides) > 1 then
     wbMergeSortPtr(@mrOverrides[0], Length(mrOverrides), CompareOverrides);
   Include(mrStates, mrsOverridesSorted);
+end;
+
+procedure TwbMainRecord.InvalidateReferencers;
+begin
+  for var lRefByIdx := 0 to Pred(mrReferencedByCount) do
+    (mrReferencedBy[lRefByIdx] as IwbMainRecordInternal).InvalidateReferencesInjected;
 end;
 
 procedure TwbMainRecord.SortReferencedBy;
@@ -18725,8 +18734,7 @@ begin
     end;
   end;
 
-  for var lReferenceByIndex := 0 to Pred(mrReferencedByCount) do
-    (mrReferencedBy[lReferenceByIndex] as IwbMainRecordInternal).InvalidateReferencesInjected;
+  InvalidateReferencers;
 end;
 
 procedure TwbMainRecord.YouAreTheMaster(const aOldMaster: IwbMainRecord; const aOverrides, aReferencedBy: TDynMainRecords; aReferencedByCount: Integer);
@@ -18775,8 +18783,7 @@ begin
 
   Exclude(mrStates, mrsIsInjectedChecked);
 
-  for var lRefByIdx := 0 to Pred(mrReferencedByCount) do
-    (mrReferencedBy[lRefByIdx] as IwbMainRecordInternal).InvalidateReferencesInjected;
+  InvalidateReferencers;
 end;
 
 procedure TwbMainRecord.YouGotAMaster(const aMaster: IwbMainRecord);
