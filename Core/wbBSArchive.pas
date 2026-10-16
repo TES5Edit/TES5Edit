@@ -356,6 +356,7 @@ type
     fFiles: array of TPackedFile;
     fArchives: TwbBSArchives;
     fLoadedSize: Int64;
+    fMayEmbedNames: Boolean;
     fLoadingCount: Integer;
     fErrorCount: Integer;
     fProcessCount: Integer;
@@ -2506,12 +2507,14 @@ begin
     aFilesList.CustomSort(AlphabeticalSort);
 
   var lCompressAll := False;
-  if fType = baSSE then begin
+  fMayEmbedNames := False;
+  if fType in [baFO3, baSSE] then begin
     var lFlags, lFileFlags: Cardinal;
     DetectFlags(fType, aFilesList, aFilesCompression, lFlags, lFileFlags);
     if fArchiveFlags <> 0 then
       lFlags := fArchiveFlags or ARCHIVE_DEFAULT;
-    lCompressAll := (lFileFlags = FILE_TEXTURES) and (lFlags and ARCHIVE_EMBEDNAME <> 0);
+    fMayEmbedNames := (lFileFlags and FILE_TEXTURES <> 0) and ((fArchiveFlags = 0) or (lFlags and ARCHIVE_EMBEDNAME <> 0));
+    lCompressAll := (fType = baSSE) and (lFileFlags = FILE_TEXTURES) and (lFlags and ARCHIVE_EMBEDNAME <> 0);
   end;
 
   SetLength(fFiles, aFilesList.Count);
@@ -2709,7 +2712,7 @@ begin
     if fShareData then begin
       aPackedFile.ShareSize := Length(buf);
       aPackedFile.ShareHash := TwbHash.LookupHash(buf, Length(buf));
-      aPackedFile.ShareCubemap := (fType in [baFO3, baSSE]) and IsCubemapName(aPackedFile.FileName);
+      aPackedFile.ShareCubemap := fMayEmbedNames and IsCubemapName(aPackedFile.FileName);
     end;
 
   finally
