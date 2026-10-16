@@ -697,12 +697,12 @@ begin
 end;
 
 procedure TwbContainerCache.Build(const aContainers: TArray<IwbResourceContainer>; const aCapabilities: TwbGameCapabilities; const aGameName: string);
-  function CalcHash(const aStr: string): Int64;
+  function CalcHash(const aStr: string; aIsFolder: Boolean): Int64;
   begin
     if gcResourceKeyCRC32NoExtension in aCapabilities then
       Result := TwbHash.BSCRC32(aStr)
     else
-      Result := TwbHash.TES4(aStr, True);
+      Result := TwbHash.TES4(aStr, not aIsFolder);
   end;
 
 begin
@@ -740,7 +740,7 @@ begin
     for var lFullName in lAll.Keys do begin
       var lFolder := ExcludeTrailingBackslash(ExtractFilePath(lFullName)).ToLowerInvariant.Replace('/', '\');
       if lFolders.TryAdd(lFolder, wbNothing) then begin
-        ccFolderHashes.TryAdd(CalcHash(lFolder), lFolder);
+        ccFolderHashes.TryAdd(CalcHash(lFolder, True), lFolder);
       end;
 
       var lFile := ExtractFileName(lFullName).ToLowerInvariant;
@@ -748,13 +748,13 @@ begin
         lFile := ChangeFileExt(lFile, '');
 
       if lFiles.TryAdd(lFile, wbNothing) then begin
-        ccFileHashes.TryAdd(CalcHash(lFile), lFile);
+        ccFileHashes.TryAdd(CalcHash(lFile, False), lFile);
 
         if gcTextureDDXAlias in aCapabilities then
           if ExtractFileExt(lFile) = '.dds' then
             lFile := ChangeFileExt(lFile, '.ddx');
             if lFiles.TryAdd(lFile, wbNothing) then begin
-              ccFileHashes.TryAdd(CalcHash(lFile), lFile);
+              ccFileHashes.TryAdd(CalcHash(lFile, False), lFile);
             end;
       end;
     end;
