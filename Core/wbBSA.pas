@@ -258,13 +258,17 @@ begin
 
     if FileExists(lHashSeedName) then
     with TStringList.Create do try
-      LoadFromFile(lHashSeedName);
-      for var lHashSeedIdx := Pred(Count) downto 0 do begin
-        var lHashSeed := Strings[lHashSeedIdx].ToLowerInvariant.Replace('/', '\');
-        if not ccAll.TryAdd(lHashSeed, wbNothing) then
-          Delete(lHashSeedIdx);
+      try
+        LoadFromFile(lHashSeedName);
+        for var lHashSeedIdx := Pred(Count) downto 0 do begin
+          var lHashSeed := Strings[lHashSeedIdx].ToLowerInvariant.Replace('/', '\');
+          if not ccAll.TryAdd(lHashSeed, wbNothing) then
+            Delete(lHashSeedIdx);
+        end;
+        SaveToFile(lHashSeedName + '2');
+      except
+        on EStreamError do ;
       end;
-      SaveToFile(lHashSeedName + '2');
     finally
       Free;
     end;
