@@ -18956,7 +18956,8 @@ begin
         if xeContext.LoaderError then begin
 {$IFDEF XE_TEST_CONTROL_POINTS}
           if xeTestSwitches.Conflicts or xeTestSwitches.NavCopy or xeTestSwitches.Merge or xeTestSwitches.MergedPatch or
-             xeTestSwitches.CopyInto or xeTestSwitches.Renumber or xeTestSwitches.ChangeFormID then begin
+             xeTestSwitches.CopyInto or xeTestSwitches.Renumber or xeTestSwitches.ChangeFormID or xeTestSwitches.NewFile or
+             xeTestSwitches.GameLink or xeTestSwitches.SplitTreeLOD then begin
             wbProgress('Test mode FAILED: an error occured while loading modules');
             CheckResult := 255;
             if xeAutoExit then

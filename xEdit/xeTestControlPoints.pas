@@ -2821,7 +2821,17 @@ begin
         lMasters.AddObject(lLast.FileName, Pointer(lLast));
         try
           AddRequiredMasters(lMasters, lNew, True);
-          lLines.Add('master' + #9 + lLast.FileName + #9 + IntToStr(lLast.LoadOrder) + #9 + lLast.LoadOrderFileID.ToString + #9 + 'added');
+          var lAdded := False;
+          for var m := 0 to Pred(lNew.MasterCount[True]) do
+            if lNew.Masters[m, True].Equals(lLast) then
+              lAdded := True;
+          if lAdded then
+            lLines.Add('master' + #9 + lLast.FileName + #9 + IntToStr(lLast.LoadOrder) + #9 + lLast.LoadOrderFileID.ToString + #9 + 'added')
+          else begin
+            lRefused := True;
+            lLines.Add('master' + #9 + lLast.FileName + #9 + IntToStr(lLast.LoadOrder) + #9 + lLast.LoadOrderFileID.ToString + #9 +
+              'not among the masters afterwards');
+          end;
         except
           on E: Exception do begin
             lRefused := True;
@@ -2859,6 +2869,8 @@ begin
   xeContext.Settings.DontSave := True;
   TestHost.TestGameLinkTarget := nil;
   try
+    if xeContext.GameDefObj.GameMode = gmTES4 then
+      raise Exception.Create('Oblivion links through Pluggy''s files, which this switch does not write');
     var lModule: IwbFile := nil;
     for var lFile in Files do
       if SameText(lFile.FileName, xeTestSwitches.GameLinkModule) and not (fsIsCompareLoad in lFile.FileStates) then
@@ -2878,6 +2890,7 @@ begin
     ForceDirectories(lFolder);
     TFile.WriteAllText(lFolder + 'xEditLink.ini', '[Console]'#13#10'selectedRefID=' +
       TestHost.TestGameLinkTarget.LoadOrderFormID.ToString + #13#10);
+    DoSetActiveRecord(nil);
     pmuMainPopup(Self);
     if not mniMainPluggyLinkReference.Visible then
       raise Exception.Create('GameLink is not offered');
@@ -2908,7 +2921,7 @@ begin
   var lActive := 'none';
   if Assigned(ActiveRecord) then
     lActive := ActiveRecord.Name + #9 + ActiveRecord._File.FileName + #9 + ActiveRecord.LoadOrderFormID.ToString;
-  if Assigned(ActiveRecord) and ActiveRecord.MasterOrSelf.Equals(lTarget) then
+  if Assigned(ActiveRecord) and ActiveRecord.Equals(lTarget.WinningOverride) then
     CheckResult := 0
   else
     CheckResult := 1;
@@ -2971,14 +2984,19 @@ begin
       if not Assigned(lWorld) or (lWorld.Signature <> 'WRLD') then
         raise Exception.Create('no worldspace ' + xeTestSwitches.SplitTreeLODWorld + ' in ' + Files[0].FileName);
       lLines.Add('world' + #9 + lWorld.Name);
+      var lFolder := xeContext.Settings.OutputPath + 'Textures\Terrain\LODGen\';
+      if TDirectory.Exists(lFolder) and (Length(TDirectory.GetFiles(lFolder, '*', TSearchOption.soAllDirectories)) > 0) then
+        raise Exception.Create('the output folder already holds files: ' + lFolder);
       lStage := 'split';
       wbSplitTreeLOD(lWorld, Files);
       var lWritten := 0;
-      var lFolder := xeContext.Settings.OutputPath + 'Textures\Terrain\LODGen\';
       if TDirectory.Exists(lFolder) then
         lWritten := Length(TDirectory.GetFiles(lFolder, '*.dds', TSearchOption.soAllDirectories));
       lLines.Add('written' + #9 + IntToStr(lWritten) + ' billboard textures');
-      CheckResult := 0;
+      if lWritten > 0 then
+        CheckResult := 0
+      else
+        CheckResult := 1;
     except
       on E: Exception do begin
         if lStage = 'split' then
