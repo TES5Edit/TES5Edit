@@ -5498,7 +5498,12 @@ begin
       Settings.WriteInteger(Name, 'Top', Top);
       Settings.WriteInteger(Name, 'Width', Width);
       Settings.WriteInteger(Name, 'Height', Height);
-    Settings.UpdateFile;
+    try
+      Settings.UpdateFile;
+    except
+      on E: Exception do
+        AddMessage('Error: Could not write the settings file: <' + E.ClassName + ': ' + E.Message + '>');
+    end;
   end;
 
   SaveLogs(True);
