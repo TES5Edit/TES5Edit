@@ -640,7 +640,7 @@ begin
   end else if isMode('clearESM') then begin
     xeToolMode    := tmESPify;
     xeToolName    := 'ClearingESMflag';
-  end else if isMode('SortAndClean') then begin
+  end else if isMode('SortAndClean') or isMode('SortAndCleanMasters') then begin
     xeToolMode    := tmSortAndCleanMasters;
     xeToolName    := 'SortAndCleanMasters';
   end else if isMode('CheckForErrors') then begin
