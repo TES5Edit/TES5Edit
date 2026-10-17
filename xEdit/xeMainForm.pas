@@ -5502,7 +5502,6 @@ begin
 
   if not UnattendedSaveFailed and (SaveChanged >= srAbort) then
     if xeUnattended then begin
-      AddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] !!! The modules that could not be saved have been left unchanged.');
       if CheckResult = 0 then
         CheckResult := xeFailureExitCode;
     end else begin
@@ -15872,7 +15871,6 @@ begin
         UnattendedSaveFailed := True;
         CheckResult := xeFailureExitCode;
         PostAddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] --= Error =--');
-        PostAddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] !!! The modules that could not be saved have been left unchanged.');
         AutoDone := True;
         Exit;
       end;
