@@ -131,7 +131,10 @@ type
     procedure DoTestOptions;
     procedure DoTestCopyIntoGap;
     procedure DoTestNewFile;
-    procedure DoTestNewFileReport;
+    procedure DoTestNewFileReport(const aFailure: string = '');
+    procedure DoTestGameLink;
+    procedure TestGameLinkRunTimer(Sender: TObject);
+    procedure TestGameLinkWrite(const aBody: string);
     procedure DoTestDropMaster;
     procedure DoTestDeltaPatchStart;
     procedure DoTestDeltaPatchReport;
@@ -2749,75 +2752,89 @@ begin
   for var lFile in Files do
     if SameText(lFile.FileName, xeTestSwitches.NewFileModule) then begin
       DoCompareTo(lFile, xeTestSwitches.NewFileCompareTo);
+      if xeContext.LoaderDone then
+        DoTestNewFileReport('the compare load of ' + xeTestSwitches.NewFileCompareTo + ' did not start');
       Exit;
     end;
-  AddMessage('[Test New File] FAILED: no module ' + xeTestSwitches.NewFileModule);
-  CheckResult := 2;
-  if xeAutoExit then
-    tmrShutdown.Enabled := True;
+  DoTestNewFileReport('no module ' + xeTestSwitches.NewFileModule);
 end;
 
-procedure TxeTestFormHelper.DoTestNewFileReport;
+procedure TxeTestFormHelper.DoTestNewFileReport(const aFailure: string);
 var
-  lLines   : TStringList;
-  lMasters : TStringList;
-  lNew     : IwbFile;
-  lLast    : IwbFile;
-  lShared  : string;
-  lTmp     : string;
+  lLines    : TStringList;
+  lMasters  : TStringList;
+  lNew      : IwbFile;
+  lLast     : IwbFile;
+  lShared   : string;
+  lSharedID : string;
+  lRefused  : Boolean;
+  lTmp      : string;
 begin
   lLines := TStringList.Create;
   try
     lLines.Add('# xEdit new-file probe');
     lLines.Add('# ' + xeApplicationTitle);
-    lLines.Add('# compareto = ' + xeTestSwitches.NewFileCompareTo + ', module = ' + xeTestSwitches.NewFileModule);
-    lLines.Add('# Columns, tab separated: what / file / load order / text');
+    lLines.Add('# compareto = ' + xeTestSwitches.NewFileCompareTo + ', module = ' + xeTestSwitches.NewFileModule +
+      ', overload = ' + IfThen(xeTestSwitches.NewFileTemplate, 'template', 'boolean'));
+    lLines.Add('# Columns, tab separated: what / file / load order / load order FileID / text');
     CheckResult := 2;
     try
+      if aFailure <> '' then
+        raise Exception.Create(aFailure);
       if xeContext.LoaderError then
         raise Exception.Create('an error occured while loading the compare to module');
       for var lFile in Files do
-        lLines.Add('file' + #9 + lFile.FileName + #9 + IntToStr(lFile.LoadOrder) + #9 +
+        lLines.Add('file' + #9 + lFile.FileName + #9 + IntToStr(lFile.LoadOrder) + #9 + lFile.LoadOrderFileID.ToString + #9 +
           IfThen(fsIsCompareLoad in lFile.FileStates, 'compare load', ''));
 
-      lNew := AddNewFileName('xeNewFileProbe.esp', False, False);
+      if xeTestSwitches.NewFileTemplate then begin
+        var lTemplates := xeContext.ModuleList.ModulesByLoadOrder(True).FilteredByFlag(mfValid).FilteredByFlag(mfTemplate);
+        if Length(lTemplates) = 0 then
+          raise Exception.Create('no module template');
+        lNew := AddNewFileName('xeNewFileProbe' + lTemplates[0].miExtension.ToString, lTemplates[0]);
+      end else
+        lNew := AddNewFileName('xeNewFileProbe.esp', False, False);
       if not Assigned(lNew) then
         raise Exception.Create('no new file was created');
       lShared := '';
+      lSharedID := '';
       lLast := nil;
       for var lFile in Files do
         if not lFile.Equals(lNew) then begin
           if lFile.LoadOrder = lNew.LoadOrder then
             lShared := lShared + ' ' + lFile.FileName;
-          if not (fsIsCompareLoad in lFile.FileStates) and (not Assigned(lLast) or (lFile.LoadOrder > lLast.LoadOrder)) then
+          if lFile.LoadOrderFileID = lNew.LoadOrderFileID then
+            lSharedID := lSharedID + ' ' + lFile.FileName;
+          if not (fsIsCompareLoad in lFile.FileStates) and not lFile.IsNotPlugin and
+             (not Assigned(lLast) or (lFile.LoadOrder > lLast.LoadOrder)) then
             lLast := lFile;
         end;
-      lLines.Add('new' + #9 + lNew.FileName + #9 + IntToStr(lNew.LoadOrder) + #9 + 'shares its load order with:' + lShared);
+      lLines.Add('new' + #9 + lNew.FileName + #9 + IntToStr(lNew.LoadOrder) + #9 + lNew.LoadOrderFileID.ToString + #9 +
+        'shares its load order with:' + lShared + '; its FileID with:' + lSharedID);
       if not Assigned(lLast) then
         raise Exception.Create('no module was loaded');
 
+      lRefused := False;
       lMasters := TStringList.Create;
       try
         lMasters.AddObject(lLast.FileName, Pointer(lLast));
         try
           AddRequiredMasters(lMasters, lNew, True);
-          lLines.Add('master' + #9 + lLast.FileName + #9 + IntToStr(lLast.LoadOrder) + #9 + 'added');
+          lLines.Add('master' + #9 + lLast.FileName + #9 + IntToStr(lLast.LoadOrder) + #9 + lLast.LoadOrderFileID.ToString + #9 + 'added');
         except
-          on E: Exception do
-            lLines.Add('master' + #9 + lLast.FileName + #9 + IntToStr(lLast.LoadOrder) + #9 + 'refused: ' + E.Message);
+          on E: Exception do begin
+            lRefused := True;
+            lLines.Add('master' + #9 + lLast.FileName + #9 + IntToStr(lLast.LoadOrder) + #9 + lLast.LoadOrderFileID.ToString + #9 +
+              'refused: ' + E.Message);
+          end;
         end;
       finally
         lMasters.Free;
       end;
-
-      var lTemplates := xeContext.ModuleList.ModulesByLoadOrder(True).FilteredByFlag(mfValid).FilteredByFlag(mfTemplate);
-      if Length(lTemplates) = 0 then
-        raise Exception.Create('no module template');
-      var lFromTemplate := AddNewFileName('xeNewFileProbeT' + lTemplates[0].miExtension.ToString, lTemplates[0]);
-      if not Assigned(lFromTemplate) then
-        raise Exception.Create('no new file was created from a template');
-      lLines.Add('template' + #9 + lFromTemplate.FileName + #9 + IntToStr(lFromTemplate.LoadOrder) + #9 + '');
-      CheckResult := 0;
+      if (lShared <> '') or (lSharedID <> '') or lRefused then
+        CheckResult := 1
+      else
+        CheckResult := 0;
     except
       on E: Exception do begin
         AddMessage('[Test New File] FAILED: ' + E.ClassName + ': ' + E.Message);
@@ -2828,6 +2845,95 @@ begin
     lTmp := xeTestSwitches.NewFileFile + '.partial';
     lLines.SaveToFile(lTmp, TEncoding.UTF8);
     if not MoveFileEx(PChar(lTmp), PChar(xeTestSwitches.NewFileFile), MOVEFILE_REPLACE_EXISTING) then
+      RaiseLastOSError;
+  finally
+    lLines.Free;
+    if xeAutoExit then
+      tmrShutdown.Enabled := True;
+  end;
+end;
+
+procedure TxeTestFormHelper.DoTestGameLink;
+begin
+  xeContext.Settings.DontSave := True;
+  TestHost.TestGameLinkTarget := nil;
+  try
+    var lModule: IwbFile := nil;
+    for var lFile in Files do
+      if SameText(lFile.FileName, xeTestSwitches.GameLinkModule) and not (fsIsCompareLoad in lFile.FileStates) then
+        lModule := lFile;
+    if not Assigned(lModule) then
+      raise Exception.Create('no module ' + xeTestSwitches.GameLinkModule);
+    for var j := 0 to Pred(lModule.RecordCount) do begin
+      var lRecord := lModule.Records[j];
+      if (lRecord.Signature <> 'TES4') and lRecord.MasterOrSelf.Equals(lRecord) and not lRecord.IsInjected then begin
+        TestHost.TestGameLinkTarget := lRecord;
+        Break;
+      end;
+    end;
+    if not Assigned(TestHost.TestGameLinkTarget) then
+      raise Exception.Create('no record of its own in ' + lModule.FileName);
+    var lFolder := xeContext.Settings.DataPath + 'xEdit\';
+    ForceDirectories(lFolder);
+    TFile.WriteAllText(lFolder + 'xEditLink.ini', '[Console]'#13#10'selectedRefID=' +
+      TestHost.TestGameLinkTarget.LoadOrderFormID.ToString + #13#10);
+    pmuMainPopup(Self);
+    if not mniMainPluggyLinkReference.Visible then
+      raise Exception.Create('GameLink is not offered');
+    mniMainPluggyLinkReference.Checked := True;
+    mniMainPluggyLinkReference.Click;
+  except
+    on E: Exception do begin
+      TestHost.TestGameLinkTarget := nil;
+      CheckResult := 2;
+      TestGameLinkWrite('# FAILED: ' + E.ClassName + ': ' + E.Message);
+      Exit;
+    end;
+  end;
+  TestHost.TestGameLinkStart := GetTickCount64;
+  TestHost.TestGameLinkTimer := TTimer.Create(Self);
+  TestHost.TestGameLinkTimer.Interval := 250;
+  TestHost.TestGameLinkTimer.OnTimer := TestGameLinkRunTimer;
+  TestHost.TestGameLinkTimer.Enabled := True;
+end;
+
+procedure TxeTestFormHelper.TestGameLinkRunTimer(Sender: TObject);
+begin
+  if not Assigned(ActiveRecord) and (GetTickCount64 < TestHost.TestGameLinkStart + 20000) then
+    Exit;
+  TestHost.TestGameLinkTimer.Enabled := False;
+  var lTarget := TestHost.TestGameLinkTarget;
+  TestHost.TestGameLinkTarget := nil;
+  var lActive := 'none';
+  if Assigned(ActiveRecord) then
+    lActive := ActiveRecord.Name + #9 + ActiveRecord._File.FileName + #9 + ActiveRecord.LoadOrderFormID.ToString;
+  if Assigned(ActiveRecord) and ActiveRecord.MasterOrSelf.Equals(lTarget) then
+    CheckResult := 0
+  else
+    CheckResult := 1;
+  TestGameLinkWrite(
+    'target' + #9 + lTarget.Name + #9 + lTarget._File.FileName + #9 + lTarget.LoadOrderFormID.ToString + #13#10 +
+    'active' + #9 + lActive);
+end;
+
+procedure TxeTestFormHelper.TestGameLinkWrite(const aBody: string);
+var
+  lLines : TStringList;
+  lTmp   : string;
+begin
+  lLines := TStringList.Create;
+  try
+    lLines.Add('# xEdit GameLink probe');
+    lLines.Add('# ' + xeApplicationTitle);
+    lLines.Add('# module = ' + xeTestSwitches.GameLinkModule);
+    lLines.Add('# Columns, tab separated: what / record / file / load order FormID');
+    for var lFile in Files do
+      lLines.Add('file' + #9 + lFile.FileName + #9 + IntToStr(lFile.LoadOrder) + #9 + lFile.LoadOrderFileID.ToString);
+    lLines.Add(aBody);
+    lLines.Add('# checkResult = ' + IntToStr(CheckResult));
+    lTmp := xeTestSwitches.GameLinkFile + '.partial';
+    lLines.SaveToFile(lTmp, TEncoding.UTF8);
+    if not MoveFileEx(PChar(lTmp), PChar(xeTestSwitches.GameLinkFile), MOVEFILE_REPLACE_EXISTING) then
       RaiseLastOSError;
   finally
     lLines.Free;

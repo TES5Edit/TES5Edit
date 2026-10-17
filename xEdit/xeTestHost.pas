@@ -59,6 +59,9 @@ type
     TestOptionsCloseTimer      : TTimer;
     TestOptionsClosePosted     : Boolean;
     TestCopyIntoGapTimer     : TTimer;
+    TestGameLinkTimer        : TTimer;
+    TestGameLinkTarget       : IwbMainRecord;
+    TestGameLinkStart        : UInt64;
     TestDropMasterTimer      : TTimer;
     TestDropMasterAnswer     : TTimer;
     TestDropMasterDetach     : IwbElement;
@@ -199,6 +202,10 @@ type
     NewFileFile           : string;
     NewFileCompareTo      : string;
     NewFileModule         : string;
+    NewFileTemplate       : Boolean;
+    GameLink              : Boolean;
+    GameLinkFile          : string;
+    GameLinkModule        : string;
     DropMaster            : Boolean;
     DropMasterFile        : string;
     DropMasterSpec        : string;
@@ -481,11 +488,22 @@ begin
   if wbFindCmdLineParam('testnewfile', NewFileFile) then begin
     wbFindCmdLineParam('testnewfilecompareto', NewFileCompareTo);
     wbFindCmdLineParam('testnewfilemodule', NewFileModule);
+    NewFileTemplate := FindCmdLineSwitch('testnewfiletemplate');
     if (NewFileFile = '') or ((NewFileCompareTo = '') <> (NewFileModule = '')) then begin
-      ShowMessage('testnewfile requires -testnewfile:<filename> [-testnewfilecompareto:<file> -testnewfilemodule:<module>]');
+      ShowMessage('testnewfile requires -testnewfile:<filename> [-testnewfilecompareto:<file> -testnewfilemodule:<module>] ' +
+        '[-testnewfiletemplate]');
       Exit(False);
     end;
     NewFile := True;
+    xeAutoLoad := True;
+  end;
+
+  if wbFindCmdLineParam('testgamelink', GameLinkFile) then begin
+    if (GameLinkFile = '') or not wbFindCmdLineParam('testgamelinkmodule', GameLinkModule) then begin
+      ShowMessage('testgamelink requires -testgamelink:<filename> -testgamelinkmodule:<module>');
+      Exit(False);
+    end;
+    GameLink := True;
     xeAutoLoad := True;
   end;
 
@@ -700,7 +718,7 @@ end;
 
 function TxeTestSwitches.Any: Boolean;
 begin
-  Result := Conflicts or NavCopy or ViewText or ViewTree or Options or CopyIntoGap or NewFile or DropMaster or DeltaPatch or Merge or MergedPatch or CopyInto or
+  Result := Conflicts or NavCopy or ViewText or ViewTree or Options or CopyIntoGap or NewFile or GameLink or DropMaster or DeltaPatch or Merge or MergedPatch or CopyInto or
     Renumber or ChangeFormID or Hide or Filter or SaveContexts or (Pump <> '') or (StateManifest <> '');
 end;
 
