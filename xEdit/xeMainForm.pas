@@ -769,7 +769,7 @@ type
     RebuildingViewTree: Boolean;
     GeneratorStarted: Boolean;
     GeneratorDone: Boolean;
-    QuickCleanSaveFailed: Boolean;
+    UnattendedSaveFailed: Boolean;
     ScriptHotkeys: TStringList;
     CheckResult : Byte;
     LOOTPluginInfos: TwbDirtyInfos;
@@ -5481,7 +5481,7 @@ begin
     end;
   end;
 
-  if not QuickCleanSaveFailed and (SaveChanged >= srAbort) then begin
+  if not UnattendedSaveFailed and (SaveChanged >= srAbort) then begin
     Action := caNone;
     Exit;
   end;
@@ -15334,7 +15334,7 @@ procedure TfrmMain.EndQuickCleanAfterFailedSave;
 begin
   if not xeAutoExit then
     Exit;
-  QuickCleanSaveFailed := True;
+  UnattendedSaveFailed := True;
   CheckResult := 1;
   tmrShutdown.Enabled := True;
 end;
@@ -15845,8 +15845,18 @@ begin
         end;
       end;
 
-      if SaveChanged = srNothingToDo then
+      var lSaveResult := SaveChanged;
+      if lSaveResult = srNothingToDo then
         ChangesMade := False;
+
+      if (lSaveResult >= srAbort) and xeUnattended then begin
+        UnattendedSaveFailed := True;
+        CheckResult := xeFailureExitCode;
+        PostAddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] --= Error =--');
+        PostAddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] !!! The modules that could not be saved have been left unchanged.');
+        AutoDone := True;
+        Exit;
+      end;
 
       PostAddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] --= All Done =--');
       if ChangesMade then begin
