@@ -1742,7 +1742,8 @@ var
   bFound          : Boolean;
   slCont, slList  : TwbFastStringList;
   TreeRecords     : array of array of IwbMainRecord;
-  loFiles         : array [0..254] of IwbFile;
+  RefFile         : IwbFile;
+  RefFileID       : TwbFileID;
   Ref             : IwbMainRecord;
   SplitPath       : string;
   TreeFileName    : string;
@@ -1792,10 +1793,7 @@ begin
       // array of found TREE records indexed by LST index
       SetLength(TreeRecords, Lst.TreesListCount);
 
-      // list of loaded plugins by load order
-      for i := High(Files) downto Low(Files) do
-        loFiles[Files[i].LoadOrder] := Files[i];
-
+      RefFile := nil;
       if lGameDef.IsFallout3 then LodLevel := 8 else LodLevel := 4;
       BTT.Init(Lst, Cell, LodLevel);
       // for each btt file
@@ -1811,10 +1809,18 @@ begin
           // for each reference of tree type
           for r := 0 to BTT.Types[j].Count - 1 do begin
             // a mod the reference is supposed to be from
-            k := BTT.Refs[j][r].RefFormID.FileID[Lst.SlotLayout].FullSlot;
-            if not Assigned(loFiles[k]) then
-              Continue;
-            Ref := loFiles[k].RecordByFormID[loFiles[k].LoadOrderFormIDtoFileFormID(BTT.Refs[j][r].RefFormID, True), False, True];
+            RefFileID := BTT.Refs[j][r].RefFormID.FileID[Lst.SlotLayout];
+            if not Assigned(RefFile) or not (RefFile.LoadOrderFileID = RefFileID) then begin
+              RefFile := nil;
+              for k := Low(Files) to High(Files) do
+                if Files[k].LoadOrderFileID = RefFileID then begin
+                  RefFile := Files[k];
+                  Break;
+                end;
+              if not Assigned(RefFile) then
+                Continue;
+            end;
+            Ref := RefFile.RecordByFormID[RefFile.LoadOrderFormIDtoFileFormID(BTT.Refs[j][r].RefFormID, True), False, True];
             // found a matching reference of TREE
             if Assigned(Ref) and Assigned(Ref.BaseRecord) and ((Ref.BaseRecord.Signature = 'TREE') or (Ref.BaseRecord.Signature = 'STAT')) then begin
               LstIndex := BTT.Types[j].Index;
