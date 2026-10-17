@@ -892,6 +892,7 @@ type
     function GetHasLoadOrderFileID: Boolean;
     function GetResolvedLoadOrderFileID(aNew: Boolean): TwbFileID;
     function GetFileFileID(aNewMasters : Boolean): TwbFileID;
+    function GetLastMasterFileID(aNew: Boolean): TwbFileID;
 
     function LoadOrderFormIDtoFileFormID(const aFormID: TwbFormID; aNew: Boolean): TwbFormID;
     function FileFormIDtoLoadOrderFormID(const aFormID: TwbFormID; aNew: Boolean): TwbFormID;
@@ -6447,8 +6448,11 @@ function TwbFile.GetContainedRecordByLoadOrderFormID(const aFormID: TwbFormID; a
   function LoadOrderToFile(const aFileID: TwbFileID): TwbFileID;
   begin
     if flComplexFileFileID then begin
-      if (aFileID = flLoadOrderFileID) and not (fsIsCompareLoad in flStates) then
-        Exit(GetFileFileID(False));
+      if aFileID = flLoadOrderFileID then
+        if (fsIsCompareLoad in flStates) and (GetMasterCount(False) > 0) then
+          Exit(GetLastMasterFileID(False))
+        else
+          Exit(GetFileFileID(False));
 
       var lFullIndex := 0;
       var lLightIndex := 0;
@@ -6642,6 +6646,18 @@ begin
       Result := TwbFileID.CreateFull(GetFullMasterCount(aNewMasters));
   end else
     Result := TwbFileID.CreateFull(GetMasterCount(aNewMasters));
+end;
+
+function TwbFile.GetLastMasterFileID(aNew: Boolean): TwbFileID;
+begin
+  case GetMaster(Pred(GetMasterCount(aNew)), aNew).ModuleType of
+    mtLight:
+      Result := TwbFileID.CreateLight(Pred(GetLightMasterCount(aNew)), flContextObj.SlotLayout);
+    mtMedium:
+      Result := TwbFileID.CreateMedium(Pred(GetMediumMasterCount(aNew)), flContextObj.SlotLayout);
+  else
+    Result := TwbFileID.CreateFull(Pred(GetFullMasterCount(aNew)));
+  end;
 end;
 
 function TwbFile.GetFileGeneration: Integer;
@@ -7504,8 +7520,11 @@ function TwbFile.TryLoadOrderFileIDtoFileFileID(const aFileID: TwbFileID; aNew: 
 begin
   Result := True;
   if flComplexFileFileID then begin
-    if (aFileID = flLoadOrderFileID) and not (fsIsCompareLoad in flStates) then begin
-      aFileFileID := GetFileFileID(aNew);
+    if aFileID = flLoadOrderFileID then begin
+      if (fsIsCompareLoad in flStates) and (GetMasterCount(aNew) > 0) then
+        aFileFileID := GetLastMasterFileID(aNew)
+      else
+        aFileFileID := GetFileFileID(aNew);
       Exit;
     end;
 
