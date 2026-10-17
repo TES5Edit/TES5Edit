@@ -139,6 +139,15 @@ type
     procedure Execute; override; final;
   end;
 
+  TxeSettingsFile = class(TMemIniFile)
+  private
+    sfReport      : TwbSaveMessageProc;
+    sfWriteFailed : Boolean;
+  public
+    constructor Create(const aFileName: string; const aReport: TwbSaveMessageProc); overload;
+    procedure UpdateFile; override; final;
+  end;
+
   TwbSaveResult = (srAllDone, srNothingToDo, srAbort, srError);
 
   TwbSeqFileResult = (sfrFailed, sfrSkipped, sfrCreated);
@@ -4302,7 +4311,7 @@ begin
 
   if not Assigned(Settings) and (xeSettingsFileName <> '') then
     if ForceDirectories(ExtractFilePath(xeSettingsFileName)) then
-      Settings := TMemIniFile.Create(xeSettingsFileName);
+      Settings := TxeSettingsFile.Create(xeSettingsFileName, AddMessage);
 
   if not Assigned(Settings) then begin
     if not xeUnattended then
@@ -5498,12 +5507,7 @@ begin
       Settings.WriteInteger(Name, 'Top', Top);
       Settings.WriteInteger(Name, 'Width', Width);
       Settings.WriteInteger(Name, 'Height', Height);
-    try
-      Settings.UpdateFile;
-    except
-      on E: Exception do
-        AddMessage('Error: Could not write the settings file: <' + E.ClassName + ': ' + E.Message + '>');
-    end;
+    Settings.UpdateFile;
   end;
 
   SaveLogs(True);
@@ -5623,7 +5627,7 @@ begin
   if wbThemesSupported then try
     if not Assigned(Settings) and (xeSettingsFileName <> '')  then
       if ForceDirectories(ExtractFilePath(xeSettingsFileName)) then
-        Settings := TMemIniFile.Create(xeSettingsFileName);
+        Settings := TxeSettingsFile.Create(xeSettingsFileName, AddMessage);
     if Assigned(Settings) then begin
       TStyleManager.TrySetStyle(Settings.ReadString('UI', 'Theme', TStyleManager.ActiveStyle.Name), False);
       Vcl.Graphics.PaletteChanged;
@@ -5660,7 +5664,7 @@ begin
   try
     if not Assigned(Settings) and (xeSettingsFileName <> '')  then
       if ForceDirectories(ExtractFilePath(xeSettingsFileName)) then
-        Settings := TMemIniFile.Create(xeSettingsFileName);
+        Settings := TxeSettingsFile.Create(xeSettingsFileName, AddMessage);
     if Assigned(Settings) then begin
       xeLoadAndApplyFontAndScale(Settings, 'UI', 'FontRecords', vstNav);
       xeLoadAndApplyFontAndScale(Settings, 'UI', 'FontRecords', vstView);
@@ -5740,7 +5744,7 @@ begin
   try
     if not Assigned(Settings) and (xeSettingsFileName <> '')  then
       if ForceDirectories(ExtractFilePath(xeSettingsFileName)) then
-        Settings := TMemIniFile.Create(xeSettingsFileName);
+        Settings := TxeSettingsFile.Create(xeSettingsFileName, AddMessage);
     if Assigned(Settings) then begin
       ColumnWidth := Settings.ReadInteger('Options', 'ColumnWidth', ColumnWidth);
       RowHeight := Settings.ReadInteger('Options', 'RowHeight', RowHeight);
@@ -20558,6 +20562,28 @@ begin
       frmMain.ShowNexusModsHint := Now + (1/24/60/6); // 10 seconds
     end;
   end);
+end;
+
+{ TxeSettingsFile }
+
+constructor TxeSettingsFile.Create(const aFileName: string; const aReport: TwbSaveMessageProc);
+begin
+  inherited Create(aFileName);
+  sfReport := aReport;
+end;
+
+procedure TxeSettingsFile.UpdateFile;
+begin
+  try
+    inherited;
+    sfWriteFailed := False;
+  except
+    on E: Exception do begin
+      if not sfWriteFailed and Assigned(sfReport) then
+        sfReport('Error: Could not write the settings file: <' + E.ClassName + ': ' + E.Message + '>');
+      sfWriteFailed := True;
+    end;
+  end;
 end;
 
 type
