@@ -15514,7 +15514,8 @@ begin
     Exit;
   var lLayout := ContextObj.SlotLayout;
   var lFormID := GetFormID;
-  if (lFormID.ObjectID[lLayout] < $800) and
+  if not lFormID.IsNull and
+     (lFormID.ObjectID[lLayout] < $800) and
      (Result.FileStates * [fsIsGameMaster, fsIsHardcoded] = []) and
      not Result.AllowHardcodedRangeUse
   then begin
