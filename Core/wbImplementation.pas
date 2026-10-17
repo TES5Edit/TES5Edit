@@ -1429,6 +1429,7 @@ type
     procedure RemoveReferencedBy(const aMainRecord: IwbMainRecord);
     procedure SortReferencedBy;
     procedure InvalidateReferencers;
+    procedure InvalidateReferencersIn(const aFile: IwbFile);
     function GetReferencedBy(aIndex: Integer): IwbMainRecord;
     function GetReferencedByCount: Integer;
     function GetReference(aIndex: Integer): IwbMainRecord;
@@ -11907,6 +11908,8 @@ begin
   Exclude(mrStates, mrsOverridesSorted);
   mrMasterAndLeafs := nil;
   mrChainStamp := ContextObj.NextStamp;
+  if mrReferencedByCount > 0 then
+    InvalidateReferencersIn(aMainRecord._File);
 end;
 
 {$IFDEF USE_PARALLEL_BUILD_REFS}
@@ -17411,6 +17414,8 @@ begin
   SetLength(mrOverrides, j);
   mrMasterAndLeafs := nil;
   ResetConflict;
+  if mrReferencedByCount > 0 then
+    InvalidateReferencersIn(aMainRecord._File);
 end;
 
 procedure TwbMainRecord.RemoveReferencedBy(const aMainRecord: IwbMainRecord);
@@ -18187,6 +18192,15 @@ procedure TwbMainRecord.InvalidateReferencers;
 begin
   for var lRefByIdx := 0 to Pred(mrReferencedByCount) do
     (mrReferencedBy[lRefByIdx] as IwbMainRecordInternal).InvalidateReferencesInjected;
+end;
+
+procedure TwbMainRecord.InvalidateReferencersIn(const aFile: IwbFile);
+begin
+  if not Assigned(aFile) then
+    Exit;
+  for var lRefByIdx := 0 to Pred(mrReferencedByCount) do
+    if aFile.Equals(mrReferencedBy[lRefByIdx]._File) then
+      (mrReferencedBy[lRefByIdx] as IwbMainRecordInternal).InvalidateReferencesInjected;
 end;
 
 procedure TwbMainRecord.SortReferencedBy;
