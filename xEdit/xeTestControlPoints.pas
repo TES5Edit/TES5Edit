@@ -130,6 +130,8 @@ type
     procedure DoTestViewTree;
     procedure DoTestOptions;
     procedure DoTestCopyIntoGap;
+    procedure DoTestNewFile;
+    procedure DoTestNewFileReport;
     procedure DoTestDropMaster;
     procedure DoTestDeltaPatchStart;
     procedure DoTestDeltaPatchReport;
@@ -2729,6 +2731,103 @@ begin
     lTmp := xeTestSwitches.CopyIntoGapFile + '.partial';
     lLines.SaveToFile(lTmp, TEncoding.UTF8);
     if not MoveFileEx(PChar(lTmp), PChar(xeTestSwitches.CopyIntoGapFile), MOVEFILE_REPLACE_EXISTING) then
+      RaiseLastOSError;
+  finally
+    lLines.Free;
+    if xeAutoExit then
+      tmrShutdown.Enabled := True;
+  end;
+end;
+
+procedure TxeTestFormHelper.DoTestNewFile;
+begin
+  xeContext.Settings.DontSave := True;
+  if xeTestSwitches.NewFileCompareTo = '' then begin
+    DoTestNewFileReport;
+    Exit;
+  end;
+  for var lFile in Files do
+    if SameText(lFile.FileName, xeTestSwitches.NewFileModule) then begin
+      DoCompareTo(lFile, xeTestSwitches.NewFileCompareTo);
+      Exit;
+    end;
+  AddMessage('[Test New File] FAILED: no module ' + xeTestSwitches.NewFileModule);
+  CheckResult := 2;
+  if xeAutoExit then
+    tmrShutdown.Enabled := True;
+end;
+
+procedure TxeTestFormHelper.DoTestNewFileReport;
+var
+  lLines   : TStringList;
+  lMasters : TStringList;
+  lNew     : IwbFile;
+  lLast    : IwbFile;
+  lShared  : string;
+  lTmp     : string;
+begin
+  lLines := TStringList.Create;
+  try
+    lLines.Add('# xEdit new-file probe');
+    lLines.Add('# ' + xeApplicationTitle);
+    lLines.Add('# compareto = ' + xeTestSwitches.NewFileCompareTo + ', module = ' + xeTestSwitches.NewFileModule);
+    lLines.Add('# Columns, tab separated: what / file / load order / text');
+    CheckResult := 2;
+    try
+      if xeContext.LoaderError then
+        raise Exception.Create('an error occured while loading the compare to module');
+      for var lFile in Files do
+        lLines.Add('file' + #9 + lFile.FileName + #9 + IntToStr(lFile.LoadOrder) + #9 +
+          IfThen(fsIsCompareLoad in lFile.FileStates, 'compare load', ''));
+
+      lNew := AddNewFileName('xeNewFileProbe.esp', False, False);
+      if not Assigned(lNew) then
+        raise Exception.Create('no new file was created');
+      lShared := '';
+      lLast := nil;
+      for var lFile in Files do
+        if not lFile.Equals(lNew) then begin
+          if lFile.LoadOrder = lNew.LoadOrder then
+            lShared := lShared + ' ' + lFile.FileName;
+          if not (fsIsCompareLoad in lFile.FileStates) and (not Assigned(lLast) or (lFile.LoadOrder > lLast.LoadOrder)) then
+            lLast := lFile;
+        end;
+      lLines.Add('new' + #9 + lNew.FileName + #9 + IntToStr(lNew.LoadOrder) + #9 + 'shares its load order with:' + lShared);
+      if not Assigned(lLast) then
+        raise Exception.Create('no module was loaded');
+
+      lMasters := TStringList.Create;
+      try
+        lMasters.AddObject(lLast.FileName, Pointer(lLast));
+        try
+          AddRequiredMasters(lMasters, lNew, True);
+          lLines.Add('master' + #9 + lLast.FileName + #9 + IntToStr(lLast.LoadOrder) + #9 + 'added');
+        except
+          on E: Exception do
+            lLines.Add('master' + #9 + lLast.FileName + #9 + IntToStr(lLast.LoadOrder) + #9 + 'refused: ' + E.Message);
+        end;
+      finally
+        lMasters.Free;
+      end;
+
+      var lTemplates := xeContext.ModuleList.ModulesByLoadOrder(True).FilteredByFlag(mfValid).FilteredByFlag(mfTemplate);
+      if Length(lTemplates) = 0 then
+        raise Exception.Create('no module template');
+      var lFromTemplate := AddNewFileName('xeNewFileProbeT' + lTemplates[0].miExtension.ToString, lTemplates[0]);
+      if not Assigned(lFromTemplate) then
+        raise Exception.Create('no new file was created from a template');
+      lLines.Add('template' + #9 + lFromTemplate.FileName + #9 + IntToStr(lFromTemplate.LoadOrder) + #9 + '');
+      CheckResult := 0;
+    except
+      on E: Exception do begin
+        AddMessage('[Test New File] FAILED: ' + E.ClassName + ': ' + E.Message);
+        lLines.Add('# FAILED: ' + E.ClassName + ': ' + E.Message);
+      end;
+    end;
+    lLines.Add('# checkResult = ' + IntToStr(CheckResult));
+    lTmp := xeTestSwitches.NewFileFile + '.partial';
+    lLines.SaveToFile(lTmp, TEncoding.UTF8);
+    if not MoveFileEx(PChar(lTmp), PChar(xeTestSwitches.NewFileFile), MOVEFILE_REPLACE_EXISTING) then
       RaiseLastOSError;
   finally
     lLines.Free;

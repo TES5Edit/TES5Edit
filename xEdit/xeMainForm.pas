@@ -921,6 +921,7 @@ type
     function AddRequiredMasters(aMasters: TStrings; const aTargetFile: IwbFile; aSilent: Boolean = False): Boolean; overload;
   protected
 
+    function NewFileLoadOrder: Integer;
     function CheckForErrorsLinear(const aElement: IwbElement; LastRecord: IwbMainRecord): IwbMainRecord;
     function CheckForErrors(const aIndent: Integer; const aElement: IwbElement): Boolean;
 
@@ -1865,6 +1866,17 @@ begin
   end;
 end;
 
+function TfrmMain.NewFileLoadOrder: Integer;
+begin
+  Result := 0;
+  if Length(Files) > 0 then begin
+    for var lFile in Files do
+      if lFile.LoadOrder > Result then
+        Result := lFile.LoadOrder;
+    Result := Succ(Result);
+  end;
+end;
+
 function TfrmMain.AddNewFileName(const aFileName: string; aIsLight, aIsMedium: Boolean): IwbFile;
 var
   LoadOrder : Integer;
@@ -1882,9 +1894,7 @@ begin
     Exit;
   end;
 
-  LoadOrder := 0;
-  if Length(Files) > 0 then
-    LoadOrder := Succ(Files[High(Files)].LoadOrder);
+  LoadOrder := NewFileLoadOrder;
 {
   if LoadOrder > 254 then begin
     ShowMessage('Maximum plugins count already reached. Adding 1 more would exceed the maximum index of 254');
@@ -1901,7 +1911,6 @@ end;
 function TfrmMain.AddNewFileName(const aFileName: string; aTemplate: PwbModuleInfo): IwbFile;
 var
   LoadOrder : Integer;
-  i: Integer;
 begin
   Result := nil;
 
@@ -1916,13 +1925,7 @@ begin
     Exit;
   end;
 
-  LoadOrder := 0;
-  if Length(Files) > 0 then begin
-    for i := Low(Files) to High(Files) do
-      if Files[i].LoadOrder > LoadOrder then
-        LoadOrder := Files[i].LoadOrder;
-    LoadOrder := Succ(LoadOrder);
-  end;
+  LoadOrder := NewFileLoadOrder;
 
   Result := (xeContext as TwbLoadingGameContext).NewFile(xeContext.Settings.DataPath + aFileName, LoadOrder, aTemplate);
   SetLength(Files, Succ(Length(Files)));
@@ -4389,7 +4392,7 @@ begin
     wbPatron := Settings.ReadBool('Options', 'Patron', wbPatron);
     if (not wbPatron or not xeAutoLoad)
 {$IFDEF XE_TEST_CONTROL_POINTS}
-      and not (xeTestSwitches.Conflicts or xeTestSwitches.NavCopy or xeTestSwitches.ViewText or xeTestSwitches.ViewTree or xeTestSwitches.Options or xeTestSwitches.CopyIntoGap or xeTestSwitches.DropMaster or xeTestSwitches.DeltaPatch or xeTestSwitches.Merge or xeTestSwitches.MergedPatch or xeTestSwitches.CopyInto or xeTestSwitches.Renumber or xeTestSwitches.ChangeFormID or xeTestSwitches.Hide or xeTestSwitches.Filter or xeTestSwitches.SaveContexts or (xeTestSwitches.PumpDuringLoad <> ''))
+      and not (xeTestSwitches.Conflicts or xeTestSwitches.NavCopy or xeTestSwitches.ViewText or xeTestSwitches.ViewTree or xeTestSwitches.Options or xeTestSwitches.CopyIntoGap or xeTestSwitches.NewFile or xeTestSwitches.DropMaster or xeTestSwitches.DeltaPatch or xeTestSwitches.Merge or xeTestSwitches.MergedPatch or xeTestSwitches.CopyInto or xeTestSwitches.Renumber or xeTestSwitches.ChangeFormID or xeTestSwitches.Hide or xeTestSwitches.Filter or xeTestSwitches.SaveContexts or (xeTestSwitches.PumpDuringLoad <> ''))
 {$ENDIF}
     then
       ShowDeveloperMessage;
@@ -19194,6 +19197,9 @@ begin
         if xeTestSwitches.CopyIntoGap then
           DoTestCopyIntoGap;
 
+        if xeTestSwitches.NewFile then
+          DoTestNewFile;
+
         if xeTestSwitches.DropMaster then
           DoTestDropMaster;
 
@@ -19295,6 +19301,9 @@ begin
 {$IFDEF XE_TEST_CONTROL_POINTS}
       if xeTestSwitches.DeltaPatch then
         DoTestDeltaPatchReport;
+
+      if xeTestSwitches.NewFile then
+        DoTestNewFileReport;
 
       if xeTestSwitches.Conflicts then begin
         if xeContext.LoaderError then begin

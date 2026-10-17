@@ -195,6 +195,10 @@ type
     CopyIntoGapRecord     : string;
     CopyIntoGapSource     : string;
     CopyIntoGapOp         : string;
+    NewFile               : Boolean;
+    NewFileFile           : string;
+    NewFileCompareTo      : string;
+    NewFileModule         : string;
     DropMaster            : Boolean;
     DropMasterFile        : string;
     DropMasterSpec        : string;
@@ -474,6 +478,17 @@ begin
     xeAutoLoad        := True;
   end;
 
+  if wbFindCmdLineParam('testnewfile', NewFileFile) then begin
+    wbFindCmdLineParam('testnewfilecompareto', NewFileCompareTo);
+    wbFindCmdLineParam('testnewfilemodule', NewFileModule);
+    if (NewFileFile = '') or ((NewFileCompareTo = '') <> (NewFileModule = '')) then begin
+      ShowMessage('testnewfile requires -testnewfile:<filename> [-testnewfilecompareto:<file> -testnewfilemodule:<module>]');
+      Exit(False);
+    end;
+    NewFile := True;
+    xeAutoLoad := True;
+  end;
+
   if wbFindCmdLineParam('testdropmaster', DropMasterFile) then begin
     if (DropMasterFile = '') or not wbFindCmdLineParam('testdropmasterspec', DropMasterSpec) then begin
       ShowMessage('testdropmaster requires -testdropmaster:<filename> ' +
@@ -685,7 +700,7 @@ end;
 
 function TxeTestSwitches.Any: Boolean;
 begin
-  Result := Conflicts or NavCopy or ViewText or ViewTree or Options or CopyIntoGap or DropMaster or DeltaPatch or Merge or MergedPatch or CopyInto or
+  Result := Conflicts or NavCopy or ViewText or ViewTree or Options or CopyIntoGap or NewFile or DropMaster or DeltaPatch or Merge or MergedPatch or CopyInto or
     Renumber or ChangeFormID or Hide or Filter or SaveContexts or (Pump <> '') or (StateManifest <> '');
 end;
 
