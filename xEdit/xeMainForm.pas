@@ -5494,10 +5494,15 @@ begin
     end;
   end;
 
-  if not UnattendedSaveFailed and (SaveChanged >= srAbort) then begin
-    Action := caNone;
-    Exit;
-  end;
+  if not UnattendedSaveFailed and (SaveChanged >= srAbort) then
+    if xeUnattended then begin
+      AddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] !!! The modules that could not be saved have been left unchanged.');
+      if CheckResult = 0 then
+        CheckResult := xeFailureExitCode;
+    end else begin
+      Action := caNone;
+      Exit;
+    end;
 
   if Assigned(Settings) then begin
     if Assigned(pnlNav) then
