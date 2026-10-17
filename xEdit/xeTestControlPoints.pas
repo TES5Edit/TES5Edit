@@ -2743,6 +2743,14 @@ begin
   end;
 end;
 
+function TestFileIDText(const aFile: IwbFile): string;
+begin
+  if aFile.HasLoadOrderFileID then
+    Result := aFile.LoadOrderFileID.ToString
+  else
+    Result := 'no slot';
+end;
+
 procedure TxeTestFormHelper.DoTestNewFile;
 begin
   xeContext.Settings.DontSave := True;
@@ -2785,18 +2793,22 @@ begin
       if xeContext.LoaderError then
         raise Exception.Create('an error occured while loading the compare to module');
       for var lFile in Files do
-        lLines.Add('file' + #9 + lFile.FileName + #9 + IntToStr(lFile.LoadOrder) + #9 + lFile.LoadOrderFileID.ToString + #9 +
+        lLines.Add('file' + #9 + lFile.FileName + #9 + IntToStr(lFile.LoadOrder) + #9 + TestFileIDText(lFile) + #9 +
           IfThen(fsIsCompareLoad in lFile.FileStates, 'compare load', ''));
 
+      var lName := 'xeNewFileProbe.esp';
       if xeTestSwitches.NewFileTemplate then begin
         var lTemplates := xeContext.ModuleList.ModulesByLoadOrder(True).FilteredByFlag(mfValid).FilteredByFlag(mfTemplate);
         if Length(lTemplates) = 0 then
           raise Exception.Create('no module template');
-        lNew := AddNewFileName('xeNewFileProbe' + lTemplates[0].miExtension.ToString, lTemplates[0]);
+        lName := 'xeNewFileProbe' + lTemplates[0].miExtension.ToString;
+        lNew := AddNewFileName(lName, lTemplates[0]);
       end else
-        lNew := AddNewFileName('xeNewFileProbe.esp', False, False);
+        lNew := AddNewFileName(lName, False, False);
       if not Assigned(lNew) then
         raise Exception.Create('no new file was created');
+      if not SameText(lNew.FileName, lName) or not lNew.Equals(Files[High(Files)]) then
+        raise Exception.Create('the new file is ' + lNew.FileName + ', not a new ' + lName);
       lShared := '';
       lSharedID := '';
       lLast := nil;
@@ -2804,13 +2816,13 @@ begin
         if not lFile.Equals(lNew) then begin
           if lFile.LoadOrder = lNew.LoadOrder then
             lShared := lShared + ' ' + lFile.FileName;
-          if lFile.LoadOrderFileID = lNew.LoadOrderFileID then
+          if lFile.HasLoadOrderFileID and lNew.HasLoadOrderFileID and (lFile.LoadOrderFileID = lNew.LoadOrderFileID) then
             lSharedID := lSharedID + ' ' + lFile.FileName;
           if not (fsIsCompareLoad in lFile.FileStates) and not lFile.IsNotPlugin and
              (not Assigned(lLast) or (lFile.LoadOrder > lLast.LoadOrder)) then
             lLast := lFile;
         end;
-      lLines.Add('new' + #9 + lNew.FileName + #9 + IntToStr(lNew.LoadOrder) + #9 + lNew.LoadOrderFileID.ToString + #9 +
+      lLines.Add('new' + #9 + lNew.FileName + #9 + IntToStr(lNew.LoadOrder) + #9 + TestFileIDText(lNew) + #9 +
         'shares its load order with:' + lShared + '; its FileID with:' + lSharedID);
       if not Assigned(lLast) then
         raise Exception.Create('no module was loaded');
@@ -2826,16 +2838,16 @@ begin
             if lNew.Masters[m, True].Equals(lLast) then
               lAdded := True;
           if lAdded then
-            lLines.Add('master' + #9 + lLast.FileName + #9 + IntToStr(lLast.LoadOrder) + #9 + lLast.LoadOrderFileID.ToString + #9 + 'added')
+            lLines.Add('master' + #9 + lLast.FileName + #9 + IntToStr(lLast.LoadOrder) + #9 + TestFileIDText(lLast) + #9 + 'added')
           else begin
             lRefused := True;
-            lLines.Add('master' + #9 + lLast.FileName + #9 + IntToStr(lLast.LoadOrder) + #9 + lLast.LoadOrderFileID.ToString + #9 +
+            lLines.Add('master' + #9 + lLast.FileName + #9 + IntToStr(lLast.LoadOrder) + #9 + TestFileIDText(lLast) + #9 +
               'not among the masters afterwards');
           end;
         except
           on E: Exception do begin
             lRefused := True;
-            lLines.Add('master' + #9 + lLast.FileName + #9 + IntToStr(lLast.LoadOrder) + #9 + lLast.LoadOrderFileID.ToString + #9 +
+            lLines.Add('master' + #9 + lLast.FileName + #9 + IntToStr(lLast.LoadOrder) + #9 + TestFileIDText(lLast) + #9 +
               'refused: ' + E.Message);
           end;
         end;
@@ -2942,7 +2954,7 @@ begin
     lLines.Add('# module = ' + xeTestSwitches.GameLinkModule);
     lLines.Add('# Columns, tab separated: what / record / file / load order FormID');
     for var lFile in Files do
-      lLines.Add('file' + #9 + lFile.FileName + #9 + IntToStr(lFile.LoadOrder) + #9 + lFile.LoadOrderFileID.ToString);
+      lLines.Add('file' + #9 + lFile.FileName + #9 + IntToStr(lFile.LoadOrder) + #9 + TestFileIDText(lFile));
     lLines.Add(aBody);
     lLines.Add('# checkResult = ' + IntToStr(CheckResult));
     lTmp := xeTestSwitches.GameLinkFile + '.partial';
