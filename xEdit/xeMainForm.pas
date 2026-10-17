@@ -1875,7 +1875,10 @@ begin
     raise Exception.CreateFmt('The specified filename:'#13#10#13#10'%s'#13#10#13#10'Contains one or more invalid characters:'#13#10#13#10'%s', [aFilename, InvalidFileNameChars]);
 
   if FileExists(xeContext.Settings.DataPath + aFileName) then begin
-    ShowMessage('A file of that name exists already.');
+    if xeUnattended then
+      AddMessage('Error: A file of that name exists already: ' + aFileName)
+    else
+      ShowMessage('A file of that name exists already.');
     Exit;
   end;
 
@@ -1906,7 +1909,10 @@ begin
     raise Exception.CreateFmt('The specified filename:'#13#10#13#10'%s'#13#10#13#10'Contains one or more invalid characters:'#13#10#13#10'%s', [aFilename, InvalidFileNameChars]);
 
   if FileExists(xeContext.Settings.DataPath + aFileName) then begin
-    ShowMessage('A file of that name exists already.');
+    if xeUnattended then
+      AddMessage('Error: A file of that name exists already: ' + aFileName)
+    else
+      ShowMessage('A file of that name exists already.');
     Exit;
   end;
 
