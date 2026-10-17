@@ -15740,6 +15740,8 @@ begin
 {$IFDEF XE_TEST_CONTROL_POINTS}
       if xeTestSwitches.FileLists <> '' then
         TestWriteFileLists;
+      if xeTestSwitches.ToolModeFault then
+        raise Exception.Create('Fault raised by -testtoolmodefault');
 {$ENDIF}
       var lReport: TProc<string> := procedure(aText: string)
         begin
@@ -15849,6 +15851,13 @@ begin
       PostAddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] Loading and saving the problematic module in CS/GECK/CK can sometimes produce');
       PostAddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] a working version. But it is recommended to contact the author of the module');
       PostAddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] to get the original fixed.');
+      if xeUnattended then begin
+        if xeToolMode in wbPluginModes then
+          CheckResult := 255
+        else
+          CheckResult := 1;
+        AutoDone := True;
+      end;
     end;
   end;
 end;
