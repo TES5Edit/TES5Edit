@@ -15506,8 +15506,19 @@ end;
 function TwbMainRecord.GetReferenceFile: IwbFile;
 begin
   Result := GetFile;
-  if Assigned(Result) then
-    Result := Result.GetMasterForFileID(GetFormID.FileID[ContextObj.SlotLayout], GetMastersUpdated, True);
+  if not Assigned(Result) then
+    Exit;
+  var lLayout := ContextObj.SlotLayout;
+  var lFormID := GetFormID;
+  if (lFormID.ObjectID[lLayout] < $800) and
+     (Result.FileStates * [fsIsGameMaster, fsIsHardcoded] = []) and
+     not Result.AllowHardcodedRangeUse
+  then begin
+    var lGameMaster := ContextObj.GameMasterFile;
+    if Assigned(lGameMaster) then
+      Exit(lGameMaster);
+  end;
+  Result := Result.GetMasterForFileID(lFormID.FileID[lLayout], GetMastersUpdated, True);
 end;
 
 function TwbMainRecord.GetReference(aIndex: Integer): IwbMainRecord;
