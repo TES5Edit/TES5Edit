@@ -6447,7 +6447,7 @@ function TwbFile.GetContainedRecordByLoadOrderFormID(const aFormID: TwbFormID; a
   function LoadOrderToFile(const aFileID: TwbFileID): TwbFileID;
   begin
     if flComplexFileFileID then begin
-      if aFileID = flLoadOrderFileID then
+      if (aFileID = flLoadOrderFileID) and not (fsIsCompareLoad in flStates) then
         Exit(GetFileFileID(False));
 
       var lFullIndex := 0;
@@ -7504,7 +7504,7 @@ function TwbFile.TryLoadOrderFileIDtoFileFileID(const aFileID: TwbFileID; aNew: 
 begin
   Result := True;
   if flComplexFileFileID then begin
-    if aFileID = flLoadOrderFileID then begin
+    if (aFileID = flLoadOrderFileID) and not (fsIsCompareLoad in flStates) then begin
       aFileFileID := GetFileFileID(aNew);
       Exit;
     end;
