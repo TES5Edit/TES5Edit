@@ -19471,20 +19471,14 @@ begin
 
   var lLayout := xeContext.SlotLayout;
   FileID := FormID.FileID[lLayout];
-  if xeContext.GameDefObj.IsLightSupported or xeContext.Settings.PseudoLight or xeContext.Settings.PseudoUpdate then begin
-    _File := nil;
-    for i := Low(Files) to High(Files) do
-      if Files[i].LoadOrderFileID = FileID then begin
-        _File := Files[i];
-        break;
-      end;
-    if not Assigned(_File) then
-      Exit;
-  end else begin
-    if (FileID.FullSlot < Low(Files)) or (FileID.FullSlot > High(Files)) then
-      Exit;
-    _File := Files[FileID.FullSlot];
-  end;
+  _File := nil;
+  for i := Low(Files) to High(Files) do
+    if Files[i].LoadOrderFileID = FileID then begin
+      _File := Files[i];
+      break;
+    end;
+  if not Assigned(_File) then
+    Exit;
 
   FormID.FileID[lLayout] := _File.FileFileID[True];
   MainRecord := _File.RecordByFormID[FormID, True, True];
