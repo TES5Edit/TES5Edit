@@ -4310,8 +4310,9 @@ begin
   AddMessage('Using settings file: ' + xeSettingsFileName);
 
   if not Assigned(Settings) and (xeSettingsFileName <> '') then
-    if ForceDirectories(ExtractFilePath(xeSettingsFileName)) then
+    if ForceDirectories(ExtractFilePath(xeSettingsFileName)) then try
       Settings := TxeSettingsFile.Create(xeSettingsFileName, AddMessage);
+    except end;
 
   if not Assigned(Settings) then begin
     if not xeUnattended then

@@ -146,6 +146,21 @@ begin
       Result := False;
 end;
 
+procedure xeInitNotice(const aMessage: string);
+begin
+  if xeUnattended then
+    xeSaveLogs(aMessage, True)
+  else
+    ShowMessage(aMessage);
+end;
+
+procedure xeInitRefusal(const aMessage: string);
+begin
+  xeInitNotice(aMessage);
+  if xeUnattended then
+    ExitCode := xeFailureExitCode;
+end;
+
 // several ini settings should be read before record definitions
 // they may affect definitions like wbSimpleRecords
 // and should be overridden by command line parameters
@@ -175,10 +190,10 @@ begin
       s := xeSettingsFileName + '.backup.' + FormatDateTime('yyyy_mm_dd_hh_nn_ss', Now);
 
       if not RenameFile(PChar(xeSettingsFileName), PChar(s)) then begin
-        ShowMessage(Format('Could not rename existing settings file to "%s".', [s]));
+        xeInitRefusal(Format('Could not rename existing settings file to "%s".', [s]));
         Exit(False);
       end else
-        ShowMessage(Format('ALL settings have been reset. Existing settings file has been renamed to "%s".', [s]));
+        xeInitNotice(Format('ALL settings have been reset. Existing settings file has been renamed to "%s".', [s]));
     end;
   end;
 
@@ -329,13 +344,13 @@ begin
     case aSettings.FindDataPath(xeGameMode, lRegistryName) of
       dpsNoRegistryKey: begin
         s := 'Fatal: Could not open registry key: ' + lRegistryName;
-        ShowMessage(Format('%s'#13#10'This can happen after %s updates, run the game''s launcher to restore registry settings', [s, 'Steam']));
+        xeInitNotice(Format('%s'#13#10'This can happen after %s updates, run the game''s launcher to restore registry settings', [s, 'Steam']));
         aSettings.DontSave := True;
         Exit;
       end;
       dpsNoRegistryValue: begin
         s := Format('Fatal: Could not determine %s installation path, no "%s" registry key', [lIdentity.GameName2, lRegistryName]);
-        ShowMessage(Format('%s'#13#10'This can happen after %s updates, run the game''s launcher to restore registry settings', [s, 'Steam']));
+        xeInitNotice(Format('%s'#13#10'This can happen after %s updates, run the game''s launcher to restore registry settings', [s, 'Steam']));
         aSettings.DontSave := True;
       end;
     end;
@@ -360,7 +375,7 @@ begin
   if not wbFindCmdLineParam('M', lMyGamesTheGamePath) then begin
     xeMyProfileName := GetCSIDLShellFolder(CSIDL_PERSONAL);
     if xeMyProfileName = '' then begin
-      ShowMessage('Fatal: Could not determine my documents folder');
+      xeInitNotice('Fatal: Could not determine my documents folder');
       aSettings.MyGamesTheGamePath := lMyGamesTheGamePath;
       Exit;
     end;
@@ -417,7 +432,7 @@ begin
       xeParamIndex := ParamIndex;
       lPluginsFileName := GetCSIDLShellFolder(CSIDL_LOCAL_APPDATA);
       if lPluginsFileName = '' then begin
-        ShowMessage('Fatal: Could not determine the local application data folder');
+        xeInitNotice('Fatal: Could not determine the local application data folder');
         Exit;
       end;
 
@@ -460,8 +475,6 @@ begin
   if aSettings.DontCache then
     lCachePath := '';
   aSettings.CachePath := lCachePath;
-
-  wbFindCmdLineParam('R', xeLogFile);
 end;
 
 var
@@ -664,6 +677,16 @@ begin
   if not (xeToolMode in [tmView, tmEdit]) then
     wbPrettyFormID := False;
 
+  if xeToolMode in [tmEdit, tmScript] then begin
+    if FindCmdLineSwitch('autoload') then
+      xeAutoLoad := True;
+
+    if FindCmdLineSwitch('autoexit') then
+      xeAutoExit := True;
+  end;
+
+  wbFindCmdLineParam('R', xeLogFile);
+
   if isMode('FNV') then begin
     xeGameMode         := gmFNV;
     ToolModes          := wbAlwaysMode + [tmMasterUpdate, tmMasterRestore];
@@ -752,7 +775,7 @@ begin
   var lIdentity := wbGameIdentities[xeGameMode];
 
   if not (xeToolMode in ToolModes) then begin
-    ShowMessage('Application ' + lIdentity.GameName + ' does not currently support ' + xeToolName);
+    xeInitRefusal('Application ' + lIdentity.GameName + ' does not currently support ' + xeToolName);
     Exit(False);
   end;
 
@@ -776,12 +799,12 @@ begin
   xeContext.Settings := lSettings;
 
   if xeSavesMode and not xeContext.GameDefObj.HasSaveDef then begin
-    ShowMessage('Application ' + xeContext.GameDefObj.GameName + ' does not currently support ' + SourceName);
+    xeInitRefusal('Application ' + xeContext.GameDefObj.GameName + ' does not currently support ' + SourceName);
     Exit(False);
   end;
 
   if xeSavesMode and (xeToolMode = tmEdit) then begin
-    ShowMessage('Application ' + xeContext.GameDefObj.GameName + ' does not currently support ' + SourceName + ' in ' + xeToolName + ' mode.');
+    xeInitRefusal('Application ' + xeContext.GameDefObj.GameName + ' does not currently support ' + SourceName + ' in ' + xeToolName + ' mode.');
     Exit(False);
   end;
 
@@ -848,14 +871,6 @@ begin
 
     if FindCmdLineSwitch('AllowESPMaster') then
       xeContext.Settings.AllowESPMasters := True;
-  end;
-
-  if xeToolMode in [tmEdit, tmScript] then begin
-    if FindCmdLineSwitch('autoload') then
-      xeAutoLoad := True;
-
-    if FindCmdLineSwitch('autoexit') then
-      xeAutoExit := True;
   end;
 
 {$IFDEF XE_TEST_CONTROL_POINTS}
@@ -1025,7 +1040,7 @@ begin
 
   if wbFindCmdLineParam('quickedit', xePluginToUse) then begin
     if not (xeToolMode = tmEdit) then
-      ShowMessage(xeToolName+' is incompatible with quickedit request!')
+      xeInitNotice(xeToolName+' is incompatible with quickedit request!')
     else
       xeQuickEdit := True;
   end;
@@ -1057,7 +1072,7 @@ begin
       ExitCode := 255
     else
 {$ENDIF}
-      ShowMessage('Can''t activate more than one out of Quick Clean, Quick Show Conflicts, Auto GameLink, Test Conflicts, Quick Edit, or Generate SEQ modes same time.');
+      xeInitRefusal('Can''t activate more than one out of Quick Clean, Quick Show Conflicts, Auto GameLink, Test Conflicts, Quick Edit, or Generate SEQ modes same time.');
     Exit(False);
   end;
 
