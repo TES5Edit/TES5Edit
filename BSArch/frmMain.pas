@@ -1921,11 +1921,6 @@ begin
       Free;
     end;
 
-  // DDS archives must be compressed or CTD
-  if TwbBSArchive.IsDDSArchive(ArchiveType) then
-    for var i := Low(Assets) to High(Assets) do
-      lstComp[i] := True;
-
   bsa := TAssetsPacker.Create;
   try
   bsa.MultiThreaded := MultiThreaded;
