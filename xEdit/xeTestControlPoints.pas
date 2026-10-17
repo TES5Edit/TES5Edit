@@ -135,6 +135,7 @@ type
     procedure DoTestGameLink;
     procedure TestGameLinkRunTimer(Sender: TObject);
     procedure TestGameLinkWrite(const aBody: string);
+    procedure DoTestSplitTreeLOD;
     procedure DoTestDropMaster;
     procedure DoTestDeltaPatchStart;
     procedure DoTestDeltaPatchReport;
@@ -2934,6 +2935,62 @@ begin
     lTmp := xeTestSwitches.GameLinkFile + '.partial';
     lLines.SaveToFile(lTmp, TEncoding.UTF8);
     if not MoveFileEx(PChar(lTmp), PChar(xeTestSwitches.GameLinkFile), MOVEFILE_REPLACE_EXISTING) then
+      RaiseLastOSError;
+  finally
+    lLines.Free;
+    if xeAutoExit then
+      tmrShutdown.Enabled := True;
+  end;
+end;
+
+procedure TxeTestFormHelper.DoTestSplitTreeLOD;
+var
+  lLines  : TStringList;
+  lStage  : string;
+  lTmp    : string;
+begin
+  xeContext.Settings.DontSave := True;
+  lLines := TStringList.Create;
+  try
+    lLines.Add('# xEdit split-tree-LOD probe');
+    lLines.Add('# ' + xeApplicationTitle);
+    lLines.Add('# world = ' + xeTestSwitches.SplitTreeLODWorld + ', light modules created = ' +
+      IntToStr(xeTestSwitches.SplitTreeLODLight) + ', output = ' + xeContext.Settings.OutputPath);
+    CheckResult := 2;
+    lStage := 'setup';
+    try
+      for var i := 1 to xeTestSwitches.SplitTreeLODLight do
+        if not Assigned(AddNewFileName(Format('xeLodProbe%.4d.esp', [i]), True, False)) then
+          raise Exception.Create('no light module ' + IntToStr(i) + ' was created');
+      var lMax := -1;
+      for var lFile in Files do
+        if lFile.LoadOrder > lMax then
+          lMax := lFile.LoadOrder;
+      lLines.Add('files' + #9 + IntToStr(Length(Files)) + #9 + 'highest load order ' + IntToStr(lMax));
+      var lWorld := Files[0].RecordByFormID[TwbFormID.FromStr(xeTestSwitches.SplitTreeLODWorld), True, True];
+      if not Assigned(lWorld) or (lWorld.Signature <> 'WRLD') then
+        raise Exception.Create('no worldspace ' + xeTestSwitches.SplitTreeLODWorld + ' in ' + Files[0].FileName);
+      lLines.Add('world' + #9 + lWorld.Name);
+      lStage := 'split';
+      wbSplitTreeLOD(lWorld, Files);
+      var lWritten := 0;
+      var lFolder := xeContext.Settings.OutputPath + 'Textures\Terrain\LODGen\';
+      if TDirectory.Exists(lFolder) then
+        lWritten := Length(TDirectory.GetFiles(lFolder, '*.dds', TSearchOption.soAllDirectories));
+      lLines.Add('written' + #9 + IntToStr(lWritten) + ' billboard textures');
+      CheckResult := 0;
+    except
+      on E: Exception do begin
+        if lStage = 'split' then
+          CheckResult := 1;
+        AddMessage('[Test Split Tree LOD] FAILED in ' + lStage + ': ' + E.ClassName + ': ' + E.Message);
+        lLines.Add('# FAILED in ' + lStage + ': ' + E.ClassName + ': ' + E.Message);
+      end;
+    end;
+    lLines.Add('# checkResult = ' + IntToStr(CheckResult));
+    lTmp := xeTestSwitches.SplitTreeLODFile + '.partial';
+    lLines.SaveToFile(lTmp, TEncoding.UTF8);
+    if not MoveFileEx(PChar(lTmp), PChar(xeTestSwitches.SplitTreeLODFile), MOVEFILE_REPLACE_EXISTING) then
       RaiseLastOSError;
   finally
     lLines.Free;
