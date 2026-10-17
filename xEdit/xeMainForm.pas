@@ -4951,7 +4951,7 @@ begin
       _File := nil;
       j := Low(Files);
       while (j <= High(Files)) and not Assigned(_File) do begin
-        if Files[j].LoadOrderFileID = FileID then
+        if Files[j].HasLoadOrderFileID and (Files[j].LoadOrderFileID = FileID) then
           _File := Files[j];
         Inc(j);
       end;
@@ -4987,7 +4987,7 @@ begin
         end;
         _File := nil;
         while (j <= High(Files)) and not Assigned(_File) do begin
-          if Files[j].LoadOrderFileID = FileID then
+          if Files[j].HasLoadOrderFileID and (Files[j].LoadOrderFileID = FileID) then
             _File := Files[j];
           Inc(j);
         end;
@@ -19480,7 +19480,7 @@ begin
   FileID := FormID.FileID[lLayout];
   _File := nil;
   for i := Low(Files) to High(Files) do
-    if Files[i].LoadOrderFileID = FileID then begin
+    if Files[i].HasLoadOrderFileID and (Files[i].LoadOrderFileID = FileID) then begin
       _File := Files[i];
       break;
     end;

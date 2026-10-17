@@ -3029,7 +3029,7 @@ begin
     lFileID := aLoadOrderFormID.FileID[flContextObj.SlotLayout];
     lMaster := nil;
     for var lFile in flContextObj.Files do
-      if Assigned(lFile) and (lFile.LoadOrder < flLoadOrder) and (lFile.LoadOrderFileID = lFileID) then begin
+      if Assigned(lFile) and (lFile.LoadOrder < flLoadOrder) and lFile.HasLoadOrderFileID and (lFile.LoadOrderFileID = lFileID) then begin
         lMaster := lFile;
         Break;
       end;
@@ -6456,7 +6456,7 @@ function TwbFile.GetContainedRecordByLoadOrderFormID(const aFormID: TwbFormID; a
 
       for var lIndex := 0 to Pred(GetMasterCount(False)) do begin
         var lMaster := GetMaster(lIndex, False);
-        if lMaster.LoadOrderFileID = aFileID then case lMaster.ModuleType of
+        if lMaster.HasLoadOrderFileID and (lMaster.LoadOrderFileID = aFileID) then case lMaster.ModuleType of
           mtLight: Exit(TwbFileID.CreateLight(lLightIndex, flContextObj.SlotLayout));
           mtMedium: Exit(TwbFileID.CreateMedium(lMediumIndex, flContextObj.SlotLayout));
           mtFull: Exit(TwbFileID.CreateFull(lFullIndex));
@@ -6473,9 +6473,11 @@ function TwbFile.GetContainedRecordByLoadOrderFormID(const aFormID: TwbFormID; a
         else
           Exit(GetFileFileID(False))
       else
-        for var i := Pred(GetMasterCount(False)) downto 0 do
-          if GetMaster(i, False).LoadOrderFileID = aFileID then
+        for var i := Pred(GetMasterCount(False)) downto 0 do begin
+          var lMaster := GetMaster(i, False);
+          if lMaster.HasLoadOrderFileID and (lMaster.LoadOrderFileID = aFileID) then
             Exit(TwbFileID.CreateFull(i));
+        end;
     end;
 
     Result := TwbFileID.Invalid;
@@ -7513,7 +7515,7 @@ begin
 
     for var lIndex := 0 to Pred(GetMasterCount(aNew)) do begin
       var lMaster := GetMaster(lIndex, aNew);
-      if lMaster.LoadOrderFileID = aFileID then case lMaster.ModuleType of 
+      if lMaster.HasLoadOrderFileID and (lMaster.LoadOrderFileID = aFileID) then case lMaster.ModuleType of
         mtLight: begin
           aFileFileID := TwbFileID.CreateLight(lLightIndex, flContextObj.SlotLayout);
           Exit;
@@ -7540,11 +7542,13 @@ begin
         aFileFileID := GetFileFileID(aNew);
       Exit;
     end;
-    for var i := Pred(GetMasterCount(aNew)) downto 0 do
-      if GetMaster(i, aNew).LoadOrderFileID = aFileID then begin
+    for var i := Pred(GetMasterCount(aNew)) downto 0 do begin
+      var lMaster := GetMaster(i, aNew);
+      if lMaster.HasLoadOrderFileID and (lMaster.LoadOrderFileID = aFileID) then begin
         aFileFileID := TwbFileID.CreateFull(i);
         Exit;
       end;
+    end;
   end;
 
   Result := False;

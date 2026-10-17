@@ -7765,9 +7765,10 @@ begin
     if fsIsGameMaster in gcFiles[lIdx].FileStates then
       Exit(gcFiles[lIdx]);
   for var lIdx := Low(gcFiles) to High(gcFiles) do
-    with gcFiles[lIdx].LoadOrderFileID do
-      if IsFullSlot and (FullSlot = 0) then
-        Exit(gcFiles[lIdx]);
+    if gcFiles[lIdx].HasLoadOrderFileID then
+      with gcFiles[lIdx].LoadOrderFileID do
+        if IsFullSlot and (FullSlot = 0) then
+          Exit(gcFiles[lIdx]);
   Result := nil;
 end;
 
@@ -7951,7 +7952,7 @@ begin
   end;
 
   for var i:= Low(gcFiles) to High(gcFiles) do
-    if gcFiles[i].LoadOrderFileID = lFileID then begin
+    if gcFiles[i].HasLoadOrderFileID and (gcFiles[i].LoadOrderFileID = lFileID) then begin
       Result := gcFiles[i].ContainedRecordByLoadOrderFormID[aFormID, True];
       if Assigned(Result) and Assigned(aSeenFromFile) then begin
         var lVisibleResult := Result.HighestOverrideVisibleForFile[aSeenFromFile];
