@@ -1243,7 +1243,8 @@ procedure xeSaveLogs(const aText: string; aAllowReplace: Boolean);
   end;
 
 begin
-  SaveLog(wbProgramPath + xeContext.GameDefObj.AppName + xeToolName + '_log.txt');
+  if Assigned(xeContext) then
+    SaveLog(wbProgramPath + xeContext.GameDefObj.AppName + xeToolName + '_log.txt');
   if xeLogFile <> '' then
     SaveLog(xeLogFile);
 end;
@@ -1339,8 +1340,7 @@ begin
       Result := False;
       if not (E is EAbort) then
         if xeUnattended then begin
-          if Assigned(xeContext) then
-            xeSaveLogs('Initialization failed: [' + E.ClassName + '] ' + E.Message, True);
+          xeSaveLogs('Initialization failed: [' + E.ClassName + '] ' + E.Message, True);
           ExitCode := xeFailureExitCode;
         end else
           ShowMessage('Initialization failed: [' + E.ClassName + '] ' + E.Message);
