@@ -15839,24 +15839,27 @@ begin
 {$ENDIF}
 
     except
-      xeContext.Settings.DontSave := True;
-      PostAddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] --= Error =--');
-      PostAddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] An error occured while trying to modify the file or saving the modified files.');
-      PostAddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] Please look at the log above to determine which of your modules caused that problem.');
-      PostAddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] The most likely reason for this is a module file that contains structural errors.');
-      PostAddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + ']');
-      PostAddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] !!! No changes have been made to any of your active modules.');
-      PostAddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] !!! You have to resolve the problem and run this program again.');
-      PostAddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + ']');
-      PostAddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] Loading and saving the problematic module in CS/GECK/CK can sometimes produce');
-      PostAddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] a working version. But it is recommended to contact the author of the module');
-      PostAddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] to get the original fixed.');
-      if xeUnattended then begin
-        if xeToolMode in wbPluginModes then
-          CheckResult := 255
-        else
-          CheckResult := 1;
-        AutoDone := True;
+      on E: Exception do begin
+        xeContext.Settings.DontSave := True;
+        PostAddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] --= Error =--');
+        PostAddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] Error: <' + E.ClassName + ': ' + E.Message + '>');
+        PostAddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] An error occured while trying to modify the file or saving the modified files.');
+        PostAddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] Please look at the log above to determine which of your modules caused that problem.');
+        PostAddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] The most likely reason for this is a module file that contains structural errors.');
+        PostAddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + ']');
+        PostAddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] !!! No changes have been made to any of your active modules.');
+        PostAddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] !!! You have to resolve the problem and run this program again.');
+        PostAddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + ']');
+        PostAddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] Loading and saving the problematic module in CS/GECK/CK can sometimes produce');
+        PostAddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] a working version. But it is recommended to contact the author of the module');
+        PostAddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] to get the original fixed.');
+        if xeUnattended then begin
+          if xeToolMode in wbPluginModes then
+            CheckResult := 255
+          else
+            CheckResult := 1;
+          AutoDone := True;
+        end;
       end;
     end;
   end;
