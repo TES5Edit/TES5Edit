@@ -1669,18 +1669,30 @@ begin
   wbProgress(wbCurrentAction);
 
   _SaveProgress := False;
+  var lUnattended := xeUnattended;
   AnyError := not xeContext.RenamePendingSaves(
     procedure(const aText: string)
     begin
-      MessageBox(0, PChar(aText), 'Error', 0);
+      if lUnattended then
+        xeSaveLogs('Error: ' + aText, False)
+      else
+        MessageBox(0, PChar(aText), 'Error', 0);
     end);
 
-  if AnyError then begin
-    MessageBox(0, PChar('One or more errors occured during renaming of saved modules.'+#13#13+
-    'Please check the files in your data path: ' + xeContext.Settings.DataPath), 'Error', 0);
-    if _SaveProgress and Assigned(frmMain) then
-      frmMain.SaveLogs(False);
-  end;
+  if AnyError then
+    if lUnattended then begin
+      xeSaveLogs('Error: One or more errors occured during renaming of saved modules. Please check the files in your data path: ' +
+        xeContext.Settings.DataPath, False);
+      if xeToolMode in wbPluginModes then
+        ExitCode := 255
+      else
+        ExitCode := 1;
+    end else begin
+      MessageBox(0, PChar('One or more errors occured during renaming of saved modules.'+#13#13+
+      'Please check the files in your data path: ' + xeContext.Settings.DataPath), 'Error', 0);
+      if _SaveProgress and Assigned(frmMain) then
+        frmMain.SaveLogs(False);
+    end;
 
   wbCurrentAction := '';
 end;
