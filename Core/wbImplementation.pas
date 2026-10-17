@@ -889,6 +889,7 @@ type
     procedure SetLoadOrder(aValue: Integer);
 
     function GetLoadOrderFileID: TwbFileID;
+    function GetHasLoadOrderFileID: Boolean;
     function GetResolvedLoadOrderFileID(aNew: Boolean): TwbFileID;
     function GetFileFileID(aNewMasters : Boolean): TwbFileID;
 
@@ -6619,6 +6620,11 @@ begin
   Result := flLoadOrderFileID;
   if Result.FullSlot < 0 then
     raise EFileNoSlotExecption.Create('File has no slot assigned');
+end;
+
+function TwbFile.GetHasLoadOrderFileID: Boolean;
+begin
+  Result := flLoadOrderFileID.FullSlot >= 0;
 end;
 
 function TwbFile.GetFileFileID(aNewMasters : Boolean): TwbFileID;

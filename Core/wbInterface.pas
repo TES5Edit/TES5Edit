@@ -1822,6 +1822,7 @@ type
     function GetRecordFromIndexByKey(aIndex: TwbNamedIndex; const aKey: string): IwbMainRecord;
     function GetLoadOrder: Integer;
     function GetLoadOrderFileID: TwbFileID;
+    function GetHasLoadOrderFileID: Boolean;
     function GetResolvedLoadOrderFileID(aNewMasters : Boolean): TwbFileID;
     function GetFileFileID(aNewMasters : Boolean): TwbFileID;
     procedure ForceLoadOrder(aValue: Integer);
@@ -1992,6 +1993,8 @@ type
       read GetLoadOrder;
     property LoadOrderFileID: TwbFileID
       read GetLoadOrderFileID;
+    property HasLoadOrderFileID: Boolean
+      read GetHasLoadOrderFileID;
     property ResolvedLoadOrderFileID[aNewMasters: Boolean]: TwbFileID
       read GetResolvedLoadOrderFileID;
     property FileFileID[aNewMasters: Boolean]: TwbFileID

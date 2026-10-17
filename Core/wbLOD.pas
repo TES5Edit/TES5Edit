@@ -1810,10 +1810,10 @@ begin
           for r := 0 to BTT.Types[j].Count - 1 do begin
             // a mod the reference is supposed to be from
             RefFileID := BTT.Refs[j][r].RefFormID.FileID[Lst.SlotLayout];
-            if not Assigned(RefFile) or not (RefFile.ResolvedLoadOrderFileID[True] = RefFileID) then begin
+            if not Assigned(RefFile) or not (RefFile.LoadOrderFileID = RefFileID) then begin
               RefFile := nil;
               for k := Low(Files) to High(Files) do
-                if Files[k].ResolvedLoadOrderFileID[True] = RefFileID then begin
+                if Files[k].HasLoadOrderFileID and (Files[k].LoadOrderFileID = RefFileID) then begin
                   RefFile := Files[k];
                   Break;
                 end;
