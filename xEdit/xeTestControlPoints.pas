@@ -135,6 +135,9 @@ type
     procedure DoTestGameLink;
     procedure TestGameLinkRunTimer(Sender: TObject);
     procedure TestGameLinkWrite(const aBody: string);
+    procedure DoTestFormIDSearch;
+    procedure TestFormIDSearchRunTimer(Sender: TObject);
+    procedure TestFormIDSearchWrite(const aBody: string);
     procedure DoTestSplitTreeLOD;
     procedure DoTestDropMaster;
     procedure DoTestDeltaPatchStart;
@@ -2960,6 +2963,113 @@ begin
     lTmp := xeTestSwitches.GameLinkFile + '.partial';
     lLines.SaveToFile(lTmp, TEncoding.UTF8);
     if not MoveFileEx(PChar(lTmp), PChar(xeTestSwitches.GameLinkFile), MOVEFILE_REPLACE_EXISTING) then
+      RaiseLastOSError;
+  finally
+    lLines.Free;
+    if xeAutoExit then
+      tmrShutdown.Enabled := True;
+  end;
+end;
+
+procedure TxeTestFormHelper.DoTestFormIDSearch;
+var
+  lKey : Word;
+begin
+  xeContext.Settings.DontSave := True;
+  TestHost.TestFormIDSearchTarget := nil;
+  try
+    var lModule: IwbFile := nil;
+    for var lFile in Files do
+      if SameText(lFile.FileName, xeTestSwitches.FormIDSearchModule) and not (fsIsCompareLoad in lFile.FileStates) then
+        lModule := lFile;
+    if not Assigned(lModule) then
+      raise Exception.Create('no module ' + xeTestSwitches.FormIDSearchModule);
+    for var j := 0 to Pred(lModule.RecordCount) do begin
+      var lRecord := lModule.Records[j];
+      if (lRecord.Signature <> 'TES4') and lRecord.MasterOrSelf.Equals(lRecord) and not lRecord.IsInjected then begin
+        TestHost.TestFormIDSearchTarget := lRecord;
+        Break;
+      end;
+    end;
+    if not Assigned(TestHost.TestFormIDSearchTarget) then
+      raise Exception.Create('no record of its own in ' + lModule.FileName);
+    DoSetActiveRecord(nil);
+  except
+    on E: Exception do begin
+      TestHost.TestFormIDSearchTarget := nil;
+      CheckResult := 2;
+      TestFormIDSearchWrite('# FAILED: ' + E.ClassName + ': ' + E.Message);
+      Exit;
+    end;
+  end;
+  var lTarget := TestHost.TestFormIDSearchTarget;
+  edFormIDSearch.Text := lTarget.LoadOrderFormID.ToString;
+  lKey := VK_RETURN;
+  try
+    edFormIDSearchKeyDown(edFormIDSearch, lKey, []);
+  except
+    on E: Exception do begin
+      TestHost.TestFormIDSearchTarget := nil;
+      CheckResult := 1;
+      TestFormIDSearchWrite(
+        'target' + #9 + lTarget.Name + #9 + lTarget._File.FileName + #9 + lTarget.LoadOrderFormID.ToString + #13#10 +
+        'search' + #9 + 'raised ' + E.ClassName + ': ' + E.Message);
+      Exit;
+    end;
+  end;
+  if edFormIDSearch.Color = wbLighter(clLime, 0.85) then
+    TestHost.TestFormIDSearchResult := 'found, with a node'
+  else if edFormIDSearch.Color = wbLighter(clYellow, 0.85) then
+    TestHost.TestFormIDSearchResult := 'found, without a node'
+  else if edFormIDSearch.Color = wbLighter(clRed, 0.85) then
+    TestHost.TestFormIDSearchResult := 'not found'
+  else
+    TestHost.TestFormIDSearchResult := 'no result';
+  TestHost.TestFormIDSearchStart := GetTickCount64;
+  TestHost.TestFormIDSearchTimer := TTimer.Create(Self);
+  TestHost.TestFormIDSearchTimer.Interval := 250;
+  TestHost.TestFormIDSearchTimer.OnTimer := TestFormIDSearchRunTimer;
+  TestHost.TestFormIDSearchTimer.Enabled := True;
+end;
+
+procedure TxeTestFormHelper.TestFormIDSearchRunTimer(Sender: TObject);
+begin
+  if not Assigned(ActiveRecord) and (GetTickCount64 < TestHost.TestFormIDSearchStart + 20000) then
+    Exit;
+  TestHost.TestFormIDSearchTimer.Enabled := False;
+  var lTarget := TestHost.TestFormIDSearchTarget;
+  TestHost.TestFormIDSearchTarget := nil;
+  var lActive := 'none';
+  if Assigned(ActiveRecord) then
+    lActive := ActiveRecord.Name + #9 + ActiveRecord._File.FileName + #9 + ActiveRecord.LoadOrderFormID.ToString;
+  if Assigned(ActiveRecord) and ActiveRecord.Equals(lTarget) then
+    CheckResult := 0
+  else
+    CheckResult := 1;
+  TestFormIDSearchWrite(
+    'target' + #9 + lTarget.Name + #9 + lTarget._File.FileName + #9 + lTarget.LoadOrderFormID.ToString + #13#10 +
+    'search' + #9 + TestHost.TestFormIDSearchResult + #13#10 +
+    'active' + #9 + lActive);
+end;
+
+procedure TxeTestFormHelper.TestFormIDSearchWrite(const aBody: string);
+var
+  lLines : TStringList;
+  lTmp   : string;
+begin
+  lLines := TStringList.Create;
+  try
+    lLines.Add('# xEdit FormID search probe');
+    lLines.Add('# ' + xeApplicationTitle);
+    lLines.Add('# module = ' + xeTestSwitches.FormIDSearchModule);
+    lLines.Add('# Columns, tab separated: what / record / file / load order FormID');
+    for var lFile in Files do
+      lLines.Add('file' + #9 + lFile.FileName + #9 + IntToStr(lFile.LoadOrder) + #9 + TestFileIDText(lFile));
+    lLines.Add(aBody);
+    lLines.Add('# checkResult = ' + IntToStr(CheckResult));
+    lTmp := xeTestSwitches.FormIDSearchFile + '.partial';
+    lLines.SaveToFile(lTmp, TEncoding.UTF8);
+    if not MoveFileEx(PChar(lTmp), PChar(xeTestSwitches.FormIDSearchFile), MOVEFILE_REPLACE_EXISTING) then
       RaiseLastOSError;
   finally
     lLines.Free;

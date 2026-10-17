@@ -62,6 +62,10 @@ type
     TestGameLinkTimer        : TTimer;
     TestGameLinkTarget       : IwbMainRecord;
     TestGameLinkStart        : UInt64;
+    TestFormIDSearchTimer    : TTimer;
+    TestFormIDSearchTarget   : IwbMainRecord;
+    TestFormIDSearchStart    : UInt64;
+    TestFormIDSearchResult   : string;
     TestDropMasterTimer      : TTimer;
     TestDropMasterAnswer     : TTimer;
     TestDropMasterDetach     : IwbElement;
@@ -206,6 +210,9 @@ type
     GameLink              : Boolean;
     GameLinkFile          : string;
     GameLinkModule        : string;
+    FormIDSearch          : Boolean;
+    FormIDSearchFile      : string;
+    FormIDSearchModule    : string;
     SplitTreeLOD          : Boolean;
     SplitTreeLODFile      : string;
     SplitTreeLODWorld     : string;
@@ -511,6 +518,15 @@ begin
     xeAutoLoad := True;
   end;
 
+  if wbFindCmdLineParam('testformidsearch', FormIDSearchFile) then begin
+    if (FormIDSearchFile = '') or not wbFindCmdLineParam('testformidsearchmodule', FormIDSearchModule) then begin
+      ShowMessage('testformidsearch requires -testformidsearch:<filename> -testformidsearchmodule:<module>');
+      Exit(False);
+    end;
+    FormIDSearch := True;
+    xeAutoLoad := True;
+  end;
+
   if wbFindCmdLineParam('testsplittreelod', SplitTreeLODFile) then begin
     if wbFindCmdLineParam('testsplittreelodlight', s) then
       SplitTreeLODLight := StrToIntDef(s, -1);
@@ -735,7 +751,7 @@ end;
 
 function TxeTestSwitches.Any: Boolean;
 begin
-  Result := Conflicts or NavCopy or ViewText or ViewTree or Options or CopyIntoGap or NewFile or GameLink or SplitTreeLOD or DropMaster or DeltaPatch or Merge or MergedPatch or CopyInto or
+  Result := Conflicts or NavCopy or ViewText or ViewTree or Options or CopyIntoGap or NewFile or GameLink or FormIDSearch or SplitTreeLOD or DropMaster or DeltaPatch or Merge or MergedPatch or CopyInto or
     Renumber or ChangeFormID or Hide or Filter or SaveContexts or (Pump <> '') or (StateManifest <> '');
 end;
 
