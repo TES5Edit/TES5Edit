@@ -397,7 +397,6 @@ begin
                  Always compress using -z parameter, game crashes otherwise
     -sf1         Starfield General archive format
     -sf1dds      Starfield DDS archive format (streamed DDS textures mipmaps)
-                 Always compress using -z parameter, game crashes otherwise
     -split:N     Split archives by N GB, 0 disables splitting
                  Don't use values larger than available free memory
                  When not set BSA archives are split by 2 GB, BA2 aren't split
