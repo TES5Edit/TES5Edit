@@ -274,7 +274,7 @@ begin
       else
         lFormID.ObjectID[lLayout] := lFormID.ObjectID[lLayout] and $FFFFFF;
 
-      lFormID.FileID[lLayout] := lFile.LoadOrderFileID;
+      lFormID.FileID[lLayout] := lFile.FileFileID[True];
 
       Value := lFile.RecordByFormID[lFormID, True, True];
     end
@@ -293,7 +293,7 @@ begin
     aFormID := TwbFormID.FromStr(string(Args.Values[0]));
     for i := Low(frmMain.Files) to High(frmMain.Files) do
       if frmMain.Files[i].HasLoadOrderFileID and (frmMain.Files[i].LoadOrderFileID = aFormID.FileID[xeContext.SlotLayout]) then begin
-        Value := frmMain.Files[i].RecordByFormID[aFormID, True, True];
+        Value := frmMain.Files[i].RecordByFormID[aFormID.ChangeFileID(xeContext.SlotLayout, frmMain.Files[i].FileFileID[True]), True, True];
         Break;
       end;
   end else
