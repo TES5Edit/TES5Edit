@@ -66,6 +66,7 @@ function xeDoInit: Boolean;
 procedure xeInitStyles;
 function xeNexusModsUrl: string;
 function xeUnattended: Boolean;
+function xeFailureExitCode: Integer;
 procedure xeSaveLogs(const aText: string; aAllowReplace: Boolean);
 
 implementation
@@ -1205,6 +1206,14 @@ begin
   Result := xeAutoExit or (xeToolMode in wbPluginModes);
 end;
 
+function xeFailureExitCode: Integer;
+begin
+  if xeToolMode in wbPluginModes then
+    Result := 255
+  else
+    Result := 1;
+end;
+
 procedure xeSaveLogs(const aText: string; aAllowReplace: Boolean);
 
   procedure SaveLog(const s: string);
@@ -1329,7 +1338,12 @@ begin
     on E: Exception do begin
       Result := False;
       if not (E is EAbort) then
-        ShowMessage('Initialization failed: [' + E.ClassName + '] ' + E.Message);
+        if xeUnattended then begin
+          if Assigned(xeContext) then
+            xeSaveLogs('Initialization failed: [' + E.ClassName + '] ' + E.Message, True);
+          ExitCode := xeFailureExitCode;
+        end else
+          ShowMessage('Initialization failed: [' + E.ClassName + '] ' + E.Message);
     end;
   end;
 end;

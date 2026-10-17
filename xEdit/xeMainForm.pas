@@ -1179,6 +1179,7 @@ type
     procedure AddMessage(const s: string);
     procedure RefuseStart(const aMessage: string);
     procedure RefuseMissingPlugin(const aName: string);
+    procedure FailUnattendedStart;
     procedure ScrollToTheLastMessage;
     procedure AddFile(const aFile: IwbFile);
     procedure AddFileInternal(const aFile: IwbFile);
@@ -1683,10 +1684,8 @@ begin
     if lUnattended then begin
       xeSaveLogs('Error: One or more errors occured during renaming of saved modules. Please check the files in your data path: ' +
         xeContext.Settings.DataPath, False);
-      if xeToolMode in wbPluginModes then
-        ExitCode := 255
-      else
-        ExitCode := 1;
+      if ExitCode = 0 then
+        ExitCode := xeFailureExitCode;
     end else begin
       MessageBox(0, PChar('One or more errors occured during renaming of saved modules.'+#13#13+
       'Please check the files in your data path: ' + xeContext.Settings.DataPath), 'Error', 0);
@@ -1819,13 +1818,18 @@ procedure TfrmMain.RefuseStart(const aMessage: string);
 begin
   if xeUnattended then begin
     AddMessage('Error: ' + aMessage);
-    if xeToolMode in wbPluginModes then
-      CheckResult := 255
-    else
-      CheckResult := 1;
+    CheckResult := xeFailureExitCode;
   end else
     ShowMessage(aMessage);
   Close;
+end;
+
+procedure TfrmMain.FailUnattendedStart;
+begin
+  if xeUnattended then begin
+    CheckResult := xeFailureExitCode;
+    Close;
+  end;
 end;
 
 procedure TfrmMain.RefuseMissingPlugin(const aName: string);
@@ -4224,6 +4228,7 @@ begin
     AddMessage('Using Mod Organizer Profile: ' + xeContext.Settings.MOProfile);
     if not xeLoadMOHookFile then begin
       AddMessage('Error: Failed to load Mod Organizer Profile');
+      FailUnattendedStart;
       Exit;
     end;
   end;
@@ -4241,6 +4246,7 @@ begin
   AddMessage('Using ini: ' + xeContext.Settings.TheGameIniFileName);
   if not FileExists(xeContext.Settings.TheGameIniFileName) then begin
     AddMessage('Fatal: Could not find ini');
+    FailUnattendedStart;
     Exit;
   end;
 
@@ -4253,6 +4259,7 @@ begin
     if not DirectoryExists(xeContext.Settings.SavePath) then begin
       if xeSavesMode then begin
         AddMessage('Fatal: Could not find save path');
+        FailUnattendedStart;
         Exit;
       end else
         AddMessage('Warning: Could not find save path');
@@ -4260,6 +4267,7 @@ begin
   end else
     if xeSavesMode then begin
       AddMessage('Fatal: No save path specified');
+      FailUnattendedStart;
       Exit;
     end;
 
@@ -4297,8 +4305,10 @@ begin
       Settings := TMemIniFile.Create(xeSettingsFileName);
 
   if not Assigned(Settings) then begin
-    ShowMessage('Could not open or create the settings file.');
+    if not xeUnattended then
+      ShowMessage('Could not open or create the settings file.');
     AddMessage('Could not open or create the settings file.');
+    FailUnattendedStart;
     Exit;
   end;
 
@@ -4640,6 +4650,7 @@ begin
   except
     on E: Exception do begin
       AddMessage('Fatal: Error loading plugin list: <' + E.ClassName + ': ' + E.Message + '>');
+      FailUnattendedStart;
       Exit;
     end;
   end;
@@ -15866,10 +15877,7 @@ begin
         PostAddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] a working version. But it is recommended to contact the author of the module');
         PostAddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] to get the original fixed.');
         if xeUnattended then begin
-          if xeToolMode in wbPluginModes then
-            CheckResult := 255
-          else
-            CheckResult := 1;
+          CheckResult := xeFailureExitCode;
           AutoDone := True;
         end;
       end;
@@ -18922,10 +18930,7 @@ begin
 {$ENDIF}
           if xeUnattended then begin
             PostAddMessage('Error: An error occured while loading modules.');
-            if xeToolMode in wbPluginModes then
-              CheckResult := 255
-            else
-              CheckResult := 1;
+            CheckResult := xeFailureExitCode;
             if not (xeToolMode in cLoadReportModes) then
               AutoDone := True;
           end else
