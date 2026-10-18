@@ -2882,14 +2882,16 @@ begin
         if (lOld >= lStart) and (lOld <= lEnd) then
           Continue;
 
-        while (j <= High(lTaken)) and lTaken[j] do
+        repeat
+          while (j <= High(lTaken)) and lTaken[j] do
+            Inc(j);
+          if not OffsetFits(j) then begin
+            Refuse(fcrTooMany);
+            Exit;
+          end;
+          lNew := lStart.Offset(lLayout, j);
           Inc(j);
-        if not OffsetFits(j) then begin
-          Refuse(fcrTooMany);
-          Exit;
-        end;
-        lNew := lStart.Offset(lLayout, j);
-        Inc(j);
+        until not Assigned(lTarget.ContainedRecordByLoadOrderFormID[lNew, True]);
       end else begin
         lNew := TwbFormID.Null;
         lHolder := nil;
@@ -2932,7 +2934,7 @@ begin
         lHolder := nil;
       end;
 
-      if lNew > lEnd then begin
+      if (lNew > lEnd) and not ((aPlan.Kind = fckRenumber) and lTarget.Equals(lSelf)) then begin
         Refuse(fcrTooMany);
         Exit;
       end;
