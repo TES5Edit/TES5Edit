@@ -19278,6 +19278,8 @@ begin
           MasterFile := Files[i];
           Break;
         end;
+      if Assigned(NewFile) and (fsIsDeltaPatch in NewFile.FileStates) then
+        MasterFile := NewFile.CompareToFile;
       if Assigned(NewFile) and Assigned(MasterFile) and not MasterFile.Equals(NewFile) then begin
         if fsIsDeltaPatch in NewFile.FileStates then try
 
