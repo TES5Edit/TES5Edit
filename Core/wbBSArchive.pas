@@ -342,7 +342,6 @@ type
     procedure GetChunk(const aFileName: string; aFileObject: Pointer;
       out aBuffer: Pointer; out aSize, aUncompressedSize: Integer;
       aChunkIndex: Integer = 0); virtual; abstract;
-    procedure CompressFile(aFileObject: Pointer); virtual; abstract;
   end;
 
 
@@ -401,7 +400,6 @@ type
     procedure GetChunk(const aFileName: string; aFileObject: Pointer;
       out aBuffer: Pointer; out aSize, aUncompressedSize: Integer;
       aChunkIndex: Integer = 0); override; final;
-    procedure CompressFile(aFileObject: Pointer); override; final;
     procedure Process;
     property ProcessCount: Integer read fProcessCount;
     property SplitSize: Int64 read fSplitSize write fSplitSize;
@@ -915,7 +913,7 @@ end;
 
 function TwbBSFileEntry.IsXbox: Boolean;
 begin
-  Result := LowerCase(Archive.FileName).Contains('_xbox.');
+  Result := LowerCase(ExtractFileName(Archive.FileName.Replace('/', '\'))).Contains('_xbox.');
 end;
 
 function TwbBSFileEntry.DDSHeaderSize: Integer;
@@ -1334,9 +1332,11 @@ begin
     for var f in Self do
       if not f.Compressed then begin
         if (fType = baSSE) and (fHeader.Flags and ARCHIVE_EMBEDNAME <> 0) then
-          Result := Result + ['Contains uncompressed files with Embedded File Names flag, such combination crashes Skyrim SE/AE']
+          Result := Result + ['Contains uncompressed files with Embedded File Names flag, such combination crashes Skyrim SE/AE; ' +
+            'ignore this warning if you use an appropriate engine fixes mod']
         else if IsDDSArchive(fType) then
-          Result := Result + ['DDS archive contains uncompressed textures which crash the game'];
+          Result := Result + ['DDS archive contains uncompressed textures which crash the game; ' +
+            'ignore this warning if you use an appropriate engine fixes mod'];
         Break;
       end;
 end;
@@ -1852,15 +1852,7 @@ begin
     // fixes to avoid game crashes with wrong flags
     // embedded names in textures only archives, might crash on other files
     if not bTexturesOnly then
-      fHeader.Flags := fHeader.Flags and not ARCHIVE_EMBEDNAME
-    // SSE crashing bug - textures with embedded names must be compressed
-    else if (fType = baSSE) and (fHeader.Flags and ARCHIVE_EMBEDNAME <> 0) then
-      for var f in Self do
-        if not f.Compress then begin
-          if Assigned(fPacker) then
-            fPacker.CompressFile(f.FileObject);
-          f.Compress := True;
-        end;
+      fHeader.Flags := fHeader.Flags and not ARCHIVE_EMBEDNAME;
 
     if (fType in [baFO3, baSSE]) and (fHeader.Flags and ARCHIVE_EMBEDNAME <> 0) then
       for var f in Self do
@@ -2581,12 +2573,10 @@ begin
   if (fType = baTES3) and not fMultiThreaded then
     aFilesList.CustomSort(AlphabeticalSort);
 
-  var lCompressAll := False;
   fMayEmbedNames := False;
   if fType in [baFO3, baSSE] then begin
     var lFlags, lFileFlags: Cardinal;
-    var lTexturesOnly: Boolean;
-    DetectFlags(fType, aFilesList, aFilesCompression, lFlags, lFileFlags, lTexturesOnly);
+    DetectFlags(fType, aFilesList, aFilesCompression, lFlags, lFileFlags);
     if fArchiveFlags <> 0 then
       lFlags := fArchiveFlags or ARCHIVE_DEFAULT;
     if (fArchiveFlags = 0) or (lFlags and ARCHIVE_EMBEDNAME <> 0) then
@@ -2595,7 +2585,6 @@ begin
           fMayEmbedNames := True;
           Break;
         end;
-    lCompressAll := (fType = baSSE) and lTexturesOnly and (lFlags and ARCHIVE_EMBEDNAME <> 0);
   end;
 
   SetLength(fFiles, aFilesList.Count);
@@ -2610,9 +2599,7 @@ begin
     else
       f.Compress := False;
     if fType = baTES3 then
-      f.Compress := False
-    else if lCompressAll then
-      f.Compress := True;
+      f.Compress := False;
 
     if Assigned(prevf) then
       prevf.Next := f
@@ -2653,24 +2640,6 @@ begin
   aBuffer := f.Chunks[aChunkIndex].Data;
   aSize := Length(f.Chunks[aChunkIndex].Data);
   aUncompressedSize := f.Chunks[aChunkIndex].UncompressedSize;
-end;
-
-procedure TwbSplitPacker.CompressFile(aFileObject: Pointer);
-var
-  f: PPackedFile;
-  zSize: Integer;
-begin
-  f := aFileObject;
-  if f.Compress then
-    Exit;
-  if fCompressionType = ctNone then
-    raise Exception.Create('Undefined compression type');
-  for var i := Low(f.Chunks) to High(f.Chunks) do begin
-    var zBuf := TwbCompression.Compress(fCompressionType, f.Chunks[i].Data, Length(f.Chunks[i].Data), zSize);
-    SetLength(zBuf, zSize);
-    f.Chunks[i].Data := zBuf;
-  end;
-  f.Compress := True;
 end;
 
 function TwbSplitPacker.NewArchiveName: string;

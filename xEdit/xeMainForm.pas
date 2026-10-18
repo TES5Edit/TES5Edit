@@ -1181,6 +1181,7 @@ type
     procedure AddMessage(const s: string);
     procedure RefuseStart(const aMessage: string);
     procedure RefuseMissingPlugin(const aName: string);
+    procedure FailUnattendedStart;
     procedure ScrollToTheLastMessage;
     procedure AddFile(const aFile: IwbFile);
     procedure AddFileInternal(const aFile: IwbFile);
@@ -1671,18 +1672,28 @@ begin
   wbProgress(wbCurrentAction);
 
   _SaveProgress := False;
+  var lUnattended := xeUnattended;
   AnyError := not xeContext.RenamePendingSaves(
     procedure(const aText: string)
     begin
-      MessageBox(0, PChar(aText), 'Error', 0);
+      if lUnattended then
+        xeSaveLogs('Error: ' + aText, False)
+      else
+        MessageBox(0, PChar(aText), 'Error', 0);
     end);
 
-  if AnyError then begin
-    MessageBox(0, PChar('One or more errors occured during renaming of saved modules.'+#13#13+
-    'Please check the files in your data path: ' + xeContext.Settings.DataPath), 'Error', 0);
-    if _SaveProgress and Assigned(frmMain) then
-      frmMain.SaveLogs(False);
-  end;
+  if AnyError then
+    if lUnattended then begin
+      xeSaveLogs('Error: One or more errors occured during renaming of saved modules. Please check the files in your data path: ' +
+        xeContext.Settings.DataPath, False);
+      if ExitCode = 0 then
+        ExitCode := xeFailureExitCode;
+    end else begin
+      MessageBox(0, PChar('One or more errors occured during renaming of saved modules.'+#13#13+
+      'Please check the files in your data path: ' + xeContext.Settings.DataPath), 'Error', 0);
+      if _SaveProgress and Assigned(frmMain) then
+        frmMain.SaveLogs(False);
+    end;
 
   wbCurrentAction := '';
 end;
@@ -1809,13 +1820,18 @@ procedure TfrmMain.RefuseStart(const aMessage: string);
 begin
   if xeUnattended then begin
     AddMessage('Error: ' + aMessage);
-    if xeToolMode in wbPluginModes then
-      CheckResult := 255
-    else
-      CheckResult := 1;
+    CheckResult := xeFailureExitCode;
   end else
     ShowMessage(aMessage);
   Close;
+end;
+
+procedure TfrmMain.FailUnattendedStart;
+begin
+  if xeUnattended then begin
+    CheckResult := xeFailureExitCode;
+    Close;
+  end;
 end;
 
 procedure TfrmMain.RefuseMissingPlugin(const aName: string);
@@ -4069,16 +4085,31 @@ begin
       Free;
     end;
 
-  if FileExists(xeScriptToRun) then begin
+  var lScript := '';
+  var lReadError := '';
+  var lRead := False;
+  if FileExists(xeScriptToRun) then
     with TStringList.Create do try
-      LoadFromFile(xeScriptToRun);
-      SelectRootNodes(vstNav);
-      ApplyScript(xeScriptToRun, Text);
+      try
+        LoadFromFile(xeScriptToRun);
+        lScript := Text;
+        lRead := True;
+      except
+        on E: Exception do begin
+          if not xeUnattended then
+            raise;
+          lReadError := ' (' + E.Message + ')';
+        end;
+      end;
     finally
       Free;
     end;
+
+  if lRead then begin
+    SelectRootNodes(vstNav);
+    ApplyScript(xeScriptToRun, lScript);
   end else begin
-    PostAddMessage('Could not open script: ' + xeScriptToRun);
+    PostAddMessage('Could not open script: ' + xeScriptToRun + lReadError);
     if xeUnattended then
       CheckResult := 1;
   end;
@@ -4199,6 +4230,7 @@ begin
     AddMessage('Using Mod Organizer Profile: ' + xeContext.Settings.MOProfile);
     if not xeLoadMOHookFile then begin
       AddMessage('Error: Failed to load Mod Organizer Profile');
+      FailUnattendedStart;
       Exit;
     end;
   end;
@@ -4216,6 +4248,7 @@ begin
   AddMessage('Using ini: ' + xeContext.Settings.TheGameIniFileName);
   if not FileExists(xeContext.Settings.TheGameIniFileName) then begin
     AddMessage('Fatal: Could not find ini');
+    FailUnattendedStart;
     Exit;
   end;
 
@@ -4228,6 +4261,7 @@ begin
     if not DirectoryExists(xeContext.Settings.SavePath) then begin
       if xeSavesMode then begin
         AddMessage('Fatal: Could not find save path');
+        FailUnattendedStart;
         Exit;
       end else
         AddMessage('Warning: Could not find save path');
@@ -4235,6 +4269,7 @@ begin
   end else
     if xeSavesMode then begin
       AddMessage('Fatal: No save path specified');
+      FailUnattendedStart;
       Exit;
     end;
 
@@ -4272,8 +4307,10 @@ begin
       Settings := TMemIniFile.Create(xeSettingsFileName);
 
   if not Assigned(Settings) then begin
-    ShowMessage('Could not open or create the settings file.');
+    if not xeUnattended then
+      ShowMessage('Could not open or create the settings file.');
     AddMessage('Could not open or create the settings file.');
+    FailUnattendedStart;
     Exit;
   end;
 
@@ -4615,6 +4652,7 @@ begin
   except
     on E: Exception do begin
       AddMessage('Fatal: Error loading plugin list: <' + E.ClassName + ': ' + E.Message + '>');
+      FailUnattendedStart;
       Exit;
     end;
   end;
@@ -5462,7 +5500,12 @@ begin
       Settings.WriteInteger(Name, 'Top', Top);
       Settings.WriteInteger(Name, 'Width', Width);
       Settings.WriteInteger(Name, 'Height', Height);
-    Settings.UpdateFile;
+    try
+      Settings.UpdateFile;
+    except
+      on E: Exception do
+        AddMessage('Error: Could not write the settings file: <' + E.ClassName + ': ' + E.Message + '>');
+    end;
   end;
 
   SaveLogs(True);
@@ -15738,6 +15781,8 @@ begin
 {$IFDEF XE_TEST_CONTROL_POINTS}
       if xeTestSwitches.FileLists <> '' then
         TestWriteFileLists;
+      if xeTestSwitches.ToolModeFault then
+        raise Exception.Create('Fault raised by -testtoolmodefault');
 {$ENDIF}
       var lReport: TProc<string> := procedure(aText: string)
         begin
@@ -15835,18 +15880,25 @@ begin
 {$ENDIF}
 
     except
-      xeContext.Settings.DontSave := True;
-      PostAddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] --= Error =--');
-      PostAddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] An error occured while trying to modify the file or saving the modified files.');
-      PostAddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] Please look at the log above to determine which of your modules caused that problem.');
-      PostAddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] The most likely reason for this is a module file that contains structural errors.');
-      PostAddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + ']');
-      PostAddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] !!! No changes have been made to any of your active modules.');
-      PostAddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] !!! You have to resolve the problem and run this program again.');
-      PostAddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + ']');
-      PostAddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] Loading and saving the problematic module in CS/GECK/CK can sometimes produce');
-      PostAddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] a working version. But it is recommended to contact the author of the module');
-      PostAddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] to get the original fixed.');
+      on E: Exception do begin
+        xeContext.Settings.DontSave := True;
+        PostAddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] --= Error =--');
+        PostAddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] Error: <' + E.ClassName + ': ' + E.Message + '>');
+        PostAddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] An error occured while trying to modify the file or saving the modified files.');
+        PostAddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] Please look at the log above to determine which of your modules caused that problem.');
+        PostAddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] The most likely reason for this is a module file that contains structural errors.');
+        PostAddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + ']');
+        PostAddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] !!! No changes have been made to any of your active modules.');
+        PostAddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] !!! You have to resolve the problem and run this program again.');
+        PostAddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + ']');
+        PostAddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] Loading and saving the problematic module in CS/GECK/CK can sometimes produce');
+        PostAddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] a working version. But it is recommended to contact the author of the module');
+        PostAddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] to get the original fixed.');
+        if xeUnattended then begin
+          CheckResult := xeFailureExitCode;
+          AutoDone := True;
+        end;
+      end;
     end;
   end;
 end;
@@ -18896,10 +18948,7 @@ begin
 {$ENDIF}
           if xeUnattended then begin
             PostAddMessage('Error: An error occured while loading modules.');
-            if xeToolMode in wbPluginModes then
-              CheckResult := 255
-            else
-              CheckResult := 1;
+            CheckResult := xeFailureExitCode;
             if not (xeToolMode in cLoadReportModes) then
               AutoDone := True;
           end else

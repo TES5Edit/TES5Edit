@@ -690,6 +690,9 @@ type
     procedure RemoveMainRecord(const aRecord: IwbMainRecord);
     procedure InjectMainRecord(const aRecord: IwbMainRecord);
     procedure RemoveInjectedMainRecord(const aRecord: IwbMainRecord);
+    function InjectionTarget(const aFormID: TwbFormID): IwbFileInternal;
+    function IsOwnFormID(const aFormID: TwbFormID; aNew: Boolean): Boolean;
+    function HoldsInjected(const aRecord: IwbMainRecord): Boolean;
     procedure ReleaseRecords;
     procedure ForceClosed;
     function ContextObj: TwbGameContext;
@@ -836,8 +839,10 @@ type
     function flFindKeyInIndex(aIndex: TwbNamedIndex; const aKey: string; out aMainRecord: IwbMainRecord): Boolean;
 
     procedure flActivateIndices;
+    procedure flRegisterWithMaster(const aRecord: IwbMainRecord; const aFormID: TwbFormID);
     procedure flUnregisterFromMaster(const aRecord: IwbMainRecord; aFormID: TwbFormID);
     procedure flUnregisterRecords;
+    procedure flInvalidateReferencesInjected;
 
     {---IwbFile---}
     function GetFileName: string;
@@ -982,6 +987,9 @@ type
     procedure RemoveMainRecord(const aRecord: IwbMainRecord);
     procedure InjectMainRecord(const aRecord: IwbMainRecord);
     procedure RemoveInjectedMainRecord(const aRecord: IwbMainRecord);
+    function InjectionTarget(const aFormID: TwbFormID): IwbFileInternal;
+    function IsOwnFormID(const aFormID: TwbFormID; aNew: Boolean): Boolean;
+    function HoldsInjected(const aRecord: IwbMainRecord): Boolean;
     procedure ReleaseRecords;
     procedure ForceClosed;
     procedure GetMasters(aMasters: TStrings); virtual;
@@ -1164,9 +1172,10 @@ type
     procedure YouAreTheMaster(const aOverrides, aReferencedBy: TDynMainRecords; aReferencedByCount: Integer); overload;
     procedure YouAreTheMaster(const aOldMaster: IwbMainRecord; const aOverrides, aReferencedBy: TDynMainRecords; aReferencedByCount: Integer); overload;
     procedure YouGotAMaster(const aMaster: IwbMainRecord);
+    function ListedInjectedIn: IwbFileInternal;
     procedure SetChildGroup(const aGroup: IwbGroupRecord);
     procedure RemoveChildGroup(const aGroup: IwbGroupRecord);
-    procedure SetReferencesInjected(aValue: Boolean);
+    procedure InvalidateReferencesInjected;
     procedure ClearForRelease;
     function DoBuildRef(aRemove: Boolean): Boolean;
 
@@ -1419,6 +1428,7 @@ type
     procedure AddReferencedBy(const aMainRecord: IwbMainRecord);
     procedure RemoveReferencedBy(const aMainRecord: IwbMainRecord);
     procedure SortReferencedBy;
+    procedure InvalidateReferencers;
     function GetReferencedBy(aIndex: Integer): IwbMainRecord;
     function GetReferencedByCount: Integer;
     function GetReference(aIndex: Integer): IwbMainRecord;
@@ -1525,9 +1535,10 @@ type
     procedure YouAreTheMaster(const aOverrides, aReferencedBy: TDynMainRecords; aReferencedByCount: Integer); overload;
     procedure YouAreTheMaster(const aOldMaster: IwbMainRecord; const aOverrides, aReferencedBy: TDynMainRecords; aReferencedByCount: Integer); overload;
     procedure YouGotAMaster(const aMaster: IwbMainRecord);
+    function ListedInjectedIn: IwbFileInternal;
     procedure SetChildGroup(const aGroup: IwbGroupRecord);
     procedure RemoveChildGroup(const aGroup: IwbGroupRecord);
-    procedure SetReferencesInjected(aValue: Boolean);
+    procedure InvalidateReferencesInjected;
     procedure ClearForRelease;
     procedure SaveRefsToStream(aStream: TStream; aSaveNames: Boolean);
     procedure LoadRefsFromStream(aStream: TStream; aLoadNames: Boolean);
@@ -2544,8 +2555,6 @@ const
 var
   FormID    : TwbFormID;
   i         : Integer;
-  Master    : IwbMainRecord;
-  GameMasterFile : IwbFileInternal;
 begin
   if not Assigned(aRecord) then
     Exit;
@@ -2588,48 +2597,21 @@ begin
 
     end;
 
-    var lFileID := FormID.FileID[flContextObj.SlotLayout];
-    if IsNewRecord(lFileID, True) and not (fsIsCompareLoad in flStates) and not (FormID.IsHardcoded and not (fsIsGameMaster in flStates))  then begin
-
-      if not flComplexFileFileID then begin
-
-        if (FormID.ToCardinal and $00FFF000) <> 0 then begin
-          Exclude(flStates, fsLightCompatible);
-          if wbHasProgressCallback then
-            if GetIsLight or flLoadOrderFileID.IsLightSlot then
-              wbProgressCallback('<Error: ' + aRecord.Name + ' has invalid ObjectID ' + IntToHex64((FormID.ToCardinal and $00FFFFFF),6) + ' for a light module. You will not be able to save this file with the Light flag active.>');
-        end;
-
-        if (FormID.ToCardinal and $00FF0000) <> 0 then begin
-          Exclude(flStates, fsMediumCompatible);
-          if wbHasProgressCallback then
-            if GetIsMedium or flLoadOrderFileID.IsMediumSlot then
-              wbProgressCallback('<Error: ' + aRecord.Name + ' has invalid ObjectID ' + IntToHex64((FormID.ToCardinal and $00FFFFFF),6) + ' for a medium module. You will not be able to save this file with the Medium flag active.>');
-        end;
-
-      end;
-
-      Exclude(flStates, fsUpdateCompatible);
-      if wbHasProgressCallback then
-        if GetIsUpdate then
-          wbProgressCallback('<Error: ' + aRecord.Name + ' has invalid ObjectID ' + IntToHex64((FormID.ToCardinal and $00FFFFFF),6) + ' for an update module. You will not be able to save this file with the Update flag active.>');
-
-      {new record...}
-    end else try
-      Master := GetMasterRecordByFormID(FormID, True, True);
-      if Assigned(Master) then
-        (Master as IwbMainRecordInternal).AddOverride(aRecord)
-      else begin
-        if FormID.IsHardcoded and not (fsIsGameMaster in flStates) then begin
-          if Supports(flContextObj.GameMasterFile, IwbFileInternal, GameMasterFile) then
-            GameMasterFile.InjectMainRecord(aRecord);
-        end else
-          (GetMasterForFileID(lFileId, True, False) as IwbFileInternal).InjectMainRecord(aRecord);
-      end;
+    try
+      flRegisterWithMaster(aRecord, FormID);
     except
-      on E: Exception do
-        if wbHasProgressCallback then
-          wbProgressCallback('Error: <' + e.Message + '> while trying to determine master record for ' + aRecord.Name);
+      if flFormIDsSorted then begin
+        flRecords[i] := nil;
+        if i < High(flRecords) then begin
+          Move(flRecords[Succ(i)], flRecords[i], SizeOf(Pointer) * (High(flRecords) - i));
+          Pointer(flRecords[High(flRecords)]) := nil;
+        end;
+        SetLength(flRecords, Pred(Length(flRecords)));
+      end else begin
+        Dec(flRecordsCount);
+        flRecords[flRecordsCount] := nil;
+      end;
+      raise;
     end;
   end;
 
@@ -4086,6 +4068,7 @@ begin;
   finally
     lMasters.Free;
     flOldMasters := nil;
+    flInvalidateReferencesInjected;
   end;
 end;
 
@@ -5402,6 +5385,8 @@ var
 begin
   if not IsElementEditable(nil) then
     raise Exception.Create('File "' + GetFileName + '" is not editable');
+  if GetIsNotPlugin then
+    Exit;
   if (GetElementCount < 1) or not Supports(GetElement(0), IwbContainerElementRef, Header) then
     raise Exception.CreateFmt('Unexpected error reading file "%s"', [flFileName]);
 
@@ -5552,10 +5537,12 @@ begin
           MastersUpdated(Old, New, lOldCount, lNewCount);
         end;
         SortRecords;
+        flInvalidateReferencesInjected;
       end;
       flProgress(Format('Removed %d unused masters.', [lRemovedCount]));
     finally
       flOldMasters := nil;
+      flInvalidateReferencesInjected;
     end;
   end
   else flProgress('Has no masters.');
@@ -5871,16 +5858,16 @@ function TwbFile.FileFileIDtoLoadOrderFileID(const aFileID: TwbFileID; aNew: Boo
 begin
   if flComplexFileFileID then case aFileID.ModuleType of
     mtLight:
-      if aFileID.LightSlot < GetLightMasterCount(aNew) then
+      if (aFileID.LightSlot >= 0) and (aFileID.LightSlot < GetLightMasterCount(aNew)) then
       Exit(GetLightMaster(aFileID.LightSlot, aNew).LoadOrderFileID);
     mtMedium:
-      if aFileID.MediumSlot < GetMediumMasterCount(aNew) then
+      if (aFileID.MediumSlot >= 0) and (aFileID.MediumSlot < GetMediumMasterCount(aNew)) then
         Exit(GetMediumMaster(aFileID.MediumSlot, aNew).LoadOrderFileID);
     mtFull:
-      if aFileID.FullSlot < GetFullMasterCount(aNew) then
+      if (aFileID.FullSlot >= 0) and (aFileID.FullSlot < GetFullMasterCount(aNew)) then
         Exit(GetFullMaster(aFileID.FullSlot, aNew).LoadOrderFileID);
   end else
-    if aFileID.FullSlot < GetMasterCount(aNew) then
+    if (aFileID.FullSlot >= 0) and (aFileID.FullSlot < GetMasterCount(aNew)) then
       Exit(GetMaster(aFileID.FullSlot, aNew).LoadOrderFileID);
 
   Result := GetResolvedLoadOrderFileID(aNew);
@@ -6675,6 +6662,8 @@ function TwbFile.GetFullMaster(aIndex: Integer; aNew: Boolean): IwbFile;
 begin
   //not very optimized... but should work for now
   Result := nil;
+  if aIndex < 0 then
+    Exit;
   for var lMasterIndex := 0 to Pred(GetMasterCount(aNew)) do
   begin
     Result := GetMaster(lMasterIndex, aNew);
@@ -6682,9 +6671,9 @@ begin
       Dec(aIndex);
       if aIndex < 0 then
         Exit;
-    end else
-      Result := nil;
+    end;
   end;
+  Result := nil;
 end;
 
 function TwbFile.GetFullMasterCount(aNew: Boolean): Integer;
@@ -7011,6 +7000,8 @@ function TwbFile.GetLightMaster(aIndex: Integer; aNew: Boolean): IwbFile;
 begin
   //not very optimized... but should work for now
   Result := nil;
+  if aIndex < 0 then
+    Exit;
   for var lMasterIndex := 0 to Pred(GetMasterCount(aNew)) do
   begin
     Result := GetMaster(lMasterIndex, aNew);
@@ -7018,9 +7009,9 @@ begin
       Dec(aIndex);
       if aIndex < 0 then
         Exit;
-    end else
-      Result := nil;
+    end;
   end;
+  Result := nil;
 end;
 
 function TwbFile.GetLightMasterCount(aNew: Boolean): Integer;
@@ -7058,15 +7049,19 @@ begin
   if aAllowSelf and IsNewRecord(aFileID, aNew) then
     Exit(Self);
 
+  Result := nil;
   if flComplexFileFileID then case aFileID.ModuleType of
     mtLight:
-      Exit(GetLightMaster(aFileID.LightSlot, True));
+      Result := GetLightMaster(aFileID.LightSlot, aNew);
     mtMedium:
-      Exit(GetMediumMaster(aFileID.MediumSlot, True));
+      Result := GetMediumMaster(aFileID.MediumSlot, aNew);
     mtFull:
-      Exit(GetFullMaster(aFileID.FullSlot, True));
-  end else
-    Exit(GetMaster(aFileID.FullSlot, True));
+      Result := GetFullMaster(aFileID.FullSlot, aNew);
+  end else if (aFileID.FullSlot >= 0) and (aFileID.FullSlot < GetMasterCount(aNew)) then
+    Result := GetMaster(aFileID.FullSlot, aNew);
+
+  if not Assigned(Result) and (fsIsCompareLoad in flStates) and (GetMasterCount(aNew) > 0) then
+    Result := GetMaster(Pred(GetMasterCount(aNew)), aNew);
 end;
 
 function TwbFile.GetMasterIndexForFileID(const aFileID: TwbFileID; aNew: Boolean): Integer;
@@ -7223,6 +7218,8 @@ function TwbFile.GetMediumMaster(aIndex: Integer; aNew: Boolean): IwbFile;
 begin
   //not very optimized... but should work for now
   Result := nil;
+  if aIndex < 0 then
+    Exit;
   for var lMasterIndex := 0 to Pred(GetMasterCount(aNew)) do
   begin
     Result := GetMaster(lMasterIndex, aNew);
@@ -7230,9 +7227,9 @@ begin
       Dec(aIndex);
       if aIndex < 0 then
         Exit;
-    end else
-      Result := nil;
+    end;
   end;
+  Result := nil;
 end;
 
 function TwbFile.GetMediumMasterCount(aNew: Boolean): Integer;
@@ -7344,7 +7341,7 @@ end;
 function TwbFile.GetResolvedLoadOrderFileID(aNew: Boolean): TwbFileID;
 begin
   if fsIsCompareLoad in flStates then begin
-    if GetMasterCount(True) > 0 then
+    if GetMasterCount(aNew) > 0 then
       Result := GetMaster(Pred(GetMasterCount(aNew)), aNew).ResolvedLoadOrderFileID[True]
     else
       Result := TwbFileID.Invalid;
@@ -8157,6 +8154,74 @@ begin
   IncGeneration;
 end;
 
+function TwbFile.InjectionTarget(const aFormID: TwbFormID): IwbFileInternal;
+begin
+  Result := nil;
+  if aFormID.IsHardcoded and not (fsIsGameMaster in flStates) then
+    Supports(flContextObj.GameMasterFile, IwbFileInternal, Result)
+  else
+    Supports(GetMasterForFileID(aFormID.FileID[flContextObj.SlotLayout], True, False), IwbFileInternal, Result);
+  if Assigned(Result) and Equals(Result) then
+    Result := nil;
+end;
+
+function TwbFile.IsOwnFormID(const aFormID: TwbFormID; aNew: Boolean): Boolean;
+begin
+  Result := IsNewRecord(aFormID.FileID[flContextObj.SlotLayout], aNew) and not (fsIsCompareLoad in flStates) and
+    not (aFormID.IsHardcoded and not (fsIsGameMaster in flStates));
+end;
+
+function TwbFile.HoldsInjected(const aRecord: IwbMainRecord): Boolean;
+var
+  i: Integer;
+begin
+  Result := (Length(flInjectedRecords) > 0) and FindInjectedID(aRecord.FixedFormID, i) and aRecord.Equals(flInjectedRecords[i]);
+end;
+
+procedure TwbFile.flRegisterWithMaster(const aRecord: IwbMainRecord; const aFormID: TwbFormID);
+begin
+  if IsOwnFormID(aFormID, True) then begin
+
+    if not flComplexFileFileID then begin
+
+      if (aFormID.ToCardinal and $00FFF000) <> 0 then begin
+        Exclude(flStates, fsLightCompatible);
+        if wbHasProgressCallback then
+          if GetIsLight or flLoadOrderFileID.IsLightSlot then
+            wbProgressCallback('<Error: ' + aRecord.Name + ' has invalid ObjectID ' + IntToHex64((aFormID.ToCardinal and $00FFFFFF),6) + ' for a light module. You will not be able to save this file with the Light flag active.>');
+      end;
+
+      if (aFormID.ToCardinal and $00FF0000) <> 0 then begin
+        Exclude(flStates, fsMediumCompatible);
+        if wbHasProgressCallback then
+          if GetIsMedium or flLoadOrderFileID.IsMediumSlot then
+            wbProgressCallback('<Error: ' + aRecord.Name + ' has invalid ObjectID ' + IntToHex64((aFormID.ToCardinal and $00FFFFFF),6) + ' for a medium module. You will not be able to save this file with the Medium flag active.>');
+      end;
+
+    end;
+
+    Exclude(flStates, fsUpdateCompatible);
+    if wbHasProgressCallback then
+      if GetIsUpdate then
+        wbProgressCallback('<Error: ' + aRecord.Name + ' has invalid ObjectID ' + IntToHex64((aFormID.ToCardinal and $00FFFFFF),6) + ' for an update module. You will not be able to save this file with the Update flag active.>');
+
+    {new record...}
+  end else try
+    var lMaster := GetMasterRecordByFormID(aFormID, True, True);
+    if Assigned(lMaster) then
+      (lMaster as IwbMainRecordInternal).AddOverride(aRecord)
+    else begin
+      var lTarget := InjectionTarget(aFormID);
+      if Assigned(lTarget) then
+        lTarget.InjectMainRecord(aRecord);
+    end;
+  except
+    on E: Exception do
+      if wbHasProgressCallback then
+        wbProgressCallback('Error: <' + e.Message + '> while trying to determine master record for ' + aRecord.Name);
+  end;
+end;
+
 procedure TwbFile.flUnregisterFromMaster(const aRecord: IwbMainRecord; aFormID: TwbFormID);
 begin
   var lIsHardcoded := aFormID.ObjectID[flContextObj.SlotLayout] < $800;
@@ -8169,14 +8234,17 @@ begin
 
   var lFileID := aFormID.FileID[flContextObj.SlotLayout];
 
-  if not lIsHardcoded and IsNewRecord(lFileID, True) then begin
+  if not lIsHardcoded and IsNewRecord(lFileID, True) and not (fsIsCompareLoad in flStates) then begin
     {record for this file}
   end else try
     var lMaster := GetMasterRecordByFormID(aFormID, True, True);
     if Assigned(lMaster) and ((lMaster as IwbElement) <> (aRecord as IwbElement)) then
       (lMaster as IwbMainRecordInternal).RemoveOverride(aRecord)
-    else
-      (GetMasterForFileID(lFileID, True, False) as IwbFileInternal).RemoveInjectedMainRecord(aRecord);
+    else begin
+      var lTarget := InjectionTarget(aFormID);
+      if Assigned(lTarget) then
+        lTarget.RemoveInjectedMainRecord(aRecord);
+    end;
   except
     on E: Exception do
       if wbHasProgressCallback then
@@ -8184,11 +8252,22 @@ begin
   end;
 end;
 
+procedure TwbFile.flInvalidateReferencesInjected;
+begin
+  for var lRecord in flRecords do
+    if Assigned(lRecord) then
+      (lRecord as IwbMainRecordInternal).InvalidateReferencesInjected;
+end;
+
 procedure TwbFile.flUnregisterRecords;
 begin
   for var lRecord in flRecords do
-    if Assigned(lRecord) and not lRecord.FixedFormID.IsNull then
-      flUnregisterFromMaster(lRecord, lRecord.FixedFormID);
+    if Assigned(lRecord) then try
+      var lFormID := lRecord.FixedFormID;
+      if not lFormID.IsNull then
+        flUnregisterFromMaster(lRecord, lFormID);
+    except
+    end;
 end;
 
 procedure TwbFile.Scan;
@@ -11830,6 +11909,8 @@ begin
   Exclude(mrStates, mrsOverridesSorted);
   mrMasterAndLeafs := nil;
   mrChainStamp := ContextObj.NextStamp;
+  if (mrReferencedByCount > 0) and ContextObj.LoaderDone then
+    InvalidateReferencers;
 end;
 
 {$IFDEF USE_PARALLEL_BUILD_REFS}
@@ -14999,6 +15080,22 @@ begin
   Result := GetFlags.IsInitiallyDisabled;
 end;
 
+function TwbMainRecord.ListedInjectedIn: IwbFileInternal;
+begin
+  Result := nil;
+  if Assigned(mrMaster) then
+    Exit;
+  var lFile: IwbFileInternal;
+  if not Supports(GetFile, IwbFileInternal, lFile) then
+    Exit;
+  var lFormID := GetFixedFormID;
+  if lFormID.IsNull or lFile.IsOwnFormID(lFormID, GetMastersUpdated) then
+    Exit;
+  Result := lFile.InjectionTarget(lFormID);
+  if Assigned(Result) and not Result.HoldsInjected(Self) then
+    Result := nil;
+end;
+
 function TwbMainRecord.GetIsInjected: Boolean;
 begin
   var lRefHold: TRefGuard;
@@ -15007,11 +15104,9 @@ begin
     var _File := GetFile;
     var FormID := GetFixedFormID;
     if Assigned(_File) and
-       not Assigned(mrMaster) and
-       not FormID.IsNull and
-           (not _File.IsNewRecord(FormID, GetMastersUpdated)) and
        not (fsIsHardcoded in _File.FileStates) and
-       ((gcFormIDInRecordHeader in GameDefObj.Capabilities) or (FormID.FileID[ContextObj.SlotLayout].FullSlot > 0)) then
+       ((gcFormIDInRecordHeader in GameDefObj.Capabilities) or (FormID.FileID[ContextObj.SlotLayout].FullSlot > 0)) and
+       (ListedInjectedIn <> nil) then
       Include(mrStates, mrsIsInjected)
     else
       Exclude(mrStates, mrsIsInjected);
@@ -15417,8 +15512,20 @@ end;
 function TwbMainRecord.GetReferenceFile: IwbFile;
 begin
   Result := GetFile;
-  if Assigned(Result) then
-    Result := Result.GetMasterForFileID(GetFormID.FileID[ContextObj.SlotLayout], GetMastersUpdated, True);
+  if not Assigned(Result) then
+    Exit;
+  var lLayout := ContextObj.SlotLayout;
+  var lFormID := GetFormID;
+  if not lFormID.IsNull and
+     (lFormID.ObjectID[lLayout] < $800) and
+     (Result.FileStates * [fsIsGameMaster, fsIsHardcoded] = []) and
+     not Result.AllowHardcodedRangeUse
+  then begin
+    var lGameMaster := ContextObj.GameMasterFile;
+    if Assigned(lGameMaster) then
+      Exit(lGameMaster);
+  end;
+  Result := Result.GetMasterForFileID(lFormID.FileID[lLayout], GetMastersUpdated, True);
 end;
 
 function TwbMainRecord.GetReference(aIndex: Integer): IwbMainRecord;
@@ -17141,7 +17248,8 @@ begin
       SortOverrides;
       lMaster := mrOverrides[0];
       (lMaster as IwbMainRecordInternal).YouAreTheMaster(mrOverrides, mrReferencedBy, mrReferencedByCount);
-    end;
+    end else
+      InvalidateReferencers;
 
   mrMaster := nil;
   mrOverrides := nil;
@@ -17249,6 +17357,7 @@ begin
   DoInit(False);
 
   Result := False;
+  InvalidateReferencesInjected;
   if GetReferencesInjected then begin
     if GetSignature = 'SCPT' then begin
       Element := GetElementByName('References');
@@ -17307,6 +17416,8 @@ begin
   SetLength(mrOverrides, j);
   mrMasterAndLeafs := nil;
   ResetConflict;
+  if (mrReferencedByCount > 0) and ContextObj.LoaderDone then
+    InvalidateReferencers;
 end;
 
 procedure TwbMainRecord.RemoveReferencedBy(const aMainRecord: IwbMainRecord);
@@ -17919,7 +18030,8 @@ begin
       if Length(mrOverrides) > 0 then begin
         SortOverrides;
         (mrOverrides[0] as IwbMainRecordInternal).YouAreTheMaster(mrOverrides, mrReferencedBy, mrReferencedByCount);
-      end;
+      end else
+        InvalidateReferencers;
 
     mrMaster := nil;
     mrOverrides := nil;
@@ -17942,7 +18054,7 @@ begin
 
     _File.AddMainRecord(Self);
   
-    if Assigned(Master) and Master.IsInjected and not Assigned(mrMaster) then
+    if Assigned(Master) and not Assigned(mrMaster) and ((Master as IwbMainRecordInternal).ListedInjectedIn <> nil) then
       (Master as IwbMainRecordInternal).YouGotAMaster(Self);
 
     ResetConflict;
@@ -18051,15 +18163,10 @@ begin
   mrePrev := Pointer(aEntry);
 end;
 
-procedure TwbMainRecord.SetReferencesInjected(aValue: Boolean);
+procedure TwbMainRecord.InvalidateReferencesInjected;
 begin
-  if aValue then begin
-    Include(mrStates, mrsReferencesInjectedChecked);
-    Include(mrStates, mrsReferencesInjected);
-  end else begin
-    Exclude(mrStates, mrsReferencesInjectedChecked);
-    Exclude(mrStates, mrsReferencesInjected);
-  end;
+  Exclude(mrStates, mrsReferencesInjectedChecked);
+  Exclude(mrStates, mrsReferencesInjected);
 end;
 
 function CompareReferencedByFile(Item1, Item2: Pointer): Integer;
@@ -18081,6 +18188,12 @@ begin
   if Length(mrOverrides) > 1 then
     wbMergeSortPtr(@mrOverrides[0], Length(mrOverrides), CompareOverrides);
   Include(mrStates, mrsOverridesSorted);
+end;
+
+procedure TwbMainRecord.InvalidateReferencers;
+begin
+  for var lRefByIdx := 0 to Pred(mrReferencedByCount) do
+    (mrReferencedBy[lRefByIdx] as IwbMainRecordInternal).InvalidateReferencesInjected;
 end;
 
 procedure TwbMainRecord.SortReferencedBy;
@@ -18631,21 +18744,21 @@ begin
   mrReferencedBy := aReferencedBy;
   mrReferencedBySize := Length(mrReferencedBy);
   mrReferencedByCount := aReferencedByCount;
-
-  for var lReferenceByIndex := 0 to Pred(mrReferencedByCount) do
-    (mrReferencedBy[lReferenceByIndex] as IwbMainRecordInternal).SetReferencesInjected(True);
+  mrReferencedByUnsorted := True;
 
   var lFile := GetFile;
-  if not Assigned(lFile) then
-    Exit;
-
-  var lMasterFile := lFile.GetMasterForFileID(GetFormID.FileID[ContextObj.SlotLayout], GetMastersUpdated, False);
-  if not Assigned(lMasterFile) then
-    Exit;
-  (lMasterFile as IwbFileInternal).InjectMainRecord(Self);
-
-  Include(mrStates, mrsIsInjectedChecked);
-  Include(mrStates, mrsIsInjected);
+  try
+    if Assigned(lFile) then begin
+      var lMasterFile := (lFile as IwbFileInternal).InjectionTarget(GetFixedFormID);
+      if Assigned(lMasterFile) then begin
+        if not lMasterFile.HoldsInjected(Self) then
+          lMasterFile.InjectMainRecord(Self);
+        Exclude(mrStates, mrsIsInjectedChecked);
+      end;
+    end;
+  finally
+    InvalidateReferencers;
+  end;
 end;
 
 procedure TwbMainRecord.YouAreTheMaster(const aOldMaster: IwbMainRecord; const aOverrides, aReferencedBy: TDynMainRecords; aReferencedByCount: Integer);
@@ -18680,23 +18793,22 @@ begin
   mrReferencedBy := aReferencedBy;
   mrReferencedBySize := Length(mrReferencedBy);
   mrReferencedByCount := aReferencedByCount;
+  mrReferencedByUnsorted := True;
 
-  Exclude(mrStates, mrsIsInjectedChecked);
-  var lIsInjected := GetIsInjected;
-
-  for var lRefByIdx := 0 to Pred(mrReferencedByCount) do
-    (mrReferencedBy[lRefByIdx] as IwbMainRecordInternal).SetReferencesInjected(lIsInjected);
-
-  if lIsInjected then begin
-    var lInjectionMaster: IwbFileInternal;
-    var lFile := GetFile;
-    if Assigned(lFile) then begin
+  var lFile: IwbFileInternal;
+  try
+    if Supports(GetFile, IwbFileInternal, lFile) then begin
       var lFormID := GetFixedFormID;
-      var lFileID := lFormID.FileID[ContextObj.SlotLayout];
-      lInjectionMaster := lFile.GetMasterForFileID(lFileId, True, False) as IwbFileInternal;
+      if not lFormID.IsNull and not lFile.IsOwnFormID(lFormID, GetMastersUpdated) then begin
+        var lInjectionMaster := lFile.InjectionTarget(lFormID);
+        if Assigned(lInjectionMaster) and not lInjectionMaster.HoldsInjected(Self) then
+          lInjectionMaster.InjectMainRecord(Self);
+      end;
     end;
-    if Assigned(lInjectionMaster) then
-      lInjectionMaster.InjectMainRecord(Self);
+
+    Exclude(mrStates, mrsIsInjectedChecked);
+  finally
+    InvalidateReferencers;
   end;
 end;
 
@@ -18708,20 +18820,9 @@ begin
 
   var lSelfRef := Self as IwbMainRecord;
 
-  var lIsInjected := GetIsInjected;
-  var lInjectionMaster: IwbFileInternal;
-
-  if lIsInjected then begin
-    var lFile := GetFile;
-    if Assigned(lFile) then begin
-      var lFormID := GetFixedFormID;
-      var lFileID := lFormID.FileID[ContextObj.SlotLayout];
-      lInjectionMaster := lFile.GetMasterForFileID(lFileId, True, False) as IwbFileInternal;
-    end;
-  end;
-
   Assert(Assigned(aMaster));
   Assert(not Assigned(mrMaster));
+  var lInjectionMaster := ListedInjectedIn;
   if Assigned(lInjectionMaster) then
     lInjectionMaster.RemoveInjectedMainRecord(Self);
 

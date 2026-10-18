@@ -168,6 +168,7 @@ type
     StateManifest         : string;
     FileLists             : string;
     ToolModeAuto          : Boolean;
+    ToolModeFault         : Boolean;
     ViewTree              : Boolean;
     ViewTreeFile          : string;
     ViewTreeList          : string;
@@ -359,6 +360,7 @@ begin
   ToolModeAuto := FindCmdLineSwitch('testtoolmodeauto');
   if ToolModeAuto then
     xeAutoLoad := True;
+  ToolModeFault := FindCmdLineSwitch('testtoolmodefault');
 end;
 
 function TxeTestSwitches.ParseEdit: Boolean;

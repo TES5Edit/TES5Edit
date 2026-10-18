@@ -66,6 +66,7 @@ function xeDoInit: Boolean;
 procedure xeInitStyles;
 function xeNexusModsUrl: string;
 function xeUnattended: Boolean;
+function xeFailureExitCode: Integer;
 procedure xeSaveLogs(const aText: string; aAllowReplace: Boolean);
 
 implementation
@@ -640,7 +641,7 @@ begin
   end else if isMode('clearESM') then begin
     xeToolMode    := tmESPify;
     xeToolName    := 'ClearingESMflag';
-  end else if isMode('SortAndClean') then begin
+  end else if isMode('SortAndClean') or isMode('SortAndCleanMasters') then begin
     xeToolMode    := tmSortAndCleanMasters;
     xeToolName    := 'SortAndCleanMasters';
   end else if isMode('CheckForErrors') then begin
@@ -1205,6 +1206,14 @@ begin
   Result := xeAutoExit or (xeToolMode in wbPluginModes);
 end;
 
+function xeFailureExitCode: Integer;
+begin
+  if xeToolMode in wbPluginModes then
+    Result := 255
+  else
+    Result := 1;
+end;
+
 procedure xeSaveLogs(const aText: string; aAllowReplace: Boolean);
 
   procedure SaveLog(const s: string);
@@ -1234,7 +1243,8 @@ procedure xeSaveLogs(const aText: string; aAllowReplace: Boolean);
   end;
 
 begin
-  SaveLog(wbProgramPath + xeContext.GameDefObj.AppName + xeToolName + '_log.txt');
+  if Assigned(xeContext) then
+    SaveLog(wbProgramPath + xeContext.GameDefObj.AppName + xeToolName + '_log.txt');
   if xeLogFile <> '' then
     SaveLog(xeLogFile);
 end;
@@ -1329,7 +1339,11 @@ begin
     on E: Exception do begin
       Result := False;
       if not (E is EAbort) then
-        ShowMessage('Initialization failed: [' + E.ClassName + '] ' + E.Message);
+        if xeUnattended then begin
+          xeSaveLogs('Initialization failed: [' + E.ClassName + '] ' + E.Message, True);
+          ExitCode := xeFailureExitCode;
+        end else
+          ShowMessage('Initialization failed: [' + E.ClassName + '] ' + E.Message);
     end;
   end;
 end;
