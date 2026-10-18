@@ -13020,6 +13020,7 @@ begin
     mniNavRenumberFormIDsFrom.Visible and
     lGameDef.IsMediumSupported and
     Supports(Element, IwbFile, _File) and
+    _File.HasLoadOrderFileID and
     _File.LoadOrderFileID.IsFullSlot and
     not (_File.IsLight or _File.IsMedium or _File.IsUpdate);
 
