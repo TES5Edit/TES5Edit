@@ -5458,6 +5458,10 @@ begin
 
       FillChar(UsedMasters, SizeOf(UsedMasters), 0);
       FindUsedMasters(@UsedMasters);
+      if fsIsCompareLoad in flStates then
+        for i := Low(flMasters) to High(flMasters) do
+          if flMasters[i].Equals(flCompareToFile) then
+            UsedMasters[i] := True;
       //!!! SF1 support
       KeepMasters := TStringList.Create;
       KeepMasters.Sorted := True;
@@ -5488,8 +5492,7 @@ begin
         begin
           if UsedMasters[i] or
              SameText(flMasters[i].FileName, flContextObj.GameDefObj.GameMasterEsm) or
-             KeepMasters.Find(flMasters[i].FileName, k) or
-             ((fsIsCompareLoad in flStates) and flMasters[i].Equals(flCompareToFile))
+             KeepMasters.Find(flMasters[i].FileName, k)
           then begin
 
             if i <> j then begin
