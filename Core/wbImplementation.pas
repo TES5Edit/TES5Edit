@@ -3206,7 +3206,7 @@ begin
 
       s := lLine[2];
       j := StrToIntDef(s, -1);
-      if (j < 0) or (j > $FFFFFF) then begin
+      if (j < 0) or (Cardinal(j) > lOldMaster.FileFileID[True].ModuleType.MaxObjectID) then begin
         Report('Skipping line '+IntToStr(i+1)+': Old FormID "'+s+'" is not in the valid range.');
         Continue;
       end;
@@ -3218,7 +3218,7 @@ begin
 
       s := lLine[6];
       j := StrToIntDef(s, -1);
-      if (j < 0) or (j > $FFFFFF) then begin
+      if (j < 0) or (Cardinal(j) > lNewMaster.FileFileID[True].ModuleType.MaxObjectID) then begin
         Report('Skipping line '+IntToStr(i+1)+': New FormID "'+s+'" is not in the valid range.');
         Continue;
       end;
