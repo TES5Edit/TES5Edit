@@ -11055,6 +11055,7 @@ var
     i             : Integer;
     c             : Cardinal;
     TargetIsLight : Boolean;
+    TargetIsMedium: Boolean;
     LowestFormID  : Cardinal;
   begin
     Result := False;
@@ -11142,17 +11143,22 @@ var
     else begin
       s := '';
       TargetIsLight := lPlan.Target.TakesLightObjectIDs;
+      TargetIsMedium := not TargetIsLight and (lPlan.Target.IsMedium or lPlan.Target.LoadOrderFileID.IsMediumSlot);
       repeat
         if s <> '' then
           ShowMessage('"'+s+'" is not a valid start FormID.')
         else begin
           c := lPlan.Target.NextObjectID and $FFFFFF;
           if TargetIsLight then
-            c := c and $FFF;
+            c := c and $FFF
+          else if TargetIsMedium then
+            c := c and $FFFF;
           if c < LowestFormID then
             c := LowestFormID;
           if TargetIsLight then
             s := IntToHex(c, 3)
+          else if TargetIsMedium then
+            s := IntToHex(c, 4)
           else
             s := IntToHex(c, 6);
         end;
@@ -11160,13 +11166,17 @@ var
         if TargetIsLight then begin
           if not InputQuery('Start from...', 'Please enter the new module specific start FormID in hex. e.g. 800. Specify only the last 3 digits. (Target is Light)', s) then
             Exit;
+        end else if TargetIsMedium then begin
+          if not InputQuery('Start from...', 'Please enter the new module specific start FormID in hex. e.g. 0800. Specify only the last 4 digits. (Target is Medium)', s) then
+            Exit;
         end else begin
           if not InputQuery('Start from...', 'Please enter the new module specific start FormID in hex. e.g. 200000. Specify only the last 6 digits.', s) then
             Exit;
         end;
 
         lPlan.Start := TwbFormID.FromStrDef(s, 0);
-      until (lPlan.Start.FileID[lLayout].FullSlot = 0) and not (lPlan.Start.ToCardinal < LowestFormID) and (not TargetIsLight or (lPlan.Start.ObjectID[lLayout] <= $FFF));
+      until (lPlan.Start.FileID[lLayout].FullSlot = 0) and not (lPlan.Start.ToCardinal < LowestFormID) and (not TargetIsLight or (lPlan.Start.ObjectID[lLayout] <= $FFF)) and
+        (not TargetIsMedium or (lPlan.Start.ObjectID[lLayout] <= $FFFF));
     end;
 
     SourceFile.PlanFormIDChange(lPlan);
