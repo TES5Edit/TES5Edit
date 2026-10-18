@@ -2840,11 +2840,14 @@ begin
     else
       lEnd := TwbFormID.FromCardinal($FFFFFF).ChangeFileID(lLayout, lTarget.LoadOrderFileID);
   end else begin
-    if not OffsetFits(j) then begin
+    if not OffsetFits(Pred(j)) then begin
       Refuse(fcrTooMany);
       Exit;
     end;
-    lEnd := lStart.Offset(lLayout, j);
+    if OffsetFits(j) then
+      lEnd := lStart.Offset(lLayout, j)
+    else
+      lEnd := lStart.Offset(lLayout, Pred(j));
     aPlan.HighFormID := lEnd;
   end;
   lFloor := lTarget.ObjectIDFloor;
