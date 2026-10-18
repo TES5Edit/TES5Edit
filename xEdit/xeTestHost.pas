@@ -73,6 +73,7 @@ type
     TestDeltaPatchLines      : TStringList;
     TestDeltaPatchTimer      : TTimer;
     TestDeltaPatchCancelled  : Boolean;
+    TestDeltaPatchComparing  : Boolean;
     TestHideTimer            : TTimer;
     TestMergeLines           : TStringList;
     TestMergeTimer           : TTimer;
@@ -229,6 +230,7 @@ type
     DeltaPatchHideRecord  : string;
     DeltaPatchCancel      : Boolean;
     DeltaPatchSave        : string;
+    DeltaPatchCompareTo   : string;
     Merge                 : Boolean;
     MergeFile             : string;
     MergeSource           : string;
@@ -557,12 +559,13 @@ begin
        not wbFindCmdLineParam('testdeltapatchname', DeltaPatchName) then begin
       ShowMessage('testdeltapatch requires -testdeltapatch:<filename> -testdeltapatchmaster:<module> ' +
         '-testdeltapatchnewer:<file> -testdeltapatchname:<name> [-testdeltapatchhide:<module>] [-testdeltapatchhiderec:<formid>] ' +
-        '[-testdeltapatchcancel] [-testdeltapatchsave:<file>]');
+        '[-testdeltapatchcancel] [-testdeltapatchsave:<file>] [-testdeltapatchcompareto:<file>]');
       Exit(False);
     end;
     wbFindCmdLineParam('testdeltapatchhide', DeltaPatchHide);
     wbFindCmdLineParam('testdeltapatchhiderec', DeltaPatchHideRecord);
     wbFindCmdLineParam('testdeltapatchsave', DeltaPatchSave);
+    wbFindCmdLineParam('testdeltapatchcompareto', DeltaPatchCompareTo);
     DeltaPatchCancel := FindCmdLineSwitch('testdeltapatchcancel');
     DeltaPatch := True;
     xeAutoLoad       := True;

@@ -102,6 +102,7 @@ type
     procedure TestChangeFormIDOnClose;
     procedure TestDeltaPatchStates(const aWhen: string);
     procedure TestDeltaPatchWrite;
+    procedure TestDeltaPatchLoad(const aMaster: IwbFile);
     procedure TestDeltaPatchCancelTimer(Sender: TObject);
     procedure TestHideRunTimer(Sender: TObject);
     procedure TestOptionsRunTimer(Sender: TObject);
@@ -3434,11 +3435,52 @@ begin
   end;
 end;
 
+procedure TxeTestFormHelper.TestDeltaPatchLoad(const aMaster: IwbFile);
+var
+  lRecord : IwbMainRecord;
+  lTarget : string;
+begin
+  TestDeltaPatchStates('loaded');
+  if xeTestSwitches.DeltaPatchHide <> '' then
+    for var i := Low(Files) to High(Files) do
+      if SameText(Files[i].FileName, xeTestSwitches.DeltaPatchHide) then
+        ConflictView.Hidden.Hide(Files[i]);
+  if xeTestSwitches.DeltaPatchHideRecord <> '' then begin
+    lRecord := aMaster.RecordByFormID[TwbFormID.FromStr(xeTestSwitches.DeltaPatchHideRecord), True, True];
+    if not Assigned(lRecord) then
+      raise Exception.Create('no record ' + xeTestSwitches.DeltaPatchHideRecord + ' in ' + aMaster.FileName);
+    ConflictView.Hidden.Hide(lRecord);
+  end;
+  TestDeltaPatchStates('before');
+
+  lTarget := xeContext.Settings.DataPath + xeTestSwitches.DeltaPatchName + '.esu';
+  if FileExists(lTarget) then
+    raise Exception.Create(lTarget + ' already exists');
+  if not CopyFile(PChar(xeTestSwitches.DeltaPatchNewer), PChar(lTarget), True) then
+    RaiseLastOSError;
+  TestHost.TestDeltaPatchLines.Add('# delta patch file = ' + lTarget);
+
+  vstNav.PopupMenu := nil;
+  bnMainMenu.Enabled := False;
+  xeContext.LoaderDone := False;
+  xeContext.LoaderError := False;
+  DoSetActiveRecord(nil);
+  mniNavFilterRemoveClick(Self);
+  wbStartTime := Now;
+  DoSetActiveRecord(nil);
+  pgMain.ActivePage := tbsMessages;
+  TLoaderThread.Create(lTarget, aMaster, [fsIsDeltaPatch]);
+  if xeTestSwitches.DeltaPatchCancel then begin
+    TestHost.TestDeltaPatchTimer := TTimer.Create(Self);
+    TestHost.TestDeltaPatchTimer.Interval := 50;
+    TestHost.TestDeltaPatchTimer.OnTimer := TestDeltaPatchCancelTimer;
+    TestHost.TestDeltaPatchTimer.Enabled := True;
+  end;
+end;
+
 procedure TxeTestFormHelper.DoTestDeltaPatchStart;
 var
   lMaster : IwbFile;
-  lRecord : IwbMainRecord;
-  lTarget : string;
 begin
   xeContext.Settings.DontSave := True;
   EditWarnOk := True;
@@ -3448,6 +3490,8 @@ begin
   TestHost.TestDeltaPatchLines.Add('# ' + xeApplicationTitle);
   TestHost.TestDeltaPatchLines.Add('# master = ' + xeTestSwitches.DeltaPatchMaster + ', newer = ' + xeTestSwitches.DeltaPatchNewer +
     ', name = ' + xeTestSwitches.DeltaPatchName + ', hide = ' + xeTestSwitches.DeltaPatchHide + ', hide record = ' + xeTestSwitches.DeltaPatchHideRecord);
+  if xeTestSwitches.DeltaPatchCompareTo <> '' then
+    TestHost.TestDeltaPatchLines.Add('# compare to = ' + xeTestSwitches.DeltaPatchCompareTo);
   TestHost.TestDeltaPatchLines.Add('# Columns, tab separated: what / when / name / states');
   try
     lMaster := nil;
@@ -3456,42 +3500,16 @@ begin
         lMaster := Files[i];
     if not Assigned(lMaster) then
       raise Exception.Create('no module ' + xeTestSwitches.DeltaPatchMaster);
-    TestDeltaPatchStates('loaded');
-    if xeTestSwitches.DeltaPatchHide <> '' then
-      for var i := Low(Files) to High(Files) do
-        if SameText(Files[i].FileName, xeTestSwitches.DeltaPatchHide) then
-          ConflictView.Hidden.Hide(Files[i]);
-    if xeTestSwitches.DeltaPatchHideRecord <> '' then begin
-      lRecord := lMaster.RecordByFormID[TwbFormID.FromStr(xeTestSwitches.DeltaPatchHideRecord), True, True];
-      if not Assigned(lRecord) then
-        raise Exception.Create('no record ' + xeTestSwitches.DeltaPatchHideRecord + ' in ' + xeTestSwitches.DeltaPatchMaster);
-      ConflictView.Hidden.Hide(lRecord);
+    if xeTestSwitches.DeltaPatchCompareTo <> '' then begin
+      TestHost.TestDeltaPatchComparing := True;
+      DoCompareTo(lMaster, xeTestSwitches.DeltaPatchCompareTo);
+      if xeContext.LoaderDone then begin
+        TestHost.TestDeltaPatchComparing := False;
+        raise Exception.Create('the compare load of ' + xeTestSwitches.DeltaPatchCompareTo + ' did not start');
+      end;
+      Exit;
     end;
-    TestDeltaPatchStates('before');
-
-    lTarget := xeContext.Settings.DataPath + xeTestSwitches.DeltaPatchName + '.esu';
-    if FileExists(lTarget) then
-      raise Exception.Create(lTarget + ' already exists');
-    if not CopyFile(PChar(xeTestSwitches.DeltaPatchNewer), PChar(lTarget), True) then
-      RaiseLastOSError;
-    TestHost.TestDeltaPatchLines.Add('# delta patch file = ' + lTarget);
-
-    vstNav.PopupMenu := nil;
-    bnMainMenu.Enabled := False;
-    xeContext.LoaderDone := False;
-    xeContext.LoaderError := False;
-    DoSetActiveRecord(nil);
-    mniNavFilterRemoveClick(Self);
-    wbStartTime := Now;
-    DoSetActiveRecord(nil);
-    pgMain.ActivePage := tbsMessages;
-    TLoaderThread.Create(lTarget, lMaster, [fsIsDeltaPatch]);
-    if xeTestSwitches.DeltaPatchCancel then begin
-      TestHost.TestDeltaPatchTimer := TTimer.Create(Self);
-      TestHost.TestDeltaPatchTimer.Interval := 50;
-      TestHost.TestDeltaPatchTimer.OnTimer := TestDeltaPatchCancelTimer;
-      TestHost.TestDeltaPatchTimer.Enabled := True;
-    end;
+    TestDeltaPatchLoad(lMaster);
   except
     on E: Exception do begin
       AddMessage('[Test Delta Patch] FAILED: ' + E.ClassName + ': ' + E.Message);
@@ -3544,6 +3562,31 @@ var
 begin
   if not Assigned(TestHost.TestDeltaPatchLines) then
     Exit;
+  if TestHost.TestDeltaPatchComparing then begin
+    TestHost.TestDeltaPatchComparing := False;
+    try
+      if xeContext.LoaderError then
+        raise Exception.Create('the compare load failed');
+      var lCopy: IwbFile := nil;
+      for var i := High(Files) downto Low(Files) do
+        if (fsIsCompareLoad in Files[i].FileStates) and not (fsIsDeltaPatch in Files[i].FileStates) and
+           Assigned(Files[i].CompareToFile) and SameText(Files[i].CompareToFile.FileName, xeTestSwitches.DeltaPatchMaster) then begin
+          lCopy := Files[i];
+          Break;
+        end;
+      if not Assigned(lCopy) then
+        raise Exception.Create('no compare copy of ' + xeTestSwitches.DeltaPatchMaster + ' is loaded');
+      TestHost.TestDeltaPatchLines.Add('# the delta patch is made of the compare copy ' + lCopy.FileName);
+      TestDeltaPatchLoad(lCopy);
+    except
+      on E: Exception do begin
+        AddMessage('[Test Delta Patch] FAILED: ' + E.ClassName + ': ' + E.Message);
+        TestHost.TestDeltaPatchLines.Add('# FAILED: ' + E.ClassName + ': ' + E.Message);
+        TestDeltaPatchWrite;
+      end;
+    end;
+    Exit;
+  end;
   try
     if xeContext.LoaderError then
       raise Exception.Create('the delta patch load failed');
@@ -3553,6 +3596,8 @@ begin
       if fsIsDeltaPatch in Files[i].FileStates then begin
         lFound := True;
         TestHost.TestDeltaPatchLines.Add('patch' + #9 + Files[i].FileName + #9 + 'records ' + IntToStr(Files[i].RecordCount));
+        if (xeTestSwitches.DeltaPatchCompareTo <> '') and Assigned(Files[i].CompareToFile) then
+          TestHost.TestDeltaPatchLines.Add('patchmaster' + #9 + Files[i].CompareToFile.FileName);
         for var j := 0 to Pred(Files[i].RecordCount) do begin
           lRecord := Files[i].Records[j];
           TestHost.TestDeltaPatchLines.Add('patchrecord' + #9 + string(lRecord.Signature) + #9 + IntToHex(lRecord.LoadOrderFormID.ToCardinal, 8) + #9 +
