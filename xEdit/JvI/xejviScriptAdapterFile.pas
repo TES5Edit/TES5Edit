@@ -83,7 +83,7 @@ var
 begin
   Value := False;
   if Supports(IInterface(Args.Values[0]), IwbFile, _File) then
-    if (_File.LoadOrderFileID.IsLightSlot = true) then
+    if _File.HasLoadOrderFileID and (_File.LoadOrderFileID.IsLightSlot = true) then
         Value :=  true;
 end;
 
@@ -93,7 +93,7 @@ var
 begin
   Value := False;
   if Supports(IInterface(Args.Values[0]), IwbFile, _File) then
-    if (_File.LoadOrderFileID.IsMediumSlot = true) then
+    if _File.HasLoadOrderFileID and (_File.LoadOrderFileID.IsMediumSlot = true) then
         Value :=  true;
 end;
 
@@ -171,7 +171,7 @@ var
   _File: IwbFile;
 begin
   Value := -1;
-  if Supports(IInterface(Args.Values[0]), IwbFile, _File) then
+  if Supports(IInterface(Args.Values[0]), IwbFile, _File) and _File.HasLoadOrderFileID then
     Value := _File.LoadOrderFileID.ToString;
 end;
 
