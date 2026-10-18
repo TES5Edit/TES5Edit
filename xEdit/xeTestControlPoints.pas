@@ -4585,7 +4585,7 @@ begin
 
     for var i := 0 to Pred(lSource.RecordCount) do begin
       lRecord := lSource.Records[i];
-      if lRecord.LoadOrderFormID.FileID[lLayout] = lSource.LoadOrderFileID then begin
+      if lSource.HasLoadOrderFileID and (lRecord.LoadOrderFormID.FileID[lLayout] = lSource.LoadOrderFileID) then begin
         lOwn := lOwn + [lRecord];
         lBefore := lBefore + [lRecord.LoadOrderFormID];
       end;
