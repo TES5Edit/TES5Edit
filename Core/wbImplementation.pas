@@ -7278,6 +7278,10 @@ function TwbFile.GetModuleType: TwbModuleType;
 begin
   if Assigned(flModule) then
     Result := flModule.GetModuleType
+  else if GetIsLightDirect then
+    Result := mtLight
+  else if GetIsMediumDirect then
+    Result := mtMedium
   else
     Result := mtFull;
 end;
