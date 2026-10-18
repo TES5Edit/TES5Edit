@@ -5862,20 +5862,30 @@ begin
 end;
 
 function TwbFile.FileFileIDtoLoadOrderFileID(const aFileID: TwbFileID; aNew: Boolean): TwbFileID;
+
+  function MasterFileID(const aMaster: IwbFile): TwbFileID;
+  begin
+    if aMaster.HasLoadOrderFileID then
+      Exit(aMaster.LoadOrderFileID);
+    Result := aMaster.ResolvedLoadOrderFileID[True];
+    if not Result.IsValid then
+      raise EFileNoSlotExecption.Create('File has no slot assigned');
+  end;
+
 begin
   if flComplexFileFileID then case aFileID.ModuleType of
     mtLight:
       if (aFileID.LightSlot >= 0) and (aFileID.LightSlot < GetLightMasterCount(aNew)) then
-      Exit(GetLightMaster(aFileID.LightSlot, aNew).LoadOrderFileID);
+      Exit(MasterFileID(GetLightMaster(aFileID.LightSlot, aNew)));
     mtMedium:
       if (aFileID.MediumSlot >= 0) and (aFileID.MediumSlot < GetMediumMasterCount(aNew)) then
-        Exit(GetMediumMaster(aFileID.MediumSlot, aNew).LoadOrderFileID);
+        Exit(MasterFileID(GetMediumMaster(aFileID.MediumSlot, aNew)));
     mtFull:
       if (aFileID.FullSlot >= 0) and (aFileID.FullSlot < GetFullMasterCount(aNew)) then
-        Exit(GetFullMaster(aFileID.FullSlot, aNew).LoadOrderFileID);
+        Exit(MasterFileID(GetFullMaster(aFileID.FullSlot, aNew)));
   end else
     if (aFileID.FullSlot >= 0) and (aFileID.FullSlot < GetMasterCount(aNew)) then
-      Exit(GetMaster(aFileID.FullSlot, aNew).LoadOrderFileID);
+      Exit(MasterFileID(GetMaster(aFileID.FullSlot, aNew)));
 
   Result := GetResolvedLoadOrderFileID(aNew);
   if not Result.IsValid then
@@ -8452,7 +8462,7 @@ begin
     if fsIsCompareLoad in flStates then begin
       if not Assigned(flCompareToFile) then
         flCompareToFile := flContextObj.FileByName(flCompareTo);
-      if Assigned(flCompareToFile) then begin
+      if Assigned(flCompareToFile) and flCompareToFile.HasLoadOrderFileID then begin
         flLoadOrderFileID := flCompareToFile.LoadOrderFileID
       end else
         flLoadOrderFileID := TwbFileID.CreateFull($FF);
