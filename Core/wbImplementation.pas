@@ -892,7 +892,7 @@ type
     function GetHasLoadOrderFileID: Boolean;
     function GetResolvedLoadOrderFileID(aNew: Boolean): TwbFileID;
     function GetFileFileID(aNewMasters : Boolean): TwbFileID;
-    function GetLastMasterFileID(aNew: Boolean): TwbFileID;
+    function GetCompareSelfFileID(aNew: Boolean): TwbFileID;
 
     function LoadOrderFormIDtoFileFormID(const aFormID: TwbFormID; aNew: Boolean): TwbFormID;
     function FileFormIDtoLoadOrderFormID(const aFormID: TwbFormID; aNew: Boolean): TwbFormID;
@@ -6449,8 +6449,8 @@ function TwbFile.GetContainedRecordByLoadOrderFormID(const aFormID: TwbFormID; a
   begin
     if flComplexFileFileID then begin
       if aFileID = flLoadOrderFileID then
-        if (fsIsCompareLoad in flStates) and (GetMasterCount(False) > 0) then
-          Exit(GetLastMasterFileID(False))
+        if fsIsCompareLoad in flStates then
+          Exit(GetCompareSelfFileID(False))
         else
           Exit(GetFileFileID(False));
 
@@ -6648,9 +6648,15 @@ begin
     Result := TwbFileID.CreateFull(GetMasterCount(aNewMasters));
 end;
 
-function TwbFile.GetLastMasterFileID(aNew: Boolean): TwbFileID;
+function TwbFile.GetCompareSelfFileID(aNew: Boolean): TwbFileID;
 begin
-  case GetMaster(Pred(GetMasterCount(aNew)), aNew).ModuleType of
+  Result := GetFileFileID(aNew);
+  if GetMasterCount(aNew) < 1 then
+    Exit;
+  var lType := GetMaster(Pred(GetMasterCount(aNew)), aNew).ModuleType;
+  if lType <> GetModuleType then
+    Exit;
+  case lType of
     mtLight:
       Result := TwbFileID.CreateLight(Pred(GetLightMasterCount(aNew)), flContextObj.SlotLayout);
     mtMedium:
@@ -7521,8 +7527,8 @@ begin
   Result := True;
   if flComplexFileFileID then begin
     if aFileID = flLoadOrderFileID then begin
-      if (fsIsCompareLoad in flStates) and (GetMasterCount(aNew) > 0) then
-        aFileFileID := GetLastMasterFileID(aNew)
+      if fsIsCompareLoad in flStates then
+        aFileFileID := GetCompareSelfFileID(aNew)
       else
         aFileFileID := GetFileFileID(aNew);
       Exit;
