@@ -5873,6 +5873,9 @@ function TwbFile.FileFileIDtoLoadOrderFileID(const aFileID: TwbFileID; aNew: Boo
   end;
 
 begin
+  if (fsIsCompareLoad in flStates) and (aFileID = GetCompareSelfFileID(aNew)) then
+    Exit(flLoadOrderFileID);
+
   if flComplexFileFileID then case aFileID.ModuleType of
     mtLight:
       if (aFileID.LightSlot >= 0) and (aFileID.LightSlot < GetLightMasterCount(aNew)) then
