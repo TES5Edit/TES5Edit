@@ -6495,16 +6495,27 @@ var
 begin
   Result := nil;
 
-  FileID :=  LoadOrderToFile(aFormID.FileID[flContextObj.SlotLayout]);
+  var lLayout := flContextObj.SlotLayout;
+  var lLoadOrderFileID := aFormID.FileID[lLayout];
+  FileID :=  LoadOrderToFile(lLoadOrderFileID);
   if not FileID.IsValid then
     Exit;
 
-  aFormID.FileID[flContextObj.SlotLayout] := FileID;
+  aFormID.FileID[lLayout] := FileID;
 
   if FindFormID(aFormID, i, False) then
     Result := flRecords[i]
   else if aAllowInjected and IsNewRecord(FileID, False) and FindInjectedID(aFormID, i) then
-    Result := flInjectedRecords[i];
+    Result := flInjectedRecords[i]
+  else if (fsIsCompareLoad in flStates) and (lLoadOrderFileID = flLoadOrderFileID) then begin
+    var lCompareIndex := GetCompareMasterIndex(False);
+    for var lIndex := 0 to Pred(lCompareIndex) do
+      if GetMaster(lIndex, False).Equals(GetMaster(lCompareIndex, False)) then begin
+        aFormID.FileID[lLayout] := GetMasterFileFileID(lIndex, False);
+        if FindFormID(aFormID, i, False) then
+          Exit(flRecords[i]);
+      end;
+  end;
 end;
 
 function TwbFile.GetOwnRecordByLoadOrderFormID(const aFormID: TwbFormID): IwbMainRecord;
