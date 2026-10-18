@@ -2783,6 +2783,11 @@ begin
   aPlan.InUseFormID := TwbFormID.Null;
   aPlan.InUseHolder := nil;
 
+  if not GetHasLoadOrderFileID then begin
+    Refuse(fcrNoOwnRecords);
+    Exit;
+  end;
+
   SetLength(lOwn, GetRecordCount);
   j := 0;
   for i := Pred(GetRecordCount) downto 0 do begin
