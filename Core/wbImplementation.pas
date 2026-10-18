@@ -6497,23 +6497,31 @@ begin
 
   var lLayout := flContextObj.SlotLayout;
   var lLoadOrderFileID := aFormID.FileID[lLayout];
+  var lObjectID := aFormID.ObjectID[lLayout];
   FileID :=  LoadOrderToFile(lLoadOrderFileID);
   if not FileID.IsValid then
     Exit;
 
-  aFormID.FileID[lLayout] := FileID;
+  var lFormID := aFormID;
+  if lObjectID <= FileID.ModuleType.MaxObjectID then begin
+    lFormID.FileID[lLayout] := FileID;
+    if FindFormID(lFormID, i, False) then
+      Exit(flRecords[i]);
+    if aAllowInjected and IsNewRecord(FileID, False) and FindInjectedID(lFormID, i) then
+      Exit(flInjectedRecords[i]);
+  end;
 
-  if FindFormID(aFormID, i, False) then
-    Result := flRecords[i]
-  else if aAllowInjected and IsNewRecord(FileID, False) and FindInjectedID(aFormID, i) then
-    Result := flInjectedRecords[i]
-  else if (fsIsCompareLoad in flStates) and (lLoadOrderFileID = flLoadOrderFileID) then begin
+  if (fsIsCompareLoad in flStates) and (lLoadOrderFileID = flLoadOrderFileID) then begin
     var lCompareIndex := GetCompareMasterIndex(False);
-    for var lIndex := 0 to Pred(lCompareIndex) do
+    for var lIndex := 0 to lCompareIndex do
       if GetMaster(lIndex, False).Equals(GetMaster(lCompareIndex, False)) then begin
-        aFormID.FileID[lLayout] := GetMasterFileFileID(lIndex, False);
-        if FindFormID(aFormID, i, False) then
-          Exit(flRecords[i]);
+        var lFileID := GetMasterFileFileID(lIndex, False);
+        if (lFileID <> FileID) and (lObjectID <= lFileID.ModuleType.MaxObjectID) then begin
+          lFormID := aFormID;
+          lFormID.FileID[lLayout] := lFileID;
+          if FindFormID(lFormID, i, False) then
+            Exit(flRecords[i]);
+        end;
       end;
   end;
 end;
@@ -7622,7 +7630,11 @@ begin
   if aFormID.IsHardcoded then
     Exit;
   var lLayout := flContextObj.SlotLayout;
-  Result.FileID[lLayout] := LoadOrderFileIDtoFileFileID(Result.FileID[lLayout], aNew);
+  var lFileID := LoadOrderFileIDtoFileFileID(Result.FileID[lLayout], aNew);
+  if (fsIsCompareLoad in flStates) and (aFormID.FileID[lLayout] = flLoadOrderFileID) and
+     (aFormID.ObjectID[lLayout] > lFileID.ModuleType.MaxObjectID) and (GetMasterCount(aNew) > 0) then
+    lFileID := GetMasterFileFileID(GetCompareMasterIndex(aNew), aNew);
+  Result.FileID[lLayout] := lFileID;
 end;
 
 var
