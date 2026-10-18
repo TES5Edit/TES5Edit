@@ -1512,7 +1512,7 @@ type
     function GetFormVCS2: Cardinal;
     procedure SetFormVCS2(aVCS: Cardinal);
     procedure ChangeFormSignature(const aSignature: TwbSignature);
-    procedure ClampFormID(aIndex: Byte);
+    procedure ClampFormID(aAbove, aTo: Byte);
 
     function ContentEquals(const aMainRecord: IwbMainRecord): Boolean;
 
@@ -8003,14 +8003,17 @@ begin
     end;
 
     if flContextObj.Settings.ClampFormID or (fsIsDeltaPatch in flStates) then begin
-      if Supports(FileHeader.ElementByName['Master Files'], IwbContainerElementRef, MasterFiles) then begin
-        k := MasterFiles.ElementCount;
-        if fsIsDeltaPatch in flStates then
-          Dec(k);
-      end else
+      if Supports(FileHeader.ElementByName['Master Files'], IwbContainerElementRef, MasterFiles) then
+        k := MasterFiles.ElementCount
+      else
         k := 0;
+      var lTo := k;
+      if fsIsDeltaPatch in flStates then begin
+        Dec(k);
+        lTo := GetCompareMasterIndex(True);
+      end;
       for i := Low(flRecords) to High(flRecords) do
-        flRecords[i].ClampFormID(k);
+        flRecords[i].ClampFormID(k, lTo);
     end;
 
     if flComplexFileFileID then begin
@@ -14708,7 +14711,7 @@ begin
   mrStruct.mrsSignature := aSignature;
 end;
 
-procedure TwbMainRecord.ClampFormID(aIndex: Byte);
+procedure TwbMainRecord.ClampFormID(aAbove, aTo: Byte);
 begin
   var lCapabilities := GameDefObj.Capabilities;
   var lFormIDInHeader := gcFormIDInRecordHeader in lCapabilities;
@@ -14717,13 +14720,13 @@ begin
   if gcComplexFileFileID in lCapabilities then
     Exit;
 
-  if mrStruct.mrsFormID(lFormIDInHeader).FileID[ContextObj.SlotLayout].FullSlot > aIndex then begin
+  if mrStruct.mrsFormID(lFormIDInHeader).FileID[ContextObj.SlotLayout].FullSlot > aAbove then begin
     MakeHeaderWriteable;
-    mrStruct.mrsFormID(lFormIDInHeader).FileID[ContextObj.SlotLayout] := TwbFileID.CreateFull(aIndex);
+    mrStruct.mrsFormID(lFormIDInHeader).FileID[ContextObj.SlotLayout] := TwbFileID.CreateFull(aTo);
     if Assigned(mrGroup) or (GetChildGroup <> nil) then
       mrGroup.GroupLabel := mrStruct.mrsFormID(lFormIDInHeader).ToCardinal;
   end else
-    if mrStruct.mrsFormID(lFormIDInHeader).FileID[ContextObj.SlotLayout].FullSlot = aIndex then
+    if mrStruct.mrsFormID(lFormIDInHeader).FileID[ContextObj.SlotLayout].FullSlot = aTo then
       if Assigned(mrGroup) or (GetChildGroup <> nil) then
         mrGroup.GroupLabel := mrStruct.mrsFormID(lFormIDInHeader).ToCardinal;
 end;

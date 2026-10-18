@@ -2336,7 +2336,7 @@ type
     procedure SetFormVCS2(aVCS: Cardinal);
 
     procedure ChangeFormSignature(const aSignature: TwbSignature);
-    procedure ClampFormID(aIndex: Byte);
+    procedure ClampFormID(aAbove, aTo: Byte);
 
     function ContentEquals(const aMainRecord: IwbMainRecord): Boolean;
 
