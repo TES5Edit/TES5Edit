@@ -19965,20 +19965,21 @@ begin
 end;
 
 procedure TwbFormIDDefFormater.FindUsedMasters(aInt: Int64; aMasters: PwbUsedMasters; const aElement: IwbElement);
-var
-  OldValue   : Cardinal;
-  FileID     : Integer;
 begin
   if dfUseLoadOrder in defFlags then
     Exit;
   if (aInt < $800) or (aInt = $FFFFFFFF) and IsValid('ACVA') then
     Exit;
+  if not Assigned(aElement) then
+    Exit;
 
-  OldValue := aInt;
-  if OldValue <> 0 then begin
-    FileID := OldValue shr 24;
-    aMasters[FileID] := True;
-  end;
+  var lFile := aElement._File;
+  if not Assigned(lFile) then
+    Exit;
+
+  var lMasterIndex := lFile.GetMasterIndexForFileID(TwbFormID.FromCardinal(aInt).FileID[defSlotLayout(aElement)], False);
+  if lMasterIndex >= 0 then
+    aMasters[lMasterIndex] := True;
 end;
 
 function TwbFormIDDefFormater.FromEditValue(const aValue: string; const aElement: IwbElement): Int64;
