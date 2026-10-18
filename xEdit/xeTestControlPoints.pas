@@ -130,6 +130,15 @@ type
     procedure DoTestViewTree;
     procedure DoTestOptions;
     procedure DoTestCopyIntoGap;
+    procedure DoTestNewFile;
+    procedure DoTestNewFileReport(const aFailure: string = '');
+    procedure DoTestGameLink;
+    procedure TestGameLinkRunTimer(Sender: TObject);
+    procedure TestGameLinkWrite(const aBody: string);
+    procedure DoTestFormIDSearch;
+    procedure TestFormIDSearchRunTimer(Sender: TObject);
+    procedure TestFormIDSearchWrite(const aBody: string);
+    procedure DoTestSplitTreeLOD;
     procedure DoTestDropMaster;
     procedure DoTestDeltaPatchStart;
     procedure DoTestDeltaPatchReport;
@@ -2737,6 +2746,399 @@ begin
   end;
 end;
 
+function TestFileIDText(const aFile: IwbFile): string;
+begin
+  if aFile.HasLoadOrderFileID then
+    Result := aFile.LoadOrderFileID.ToString
+  else
+    Result := 'no slot';
+end;
+
+procedure TxeTestFormHelper.DoTestNewFile;
+begin
+  xeContext.Settings.DontSave := True;
+  if xeTestSwitches.NewFileCompareTo = '' then begin
+    DoTestNewFileReport;
+    Exit;
+  end;
+  for var lFile in Files do
+    if SameText(lFile.FileName, xeTestSwitches.NewFileModule) then begin
+      DoCompareTo(lFile, xeTestSwitches.NewFileCompareTo);
+      if xeContext.LoaderDone then
+        DoTestNewFileReport('the compare load of ' + xeTestSwitches.NewFileCompareTo + ' did not start');
+      Exit;
+    end;
+  DoTestNewFileReport('no module ' + xeTestSwitches.NewFileModule);
+end;
+
+procedure TxeTestFormHelper.DoTestNewFileReport(const aFailure: string);
+var
+  lLines    : TStringList;
+  lMasters  : TStringList;
+  lNew      : IwbFile;
+  lLast     : IwbFile;
+  lShared   : string;
+  lSharedID : string;
+  lRefused  : Boolean;
+  lTmp      : string;
+begin
+  lLines := TStringList.Create;
+  try
+    lLines.Add('# xEdit new-file probe');
+    lLines.Add('# ' + xeApplicationTitle);
+    lLines.Add('# compareto = ' + xeTestSwitches.NewFileCompareTo + ', module = ' + xeTestSwitches.NewFileModule +
+      ', overload = ' + IfThen(xeTestSwitches.NewFileTemplate, 'template', 'boolean'));
+    lLines.Add('# Columns, tab separated: what / file / load order / load order FileID / text');
+    CheckResult := 2;
+    try
+      if aFailure <> '' then
+        raise Exception.Create(aFailure);
+      if xeContext.LoaderError then
+        raise Exception.Create('an error occured while loading the compare to module');
+      for var lFile in Files do
+        lLines.Add('file' + #9 + lFile.FileName + #9 + IntToStr(lFile.LoadOrder) + #9 + TestFileIDText(lFile) + #9 +
+          IfThen(fsIsCompareLoad in lFile.FileStates, 'compare load', ''));
+
+      var lName := 'xeNewFileProbe.esp';
+      if xeTestSwitches.NewFileTemplate then begin
+        var lTemplates := xeContext.ModuleList.ModulesByLoadOrder(True).FilteredByFlag(mfValid).FilteredByFlag(mfTemplate);
+        if Length(lTemplates) = 0 then
+          raise Exception.Create('no module template');
+        lName := 'xeNewFileProbe' + lTemplates[0].miExtension.ToString;
+        lNew := AddNewFileName(lName, lTemplates[0]);
+      end else
+        lNew := AddNewFileName(lName, False, False);
+      if not Assigned(lNew) then
+        raise Exception.Create('no new file was created');
+      if not SameText(lNew.FileName, lName) or not lNew.Equals(Files[High(Files)]) then
+        raise Exception.Create('the new file is ' + lNew.FileName + ', not a new ' + lName);
+      lShared := '';
+      lSharedID := '';
+      lLast := nil;
+      for var lFile in Files do
+        if not lFile.Equals(lNew) then begin
+          if lFile.LoadOrder = lNew.LoadOrder then
+            lShared := lShared + ' ' + lFile.FileName;
+          if lFile.HasLoadOrderFileID and lNew.HasLoadOrderFileID and (lFile.LoadOrderFileID = lNew.LoadOrderFileID) then
+            lSharedID := lSharedID + ' ' + lFile.FileName;
+          if not (fsIsCompareLoad in lFile.FileStates) and not lFile.IsNotPlugin and
+             (not Assigned(lLast) or (lFile.LoadOrder > lLast.LoadOrder)) then
+            lLast := lFile;
+        end;
+      lLines.Add('new' + #9 + lNew.FileName + #9 + IntToStr(lNew.LoadOrder) + #9 + TestFileIDText(lNew) + #9 +
+        'shares its load order with:' + lShared + '; its FileID with:' + lSharedID);
+      if not Assigned(lLast) then
+        raise Exception.Create('no module was loaded');
+
+      lRefused := False;
+      lMasters := TStringList.Create;
+      try
+        lMasters.AddObject(lLast.FileName, Pointer(lLast));
+        try
+          AddRequiredMasters(lMasters, lNew, True);
+          var lAdded := False;
+          for var m := 0 to Pred(lNew.MasterCount[True]) do
+            if lNew.Masters[m, True].Equals(lLast) then
+              lAdded := True;
+          if lAdded then
+            lLines.Add('master' + #9 + lLast.FileName + #9 + IntToStr(lLast.LoadOrder) + #9 + TestFileIDText(lLast) + #9 + 'added')
+          else begin
+            lRefused := True;
+            lLines.Add('master' + #9 + lLast.FileName + #9 + IntToStr(lLast.LoadOrder) + #9 + TestFileIDText(lLast) + #9 +
+              'not among the masters afterwards');
+          end;
+        except
+          on E: Exception do begin
+            lRefused := True;
+            lLines.Add('master' + #9 + lLast.FileName + #9 + IntToStr(lLast.LoadOrder) + #9 + TestFileIDText(lLast) + #9 +
+              'refused: ' + E.Message);
+          end;
+        end;
+      finally
+        lMasters.Free;
+      end;
+      if (lShared <> '') or (lSharedID <> '') or lRefused then
+        CheckResult := 1
+      else
+        CheckResult := 0;
+    except
+      on E: Exception do begin
+        AddMessage('[Test New File] FAILED: ' + E.ClassName + ': ' + E.Message);
+        lLines.Add('# FAILED: ' + E.ClassName + ': ' + E.Message);
+      end;
+    end;
+    lLines.Add('# checkResult = ' + IntToStr(CheckResult));
+    lTmp := xeTestSwitches.NewFileFile + '.partial';
+    lLines.SaveToFile(lTmp, TEncoding.UTF8);
+    if not MoveFileEx(PChar(lTmp), PChar(xeTestSwitches.NewFileFile), MOVEFILE_REPLACE_EXISTING) then
+      RaiseLastOSError;
+  finally
+    lLines.Free;
+    if xeAutoExit then
+      tmrShutdown.Enabled := True;
+  end;
+end;
+
+procedure TxeTestFormHelper.DoTestGameLink;
+begin
+  xeContext.Settings.DontSave := True;
+  TestHost.TestGameLinkTarget := nil;
+  try
+    if xeContext.GameDefObj.GameMode = gmTES4 then
+      raise Exception.Create('Oblivion links through Pluggy''s files, which this switch does not write');
+    var lModule: IwbFile := nil;
+    for var lFile in Files do
+      if SameText(lFile.FileName, xeTestSwitches.GameLinkModule) and not (fsIsCompareLoad in lFile.FileStates) then
+        lModule := lFile;
+    if not Assigned(lModule) then
+      raise Exception.Create('no module ' + xeTestSwitches.GameLinkModule);
+    for var j := 0 to Pred(lModule.RecordCount) do begin
+      var lRecord := lModule.Records[j];
+      if (lRecord.Signature <> 'TES4') and lRecord.MasterOrSelf.Equals(lRecord) and not lRecord.IsInjected then begin
+        TestHost.TestGameLinkTarget := lRecord;
+        Break;
+      end;
+    end;
+    if not Assigned(TestHost.TestGameLinkTarget) then
+      raise Exception.Create('no record of its own in ' + lModule.FileName);
+    var lFolder := xeContext.Settings.DataPath + 'xEdit\';
+    ForceDirectories(lFolder);
+    TFile.WriteAllText(lFolder + 'xEditLink.ini', '[Console]'#13#10'selectedRefID=' +
+      TestHost.TestGameLinkTarget.LoadOrderFormID.ToString + #13#10);
+    DoSetActiveRecord(nil);
+    pmuMainPopup(Self);
+    if not mniMainPluggyLinkReference.Visible then
+      raise Exception.Create('GameLink is not offered');
+    mniMainPluggyLinkReference.Checked := True;
+    mniMainPluggyLinkReference.Click;
+  except
+    on E: Exception do begin
+      TestHost.TestGameLinkTarget := nil;
+      CheckResult := 2;
+      TestGameLinkWrite('# FAILED: ' + E.ClassName + ': ' + E.Message);
+      Exit;
+    end;
+  end;
+  TestHost.TestGameLinkStart := GetTickCount64;
+  TestHost.TestGameLinkTimer := TTimer.Create(Self);
+  TestHost.TestGameLinkTimer.Interval := 250;
+  TestHost.TestGameLinkTimer.OnTimer := TestGameLinkRunTimer;
+  TestHost.TestGameLinkTimer.Enabled := True;
+end;
+
+procedure TxeTestFormHelper.TestGameLinkRunTimer(Sender: TObject);
+begin
+  if not Assigned(ActiveRecord) and (GetTickCount64 < TestHost.TestGameLinkStart + 20000) then
+    Exit;
+  TestHost.TestGameLinkTimer.Enabled := False;
+  var lTarget := TestHost.TestGameLinkTarget;
+  TestHost.TestGameLinkTarget := nil;
+  var lActive := 'none';
+  if Assigned(ActiveRecord) then
+    lActive := ActiveRecord.Name + #9 + ActiveRecord._File.FileName + #9 + ActiveRecord.LoadOrderFormID.ToString;
+  if Assigned(ActiveRecord) and ActiveRecord.Equals(lTarget.WinningOverride) then
+    CheckResult := 0
+  else
+    CheckResult := 1;
+  TestGameLinkWrite(
+    'target' + #9 + lTarget.Name + #9 + lTarget._File.FileName + #9 + lTarget.LoadOrderFormID.ToString + #13#10 +
+    'active' + #9 + lActive);
+end;
+
+procedure TxeTestFormHelper.TestGameLinkWrite(const aBody: string);
+var
+  lLines : TStringList;
+  lTmp   : string;
+begin
+  lLines := TStringList.Create;
+  try
+    lLines.Add('# xEdit GameLink probe');
+    lLines.Add('# ' + xeApplicationTitle);
+    lLines.Add('# module = ' + xeTestSwitches.GameLinkModule);
+    lLines.Add('# Columns, tab separated: what / record / file / load order FormID');
+    for var lFile in Files do
+      lLines.Add('file' + #9 + lFile.FileName + #9 + IntToStr(lFile.LoadOrder) + #9 + TestFileIDText(lFile));
+    lLines.Add(aBody);
+    lLines.Add('# checkResult = ' + IntToStr(CheckResult));
+    lTmp := xeTestSwitches.GameLinkFile + '.partial';
+    lLines.SaveToFile(lTmp, TEncoding.UTF8);
+    if not MoveFileEx(PChar(lTmp), PChar(xeTestSwitches.GameLinkFile), MOVEFILE_REPLACE_EXISTING) then
+      RaiseLastOSError;
+  finally
+    lLines.Free;
+    if xeAutoExit then
+      tmrShutdown.Enabled := True;
+  end;
+end;
+
+procedure TxeTestFormHelper.DoTestFormIDSearch;
+var
+  lKey : Word;
+begin
+  xeContext.Settings.DontSave := True;
+  TestHost.TestFormIDSearchTarget := nil;
+  try
+    var lModule: IwbFile := nil;
+    for var lFile in Files do
+      if SameText(lFile.FileName, xeTestSwitches.FormIDSearchModule) and not (fsIsCompareLoad in lFile.FileStates) then
+        lModule := lFile;
+    if not Assigned(lModule) then
+      raise Exception.Create('no module ' + xeTestSwitches.FormIDSearchModule);
+    for var j := 0 to Pred(lModule.RecordCount) do begin
+      var lRecord := lModule.Records[j];
+      if (lRecord.Signature <> 'TES4') and lRecord.MasterOrSelf.Equals(lRecord) and not lRecord.IsInjected then begin
+        TestHost.TestFormIDSearchTarget := lRecord;
+        Break;
+      end;
+    end;
+    if not Assigned(TestHost.TestFormIDSearchTarget) then
+      raise Exception.Create('no record of its own in ' + lModule.FileName);
+    DoSetActiveRecord(nil);
+  except
+    on E: Exception do begin
+      TestHost.TestFormIDSearchTarget := nil;
+      CheckResult := 2;
+      TestFormIDSearchWrite('# FAILED: ' + E.ClassName + ': ' + E.Message);
+      Exit;
+    end;
+  end;
+  var lTarget := TestHost.TestFormIDSearchTarget;
+  edFormIDSearch.Text := lTarget.LoadOrderFormID.ToString;
+  lKey := VK_RETURN;
+  try
+    edFormIDSearchKeyDown(edFormIDSearch, lKey, []);
+  except
+    on E: Exception do begin
+      TestHost.TestFormIDSearchTarget := nil;
+      CheckResult := 1;
+      TestFormIDSearchWrite(
+        'target' + #9 + lTarget.Name + #9 + lTarget._File.FileName + #9 + lTarget.LoadOrderFormID.ToString + #13#10 +
+        'search' + #9 + 'raised ' + E.ClassName + ': ' + E.Message);
+      Exit;
+    end;
+  end;
+  if edFormIDSearch.Color = wbLighter(clLime, 0.85) then
+    TestHost.TestFormIDSearchResult := 'found, with a node'
+  else if edFormIDSearch.Color = wbLighter(clYellow, 0.85) then
+    TestHost.TestFormIDSearchResult := 'found, without a node'
+  else if edFormIDSearch.Color = wbLighter(clRed, 0.85) then
+    TestHost.TestFormIDSearchResult := 'not found'
+  else
+    TestHost.TestFormIDSearchResult := 'no result';
+  TestHost.TestFormIDSearchStart := GetTickCount64;
+  TestHost.TestFormIDSearchTimer := TTimer.Create(Self);
+  TestHost.TestFormIDSearchTimer.Interval := 250;
+  TestHost.TestFormIDSearchTimer.OnTimer := TestFormIDSearchRunTimer;
+  TestHost.TestFormIDSearchTimer.Enabled := True;
+end;
+
+procedure TxeTestFormHelper.TestFormIDSearchRunTimer(Sender: TObject);
+begin
+  if not Assigned(ActiveRecord) and (GetTickCount64 < TestHost.TestFormIDSearchStart + 20000) then
+    Exit;
+  TestHost.TestFormIDSearchTimer.Enabled := False;
+  var lTarget := TestHost.TestFormIDSearchTarget;
+  TestHost.TestFormIDSearchTarget := nil;
+  var lActive := 'none';
+  if Assigned(ActiveRecord) then
+    lActive := ActiveRecord.Name + #9 + ActiveRecord._File.FileName + #9 + ActiveRecord.LoadOrderFormID.ToString;
+  if Assigned(ActiveRecord) and ActiveRecord.Equals(lTarget) then
+    CheckResult := 0
+  else
+    CheckResult := 1;
+  TestFormIDSearchWrite(
+    'target' + #9 + lTarget.Name + #9 + lTarget._File.FileName + #9 + lTarget.LoadOrderFormID.ToString + #13#10 +
+    'search' + #9 + TestHost.TestFormIDSearchResult + #13#10 +
+    'active' + #9 + lActive);
+end;
+
+procedure TxeTestFormHelper.TestFormIDSearchWrite(const aBody: string);
+var
+  lLines : TStringList;
+  lTmp   : string;
+begin
+  lLines := TStringList.Create;
+  try
+    lLines.Add('# xEdit FormID search probe');
+    lLines.Add('# ' + xeApplicationTitle);
+    lLines.Add('# module = ' + xeTestSwitches.FormIDSearchModule);
+    lLines.Add('# Columns, tab separated: what / record / file / load order FormID');
+    for var lFile in Files do
+      lLines.Add('file' + #9 + lFile.FileName + #9 + IntToStr(lFile.LoadOrder) + #9 + TestFileIDText(lFile));
+    lLines.Add(aBody);
+    lLines.Add('# checkResult = ' + IntToStr(CheckResult));
+    lTmp := xeTestSwitches.FormIDSearchFile + '.partial';
+    lLines.SaveToFile(lTmp, TEncoding.UTF8);
+    if not MoveFileEx(PChar(lTmp), PChar(xeTestSwitches.FormIDSearchFile), MOVEFILE_REPLACE_EXISTING) then
+      RaiseLastOSError;
+  finally
+    lLines.Free;
+    if xeAutoExit then
+      tmrShutdown.Enabled := True;
+  end;
+end;
+
+procedure TxeTestFormHelper.DoTestSplitTreeLOD;
+var
+  lLines  : TStringList;
+  lStage  : string;
+  lTmp    : string;
+begin
+  xeContext.Settings.DontSave := True;
+  lLines := TStringList.Create;
+  try
+    lLines.Add('# xEdit split-tree-LOD probe');
+    lLines.Add('# ' + xeApplicationTitle);
+    lLines.Add('# world = ' + xeTestSwitches.SplitTreeLODWorld + ', light modules created = ' +
+      IntToStr(xeTestSwitches.SplitTreeLODLight) + ', output = ' + xeContext.Settings.OutputPath);
+    CheckResult := 2;
+    lStage := 'setup';
+    try
+      for var i := 1 to xeTestSwitches.SplitTreeLODLight do
+        if not Assigned(AddNewFileName(Format('xeLodProbe%.4d.esp', [i]), True, False)) then
+          raise Exception.Create('no light module ' + IntToStr(i) + ' was created');
+      var lMax := -1;
+      for var lFile in Files do
+        if lFile.LoadOrder > lMax then
+          lMax := lFile.LoadOrder;
+      lLines.Add('files' + #9 + IntToStr(Length(Files)) + #9 + 'highest load order ' + IntToStr(lMax));
+      var lWorld := Files[0].RecordByFormID[TwbFormID.FromStr(xeTestSwitches.SplitTreeLODWorld), True, True];
+      if not Assigned(lWorld) or (lWorld.Signature <> 'WRLD') then
+        raise Exception.Create('no worldspace ' + xeTestSwitches.SplitTreeLODWorld + ' in ' + Files[0].FileName);
+      lLines.Add('world' + #9 + lWorld.Name);
+      var lFolder := xeContext.Settings.OutputPath + 'Textures\Terrain\LODGen\';
+      if TDirectory.Exists(lFolder) and (Length(TDirectory.GetFiles(lFolder, '*', TSearchOption.soAllDirectories)) > 0) then
+        raise Exception.Create('the output folder already holds files: ' + lFolder);
+      lStage := 'split';
+      wbSplitTreeLOD(lWorld, Files);
+      var lWritten := 0;
+      if TDirectory.Exists(lFolder) then
+        lWritten := Length(TDirectory.GetFiles(lFolder, '*.dds', TSearchOption.soAllDirectories));
+      lLines.Add('written' + #9 + IntToStr(lWritten) + ' billboard textures');
+      if lWritten > 0 then
+        CheckResult := 0
+      else
+        CheckResult := 1;
+    except
+      on E: Exception do begin
+        if lStage = 'split' then
+          CheckResult := 1;
+        AddMessage('[Test Split Tree LOD] FAILED in ' + lStage + ': ' + E.ClassName + ': ' + E.Message);
+        lLines.Add('# FAILED in ' + lStage + ': ' + E.ClassName + ': ' + E.Message);
+      end;
+    end;
+    lLines.Add('# checkResult = ' + IntToStr(CheckResult));
+    lTmp := xeTestSwitches.SplitTreeLODFile + '.partial';
+    lLines.SaveToFile(lTmp, TEncoding.UTF8);
+    if not MoveFileEx(PChar(lTmp), PChar(xeTestSwitches.SplitTreeLODFile), MOVEFILE_REPLACE_EXISTING) then
+      RaiseLastOSError;
+  finally
+    lLines.Free;
+    if xeAutoExit then
+      tmrShutdown.Enabled := True;
+  end;
+end;
+
 procedure TxeTestFormHelper.DoTestDropMaster;
 begin
   xeContext.Settings.DontSave := True;
@@ -4183,7 +4585,7 @@ begin
 
     for var i := 0 to Pred(lSource.RecordCount) do begin
       lRecord := lSource.Records[i];
-      if lRecord.LoadOrderFormID.FileID[lLayout] = lSource.LoadOrderFileID then begin
+      if lSource.HasLoadOrderFileID and (lRecord.LoadOrderFormID.FileID[lLayout] = lSource.LoadOrderFileID) then begin
         lOwn := lOwn + [lRecord];
         lBefore := lBefore + [lRecord.LoadOrderFormID];
       end;

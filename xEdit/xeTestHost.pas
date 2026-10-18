@@ -59,6 +59,13 @@ type
     TestOptionsCloseTimer      : TTimer;
     TestOptionsClosePosted     : Boolean;
     TestCopyIntoGapTimer     : TTimer;
+    TestGameLinkTimer        : TTimer;
+    TestGameLinkTarget       : IwbMainRecord;
+    TestGameLinkStart        : UInt64;
+    TestFormIDSearchTimer    : TTimer;
+    TestFormIDSearchTarget   : IwbMainRecord;
+    TestFormIDSearchStart    : UInt64;
+    TestFormIDSearchResult   : string;
     TestDropMasterTimer      : TTimer;
     TestDropMasterAnswer     : TTimer;
     TestDropMasterDetach     : IwbElement;
@@ -195,6 +202,21 @@ type
     CopyIntoGapRecord     : string;
     CopyIntoGapSource     : string;
     CopyIntoGapOp         : string;
+    NewFile               : Boolean;
+    NewFileFile           : string;
+    NewFileCompareTo      : string;
+    NewFileModule         : string;
+    NewFileTemplate       : Boolean;
+    GameLink              : Boolean;
+    GameLinkFile          : string;
+    GameLinkModule        : string;
+    FormIDSearch          : Boolean;
+    FormIDSearchFile      : string;
+    FormIDSearchModule    : string;
+    SplitTreeLOD          : Boolean;
+    SplitTreeLODFile      : string;
+    SplitTreeLODWorld     : string;
+    SplitTreeLODLight     : Integer;
     DropMaster            : Boolean;
     DropMasterFile        : string;
     DropMasterSpec        : string;
@@ -474,6 +496,50 @@ begin
     xeAutoLoad        := True;
   end;
 
+  if wbFindCmdLineParam('testnewfile', NewFileFile) then begin
+    wbFindCmdLineParam('testnewfilecompareto', NewFileCompareTo);
+    wbFindCmdLineParam('testnewfilemodule', NewFileModule);
+    NewFileTemplate := FindCmdLineSwitch('testnewfiletemplate');
+    if (NewFileFile = '') or ((NewFileCompareTo = '') <> (NewFileModule = '')) then begin
+      ShowMessage('testnewfile requires -testnewfile:<filename> [-testnewfilecompareto:<file> -testnewfilemodule:<module>] ' +
+        '[-testnewfiletemplate]');
+      Exit(False);
+    end;
+    NewFile := True;
+    xeAutoLoad := True;
+  end;
+
+  if wbFindCmdLineParam('testgamelink', GameLinkFile) then begin
+    if (GameLinkFile = '') or not wbFindCmdLineParam('testgamelinkmodule', GameLinkModule) then begin
+      ShowMessage('testgamelink requires -testgamelink:<filename> -testgamelinkmodule:<module>');
+      Exit(False);
+    end;
+    GameLink := True;
+    xeAutoLoad := True;
+  end;
+
+  if wbFindCmdLineParam('testformidsearch', FormIDSearchFile) then begin
+    if (FormIDSearchFile = '') or not wbFindCmdLineParam('testformidsearchmodule', FormIDSearchModule) then begin
+      ShowMessage('testformidsearch requires -testformidsearch:<filename> -testformidsearchmodule:<module>');
+      Exit(False);
+    end;
+    FormIDSearch := True;
+    xeAutoLoad := True;
+  end;
+
+  if wbFindCmdLineParam('testsplittreelod', SplitTreeLODFile) then begin
+    if wbFindCmdLineParam('testsplittreelodlight', s) then
+      SplitTreeLODLight := StrToIntDef(s, -1);
+    if (SplitTreeLODFile = '') or not wbFindCmdLineParam('testsplittreelodworld', SplitTreeLODWorld) or
+       (SplitTreeLODLight < 0) then begin
+      ShowMessage('testsplittreelod requires -testsplittreelod:<filename> -testsplittreelodworld:<FormID of the worldspace in the ' +
+        'game master> [-testsplittreelodlight:<number of light modules to create first>]');
+      Exit(False);
+    end;
+    SplitTreeLOD := True;
+    xeAutoLoad := True;
+  end;
+
   if wbFindCmdLineParam('testdropmaster', DropMasterFile) then begin
     if (DropMasterFile = '') or not wbFindCmdLineParam('testdropmasterspec', DropMasterSpec) then begin
       ShowMessage('testdropmaster requires -testdropmaster:<filename> ' +
@@ -685,7 +751,7 @@ end;
 
 function TxeTestSwitches.Any: Boolean;
 begin
-  Result := Conflicts or NavCopy or ViewText or ViewTree or Options or CopyIntoGap or DropMaster or DeltaPatch or Merge or MergedPatch or CopyInto or
+  Result := Conflicts or NavCopy or ViewText or ViewTree or Options or CopyIntoGap or NewFile or GameLink or FormIDSearch or SplitTreeLOD or DropMaster or DeltaPatch or Merge or MergedPatch or CopyInto or
     Renumber or ChangeFormID or Hide or Filter or SaveContexts or (Pump <> '') or (StateManifest <> '');
 end;
 

@@ -227,7 +227,7 @@ begin
   _File := nil;
   j := Low(PFiles^);
   while (j <= High(PFiles^)) and not Assigned(_File) do begin
-    if PFiles^[j].LoadOrderFileID = FileID then
+    if PFiles^[j].HasLoadOrderFileID and (PFiles^[j].LoadOrderFileID = FileID) then
       _File := PFiles^[j];
     Inc(j);
   end;
@@ -238,7 +238,7 @@ begin
 
     _File := nil;
     while (j <= High(PFiles^)) and not Assigned(_File) do begin
-      if PFiles^[j].LoadOrderFileID = FileID then
+      if PFiles^[j].HasLoadOrderFileID and (PFiles^[j].LoadOrderFileID = FileID) then
         _File := PFiles^[j];
       Inc(j);
     end;

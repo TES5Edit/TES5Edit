@@ -5050,6 +5050,13 @@ begin
 end;
 
 procedure wbREFRPersistLocToStr(var aValue: string; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
+
+  function VisibleLink(const aLink: IwbElement): IwbMainRecord;
+  begin
+    if Supports(aLink.LinksTo, IwbMainRecord, Result) then
+      Result := Result.HighestOverrideVisibleForFile[aElement._File];
+  end;
+
 begin
   if not (Assigned(aElement) and (aType in [ctCheck])) then
     Exit;
@@ -5096,7 +5103,7 @@ begin
     if not Assigned(lCellRecord) then
     begin
       var lFile := aElement._File;
-      var lFormID := lMainRecord.FormID;
+      var lFormID := lWorldRecord.LoadOrderFormID;
       for var lMasterIdx := Pred(lFile.MasterCount[True]) downto 0 do
       begin
         var lMaster := lFile.Masters[lMasterIdx, True];
@@ -5124,7 +5131,7 @@ begin
 
   if Assigned(lXEZN) then
   begin
-    lZone := lXEZN.LinksTo as IwbMainRecord;
+    lZone := VisibleLink(lXEZN);
     if Assigned(lZone) then
     begin
       lDATA := lZone.ElementBySignature[DATA] as IwbContainerElementRef;
@@ -5132,7 +5139,7 @@ begin
       begin
         lDATALoc := lDATA.ElementByName['Location'];
         if Assigned(lDATALoc) and (lDATALoc.NativeValue <> 0) then
-          lPersistLocation := lDATALoc.LinksTo as IwbMainRecord;
+          lPersistLocation := VisibleLink(lDATALoc);
       end;
     end;
   end;
@@ -5142,7 +5149,7 @@ begin
   begin
     lXLCN := lCellRecord.ElementBySignature[XLCN];
     if Assigned(lXLCN) then
-      lPersistLocation := lXLCN.LinksTo as IwbMainRecord;
+      lPersistLocation := VisibleLink(lXLCN);
   end;
 
   if Assigned(lWorldRecord) then
@@ -5152,7 +5159,7 @@ begin
       lXEZN := lWorldRecord.ElementBySignature[XEZN];
       if Assigned(lXEZN) then
       begin
-        lZone := lXEZN.LinksTo as IwbMainRecord;
+        lZone := VisibleLink(lXEZN);
         if Assigned(lZone) then
         begin
           lDATA := lZone.ElementBySignature[DATA] as IwbContainerElementRef;
@@ -5160,7 +5167,7 @@ begin
           begin
             lDATALoc := lDATA.ElementByName['Location'];
             if Assigned(lDATALoc) and (lDATALoc.NativeValue <> 0) then
-              lPersistLocation := lDATALoc.LinksTo as IwbMainRecord;
+              lPersistLocation := VisibleLink(lDATALoc);
           end;
         end;
       end;
@@ -5170,7 +5177,7 @@ begin
     begin
       lXLCN := lWorldRecord.ElementBySignature[XLCN];
       if Assigned(lXLCN) then
-        lPersistLocation := lXLCN.LinksTo as IwbMainRecord;
+        lPersistLocation := VisibleLink(lXLCN);
     end;
   end;
 
@@ -5188,7 +5195,7 @@ begin
     lVisited := lVisited + [lPersistMaster];
 
     if Assigned(lParentLoc) then
-      lPersistLocation := lParentLoc.LinksTo as IwbMainRecord
+      lPersistLocation := VisibleLink(lParentLoc)
     else
     begin
       aValue := '<Warning: Reference ' + lMainRecord.ShortName + ' is not in its Persist Location ' + aElement.EditValue +'>';

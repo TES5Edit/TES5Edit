@@ -141,6 +141,15 @@ type
     procedure Execute; override; final;
   end;
 
+  TxeSettingsFile = class(TMemIniFile)
+  private
+    sfReport      : TwbSaveMessageProc;
+    sfWriteFailed : Boolean;
+  public
+    constructor Create(const aFileName: string; const aReport: TwbSaveMessageProc); overload;
+    procedure UpdateFile; override; final;
+  end;
+
   TwbSaveResult = (srAllDone, srNothingToDo, srAbort, srError);
 
   TwbSeqFileResult = (sfrFailed, sfrSkipped, sfrCreated);
@@ -771,7 +780,7 @@ type
     RebuildingViewTree: Boolean;
     GeneratorStarted: Boolean;
     GeneratorDone: Boolean;
-    QuickCleanSaveFailed: Boolean;
+    UnattendedSaveFailed: Boolean;
     ScriptHotkeys: TStringList;
     CheckResult : Byte;
     LOOTPluginInfos: TwbDirtyInfos;
@@ -914,6 +923,7 @@ type
     function AddRequiredMasters(aMasters: TStrings; const aTargetFile: IwbFile; aSilent: Boolean = False): Boolean; overload;
   protected
 
+    function NewFileLoadOrder: Integer;
     function CheckForErrorsLinear(const aElement: IwbElement; LastRecord: IwbMainRecord): IwbMainRecord;
     function CheckForErrors(const aIndent: Integer; const aElement: IwbElement): Boolean;
 
@@ -1858,6 +1868,17 @@ begin
   end;
 end;
 
+function TfrmMain.NewFileLoadOrder: Integer;
+begin
+  Result := 0;
+  if Length(Files) > 0 then begin
+    for var lFile in Files do
+      if lFile.LoadOrder > Result then
+        Result := lFile.LoadOrder;
+    Result := Succ(Result);
+  end;
+end;
+
 function TfrmMain.AddNewFileName(const aFileName: string; aIsLight, aIsMedium: Boolean): IwbFile;
 var
   LoadOrder : Integer;
@@ -1868,13 +1889,14 @@ begin
     raise Exception.CreateFmt('The specified filename:'#13#10#13#10'%s'#13#10#13#10'Contains one or more invalid characters:'#13#10#13#10'%s', [aFilename, InvalidFileNameChars]);
 
   if FileExists(xeContext.Settings.DataPath + aFileName) then begin
-    ShowMessage('A file of that name exists already.');
+    if xeUnattended then
+      AddMessage('Error: A file of that name exists already: ' + aFileName)
+    else
+      ShowMessage('A file of that name exists already.');
     Exit;
   end;
 
-  LoadOrder := 0;
-  if Length(Files) > 0 then
-    LoadOrder := Succ(Files[High(Files)].LoadOrder);
+  LoadOrder := NewFileLoadOrder;
 {
   if LoadOrder > 254 then begin
     ShowMessage('Maximum plugins count already reached. Adding 1 more would exceed the maximum index of 254');
@@ -1891,7 +1913,6 @@ end;
 function TfrmMain.AddNewFileName(const aFileName: string; aTemplate: PwbModuleInfo): IwbFile;
 var
   LoadOrder : Integer;
-  i: Integer;
 begin
   Result := nil;
 
@@ -1899,17 +1920,14 @@ begin
     raise Exception.CreateFmt('The specified filename:'#13#10#13#10'%s'#13#10#13#10'Contains one or more invalid characters:'#13#10#13#10'%s', [aFilename, InvalidFileNameChars]);
 
   if FileExists(xeContext.Settings.DataPath + aFileName) then begin
-    ShowMessage('A file of that name exists already.');
+    if xeUnattended then
+      AddMessage('Error: A file of that name exists already: ' + aFileName)
+    else
+      ShowMessage('A file of that name exists already.');
     Exit;
   end;
 
-  LoadOrder := 0;
-  if Length(Files) > 0 then begin
-    for i := Low(Files) to High(Files) do
-      if Files[i].LoadOrder > LoadOrder then
-        LoadOrder := Files[i].LoadOrder;
-    LoadOrder := Succ(LoadOrder);
-  end;
+  LoadOrder := NewFileLoadOrder;
 
   Result := (xeContext as TwbLoadingGameContext).NewFile(xeContext.Settings.DataPath + aFileName, LoadOrder, aTemplate);
   SetLength(Files, Succ(Length(Files)));
@@ -4302,9 +4320,13 @@ begin
 
   AddMessage('Using settings file: ' + xeSettingsFileName);
 
-  if not Assigned(Settings) and (xeSettingsFileName <> '') then
+  if not Assigned(Settings) and (xeSettingsFileName <> '') then try
     if ForceDirectories(ExtractFilePath(xeSettingsFileName)) then
-      Settings := TMemIniFile.Create(xeSettingsFileName);
+      Settings := TxeSettingsFile.Create(xeSettingsFileName, AddMessage);
+  except
+    on E: Exception do
+      AddMessage('Error: <' + E.ClassName + ': ' + E.Message + '>');
+  end;
 
   if not Assigned(Settings) then begin
     if not xeUnattended then
@@ -4372,7 +4394,7 @@ begin
     wbPatron := Settings.ReadBool('Options', 'Patron', wbPatron);
     if (not wbPatron or not xeAutoLoad)
 {$IFDEF XE_TEST_CONTROL_POINTS}
-      and not (xeTestSwitches.Conflicts or xeTestSwitches.NavCopy or xeTestSwitches.ViewText or xeTestSwitches.ViewTree or xeTestSwitches.Options or xeTestSwitches.CopyIntoGap or xeTestSwitches.DropMaster or xeTestSwitches.DeltaPatch or xeTestSwitches.Merge or xeTestSwitches.MergedPatch or xeTestSwitches.CopyInto or xeTestSwitches.Renumber or xeTestSwitches.ChangeFormID or xeTestSwitches.Hide or xeTestSwitches.Filter or xeTestSwitches.SaveContexts or (xeTestSwitches.PumpDuringLoad <> ''))
+      and not (xeTestSwitches.Conflicts or xeTestSwitches.NavCopy or xeTestSwitches.ViewText or xeTestSwitches.ViewTree or xeTestSwitches.Options or xeTestSwitches.CopyIntoGap or xeTestSwitches.NewFile or xeTestSwitches.GameLink or xeTestSwitches.FormIDSearch or xeTestSwitches.SplitTreeLOD or xeTestSwitches.DropMaster or xeTestSwitches.DeltaPatch or xeTestSwitches.Merge or xeTestSwitches.MergedPatch or xeTestSwitches.CopyInto or xeTestSwitches.Renumber or xeTestSwitches.ChangeFormID or xeTestSwitches.Hide or xeTestSwitches.Filter or xeTestSwitches.SaveContexts or (xeTestSwitches.PumpDuringLoad <> ''))
 {$ENDIF}
     then
       ShowDeveloperMessage;
@@ -4931,7 +4953,7 @@ begin
       _File := nil;
       j := Low(Files);
       while (j <= High(Files)) and not Assigned(_File) do begin
-        if Files[j].LoadOrderFileID = FileID then
+        if Files[j].HasLoadOrderFileID and (Files[j].LoadOrderFileID = FileID) then
           _File := Files[j];
         Inc(j);
       end;
@@ -4967,7 +4989,7 @@ begin
         end;
         _File := nil;
         while (j <= High(Files)) and not Assigned(_File) do begin
-          if Files[j].LoadOrderFileID = FileID then
+          if Files[j].HasLoadOrderFileID and (Files[j].LoadOrderFileID = FileID) then
             _File := Files[j];
           Inc(j);
         end;
@@ -5483,10 +5505,14 @@ begin
     end;
   end;
 
-  if not QuickCleanSaveFailed and (SaveChanged >= srAbort) then begin
-    Action := caNone;
-    Exit;
-  end;
+  if not UnattendedSaveFailed and (SaveChanged >= srAbort) then
+    if xeUnattended then begin
+      if CheckResult = 0 then
+        CheckResult := xeFailureExitCode;
+    end else begin
+      Action := caNone;
+      Exit;
+    end;
 
   if Assigned(Settings) then begin
     if Assigned(pnlNav) then
@@ -5500,12 +5526,7 @@ begin
       Settings.WriteInteger(Name, 'Top', Top);
       Settings.WriteInteger(Name, 'Width', Width);
       Settings.WriteInteger(Name, 'Height', Height);
-    try
-      Settings.UpdateFile;
-    except
-      on E: Exception do
-        AddMessage('Error: Could not write the settings file: <' + E.ClassName + ': ' + E.Message + '>');
-    end;
+    Settings.UpdateFile;
   end;
 
   SaveLogs(True);
@@ -5625,7 +5646,7 @@ begin
   if wbThemesSupported then try
     if not Assigned(Settings) and (xeSettingsFileName <> '')  then
       if ForceDirectories(ExtractFilePath(xeSettingsFileName)) then
-        Settings := TMemIniFile.Create(xeSettingsFileName);
+        Settings := TxeSettingsFile.Create(xeSettingsFileName, AddMessage);
     if Assigned(Settings) then begin
       TStyleManager.TrySetStyle(Settings.ReadString('UI', 'Theme', TStyleManager.ActiveStyle.Name), False);
       Vcl.Graphics.PaletteChanged;
@@ -5662,7 +5683,7 @@ begin
   try
     if not Assigned(Settings) and (xeSettingsFileName <> '')  then
       if ForceDirectories(ExtractFilePath(xeSettingsFileName)) then
-        Settings := TMemIniFile.Create(xeSettingsFileName);
+        Settings := TxeSettingsFile.Create(xeSettingsFileName, AddMessage);
     if Assigned(Settings) then begin
       xeLoadAndApplyFontAndScale(Settings, 'UI', 'FontRecords', vstNav);
       xeLoadAndApplyFontAndScale(Settings, 'UI', 'FontRecords', vstView);
@@ -5742,7 +5763,7 @@ begin
   try
     if not Assigned(Settings) and (xeSettingsFileName <> '')  then
       if ForceDirectories(ExtractFilePath(xeSettingsFileName)) then
-        Settings := TMemIniFile.Create(xeSettingsFileName);
+        Settings := TxeSettingsFile.Create(xeSettingsFileName, AddMessage);
     if Assigned(Settings) then begin
       ColumnWidth := Settings.ReadInteger('Options', 'ColumnWidth', ColumnWidth);
       RowHeight := Settings.ReadInteger('Options', 'RowHeight', RowHeight);
@@ -8537,6 +8558,11 @@ begin
     finally
       Free;
     end;
+
+    if _File.IsUpdate then begin
+      ShowMessage('"'+_File.Name+'" is an update module and can''t own any records.');
+      Exit;
+    end;
   end;
 
   var lYesToAll := False;
@@ -11042,6 +11068,7 @@ var
     i             : Integer;
     c             : Cardinal;
     TargetIsLight : Boolean;
+    TargetIsMedium: Boolean;
     LowestFormID  : Cardinal;
   begin
     Result := False;
@@ -11129,17 +11156,22 @@ var
     else begin
       s := '';
       TargetIsLight := lPlan.Target.TakesLightObjectIDs;
+      TargetIsMedium := not TargetIsLight and (lPlan.Target.IsMedium or lPlan.Target.LoadOrderFileID.IsMediumSlot);
       repeat
         if s <> '' then
           ShowMessage('"'+s+'" is not a valid start FormID.')
         else begin
           c := lPlan.Target.NextObjectID and $FFFFFF;
           if TargetIsLight then
-            c := c and $FFF;
+            c := c and $FFF
+          else if TargetIsMedium then
+            c := c and $FFFF;
           if c < LowestFormID then
             c := LowestFormID;
           if TargetIsLight then
             s := IntToHex(c, 3)
+          else if TargetIsMedium then
+            s := IntToHex(c, 4)
           else
             s := IntToHex(c, 6);
         end;
@@ -11147,13 +11179,17 @@ var
         if TargetIsLight then begin
           if not InputQuery('Start from...', 'Please enter the new module specific start FormID in hex. e.g. 800. Specify only the last 3 digits. (Target is Light)', s) then
             Exit;
+        end else if TargetIsMedium then begin
+          if not InputQuery('Start from...', 'Please enter the new module specific start FormID in hex. e.g. 0800. Specify only the last 4 digits. (Target is Medium)', s) then
+            Exit;
         end else begin
           if not InputQuery('Start from...', 'Please enter the new module specific start FormID in hex. e.g. 200000. Specify only the last 6 digits.', s) then
             Exit;
         end;
 
         lPlan.Start := TwbFormID.FromStrDef(s, 0);
-      until (lPlan.Start.FileID[lLayout].FullSlot = 0) and not (lPlan.Start.ToCardinal < LowestFormID) and (not TargetIsLight or (lPlan.Start.ObjectID[lLayout] <= $FFF));
+      until (lPlan.Start.FileID[lLayout].FullSlot = 0) and not (lPlan.Start.ToCardinal < LowestFormID) and (not TargetIsLight or (lPlan.Start.ObjectID[lLayout] <= $FFF)) and
+        (not TargetIsMedium or (lPlan.Start.ObjectID[lLayout] <= $FFFF));
     end;
 
     SourceFile.PlanFormIDChange(lPlan);
@@ -13012,6 +13048,7 @@ begin
     mniNavRenumberFormIDsFrom.Visible and
     lGameDef.IsMediumSupported and
     Supports(Element, IwbFile, _File) and
+    _File.HasLoadOrderFileID and
     _File.LoadOrderFileID.IsFullSlot and
     not (_File.IsLight or _File.IsMedium or _File.IsUpdate);
 
@@ -15347,7 +15384,7 @@ procedure TfrmMain.EndQuickCleanAfterFailedSave;
 begin
   if not xeAutoExit then
     Exit;
-  QuickCleanSaveFailed := True;
+  UnattendedSaveFailed := True;
   CheckResult := 1;
   tmrShutdown.Enabled := True;
 end;
@@ -15858,8 +15895,17 @@ begin
         end;
       end;
 
-      if SaveChanged = srNothingToDo then
+      var lSaveResult := SaveChanged;
+      if lSaveResult = srNothingToDo then
         ChangesMade := False;
+
+      if (lSaveResult >= srAbort) and xeUnattended then begin
+        UnattendedSaveFailed := True;
+        CheckResult := xeFailureExitCode;
+        PostAddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] --= Error =--');
+        AutoDone := True;
+        Exit;
+      end;
 
       PostAddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] --= All Done =--');
       if ChangesMade then begin
@@ -18939,7 +18985,8 @@ begin
         if xeContext.LoaderError then begin
 {$IFDEF XE_TEST_CONTROL_POINTS}
           if xeTestSwitches.Conflicts or xeTestSwitches.NavCopy or xeTestSwitches.Merge or xeTestSwitches.MergedPatch or
-             xeTestSwitches.CopyInto or xeTestSwitches.Renumber or xeTestSwitches.ChangeFormID then begin
+             xeTestSwitches.CopyInto or xeTestSwitches.Renumber or xeTestSwitches.ChangeFormID or xeTestSwitches.NewFile or
+             xeTestSwitches.GameLink or xeTestSwitches.FormIDSearch or xeTestSwitches.SplitTreeLOD then begin
             wbProgress('Test mode FAILED: an error occured while loading modules');
             CheckResult := 255;
             if xeAutoExit then
@@ -19180,6 +19227,18 @@ begin
         if xeTestSwitches.CopyIntoGap then
           DoTestCopyIntoGap;
 
+        if xeTestSwitches.NewFile then
+          DoTestNewFile;
+
+        if xeTestSwitches.GameLink then
+          DoTestGameLink;
+
+        if xeTestSwitches.FormIDSearch then
+          DoTestFormIDSearch;
+
+        if xeTestSwitches.SplitTreeLOD then
+          DoTestSplitTreeLOD;
+
         if xeTestSwitches.DropMaster then
           DoTestDropMaster;
 
@@ -19281,6 +19340,9 @@ begin
 {$IFDEF XE_TEST_CONTROL_POINTS}
       if xeTestSwitches.DeltaPatch then
         DoTestDeltaPatchReport;
+
+      if xeTestSwitches.NewFile then
+        DoTestNewFileReport;
 
       if xeTestSwitches.Conflicts then begin
         if xeContext.LoaderError then begin
@@ -19445,20 +19507,14 @@ begin
 
   var lLayout := xeContext.SlotLayout;
   FileID := FormID.FileID[lLayout];
-  if xeContext.GameDefObj.IsLightSupported or xeContext.Settings.PseudoLight or xeContext.Settings.PseudoUpdate then begin
-    _File := nil;
-    for i := Low(Files) to High(Files) do
-      if Files[i].LoadOrderFileID = FileID then begin
-        _File := Files[i];
-        break;
-      end;
-    if not Assigned(_File) then
-      Exit;
-  end else begin
-    if (FileID.FullSlot < Low(Files)) or (FileID.FullSlot > High(Files)) then
-      Exit;
-    _File := Files[FileID.FullSlot];
-  end;
+  _File := nil;
+  for i := Low(Files) to High(Files) do
+    if Files[i].HasLoadOrderFileID and (Files[i].LoadOrderFileID = FileID) then begin
+      _File := Files[i];
+      break;
+    end;
+  if not Assigned(_File) then
+    Exit;
 
   FormID.FileID[lLayout] := _File.FileFileID[True];
   MainRecord := _File.RecordByFormID[FormID, True, True];
@@ -20561,6 +20617,28 @@ begin
       frmMain.ShowNexusModsHint := Now + (1/24/60/6); // 10 seconds
     end;
   end);
+end;
+
+{ TxeSettingsFile }
+
+constructor TxeSettingsFile.Create(const aFileName: string; const aReport: TwbSaveMessageProc);
+begin
+  inherited Create(aFileName);
+  sfReport := aReport;
+end;
+
+procedure TxeSettingsFile.UpdateFile;
+begin
+  try
+    inherited;
+    sfWriteFailed := False;
+  except
+    on E: Exception do begin
+      if not sfWriteFailed and Assigned(sfReport) then
+        sfReport('Error: Could not write the settings file: <' + E.ClassName + ': ' + E.Message + '>');
+      sfWriteFailed := True;
+    end;
+  end;
 end;
 
 type

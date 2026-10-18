@@ -1821,6 +1821,7 @@ type
     function GetRecordFromIndexByKey(aIndex: TwbNamedIndex; const aKey: string): IwbMainRecord;
     function GetLoadOrder: Integer;
     function GetLoadOrderFileID: TwbFileID;
+    function GetHasLoadOrderFileID: Boolean;
     function GetResolvedLoadOrderFileID(aNewMasters : Boolean): TwbFileID;
     function GetFileFileID(aNewMasters : Boolean): TwbFileID;
     procedure ForceLoadOrder(aValue: Integer);
@@ -1991,6 +1992,8 @@ type
       read GetLoadOrder;
     property LoadOrderFileID: TwbFileID
       read GetLoadOrderFileID;
+    property HasLoadOrderFileID: Boolean
+      read GetHasLoadOrderFileID;
     property ResolvedLoadOrderFileID[aNewMasters: Boolean]: TwbFileID
       read GetResolvedLoadOrderFileID;
     property FileFileID[aNewMasters: Boolean]: TwbFileID
@@ -2332,7 +2335,7 @@ type
     procedure SetFormVCS2(aVCS: Cardinal);
 
     procedure ChangeFormSignature(const aSignature: TwbSignature);
-    procedure ClampFormID(aIndex: Byte);
+    procedure ClampFormID(aAbove, aTo: Byte);
 
     function ContentEquals(const aMainRecord: IwbMainRecord): Boolean;
 
@@ -7761,9 +7764,10 @@ begin
     if fsIsGameMaster in gcFiles[lIdx].FileStates then
       Exit(gcFiles[lIdx]);
   for var lIdx := Low(gcFiles) to High(gcFiles) do
-    with gcFiles[lIdx].LoadOrderFileID do
-      if IsFullSlot and (FullSlot = 0) then
-        Exit(gcFiles[lIdx]);
+    if gcFiles[lIdx].HasLoadOrderFileID then
+      with gcFiles[lIdx].LoadOrderFileID do
+        if IsFullSlot and (FullSlot = 0) then
+          Exit(gcFiles[lIdx]);
   Result := nil;
 end;
 
@@ -7947,7 +7951,7 @@ begin
   end;
 
   for var i:= Low(gcFiles) to High(gcFiles) do
-    if gcFiles[i].LoadOrderFileID = lFileID then begin
+    if gcFiles[i].HasLoadOrderFileID and (gcFiles[i].LoadOrderFileID = lFileID) then begin
       Result := gcFiles[i].ContainedRecordByLoadOrderFormID[aFormID, True];
       if Assigned(Result) and Assigned(aSeenFromFile) then begin
         var lVisibleResult := Result.HighestOverrideVisibleForFile[aSeenFromFile];

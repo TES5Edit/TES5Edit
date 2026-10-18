@@ -889,8 +889,12 @@ type
     procedure SetLoadOrder(aValue: Integer);
 
     function GetLoadOrderFileID: TwbFileID;
+    function GetHasLoadOrderFileID: Boolean;
     function GetResolvedLoadOrderFileID(aNew: Boolean): TwbFileID;
     function GetFileFileID(aNewMasters : Boolean): TwbFileID;
+    function GetCompareMasterIndex(aNew: Boolean): Integer;
+    function GetMasterFileFileID(aIndex: Integer; aNew: Boolean): TwbFileID;
+    function GetCompareSelfFileID(aNew: Boolean): TwbFileID;
 
     function LoadOrderFormIDtoFileFormID(const aFormID: TwbFormID; aNew: Boolean): TwbFormID;
     function FileFormIDtoLoadOrderFormID(const aFormID: TwbFormID; aNew: Boolean): TwbFormID;
@@ -1508,7 +1512,7 @@ type
     function GetFormVCS2: Cardinal;
     procedure SetFormVCS2(aVCS: Cardinal);
     procedure ChangeFormSignature(const aSignature: TwbSignature);
-    procedure ClampFormID(aIndex: Byte);
+    procedure ClampFormID(aAbove, aTo: Byte);
 
     function ContentEquals(const aMainRecord: IwbMainRecord): Boolean;
 
@@ -2749,6 +2753,7 @@ var
   lStart      : TwbFormID;
   lEnd        : TwbFormID;
   lFloor      : Cardinal;
+  lMax        : Cardinal;
   lOld        : TwbFormID;
   lNew        : TwbFormID;
   lRecord     : IwbMainRecord;
@@ -2766,6 +2771,11 @@ var
     aPlan.PreservedCount := 0;
   end;
 
+  function OffsetFits(aDelta: Integer): Boolean;
+  begin
+    Result := Int64(lStart.ObjectID[lLayout]) + aDelta <= lMax;
+  end;
+
 begin
   lLayout := flContextObj.SlotLayout;
   lSelf := Self;
@@ -2778,6 +2788,11 @@ begin
   aPlan.RefusedRecord := nil;
   aPlan.InUseFormID := TwbFormID.Null;
   aPlan.InUseHolder := nil;
+
+  if not GetHasLoadOrderFileID then begin
+    Refuse(fcrNoOwnRecords);
+    Exit;
+  end;
 
   SetLength(lOwn, GetRecordCount);
   j := 0;
@@ -2795,6 +2810,7 @@ begin
 
   lStart := aPlan.Start;
   lStart.FileID[lLayout] := lTarget.LoadOrderFileID;
+  lMax := lStart.FileID[lLayout].ModuleType.MaxObjectID;
   aPlan.HighFormID := lStart;
   if aPlan.Kind = fckCompact then
     lEnd := TwbFormID.FromCardinal(aPlan.Goal.MaxObjectID).ChangeFileID(lLayout, lTarget.LoadOrderFileID)
@@ -2804,6 +2820,10 @@ begin
     else
       lEnd := TwbFormID.FromCardinal($FFFFFF).ChangeFileID(lLayout, lTarget.LoadOrderFileID);
   end else begin
+    if not OffsetFits(j) then begin
+      Refuse(fcrTooMany);
+      Exit;
+    end;
     lEnd := lStart.Offset(lLayout, j);
     aPlan.HighFormID := lEnd;
   end;
@@ -2841,6 +2861,10 @@ begin
 
         while (j <= High(lTaken)) and lTaken[j] do
           Inc(j);
+        if not OffsetFits(j) then begin
+          Refuse(fcrTooMany);
+          Exit;
+        end;
         lNew := lStart.Offset(lLayout, j);
         Inc(j);
       end else begin
@@ -2873,6 +2897,10 @@ begin
                 Break;
               end;
           end else begin
+            if not OffsetFits(j) then begin
+              Refuse(fcrTooMany);
+              Exit;
+            end;
             lNew := lStart.Offset(lLayout, j);
             Inc(j);
           end;
@@ -2917,6 +2945,10 @@ begin
             Continue;
 
           repeat
+            if not OffsetFits(j) then begin
+              Refuse(fcrTooMany);
+              Exit;
+            end;
             lNew := lStart.Offset(lLayout, j);
             Inc(j);
           until not lPlanned.ContainsKey(lNew.ToCardinal) and not Assigned(lTarget.ContainedRecordByLoadOrderFormID[lNew, True]);
@@ -3028,7 +3060,7 @@ begin
     lFileID := aLoadOrderFormID.FileID[flContextObj.SlotLayout];
     lMaster := nil;
     for var lFile in flContextObj.Files do
-      if Assigned(lFile) and (lFile.LoadOrder < flLoadOrder) and (lFile.LoadOrderFileID = lFileID) then begin
+      if Assigned(lFile) and (lFile.LoadOrder < flLoadOrder) and lFile.HasLoadOrderFileID and (lFile.LoadOrderFileID = lFileID) then begin
         lMaster := lFile;
         Break;
       end;
@@ -5855,20 +5887,36 @@ begin
 end;
 
 function TwbFile.FileFileIDtoLoadOrderFileID(const aFileID: TwbFileID; aNew: Boolean): TwbFileID;
+
+  function MasterFileID(const aMaster: IwbFile): TwbFileID;
+  begin
+    if aMaster.HasLoadOrderFileID then
+      Exit(aMaster.LoadOrderFileID);
+    Result := aMaster.ResolvedLoadOrderFileID[True];
+    if not Result.IsValid then
+      raise EFileNoSlotExecption.Create('File has no slot assigned');
+  end;
+
 begin
+  if fsIsCompareLoad in flStates then begin
+    var lIndex := GetCompareMasterIndex(aNew);
+    if (lIndex >= 0) and GetMaster(lIndex, aNew).Equals(flCompareToFile) and (aFileID = GetCompareSelfFileID(aNew)) then
+      Exit(flLoadOrderFileID);
+  end;
+
   if flComplexFileFileID then case aFileID.ModuleType of
     mtLight:
       if (aFileID.LightSlot >= 0) and (aFileID.LightSlot < GetLightMasterCount(aNew)) then
-      Exit(GetLightMaster(aFileID.LightSlot, aNew).LoadOrderFileID);
+      Exit(MasterFileID(GetLightMaster(aFileID.LightSlot, aNew)));
     mtMedium:
       if (aFileID.MediumSlot >= 0) and (aFileID.MediumSlot < GetMediumMasterCount(aNew)) then
-        Exit(GetMediumMaster(aFileID.MediumSlot, aNew).LoadOrderFileID);
+        Exit(MasterFileID(GetMediumMaster(aFileID.MediumSlot, aNew)));
     mtFull:
       if (aFileID.FullSlot >= 0) and (aFileID.FullSlot < GetFullMasterCount(aNew)) then
-        Exit(GetFullMaster(aFileID.FullSlot, aNew).LoadOrderFileID);
+        Exit(MasterFileID(GetFullMaster(aFileID.FullSlot, aNew)));
   end else
     if (aFileID.FullSlot >= 0) and (aFileID.FullSlot < GetMasterCount(aNew)) then
-      Exit(GetMaster(aFileID.FullSlot, aNew).LoadOrderFileID);
+      Exit(MasterFileID(GetMaster(aFileID.FullSlot, aNew)));
 
   Result := GetResolvedLoadOrderFileID(aNew);
   if not Result.IsValid then
@@ -6449,7 +6497,10 @@ function TwbFile.GetContainedRecordByLoadOrderFormID(const aFormID: TwbFormID; a
   begin
     if flComplexFileFileID then begin
       if aFileID = flLoadOrderFileID then
-        Exit(GetFileFileID(False));
+        if fsIsCompareLoad in flStates then
+          Exit(GetCompareSelfFileID(False))
+        else
+          Exit(GetFileFileID(False));
 
       var lFullIndex := 0;
       var lLightIndex := 0;
@@ -6457,7 +6508,7 @@ function TwbFile.GetContainedRecordByLoadOrderFormID(const aFormID: TwbFormID; a
 
       for var lIndex := 0 to Pred(GetMasterCount(False)) do begin
         var lMaster := GetMaster(lIndex, False);
-        if lMaster.LoadOrderFileID = aFileID then case lMaster.ModuleType of
+        if lMaster.HasLoadOrderFileID and (lMaster.LoadOrderFileID = aFileID) then case lMaster.ModuleType of
           mtLight: Exit(TwbFileID.CreateLight(lLightIndex, flContextObj.SlotLayout));
           mtMedium: Exit(TwbFileID.CreateMedium(lMediumIndex, flContextObj.SlotLayout));
           mtFull: Exit(TwbFileID.CreateFull(lFullIndex));
@@ -6470,13 +6521,15 @@ function TwbFile.GetContainedRecordByLoadOrderFormID(const aFormID: TwbFormID; a
     end else begin
       if aFileID = flLoadOrderFileID then
         if fsIsCompareLoad in flStates then
-          Exit(TwbFileID.CreateFull(Pred(GetMasterCount(False))))
+          Exit(GetCompareSelfFileID(False))
         else
           Exit(GetFileFileID(False))
       else
-        for var i := Pred(GetMasterCount(False)) downto 0 do
-          if GetMaster(i, False).LoadOrderFileID = aFileID then
+        for var i := Pred(GetMasterCount(False)) downto 0 do begin
+          var lMaster := GetMaster(i, False);
+          if lMaster.HasLoadOrderFileID and (lMaster.LoadOrderFileID = aFileID) then
             Exit(TwbFileID.CreateFull(i));
+        end;
     end;
 
     Result := TwbFileID.Invalid;
@@ -6488,16 +6541,35 @@ var
 begin
   Result := nil;
 
-  FileID :=  LoadOrderToFile(aFormID.FileID[flContextObj.SlotLayout]);
+  var lLayout := flContextObj.SlotLayout;
+  var lLoadOrderFileID := aFormID.FileID[lLayout];
+  var lObjectID := aFormID.ObjectID[lLayout];
+  FileID :=  LoadOrderToFile(lLoadOrderFileID);
   if not FileID.IsValid then
     Exit;
 
-  aFormID.FileID[flContextObj.SlotLayout] := FileID;
+  var lFormID := aFormID;
+  if lObjectID <= FileID.ModuleType.MaxObjectID then begin
+    lFormID.FileID[lLayout] := FileID;
+    if FindFormID(lFormID, i, False) then
+      Exit(flRecords[i]);
+    if aAllowInjected and IsNewRecord(FileID, False) and FindInjectedID(lFormID, i) then
+      Exit(flInjectedRecords[i]);
+  end;
 
-  if FindFormID(aFormID, i, False) then
-    Result := flRecords[i]
-  else if aAllowInjected and IsNewRecord(FileID, False) and FindInjectedID(aFormID, i) then
-    Result := flInjectedRecords[i];
+  if (fsIsCompareLoad in flStates) and (lLoadOrderFileID = flLoadOrderFileID) then begin
+    var lCompareIndex := GetCompareMasterIndex(False);
+    for var lIndex := 0 to lCompareIndex do
+      if GetMaster(lIndex, False).Equals(GetMaster(lCompareIndex, False)) then begin
+        var lFileID := GetMasterFileFileID(lIndex, False);
+        if (lFileID <> FileID) and (lObjectID <= lFileID.ModuleType.MaxObjectID) then begin
+          lFormID := aFormID;
+          lFormID.FileID[lLayout] := lFileID;
+          if FindFormID(lFormID, i, False) then
+            Exit(flRecords[i]);
+        end;
+      end;
+  end;
 end;
 
 function TwbFile.GetOwnRecordByLoadOrderFormID(const aFormID: TwbFormID): IwbMainRecord;
@@ -6623,6 +6695,11 @@ begin
     raise EFileNoSlotExecption.Create('File has no slot assigned');
 end;
 
+function TwbFile.GetHasLoadOrderFileID: Boolean;
+begin
+  Result := flLoadOrderFileID.FullSlot >= 0;
+end;
+
 function TwbFile.GetFileFileID(aNewMasters : Boolean): TwbFileID;
 begin
   var SelfRef := Self as IwbContainerElementRef;
@@ -6636,6 +6713,42 @@ begin
       Result := TwbFileID.CreateFull(GetFullMasterCount(aNewMasters));
   end else
     Result := TwbFileID.CreateFull(GetMasterCount(aNewMasters));
+end;
+
+function TwbFile.GetCompareMasterIndex(aNew: Boolean): Integer;
+begin
+  Result := Pred(GetMasterCount(aNew));
+  if Assigned(flCompareToFile) then
+    for var lIndex := Result downto 0 do
+      if GetMaster(lIndex, aNew).Equals(flCompareToFile) then
+        Exit(lIndex);
+end;
+
+function TwbFile.GetMasterFileFileID(aIndex: Integer; aNew: Boolean): TwbFileID;
+begin
+  if not flComplexFileFileID then
+    Exit(TwbFileID.CreateFull(aIndex));
+  var lType := GetMaster(aIndex, aNew).ModuleType;
+  var lTypeIndex := 0;
+  for var lIndex := 0 to Pred(aIndex) do
+    if GetMaster(lIndex, aNew).ModuleType = lType then
+      Inc(lTypeIndex);
+  case lType of
+    mtLight:
+      Result := TwbFileID.CreateLight(lTypeIndex, flContextObj.SlotLayout);
+    mtMedium:
+      Result := TwbFileID.CreateMedium(lTypeIndex, flContextObj.SlotLayout);
+  else
+    Result := TwbFileID.CreateFull(lTypeIndex);
+  end;
+end;
+
+function TwbFile.GetCompareSelfFileID(aNew: Boolean): TwbFileID;
+begin
+  var lIndex := GetCompareMasterIndex(aNew);
+  if (lIndex < 0) or (flComplexFileFileID and (GetMaster(lIndex, aNew).ModuleType <> GetModuleType)) then
+    Exit(GetFileFileID(aNew));
+  Result := GetMasterFileFileID(lIndex, aNew);
 end;
 
 function TwbFile.GetFileGeneration: Integer;
@@ -7061,7 +7174,7 @@ begin
     Result := GetMaster(aFileID.FullSlot, aNew);
 
   if not Assigned(Result) and (fsIsCompareLoad in flStates) and (GetMasterCount(aNew) > 0) then
-    Result := GetMaster(Pred(GetMasterCount(aNew)), aNew);
+    Result := GetMaster(GetCompareMasterIndex(aNew), aNew);
 end;
 
 function TwbFile.GetMasterIndexForFileID(const aFileID: TwbFileID; aNew: Boolean): Integer;
@@ -7129,7 +7242,7 @@ begin
           var lLightMasterCount := GetLightMasterCount(aNewMasters);
           if lLightSlot >= lLightMasterCount then begin
             if fsIsCompareLoad in flStates then
-              lMaster := GetMaster(Pred(GetMasterCount(aNewMasters)), aNewMasters);
+              lMaster := GetMaster(GetCompareMasterIndex(aNewMasters), aNewMasters);
           end else
             lMaster := GetLightMaster(lLightSlot, aNewMasters);
         end;
@@ -7140,7 +7253,7 @@ begin
           var lMediumMasterCount := GetMediumMasterCount(aNewMasters);
           if lMediumSlot >= lMediumMasterCount then begin
             if fsIsCompareLoad in flStates then
-              lMaster := GetMaster(Pred(GetMasterCount(aNewMasters)), aNewMasters);
+              lMaster := GetMaster(GetCompareMasterIndex(aNewMasters), aNewMasters);
           end else
             lMaster := GetMediumMaster(lMediumSlot, aNewMasters);
         end;
@@ -7151,7 +7264,7 @@ begin
           var lFullMasterCount := GetFullMasterCount(aNewMasters);
           if lFullSlot >= lFullMasterCount then begin
             if fsIsCompareLoad in flStates then
-              lMaster := GetMaster(Pred(GetMasterCount(aNewMasters)), aNewMasters);
+              lMaster := GetMaster(GetCompareMasterIndex(aNewMasters), aNewMasters);
           end else
             lMaster := GetFullMaster(lFullSlot, aNewMasters);
         end;
@@ -7164,7 +7277,7 @@ begin
       var lMasterCount := GetMasterCount(aNewMasters);
       if lSlot >= lMasterCount then begin
         if fsIsCompareLoad in flStates then
-          lMaster := GetMaster(Pred(lMasterCount), aNewMasters);
+          lMaster := GetMaster(GetCompareMasterIndex(aNewMasters), aNewMasters);
       end else
         lMaster := GetMaster(lSlot, aNewMasters);
     end;
@@ -7250,6 +7363,12 @@ function TwbFile.GetModuleType: TwbModuleType;
 begin
   if Assigned(flModule) then
     Result := flModule.GetModuleType
+  else if GetElementCount < 1 then
+    Result := mtFull
+  else if GetIsLightDirect then
+    Result := mtLight
+  else if GetIsMediumDirect then
+    Result := mtMedium
   else
     Result := mtFull;
 end;
@@ -7342,7 +7461,7 @@ function TwbFile.GetResolvedLoadOrderFileID(aNew: Boolean): TwbFileID;
 begin
   if fsIsCompareLoad in flStates then begin
     if GetMasterCount(aNew) > 0 then
-      Result := GetMaster(Pred(GetMasterCount(aNew)), aNew).ResolvedLoadOrderFileID[True]
+      Result := GetMaster(GetCompareMasterIndex(aNew), aNew).ResolvedLoadOrderFileID[True]
     else
       Result := TwbFileID.Invalid;
   end else begin
@@ -7499,7 +7618,10 @@ begin
   Result := True;
   if flComplexFileFileID then begin
     if aFileID = flLoadOrderFileID then begin
-      aFileFileID := GetFileFileID(aNew);
+      if fsIsCompareLoad in flStates then
+        aFileFileID := GetCompareSelfFileID(aNew)
+      else
+        aFileFileID := GetFileFileID(aNew);
       Exit;
     end;
 
@@ -7509,7 +7631,7 @@ begin
 
     for var lIndex := 0 to Pred(GetMasterCount(aNew)) do begin
       var lMaster := GetMaster(lIndex, aNew);
-      if lMaster.LoadOrderFileID = aFileID then case lMaster.ModuleType of 
+      if lMaster.HasLoadOrderFileID and (lMaster.LoadOrderFileID = aFileID) then case lMaster.ModuleType of
         mtLight: begin
           aFileFileID := TwbFileID.CreateLight(lLightIndex, flContextObj.SlotLayout);
           Exit;
@@ -7531,16 +7653,18 @@ begin
   end else begin
     if aFileID = flLoadOrderFileID then begin
       if fsIsCompareLoad in flStates then
-        aFileFileID := TwbFileID.CreateFull(Pred(GetMasterCount(aNew)))
+        aFileFileID := GetCompareSelfFileID(aNew)
       else
         aFileFileID := GetFileFileID(aNew);
       Exit;
     end;
-    for var i := Pred(GetMasterCount(aNew)) downto 0 do
-      if GetMaster(i, aNew).LoadOrderFileID = aFileID then begin
+    for var i := Pred(GetMasterCount(aNew)) downto 0 do begin
+      var lMaster := GetMaster(i, aNew);
+      if lMaster.HasLoadOrderFileID and (lMaster.LoadOrderFileID = aFileID) then begin
         aFileFileID := TwbFileID.CreateFull(i);
         Exit;
       end;
+    end;
   end;
 
   Result := False;
@@ -7552,7 +7676,11 @@ begin
   if aFormID.IsHardcoded then
     Exit;
   var lLayout := flContextObj.SlotLayout;
-  Result.FileID[lLayout] := LoadOrderFileIDtoFileFileID(Result.FileID[lLayout], aNew);
+  var lFileID := LoadOrderFileIDtoFileFileID(Result.FileID[lLayout], aNew);
+  if (fsIsCompareLoad in flStates) and (aFormID.FileID[lLayout] = flLoadOrderFileID) and
+     (aFormID.ObjectID[lLayout] > lFileID.ModuleType.MaxObjectID) and (GetMasterCount(aNew) > 0) then
+    lFileID := GetMasterFileFileID(GetCompareMasterIndex(aNew), aNew);
+  Result.FileID[lLayout] := lFileID;
 end;
 
 var
@@ -7921,14 +8049,17 @@ begin
     end;
 
     if flContextObj.Settings.ClampFormID or (fsIsDeltaPatch in flStates) then begin
-      if Supports(FileHeader.ElementByName['Master Files'], IwbContainerElementRef, MasterFiles) then begin
-        k := MasterFiles.ElementCount;
-        if fsIsDeltaPatch in flStates then
-          Dec(k);
-      end else
+      if Supports(FileHeader.ElementByName['Master Files'], IwbContainerElementRef, MasterFiles) then
+        k := MasterFiles.ElementCount
+      else
         k := 0;
+      var lTo := k;
+      if fsIsDeltaPatch in flStates then begin
+        Dec(k);
+        lTo := GetCompareMasterIndex(True);
+      end;
       for i := Low(flRecords) to High(flRecords) do
-        flRecords[i].ClampFormID(k);
+        flRecords[i].ClampFormID(k, lTo);
     end;
 
     if flComplexFileFileID then begin
@@ -8362,7 +8493,7 @@ begin
     if fsIsCompareLoad in flStates then begin
       if not Assigned(flCompareToFile) then
         flCompareToFile := flContextObj.FileByName(flCompareTo);
-      if Assigned(flCompareToFile) then begin
+      if Assigned(flCompareToFile) and flCompareToFile.HasLoadOrderFileID then begin
         flLoadOrderFileID := flCompareToFile.LoadOrderFileID
       end else
         flLoadOrderFileID := TwbFileID.CreateFull($FF);
@@ -14626,7 +14757,7 @@ begin
   mrStruct.mrsSignature := aSignature;
 end;
 
-procedure TwbMainRecord.ClampFormID(aIndex: Byte);
+procedure TwbMainRecord.ClampFormID(aAbove, aTo: Byte);
 begin
   var lCapabilities := GameDefObj.Capabilities;
   var lFormIDInHeader := gcFormIDInRecordHeader in lCapabilities;
@@ -14635,13 +14766,13 @@ begin
   if gcComplexFileFileID in lCapabilities then
     Exit;
 
-  if mrStruct.mrsFormID(lFormIDInHeader).FileID[ContextObj.SlotLayout].FullSlot > aIndex then begin
+  if mrStruct.mrsFormID(lFormIDInHeader).FileID[ContextObj.SlotLayout].FullSlot > aAbove then begin
     MakeHeaderWriteable;
-    mrStruct.mrsFormID(lFormIDInHeader).FileID[ContextObj.SlotLayout] := TwbFileID.CreateFull(aIndex);
+    mrStruct.mrsFormID(lFormIDInHeader).FileID[ContextObj.SlotLayout] := TwbFileID.CreateFull(aTo);
     if Assigned(mrGroup) or (GetChildGroup <> nil) then
       mrGroup.GroupLabel := mrStruct.mrsFormID(lFormIDInHeader).ToCardinal;
   end else
-    if mrStruct.mrsFormID(lFormIDInHeader).FileID[ContextObj.SlotLayout].FullSlot = aIndex then
+    if mrStruct.mrsFormID(lFormIDInHeader).FileID[ContextObj.SlotLayout].FullSlot = aTo then
       if Assigned(mrGroup) or (GetChildGroup <> nil) then
         mrGroup.GroupLabel := mrStruct.mrsFormID(lFormIDInHeader).ToCardinal;
 end;
@@ -22449,17 +22580,35 @@ var
     Group       : IwbContainerElementRef;
     Master      : IwbMainRecord;
     MainRecord  : IwbMainRecord;
-    g           : IwbGroupRecord;
     i, j, k     : Integer;
     InsertRecord: IwbMainRecordEntry;
     TargetRecord: IwbMainRecordEntry;
     PrevRecord  : IwbMainRecordEntry;
-    InfoQuest   : Int64;
-    InfoQuest2  : Int64;
+    InfoQuest   : TwbFormID;
     Inserted    : Boolean;
     NewElements : TDynElementInternals;
     INOM        : IwbContainerElementRef;
     ListSig     : TwbSignature;
+
+    function QuestOf(const aInfo: IwbMainRecord; aIsSkyrim: Boolean): TwbFormID;
+    var
+      lHolder : IwbMainRecord;
+      lGroup  : IwbGroupRecord;
+      lNative : Int64;
+    begin
+      if aIsSkyrim then begin
+        Supports(aInfo.Container, IwbGroupRecord, lGroup);
+        lHolder := lGroup.ChildrenOf;
+        lNative := lHolder.ElementNativeValues['QNAM'];
+      end else begin
+        lHolder := aInfo;
+        lNative := lHolder.ElementNativeValues['QSTI'];
+      end;
+      if lNative = 0 then
+        Exit(TwbFormID.Null);
+      Result := lHolder._File.FileFormIDtoLoadOrderFormID(TwbFormID.FromCardinal(lNative), lHolder.MastersUpdated);
+    end;
+
   begin
     if aOnlyMasters then begin
       MainRecords := ChildrenOf.MasterRecordsFromMasterFilesAndSelf;
@@ -22513,23 +22662,15 @@ var
                   if not TargetRecord.ElementExists['PNAM'] then begin
                     {>>> No QSTI in Skyrim, using DIAL\QNAM <<<}
                     var lIsSkyrim := GameDefObj.IsSkyrim;
-                    if lIsSkyrim then begin
-                      Supports(TargetRecord.Container, IwbGroupRecord, g);
-                      InfoQuest := g.ChildrenOf.ElementNativeValues['QNAM'];
-                    end else
-                      InfoQuest := TargetRecord.ElementNativeValues['QSTI'];
+                    InfoQuest := QuestOf(TargetRecord, lIsSkyrim);
                     InsertRecord := PrevRecord;
                     Inserted := False;
                     while Assigned(InsertRecord) do begin
-                      if lIsSkyrim then begin
-                        Supports(InsertRecord.Container, IwbGroupRecord, g);
-                        InfoQuest2 := g.ChildrenOf.ElementNativeValues['QNAM'];
-                      end else
-                        InfoQuest2 := InsertRecord.ElementNativeValues['QSTI'];
-                      if (not InsertRecord.IsDeleted) and (InfoQuest = InfoQuest2) then begin
+                      if (not InsertRecord.IsDeleted) and (InfoQuest = QuestOf(InsertRecord, lIsSkyrim)) then begin
                         try
                           Inserted := True;
-                          TargetRecord.Add('PNAM').NativeValue := InsertRecord.LoadOrderFormID.ToCardinal;
+                          TargetRecord.Add('PNAM').NativeValue :=
+                            TargetRecord._File.LoadOrderFormIDtoFileFormID(InsertRecord.LoadOrderFormID, TargetRecord.MastersUpdated).ToCardinal;
                         except
                           TargetRecord.RemoveElement('PNAM');
                         end;
