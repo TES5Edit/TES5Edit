@@ -7778,7 +7778,14 @@ begin
     end;
   end;
 
-  Result := TwbFormID.FromCardinal(NextObjectID).ChangeFileID(flContextObj.SlotLayout, GetFileFileID(True));
+  var lFileID := GetFileFileID(True);
+  if fsIsCompareLoad in flStates then begin
+    var lCompareIndex := GetCompareMasterIndex(True);
+    if (lCompareIndex >= 0) and GetMaster(lCompareIndex, True).Equals(flCompareToFile) then
+      lFileID := GetCompareSelfFileID(True);
+  end;
+
+  Result := TwbFormID.FromCardinal(NextObjectID).ChangeFileID(flContextObj.SlotLayout, lFileID);
   First := Result;
   while GetRecordByFormID(Result, True, True) <> nil do begin
     Inc(NextObjectID);
@@ -7788,7 +7795,7 @@ begin
       else
         NextObjectID := $800;
     end;
-    Result := TwbFormID.FromCardinal(NextObjectID).ChangeFileID(flContextObj.SlotLayout, GetFileFileID(True));
+    Result := TwbFormID.FromCardinal(NextObjectID).ChangeFileID(flContextObj.SlotLayout, lFileID);
     if Result = First then //we've gone through all possible FormIDs once, no more space free
       raise ERangeError.Create('File ' + GetFileName + ' has no more space for a new FormID');
   end;
