@@ -2788,6 +2788,17 @@ var
     Result := Int64(lStart.ObjectID[lLayout]) + aDelta <= lMax;
   end;
 
+  function InjectedWithin(aSpan: Integer): Integer;
+  begin
+    Result := 0;
+    var lLast := lStart.Offset(lLayout, aSpan);
+    for var lIndex := Low(flInjectedRecords) to High(flInjectedRecords) do begin
+      var lFormID := flInjectedRecords[lIndex].LoadOrderFormID;
+      if (lFormID >= lStart) and (lFormID <= lLast) then
+        Inc(Result);
+    end;
+  end;
+
 begin
   lLayout := flContextObj.SlotLayout;
   lSelf := Self;
@@ -2844,15 +2855,26 @@ begin
       Refuse(fcrTooMany);
       Exit;
     end;
-    if OffsetFits(j) then
-      lEnd := lStart.Offset(lLayout, j)
-    else
-      lEnd := lStart.Offset(lLayout, Pred(j));
+    var lBase := j;
+    if not OffsetFits(lBase) then
+      lBase := Pred(j);
+    var lSpan := lBase;
+    repeat
+      var lWanted := lBase + InjectedWithin(lSpan);
+      if lWanted = lSpan then
+        Break;
+      if not OffsetFits(lWanted) then begin
+        lSpan := Integer(lMax - lStart.ObjectID[lLayout]);
+        Break;
+      end;
+      lSpan := lWanted;
+    until False;
+    lEnd := lStart.Offset(lLayout, lSpan);
     aPlan.HighFormID := lEnd;
   end;
   lFloor := lTarget.ObjectIDFloor;
 
-  if lTarget.Equals(lSelf) then
+  if lTarget.Equals(lSelf) then begin
     for i := Low(lOwn) to High(lOwn) do begin
       lOld := lOwn[i].LoadOrderFormID;
       if (lOld >= lStart) and (lOld <= lEnd) then begin
@@ -2862,6 +2884,16 @@ begin
         lTaken[j] := True;
       end;
     end;
+    for i := Low(flInjectedRecords) to High(flInjectedRecords) do begin
+      lOld := flInjectedRecords[i].LoadOrderFormID;
+      if (lOld >= lStart) and (lOld <= lEnd) then begin
+        j := lOld - lStart;
+        if j > High(lTaken) then
+          SetLength(lTaken, Succ(j));
+        lTaken[j] := True;
+      end;
+    end;
+  end;
 
   lSignatures := TStringList.Create;
   try
@@ -2882,16 +2914,14 @@ begin
         if (lOld >= lStart) and (lOld <= lEnd) then
           Continue;
 
-        repeat
-          while (j <= High(lTaken)) and lTaken[j] do
-            Inc(j);
-          if not OffsetFits(j) then begin
-            Refuse(fcrTooMany);
-            Exit;
-          end;
-          lNew := lStart.Offset(lLayout, j);
+        while (j <= High(lTaken)) and lTaken[j] do
           Inc(j);
-        until not Assigned(lTarget.ContainedRecordByLoadOrderFormID[lNew, True]);
+        if not OffsetFits(j) then begin
+          Refuse(fcrTooMany);
+          Exit;
+        end;
+        lNew := lStart.Offset(lLayout, j);
+        Inc(j);
       end else begin
         lNew := TwbFormID.Null;
         lHolder := nil;
@@ -2934,7 +2964,7 @@ begin
         lHolder := nil;
       end;
 
-      if (lNew > lEnd) and not ((aPlan.Kind = fckRenumber) and lTarget.Equals(lSelf)) then begin
+      if lNew > lEnd then begin
         Refuse(fcrTooMany);
         Exit;
       end;
