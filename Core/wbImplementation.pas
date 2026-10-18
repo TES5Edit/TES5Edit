@@ -7754,6 +7754,8 @@ var
 begin
   if GetIsUpdate then
     raise Exception.Create('File ' + GetFileName + ' is an update and can not contain new records.');
+  if not GetHasLoadOrderFileID then
+    raise Exception.Create('File ' + GetFileName + ' has no load order slot and can not contain new records until it is loaded again.');
 
   Assert(not (fsMastersUpdating in flStates));
 
