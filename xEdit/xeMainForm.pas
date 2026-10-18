@@ -8556,6 +8556,11 @@ begin
     finally
       Free;
     end;
+
+    if _File.IsUpdate then begin
+      ShowMessage('"'+_File.Name+'" is an update module and can''t own any records.');
+      Exit;
+    end;
   end;
 
   var lYesToAll := False;
