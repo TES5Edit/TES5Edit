@@ -2753,6 +2753,7 @@ var
   lStart      : TwbFormID;
   lEnd        : TwbFormID;
   lFloor      : Cardinal;
+  lMax        : Cardinal;
   lOld        : TwbFormID;
   lNew        : TwbFormID;
   lRecord     : IwbMainRecord;
@@ -2768,6 +2769,11 @@ var
     aPlan.Records := nil;
     aPlan.NewFormIDs := nil;
     aPlan.PreservedCount := 0;
+  end;
+
+  function OffsetFits(aDelta: Integer): Boolean;
+  begin
+    Result := Int64(lStart.ObjectID[lLayout]) + aDelta <= lMax;
   end;
 
 begin
@@ -2804,6 +2810,7 @@ begin
 
   lStart := aPlan.Start;
   lStart.FileID[lLayout] := lTarget.LoadOrderFileID;
+  lMax := lStart.FileID[lLayout].ModuleType.MaxObjectID;
   aPlan.HighFormID := lStart;
   if aPlan.Kind = fckCompact then
     lEnd := TwbFormID.FromCardinal(aPlan.Goal.MaxObjectID).ChangeFileID(lLayout, lTarget.LoadOrderFileID)
@@ -2813,6 +2820,10 @@ begin
     else
       lEnd := TwbFormID.FromCardinal($FFFFFF).ChangeFileID(lLayout, lTarget.LoadOrderFileID);
   end else begin
+    if not OffsetFits(j) then begin
+      Refuse(fcrTooMany);
+      Exit;
+    end;
     lEnd := lStart.Offset(lLayout, j);
     aPlan.HighFormID := lEnd;
   end;
@@ -2850,6 +2861,10 @@ begin
 
         while (j <= High(lTaken)) and lTaken[j] do
           Inc(j);
+        if not OffsetFits(j) then begin
+          Refuse(fcrTooMany);
+          Exit;
+        end;
         lNew := lStart.Offset(lLayout, j);
         Inc(j);
       end else begin
@@ -2882,6 +2897,10 @@ begin
                 Break;
               end;
           end else begin
+            if not OffsetFits(j) then begin
+              Refuse(fcrTooMany);
+              Exit;
+            end;
             lNew := lStart.Offset(lLayout, j);
             Inc(j);
           end;
@@ -2926,6 +2945,10 @@ begin
             Continue;
 
           repeat
+            if not OffsetFits(j) then begin
+              Refuse(fcrTooMany);
+              Exit;
+            end;
             lNew := lStart.Offset(lLayout, j);
             Inc(j);
           until not lPlanned.ContainsKey(lNew.ToCardinal) and not Assigned(lTarget.ContainedRecordByLoadOrderFormID[lNew, True]);
