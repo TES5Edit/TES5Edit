@@ -5016,7 +5016,7 @@ begin
     if not Assigned(lCellRecord) then
     begin
       var lFile := aElement._File;
-      var lFormID := lMainRecord.FormID;
+      var lFormID := lWorldRecord.LoadOrderFormID;
       for var lMasterIdx := Pred(lFile.MasterCount[True]) downto 0 do
       begin
         var lMaster := lFile.Masters[lMasterIdx, True];
