@@ -22531,17 +22531,35 @@ var
     Group       : IwbContainerElementRef;
     Master      : IwbMainRecord;
     MainRecord  : IwbMainRecord;
-    g           : IwbGroupRecord;
     i, j, k     : Integer;
     InsertRecord: IwbMainRecordEntry;
     TargetRecord: IwbMainRecordEntry;
     PrevRecord  : IwbMainRecordEntry;
-    InfoQuest   : Int64;
-    InfoQuest2  : Int64;
+    InfoQuest   : TwbFormID;
     Inserted    : Boolean;
     NewElements : TDynElementInternals;
     INOM        : IwbContainerElementRef;
     ListSig     : TwbSignature;
+
+    function QuestOf(const aInfo: IwbMainRecord; aIsSkyrim: Boolean): TwbFormID;
+    var
+      lHolder : IwbMainRecord;
+      lGroup  : IwbGroupRecord;
+      lNative : Int64;
+    begin
+      if aIsSkyrim then begin
+        Supports(aInfo.Container, IwbGroupRecord, lGroup);
+        lHolder := lGroup.ChildrenOf;
+        lNative := lHolder.ElementNativeValues['QNAM'];
+      end else begin
+        lHolder := aInfo;
+        lNative := lHolder.ElementNativeValues['QSTI'];
+      end;
+      if lNative = 0 then
+        Exit(TwbFormID.Null);
+      Result := lHolder._File.FileFormIDtoLoadOrderFormID(TwbFormID.FromCardinal(lNative), lHolder.MastersUpdated);
+    end;
+
   begin
     if aOnlyMasters then begin
       MainRecords := ChildrenOf.MasterRecordsFromMasterFilesAndSelf;
@@ -22595,23 +22613,15 @@ var
                   if not TargetRecord.ElementExists['PNAM'] then begin
                     {>>> No QSTI in Skyrim, using DIAL\QNAM <<<}
                     var lIsSkyrim := GameDefObj.IsSkyrim;
-                    if lIsSkyrim then begin
-                      Supports(TargetRecord.Container, IwbGroupRecord, g);
-                      InfoQuest := g.ChildrenOf.ElementNativeValues['QNAM'];
-                    end else
-                      InfoQuest := TargetRecord.ElementNativeValues['QSTI'];
+                    InfoQuest := QuestOf(TargetRecord, lIsSkyrim);
                     InsertRecord := PrevRecord;
                     Inserted := False;
                     while Assigned(InsertRecord) do begin
-                      if lIsSkyrim then begin
-                        Supports(InsertRecord.Container, IwbGroupRecord, g);
-                        InfoQuest2 := g.ChildrenOf.ElementNativeValues['QNAM'];
-                      end else
-                        InfoQuest2 := InsertRecord.ElementNativeValues['QSTI'];
-                      if (not InsertRecord.IsDeleted) and (InfoQuest = InfoQuest2) then begin
+                      if (not InsertRecord.IsDeleted) and (InfoQuest = QuestOf(InsertRecord, lIsSkyrim)) then begin
                         try
                           Inserted := True;
-                          TargetRecord.Add('PNAM').NativeValue := InsertRecord.LoadOrderFormID.ToCardinal;
+                          TargetRecord.Add('PNAM').NativeValue :=
+                            TargetRecord._File.LoadOrderFormIDtoFileFormID(InsertRecord.LoadOrderFormID, TargetRecord.MastersUpdated).ToCardinal;
                         except
                           TargetRecord.RemoveElement('PNAM');
                         end;
