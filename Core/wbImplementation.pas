@@ -2823,12 +2823,20 @@ begin
   lStart := aPlan.Start;
   lStart.FileID[lLayout] := lTarget.LoadOrderFileID;
   lMax := lStart.FileID[lLayout].ModuleType.MaxObjectID;
+  if lTarget.IsLight then begin
+    if lMax > $FFF then
+      lMax := $FFF;
+  end else if lTarget.IsMedium then
+    if lMax > $FFFF then
+      lMax := $FFFF;
   aPlan.HighFormID := lStart;
   if aPlan.Kind = fckCompact then
     lEnd := TwbFormID.FromCardinal(aPlan.Goal.MaxObjectID).ChangeFileID(lLayout, lTarget.LoadOrderFileID)
   else if not lTarget.Equals(lSelf) then begin
     if lTarget.IsLight then
       lEnd := TwbFormID.FromCardinal($FFF).ChangeFileID(lLayout, lTarget.LoadOrderFileID)
+    else if lTarget.IsMedium then
+      lEnd := TwbFormID.FromCardinal($FFFF).ChangeFileID(lLayout, lTarget.LoadOrderFileID)
     else
       lEnd := TwbFormID.FromCardinal($FFFFFF).ChangeFileID(lLayout, lTarget.LoadOrderFileID);
   end else begin
