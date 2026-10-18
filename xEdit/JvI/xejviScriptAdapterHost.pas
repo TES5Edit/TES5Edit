@@ -197,7 +197,7 @@ var
 begin
   if VarIsStr(Args.Values[0]) then begin
     for i := Low(frmMain.Files) to High(frmMain.Files) do
-      if frmMain.Files[i].HasLoadOrderFileID and (frmMain.Files[i].LoadOrderFileID.ToString = Args.Values[0]) then begin
+      if frmMain.Files[i].HasLoadOrderFileID and SameText(frmMain.Files[i].LoadOrderFileID.ToString, Args.Values[0]) then begin
         Value := frmMain.Files[i];
         Break;
       end;
