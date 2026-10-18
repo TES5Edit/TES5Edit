@@ -5468,7 +5468,8 @@ begin
         begin
           if UsedMasters[i] or
              SameText(flMasters[i].FileName, flContextObj.GameDefObj.GameMasterEsm) or
-             KeepMasters.Find(flMasters[i].FileName, k)
+             KeepMasters.Find(flMasters[i].FileName, k) or
+             ((fsIsCompareLoad in flStates) and flMasters[i].Equals(flCompareToFile))
           then begin
 
             if i <> j then begin
