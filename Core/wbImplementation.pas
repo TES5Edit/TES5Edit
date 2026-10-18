@@ -9049,22 +9049,28 @@ var
   Rec            : IwbRecord;
   lEntries    : array of TwbMasterSortEntry;
   lOrder      : array of Pointer;
+  lOldIDs     : TwbFileIDs;
+  lNextFull   : Integer;
+  lNextLight  : Integer;
+  lNextMedium : Integer;
 
-  function GetOldFileID(aIndex: Integer): TwbFileID;
+  function NextFileID(const aFile: IwbFile): TwbFileID;
   begin
-    var lType := flOldMasters[aIndex].GetModuleType;
-    var lTypeIndex := 0;
-    for var lIndex := 0 to Pred(aIndex) do
-      if flOldMasters[lIndex].GetModuleType = lType then
-        Inc(lTypeIndex);
-    case lType of
-      mtLight:
-        Result := TwbFileID.CreateLight(lTypeIndex, flContextObj.SlotLayout);
-      mtMedium:
-        Result := TwbFileID.CreateMedium(lTypeIndex, flContextObj.SlotLayout);
-    else
-      Result := TwbFileID.CreateFull(lTypeIndex);
-    end;
+    if flComplexFileFileID then
+      case aFile.GetModuleType of
+        mtLight: begin
+          Result := TwbFileID.CreateLight(lNextLight, flContextObj.SlotLayout);
+          Inc(lNextLight);
+          Exit;
+        end;
+        mtMedium: begin
+          Result := TwbFileID.CreateMedium(lNextMedium, flContextObj.SlotLayout);
+          Inc(lNextMedium);
+          Exit;
+        end;
+      end;
+    Result := TwbFileID.CreateFull(lNextFull);
+    Inc(lNextFull);
   end;
 
 begin
@@ -9096,50 +9102,29 @@ begin
 
       wbMergeSortPtr(@lOrder[0], Length(lOrder), CompareMasterSortEntries);
       //!!! SF1 support
+      SetLength(lOldIDs, Length(flOldMasters));
+      lNextFull := 0;
+      lNextLight := 0;
+      lNextMedium := 0;
+      for i := Low(flOldMasters) to High(flOldMasters) do
+        lOldIDs[i] := NextFileID(flOldMasters[i]);
       Old := nil;
       New := nil;
-      var nextFullID := 0;
-      var nextSmallID := 0;
-      var nextMediumID := 0;
+      lNextFull := 0;
+      lNextLight := 0;
+      lNextMedium := 0;
       for i := Low(flMasters) to High(flMasters) do begin
         j := PwbMasterSortEntry(lOrder[i]).mseIndex;
         flMasters[i] := flOldMasters[j];
-        if i <> j then begin
+        var lNewID := NextFileID(flMasters[i]);
+        if i <> j then
           MasterFiles[j].SortOrder := i;
+        if (i <> j) or (lNewID <> lOldIDs[j]) then begin
           SetLength(Old, Succ(Length(Old)));
           SetLength(New, Succ(Length(New)));
-
-          if not flComplexFileFileID then
-          begin
-            Old[High(Old)] := TwbFileID.CreateFull(j);
-            New[High(New)] := TwbFileID.CreateFull(i);
-          end else
-          case flMasters[i].GetModuleType of
-            mtFull:
-              begin
-                Old[High(Old)] := GetOldFileID(j);
-                New[High(New)] := TwbFileID.CreateFull(nextFullID);
-                Inc(nextFullID);
-              end;
-            mtLight:
-              begin
-                Old[High(Old)] := GetOldFileID(j);
-                New[High(New)] := TwbFileID.CreateLight(nextSmallID, flContextObj.SlotLayout);
-                Inc(nextSmallID)
-              end;
-            mtMedium:
-              begin
-                Old[High(Old)] := GetOldFileID(j);
-                New[High(New)] := TwbFileID.CreateMedium(nextMediumID, flContextObj.SlotLayout);
-                Inc(nextMediumID);
-              end;
-          end;
-        end else
-        case flMasters[i].GetModuleType of
-            mtFull: Inc(nextFullID);
-            mtLight: Inc(nextSmallID);
-            mtMedium: Inc(nextMediumID);
-          end;
+          Old[High(Old)] := lOldIDs[j];
+          New[High(New)] := lNewID;
+        end;
       end;
       if Length(Old) > 0 then begin
         if flContextObj.BeginInternalEdit(True) then try
