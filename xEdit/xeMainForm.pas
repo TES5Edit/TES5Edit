@@ -975,7 +975,6 @@ type
   private
     procedure WMClose(var Message: TWMClose); message WM_CLOSE;
     procedure WMQueryEndSession(var Message: TWMQueryEndSession); message WM_QUERYENDSESSION;
-    function AppWindowHook(var Message: TMessage): Boolean;
     procedure WMUser(var Message: TMessage); message WM_USER;
     procedure WMUser1(var Message: TMessage); message WM_USER + 1;
     procedure WMUserLoaderDone(var Message: TMessage); message WM_USER + 2;
@@ -2183,17 +2182,6 @@ begin
     PostAddMessage('[' + wbFormatElapsedTime(Now - wbStartTime) + '] Windows session end refused: an operation is running.');
   end else
     Message.Result := LRESULT(inherited CloseQuery);
-end;
-
-function TfrmMain.AppWindowHook(var Message: TMessage): Boolean;
-begin
-  Result := False;
-  if (Message.Msg = WM_ENDSESSION) and TWMEndSession(Message).EndSession then begin
-    FlushPostedMessages;
-    SaveLogs(True);
-    if not LoaderStarted or xeContext.LoaderDone then
-      DoRename;
-  end;
 end;
 
 function TfrmMain.IsShortCut(var Message: TWMKey): Boolean;
@@ -3986,7 +3974,6 @@ end;
 
 destructor TfrmMain.Destroy;
 begin
-  Application.UnhookMainWindow(AppWindowHook);
   inherited;
   for var lHook in MessageScopeHooks do
     lHook.Free;
@@ -5662,7 +5649,6 @@ begin
   if xeTestSwitches.Any then
     TestHost := TxeTestHost.Create(Self);
 {$ENDIF}
-  Application.HookMainWindow(AppWindowHook);
   lvReferencedByAllItems := TObjectList<TRefByListItem>.Create(True);
   lvReferencedByFilteredItems := TList<TRefByListItem>.Create;
 
