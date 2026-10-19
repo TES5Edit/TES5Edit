@@ -1099,7 +1099,8 @@ type
     function IsNone   : Boolean; inline;
 
     function IsHardcoded: Boolean; inline;
-    procedure CheckAssignable;
+    procedure CheckObjectID(aLayout: TwbSlotLayout);
+    procedure CheckAssignable(aLayout: TwbSlotLayout);
 
     procedure SetObjectID(aLayout: TwbSlotLayout; const Value: Cardinal; aSilent: Boolean); overload;
 
@@ -25128,12 +25129,19 @@ begin
   Result := _FormID = $00000014;
 end;
 
-procedure TwbFormID.CheckAssignable;
+procedure TwbFormID.CheckObjectID(aLayout: TwbSlotLayout);
+begin
+  if not IsNull and (GetObjectID(aLayout) = 0) then
+    raise Exception.Create('FormID [' + ToDisplayString(aLayout) + '] has the ObjectID 000, which no record can use');
+end;
+
+procedure TwbFormID.CheckAssignable(aLayout: TwbSlotLayout);
 begin
   if IsNull then
     raise Exception.Create('00000000 is not a valid FormID');
   if IsPlayer then
     raise Exception.Create('00000014 is not a valid FormID');
+  CheckObjectID(aLayout);
 end;
 
 class operator TwbFormID.LessThan(const A, B: TwbFormID): Boolean;

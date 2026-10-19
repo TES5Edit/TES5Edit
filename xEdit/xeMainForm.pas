@@ -2867,10 +2867,7 @@ begin
 
   if InputQuery('New FormID', 'Please enter the new FormID in hex. e.g. 0404CC43. The FormID needs to be a load order corrected form ID.', s) then try
     NewFormID := TwbFormID.FromStr(s);
-    if NewFormID.IsNull then
-      raise Exception.Create('00000000 is not a valid FormID');
-    if NewFormID.IsPlayer then
-      raise Exception.Create('00000014 is not a valid FormID');
+    NewFormID.CheckAssignable(xeContext.SlotLayout);
 
     OldFormID := MainRecord.LoadOrderFormID;
     if NewFormID = OldFormID then begin
@@ -8606,7 +8603,7 @@ begin
           end;
         end;
         NewFormID := TwbFormID.FromStr(s);
-        NewFormID.CheckAssignable;
+        NewFormID.CheckAssignable(xeContext.SlotLayout);
       end else
         Exit;
 

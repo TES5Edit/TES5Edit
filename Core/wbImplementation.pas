@@ -13366,7 +13366,7 @@ var
 begin
   lSelfRef := Self;
   Result := 0;
-  aNewFormID.CheckAssignable;
+  aNewFormID.CheckAssignable(ContextObj.SlotLayout);
 
   lMaster := lSelfRef.MasterOrSelf;
   k := -1;
@@ -18182,6 +18182,7 @@ begin
       Exit;
 
     var lLayout := ContextObj.SlotLayout;
+    aFormID.CheckObjectID(lLayout);
     if (aFormID.ObjectID[lLayout] < $800) and not aFormID.IsHardcoded then begin
       if _File.MasterCount[GetMastersUpdated] < 1 then
         raise Exception.Create('Using FormID [' + aFormID.ToDisplayString(lLayout) + '] requires "' + _File.Name + '" to have at least 1 master' );
@@ -20960,8 +20961,7 @@ begin
       FormID := _File.NewFormID
   else begin
     FormID := ContextObj.FormIDOf(Self);
-    if not FormID.IsNull and (FormID.ObjectID[ContextObj.SlotLayout] = 0) then
-      raise Exception.Create('FormID [' + FormID.ToDisplayString(ContextObj.SlotLayout) + '] has the ObjectID 000, which no record can use');
+    FormID.CheckObjectID(ContextObj.SlotLayout);
     FormID := _File.LoadOrderFormIDtoFileFormID(FormID, True);
   end;
   if FormID.IsNull then
