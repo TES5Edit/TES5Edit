@@ -5550,6 +5550,7 @@ begin
       end;
     finally
       wbForceTerminate := False;
+      Caption := Application.Title;
       pnlClient.Enabled := True;
       UpdatePnlCancelVisible;
     end;
