@@ -5425,8 +5425,13 @@ procedure TfrmMain.FlushPostedMessages;
 var
   lMsg: TMsg;
 begin
-  while PeekMessage(lMsg, Handle, WM_USER, WM_USER, PM_REMOVE) do
+  while PeekMessage(lMsg, Handle, WM_USER, WM_USER, PM_REMOVE) do begin
+    if lMsg.message = WM_QUIT then begin
+      PostQuitMessage(Integer(lMsg.wParam));
+      Break;
+    end;
     DispatchMessage(lMsg);
+  end;
   if Assigned(NewMessages) and (NewMessages.Count > 0) then begin
     mmoMessages.Lines.AddStrings(NewMessages);
     NewMessages.Clear;
