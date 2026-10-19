@@ -19076,7 +19076,9 @@ begin
             TestPumpStart;
 {$ENDIF}
           if not wbForceTerminate then
-            tmrGenerator.Enabled := True;
+            tmrGenerator.Enabled := True
+          else if xeUnattended and (CheckResult = 0) then
+            CheckResult := xeFailureExitCode;
           Exit;
         end;
 
