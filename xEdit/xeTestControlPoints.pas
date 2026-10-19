@@ -103,7 +103,8 @@ type
     procedure TestLoaderHoldAfterDone;
     procedure TestLoaderHoldRelease;
     procedure TestDeltaPatchStates(const aWhen: string);
-    procedure TestDeltaPatchWrite;
+    procedure TestDeltaPatchWrite(aShutdown: Boolean = True);
+    procedure TestDeltaPatchClose;
     procedure TestDeltaPatchLoad(const aMaster: IwbFile);
     procedure TestDeltaPatchCancelTimer(Sender: TObject);
     procedure TestDeltaPatchSecondTimer(Sender: TObject);
@@ -3420,7 +3421,7 @@ begin
       'member=' + BoolToStr(ConflictView.Hidden.Contains(lRecord), True) + #9 + 'hidden=' + BoolToStr(ConflictView.Hidden.IsHidden(lRecord), True));
 end;
 
-procedure TxeTestFormHelper.TestDeltaPatchWrite;
+procedure TxeTestFormHelper.TestDeltaPatchWrite(aShutdown: Boolean);
 var
   lTmp : string;
 begin
@@ -3433,7 +3434,7 @@ begin
   finally
     FreeAndNil(TestHost.TestDeltaPatchLines);
     TestHost.TestDeltaPatchMasterFile := nil;
-    if xeAutoExit then
+    if xeAutoExit and aShutdown then
       tmrShutdown.Enabled := True;
   end;
 end;
@@ -3480,6 +3481,17 @@ begin
     TestHost.TestDeltaPatchTimer.OnTimer := TestDeltaPatchCancelTimer;
     TestHost.TestDeltaPatchTimer.Enabled := True;
   end;
+  if xeTestSwitches.DeltaPatchClose and (xeTestSwitches.DeltaPatchSecond = '') then
+    TestDeltaPatchClose;
+end;
+
+procedure TxeTestFormHelper.TestDeltaPatchClose;
+begin
+  AddMessage('[Test Delta Patch] closing the editor while the delta patch loads');
+  TestHost.TestDeltaPatchLines.Add('# closed while the delta patch loads');
+  CheckResult := 0;
+  TestDeltaPatchWrite(False);
+  PostMessage(Handle, WM_CLOSE, 0, 0);
 end;
 
 procedure TxeTestFormHelper.DoTestDeltaPatchStart;
@@ -3544,6 +3556,8 @@ begin
     wbStartTime := Now;
     pgMain.ActivePage := tbsMessages;
     TLoaderThread.Create(lTarget, TestHost.TestDeltaPatchMasterFile, [fsIsDeltaPatch]);
+    if xeTestSwitches.DeltaPatchClose then
+      TestDeltaPatchClose;
   except
     on E: Exception do begin
       AddMessage('[Test Delta Patch] FAILED: ' + E.ClassName + ': ' + E.Message);
