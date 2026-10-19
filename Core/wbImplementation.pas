@@ -8019,7 +8019,6 @@ begin
           ;
 
         var lLayout := flContextObj.SlotLayout;
-        {!!!!! SF1 support? }
         if Supports(FileHeader.ElementByName['Master Files'], IwbContainerElementRef, MasterFiles) then
           for i := 0 to Pred(MasterFiles.ElementCount) do begin
             if Supports(MasterFiles.Elements[i], IwbContainerElementRef, MasterFile) then begin
@@ -8031,12 +8030,18 @@ begin
                   while j <= High(flRecords) do begin
                     Current := flRecords[j];
                     FormID := Current.FixedFormID;
-                    var FileID := FormID.FileID[lLayout].FullSlot;
-                    if FileID > i then
-                      Break;
+                    if flComplexFileFileID then begin
+                      Inc(j);
+                      if Current.IsMaster then
+                        Continue;
+                    end else begin
+                      var FileID := FormID.FileID[lLayout].FullSlot;
+                      if FileID > i then
+                        Break;
 
-                    Assert(FileID = i);
-                    Inc(j);
+                      Assert(FileID = i);
+                      Inc(j);
+                    end;
 
                     Signature := Current.Signature;
                     if (Signature = 'CELL') or
