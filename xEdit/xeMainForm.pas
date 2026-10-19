@@ -5527,6 +5527,7 @@ begin
       if CheckResult = 0 then
         CheckResult := xeFailureExitCode;
     end else begin
+      wbForceTerminate := False;
       Action := caNone;
       Exit;
     end;
