@@ -2925,9 +2925,9 @@ begin
     end;
     if not Assigned(TestHost.TestGameLinkTarget) then
       raise Exception.Create('no record of its own in ' + lModule.FileName);
+    if (xeTestSwitches.GameLinkRefusedClose or (xeTestSwitches.GameLinkLocked <> '')) and not Assigned(TestHost.TestGameLinkSecond) then
+      raise Exception.Create('no second record of its own with an EditorID in ' + lModule.FileName);
     if xeTestSwitches.GameLinkRefusedClose then begin
-      if not Assigned(TestHost.TestGameLinkSecond) then
-        raise Exception.Create('no second record of its own with an EditorID in ' + lModule.FileName);
       xeContext.Settings.DontSave := False;
       EditWarnOk := True;
     end;
@@ -2983,6 +2983,20 @@ procedure TxeTestFormHelper.TestGameLinkRunTimer(Sender: TObject);
 
 begin
   case TestHost.TestGameLinkPhase of
+    4: begin
+      if GetTickCount64 < TestHost.TestGameLinkStart + 2000 then
+        Exit;
+      FreeAndNil(TestHost.TestGameLinkLock);
+      if SameText(xeTestSwitches.GameLinkLocked, 'repick') then begin
+        TestHost.TestGameLinkBody := TestHost.TestGameLinkBody + #13#10'repick' + #9 + 'the menu item picked again';
+        mniMainPluggyLinkReference.Checked := True;
+        mniMainPluggyLinkReference.Click;
+      end;
+      TestGameLinkPointAt(TestHost.TestGameLinkSecond);
+      TestHost.TestGameLinkStart := GetTickCount64;
+      TestHost.TestGameLinkPhase := 2;
+      Exit;
+    end;
     3: begin
       if GetTickCount64 < TestHost.TestGameLinkStart + 1500 then
         Exit;
@@ -3035,7 +3049,7 @@ begin
   TestHost.TestGameLinkBody :=
     'target' + #9 + lTarget.Name + #9 + lTarget._File.FileName + #9 + lTarget.LoadOrderFormID.ToString + #13#10 +
     'active' + #9 + ActiveText;
-  if not xeTestSwitches.GameLinkRefusedClose or not lFound then begin
+  if not (xeTestSwitches.GameLinkRefusedClose or (xeTestSwitches.GameLinkLocked <> '')) or not lFound then begin
     TestHost.TestGameLinkTimer.Enabled := False;
     if lFound then
       CheckResult := 0
@@ -3046,6 +3060,18 @@ begin
       xeContext.Settings.DontSave := True;
       PostMessage(Handle, WM_CLOSE, 0, 0);
     end;
+    Exit;
+  end;
+  if xeTestSwitches.GameLinkLocked <> '' then begin
+    var lFile := xeContext.Settings.DataPath + 'xEdit\xEditLink.ini';
+    var lBytes := TEncoding.ASCII.GetBytes('[Console]'#13#10'selectedRefID=' + lTarget.LoadOrderFormID.ToString + #13#10);
+    TestHost.TestGameLinkLock := TFileStream.Create(lFile, fmOpenReadWrite or fmShareExclusive);
+    TestHost.TestGameLinkLock.Size := 0;
+    TestHost.TestGameLinkLock.WriteBuffer(lBytes[0], Length(lBytes));
+    FlushFileBuffers(TestHost.TestGameLinkLock.Handle);
+    TestHost.TestGameLinkBody := TestHost.TestGameLinkBody + #13#10'locked' + #9 + 'the link file held without sharing for 2 s, written once';
+    TestHost.TestGameLinkStart := GetTickCount64;
+    TestHost.TestGameLinkPhase := 4;
     Exit;
   end;
   if xeTestSwitches.GameLinkCancel then begin
