@@ -3654,11 +3654,13 @@ begin
     raise Exception.Create(lTarget + ' already exists');
   if not CopyFile(PChar(xeTestSwitches.EndSessionLoad), PChar(lTarget), True) then
     RaiseLastOSError;
-  TestEndSessionAdd('load' + #9 + ExtractFileName(lTarget));
+  TestEndSessionAdd('load' + #9 + ExtractFileName(lTarget) + IfThen(xeTestSwitches.EndSessionLoadTerminated, #9'terminated before it starts', ''));
   vstNav.PopupMenu := nil;
   bnMainMenu.Enabled := False;
   xeContext.LoaderError := False;
   wbStartTime := Now;
+  if xeTestSwitches.EndSessionLoadTerminated then
+    wbForceTerminate := True;
   TLoaderThread.Create(lTarget, aMaster, [fsIsDeltaPatch]);
 end;
 

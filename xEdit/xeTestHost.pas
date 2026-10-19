@@ -250,6 +250,7 @@ type
     EndSessionLoad        : string;
     EndSessionClose       : Boolean;
     EndSessionDuringLoad  : Boolean;
+    EndSessionLoadTerminated : Boolean;
     Merge                 : Boolean;
     MergeFile             : string;
     MergeSource           : string;
@@ -597,7 +598,8 @@ begin
   if wbFindCmdLineParam('testendsession', EndSessionFile) then begin
     if (EndSessionFile = '') or not wbFindCmdLineParam('testendsessionsave', EndSessionSave) then begin
       ShowMessage('testendsession requires -testendsession:<filename> -testendsessionsave:<module> [-testendsessionunsaved:<module>] ' +
-        '[-testendsessionanswer:<ok|cancel>[,...]] [-testendsessionload:<file> [-testendsessionclose]] [-testendsessionduringload]');
+        '[-testendsessionanswer:<ok|cancel>[,...]] [-testendsessionload:<file> [-testendsessionclose] [-testendsessionloadterminated]] ' +
+        '[-testendsessionduringload]');
       Exit(False);
     end;
     wbFindCmdLineParam('testendsessionunsaved', EndSessionUnsaved);
@@ -605,6 +607,7 @@ begin
     wbFindCmdLineParam('testendsessionload', EndSessionLoad);
     EndSessionClose := FindCmdLineSwitch('testendsessionclose');
     EndSessionDuringLoad := FindCmdLineSwitch('testendsessionduringload');
+    EndSessionLoadTerminated := FindCmdLineSwitch('testendsessionloadterminated');
     EndSession := True;
     xeAutoLoad       := True;
   end;
