@@ -106,6 +106,7 @@ type
     procedure TestDeltaPatchWrite;
     procedure TestDeltaPatchLoad(const aMaster: IwbFile);
     procedure TestDeltaPatchCancelTimer(Sender: TObject);
+    procedure TestDeltaPatchSecondTimer(Sender: TObject);
     procedure TestHideRunTimer(Sender: TObject);
     procedure TestOptionsRunTimer(Sender: TObject);
     procedure TestOptionsAnswerTimer(Sender: TObject);
@@ -3522,6 +3523,36 @@ begin
   end;
 end;
 
+procedure TxeTestFormHelper.TestDeltaPatchSecondTimer(Sender: TObject);
+var
+  lTarget : string;
+begin
+  TestHost.TestDeltaPatchTimer.Enabled := False;
+  try
+    lTarget := xeContext.Settings.DataPath + xeTestSwitches.DeltaPatchName + '2.esu';
+    if FileExists(lTarget) then
+      raise Exception.Create(lTarget + ' already exists');
+    if not CopyFile(PChar(xeTestSwitches.DeltaPatchSecond), PChar(lTarget), True) then
+      RaiseLastOSError;
+    TestHost.TestDeltaPatchLines.Add('# second delta patch file = ' + lTarget);
+    vstNav.PopupMenu := nil;
+    bnMainMenu.Enabled := False;
+    xeContext.LoaderDone := False;
+    xeContext.LoaderError := False;
+    DoSetActiveRecord(nil);
+    mniNavFilterRemoveClick(Self);
+    wbStartTime := Now;
+    pgMain.ActivePage := tbsMessages;
+    TLoaderThread.Create(lTarget, TestHost.TestDeltaPatchMasterFile, [fsIsDeltaPatch]);
+  except
+    on E: Exception do begin
+      AddMessage('[Test Delta Patch] FAILED: ' + E.ClassName + ': ' + E.Message);
+      TestHost.TestDeltaPatchLines.Add('# FAILED: ' + E.ClassName + ': ' + E.Message);
+      TestDeltaPatchWrite;
+    end;
+  end;
+end;
+
 procedure TxeTestFormHelper.TestDeltaPatchCancelTimer(Sender: TObject);
 begin
   if not Assigned(TestHost.TestDeltaPatchLines) then begin
@@ -3588,6 +3619,16 @@ begin
         TestDeltaPatchWrite;
       end;
     end;
+    Exit;
+  end;
+  if (xeTestSwitches.DeltaPatchSecond <> '') and not TestHost.TestDeltaPatchSecondDone then begin
+    TestHost.TestDeltaPatchSecondDone := True;
+    TestHost.TestDeltaPatchLines.Add('# the first delta patch load failed: ' + BoolToStr(xeContext.LoaderError, True) +
+      '; the second follows');
+    TestHost.TestDeltaPatchTimer := TTimer.Create(Self);
+    TestHost.TestDeltaPatchTimer.Interval := 50;
+    TestHost.TestDeltaPatchTimer.OnTimer := TestDeltaPatchSecondTimer;
+    TestHost.TestDeltaPatchTimer.Enabled := True;
     Exit;
   end;
   try
