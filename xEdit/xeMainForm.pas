@@ -993,6 +993,7 @@ type
     NewMessages: TStringList;
     SessionEnding: Boolean;
     ClosedDown: Boolean;
+    MainLoadTerminated: Boolean;
     ActiveIndex: TColumnIndex;
     ActiveRecordLock: Integer;
     ActiveMaster: IwbMainRecord;
@@ -5527,7 +5528,6 @@ begin
       if CheckResult = 0 then
         CheckResult := xeFailureExitCode;
     end else begin
-      wbForceTerminate := False;
       Action := caNone;
       Exit;
     end;
@@ -5548,6 +5548,7 @@ begin
         Sleep(100);
       end;
     finally
+      wbForceTerminate := False;
       pnlClient.Enabled := True;
       UpdatePnlCancelVisible;
     end;
@@ -15859,7 +15860,7 @@ begin
     frmMain.Close;   // Wait until NewMessages are processed.
   end;
 
-  if (xeToolMode in cLoadReportModes) and xeContext.LoaderDone and not wbForceTerminate and not xeMasterUpdateDone and not InNestedLoop then begin
+  if (xeToolMode in cLoadReportModes) and xeContext.LoaderDone and not MainLoadTerminated and not xeMasterUpdateDone and not InNestedLoop then begin
     xeMasterUpdateDone := True;
     ChangesMade := False;
     if xeContext.LoaderError then begin
@@ -19117,6 +19118,7 @@ begin
         tbsAMMOSpreadsheet.TabVisible := lGameDef.IsOblivion or lGameDef.IsSkyrim;
 
         if wbForceTerminate then begin
+          MainLoadTerminated := True;
           GeneralProgressNoAbortCheck('Loading of modules got terminated early. Editing is disabled.');
           if xeUnattended and (CheckResult = 0) then
             CheckResult := xeFailureExitCode;
