@@ -13196,6 +13196,8 @@ begin
   InitDataPtr; // reset...
 
   if mrStruct.mrsFlags(gcFormIDInRecordHeader in GameDefObj.Capabilities).IsCompressed then try
+    if mrStruct.mrsDataSize < SizeOf(Cardinal) then
+      raise Exception.CreateFmt('compressed data of %d bytes is too short to hold its uncompressed length', [mrStruct.mrsDataSize]);
     UncompressedLength := PCardinal(dcDataBasePtr)^;
     if UncompressedLength > 0 then begin
       SetLength(mrDataStorage, UncompressedLength );
