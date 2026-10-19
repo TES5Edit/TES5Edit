@@ -3533,8 +3533,11 @@ begin
     lLines.Add('# ' + xeApplicationTitle);
     try
       Touch(FindFile(xeTestSwitches.EndSessionSave));
-      lLines.Add('save' + #9 + IntToStr(Ord(SaveChanged(True))));
+      var lSaved := SaveChanged(True);
+      lLines.Add('save' + #9 + IntToStr(Ord(lSaved)));
       lLines.Add('renamequeue' + #9 + BoolToStr(xeContext.HasRenameQueue, True));
+      if (lSaved <> srAllDone) or not xeContext.HasRenameQueue then
+        raise Exception.Create('the save was not written and queued for renaming');
       if xeTestSwitches.EndSessionUnsaved <> '' then
         Touch(FindFile(xeTestSwitches.EndSessionUnsaved));
       for var lName in TDirectory.GetFiles(xeContext.Settings.DataPath) do
