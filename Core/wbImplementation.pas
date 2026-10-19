@@ -16353,8 +16353,9 @@ begin
 
   if not (mrsBasePtrAllocated in mrStates) then begin
     New(p);
+    p^ := Default(TwbMainRecordStruct);
+    Move(mrStruct^, p^, GameDefObj.SizeOfMainRecordStruct);
     Include(mrStates, mrsBasePtrAllocated);
-    p^ := mrStruct^;
     dcBasePtr := p;
     dcEndPtr := nil;
 
@@ -18758,7 +18759,8 @@ var
       SelfRef := Self as IwbContainerElementRef;
       DoInit(True);
 
-      mrs := mrStruct^;
+      mrs := Default(TwbMainRecordStruct);
+      Move(mrStruct^, mrs, lSizeOfMainRecordStruct);
 
       CurrentPosition := aStream.Position;
 
