@@ -5553,7 +5553,12 @@ begin
       UpdatePnlCancelVisible;
     end;
   end;
+end;
 
+procedure TfrmMain.CloseDown;
+var
+  i: Integer;
+begin
   if Assigned(PluggyLinkThread) then
     PluggyLinkThread.Terminate;
   FreeAndNil(PluggyLinkThread);
@@ -5577,12 +5582,7 @@ begin
       CheckNexusModsReleaseThread := nil;
     end;
   end;
-end;
 
-procedure TfrmMain.CloseDown;
-var
-  i: Integer;
-begin
   if Assigned(Settings) then begin
     if Assigned(pnlNav) then
       Settings.WriteInteger(Name, 'pnlNavWidth', pnlNav.Width);
@@ -20392,7 +20392,7 @@ begin
           WAIT_FAILED:
             RaiseLastOSError;
         end;
-      until Terminated or wbForceTerminate;
+      until Terminated;
     finally
       if not FindCloseChangeNotification(WaitHandle) then
         RaiseLastOSError;
@@ -20569,7 +20569,7 @@ begin
           WAIT_FAILED:
             RaiseLastOSError;
         end;
-      until Terminated or wbForceTerminate;
+      until Terminated;
     finally
       if not FindCloseChangeNotification(WaitHandle) then
         RaiseLastOSError;
