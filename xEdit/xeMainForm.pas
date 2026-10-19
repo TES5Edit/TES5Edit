@@ -1169,6 +1169,7 @@ type
     procedure vstCreateEditor(const aElement: IwbElement; out EditLink: IVTEditLink);
 
     procedure SaveLogs(aAllowReplace: Boolean);
+    procedure FlushPostedMessages;
     procedure UpdateActiveFromPluggyLink;
   public
     Settings: TMemIniFile;
@@ -5420,6 +5421,18 @@ begin
   xeSaveLogs(mmoMessages.Lines.Text, aAllowReplace);
 end;
 
+procedure TfrmMain.FlushPostedMessages;
+var
+  lMsg: TMsg;
+begin
+  while PeekMessage(lMsg, Handle, WM_USER, WM_USER, PM_REMOVE) do
+    DispatchMessage(lMsg);
+  if Assigned(NewMessages) and (NewMessages.Count > 0) then begin
+    mmoMessages.Lines.AddStrings(NewMessages);
+    NewMessages.Clear;
+  end;
+end;
+
 procedure TfrmMain.SaveModGroupsSelection(const aModGroups: TwbModGroupPtrs);
 var
   i  : Integer;
@@ -5452,13 +5465,7 @@ begin
       ', client panel enabled ' + BoolToStr(pnlClient.Enabled, True) + ', action "' + wbCurrentAction + '"' + lShown);
   end;
   if Assigned(TestHost) and Assigned(TestHost.TestChangeFormIDLines) then begin
-    var lMsg: TMsg;
-    while PeekMessage(lMsg, Handle, WM_USER, WM_USER, PM_REMOVE) do
-      DispatchMessage(lMsg);
-    if Assigned(NewMessages) and (NewMessages.Count > 0) then begin
-      mmoMessages.Lines.AddStrings(NewMessages);
-      NewMessages.Clear;
-    end;
+    FlushPostedMessages;
     TestChangeFormIDOnClose;
   end;
 {$ENDIF}
@@ -5527,6 +5534,7 @@ begin
     Settings.UpdateFile;
   end;
 
+  FlushPostedMessages;
   SaveLogs(True);
 {$IFDEF XE_TEST_CONTROL_POINTS}
   TestLoaderHoldRelease;
