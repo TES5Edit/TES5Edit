@@ -2343,7 +2343,7 @@ begin
   else
     PluggyLinkState := plsNone;
 
-  if (PluggyLinkState = plsNone) or Assigned(PluggyLinkThread) and (PluggyLinkThread.Terminated) then
+  if (PluggyLinkState = plsNone) or Assigned(PluggyLinkThread) and (PluggyLinkThread.Terminated or PluggyLinkThread.Finished) then
     FreeAndNil(PluggyLinkThread);
 
   if (PluggyLinkState <> plsNone) then
@@ -20513,7 +20513,12 @@ var
   SelectedRefID: TwbFormID;
   SelectedBaseID: TwbFormID;
 begin
-  Stream := TBufferedFileStream.Create(glFolder + 'xEditLink.ini', fmOpenRead or fmShareDenyNone);
+  try
+    Stream := TBufferedFileStream.Create(glFolder + 'xEditLink.ini', fmOpenRead or fmShareDenyNone);
+  except
+    on EFOpenError do
+      Exit;
+  end;
   try
     sl := TStringList.Create;
     try
