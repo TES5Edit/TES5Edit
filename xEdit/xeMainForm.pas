@@ -1260,6 +1260,7 @@ type
     glFolder         : string;
     glLastFormID     : TwbFormID;
     glLastBaseFormID : TwbFormID;
+    glReadPending    : Boolean;
   protected
     procedure Execute; override; final;
     procedure ChangeDetected;
@@ -20516,9 +20517,14 @@ begin
   try
     Stream := TBufferedFileStream.Create(glFolder + 'xEditLink.ini', fmOpenRead or fmShareDenyNone);
   except
-    on EFOpenError do
+    on E: EFOpenError do begin
+      if not glReadPending then
+        frmMain.PostAddMessage('[GameLink] Error: ' + E.Message + ' (retrying every second)');
+      glReadPending := True;
       Exit;
+    end;
   end;
+  glReadPending := False;
   try
     sl := TStringList.Create;
     try
@@ -20571,6 +20577,9 @@ begin
             if not FindNextChangeNotification(WaitHandle) then
               RaiseLastOSError;
           end;
+          WAIT_TIMEOUT:
+            if glReadPending then
+              ChangeDetected;
           WAIT_FAILED:
             RaiseLastOSError;
         end;
