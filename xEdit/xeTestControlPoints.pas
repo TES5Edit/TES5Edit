@@ -3814,6 +3814,7 @@ begin
   try
     TestEndSessionAdd('refused' + #9 + 'terminate ' + BoolToStr(wbForceTerminate, True) + #9 + 'loaderdone ' +
       BoolToStr(xeContext.LoaderDone, True) + #9 + 'files ' + IntToStr(Length(Files)));
+    TestEndSessionAdd('caption' + #9 + Caption + #9 + 'application title ' + Application.Title);
     for var i := Low(Files) to High(Files) do
       TestEndSessionAdd('file' + #9 + Files[i].FileName + #9 + 'unsaved ' + BoolToStr(esUnsaved in Files[i].ElementStates, True) +
         #9 + 'deltapatch ' + BoolToStr(fsIsDeltaPatch in Files[i].FileStates, True) + #9 + 'records ' + IntToStr(Files[i].RecordCount));
