@@ -773,6 +773,7 @@ type
     NodeForViewFocusedElement: PVirtualNode;
     ColumnForViewFocusedElement: Integer;
     LoaderStarted: Boolean;
+    LoadersRunning: Integer;
     ShowFlagEnumValue: Boolean;
     ScriptRunning: Boolean;
     RebuildingViewTree: Boolean;
@@ -975,6 +976,9 @@ type
   private
     procedure WMClose(var Message: TWMClose); message WM_CLOSE;
     procedure WMQueryEndSession(var Message: TWMQueryEndSession); message WM_QUERYENDSESSION;
+    function AppWindowHook(var Message: TMessage): Boolean;
+    procedure StopBackgroundWork;
+    procedure CloseDown;
     procedure WMUser(var Message: TMessage); message WM_USER;
     procedure WMUser1(var Message: TMessage); message WM_USER + 1;
     procedure WMUserLoaderDone(var Message: TMessage); message WM_USER + 2;
@@ -987,6 +991,8 @@ type
     Files: TwbFiles;
   private
     NewMessages: TStringList;
+    SessionEnding: Boolean;
+    ClosedDown: Boolean;
     ActiveIndex: TColumnIndex;
     ActiveRecordLock: Integer;
     ActiveMaster: IwbMainRecord;
@@ -1354,7 +1360,7 @@ var
   frmMain                     : TfrmMain;
   _PreviousCopyIntoSelectedModules: TwbModuleInfos;
 
-procedure DoRename;
+procedure DoRename(aSessionEnd: Boolean = False);
 
 function LockProcessMessages: Integer;
 function UnLockProcessMessages: Integer;
@@ -1648,7 +1654,7 @@ begin
     GeneralProgress(s);
 end;
 
-procedure DoRename;
+procedure DoRename(aSessionEnd: Boolean = False);
 var
   AnyError : Boolean;
 begin
@@ -1683,7 +1689,7 @@ begin
   wbProgress(wbCurrentAction);
 
   _SaveProgress := False;
-  var lUnattended := xeUnattended;
+  var lUnattended := xeUnattended or aSessionEnd;
   AnyError := not xeContext.RenamePendingSaves(
     procedure(const aText: string)
     begin
@@ -2179,11 +2185,47 @@ end;
 
 procedure TfrmMain.WMQueryEndSession(var Message: TWMQueryEndSession);
 begin
-  if (NestedPumpDepth > 0) or (LongActionDepth > 0) or not pnlClient.Enabled then begin
-    Message.Result := 0;
-    PostAddMessage('[' + wbFormatElapsedTime(Now - wbStartTime) + '] Windows session end refused: an operation is running.');
-  end else
-    Message.Result := LRESULT(inherited CloseQuery);
+  Message.Result := 0;
+  if InNestedLoop or (LongActionDepth > 0) or not pnlClient.Enabled then
+    PostAddMessage('[' + wbFormatElapsedTime(Now - wbStartTime) + '] Windows session end refused: an operation is running.')
+  else if LoadersRunning > 0 then begin
+    if Length(Files) > 0 then
+      PostAddMessage('[' + wbFormatElapsedTime(Now - wbStartTime) + '] Windows session end refused: modules are being loaded.')
+    else
+      Message.Result := LRESULT(inherited CloseQuery);
+  end else if inherited CloseQuery then begin
+    if not UnattendedSaveFailed then
+      case SaveChanged of
+        srAbort:
+          Exit;
+        srError:
+          if xeUnattended then begin
+            if CheckResult = 0 then
+              CheckResult := xeFailureExitCode;
+          end else
+            Exit;
+      end;
+    Message.Result := 1;
+  end;
+end;
+
+function TfrmMain.AppWindowHook(var Message: TMessage): Boolean;
+begin
+  Result := False;
+  if (Message.Msg <> WM_ENDSESSION) or not TWMEndSession(Message).EndSession then
+    Exit;
+  Result := SessionEnding or ClosedDown;
+  if Result or InNestedLoop or (LongActionDepth > 0) or not pnlClient.Enabled then
+    Exit;
+  SessionEnding := True;
+  try
+    StopBackgroundWork;
+    CloseDown;
+    DoRename(True);
+  except
+    on E: Exception do
+      xeSaveLogs('Error: ' + E.ClassName + ': ' + E.Message, False);
+  end;
 end;
 
 function TfrmMain.IsShortCut(var Message: TWMKey): Boolean;
@@ -3976,6 +4018,7 @@ end;
 
 destructor TfrmMain.Destroy;
 begin
+  Application.UnhookMainWindow(AppWindowHook);
   inherited;
   for var lHook in MessageScopeHooks do
     lHook.Free;
@@ -5459,10 +5502,6 @@ begin
 end;
 
 procedure TfrmMain.FormClose(Sender: TObject; var Action: TCloseAction);
-
-var
-  i: Integer;
-
 begin
 {$IFDEF XE_TEST_CONTROL_POINTS}
   if xeTestSwitches.Pump <> '' then begin
@@ -5478,13 +5517,29 @@ begin
   end;
 {$ENDIF}
   Action := caFree;
-  if LoaderStarted and not xeContext.LoaderDone then begin
+  StopBackgroundWork;
+
+  if not UnattendedSaveFailed and (SaveChanged >= srAbort) then
+    if xeUnattended then begin
+      if CheckResult = 0 then
+        CheckResult := xeFailureExitCode;
+    end else begin
+      Action := caNone;
+      Exit;
+    end;
+
+  CloseDown;
+end;
+
+procedure TfrmMain.StopBackgroundWork;
+begin
+  if LoadersRunning > 0 then begin
     wbForceTerminate := True;
     Caption := 'Waiting for Background Loader to terminate...';
     pnlClient.Enabled := False;
     MessageScopeClose(0);
     try
-      while not xeContext.LoaderDone do begin
+      while LoadersRunning > 0 do begin
         DoProcessMessages;
         Sleep(100);
       end;
@@ -5517,16 +5572,12 @@ begin
       CheckNexusModsReleaseThread := nil;
     end;
   end;
+end;
 
-  if not UnattendedSaveFailed and (SaveChanged >= srAbort) then
-    if xeUnattended then begin
-      if CheckResult = 0 then
-        CheckResult := xeFailureExitCode;
-    end else begin
-      Action := caNone;
-      Exit;
-    end;
-
+procedure TfrmMain.CloseDown;
+var
+  i: Integer;
+begin
   if Assigned(Settings) then begin
     if Assigned(pnlNav) then
       Settings.WriteInteger(Name, 'pnlNavWidth', pnlNav.Width);
@@ -5575,6 +5626,7 @@ begin
   Files := nil;
   _wbProgressCallback := nil;
   ExitCode := CheckResult;
+  ClosedDown := True;
 end;
 
 procedure xeApplyFontAndScale(aForm: TForm);
@@ -5655,6 +5707,7 @@ begin
   if xeTestSwitches.Any then
     TestHost := TxeTestHost.Create(Self);
 {$ENDIF}
+  Application.HookMainWindow(AppWindowHook);
   lvReferencedByAllItems := TObjectList<TRefByListItem>.Create(True);
   lvReferencedByFilteredItems := TList<TRefByListItem>.Create;
 
@@ -18973,6 +19026,7 @@ begin
   var lModGroups := xeContext.ModGroupList;
   var lGameDef := xeContext.GameDefObj;
   var lLoaderStartTime := PDateTime(Message.WParam)^;
+  Dec(LoadersRunning);
 {$IFDEF XE_TEST_CONTROL_POINTS}
   TestEndSessionLoaderDone;
 {$ENDIF}
@@ -19630,6 +19684,7 @@ begin
   ltStates := aFileStates;
   inherited Create(False);
   FreeOnTerminate := True;
+  Inc(frmMain.LoadersRunning);
 end;
 
 constructor TLoaderThread.Create(const aFileName: string; const aMaster: IwbFile; aFileStates: TwbFileStates = []);
@@ -19643,6 +19698,7 @@ begin
   ltStates := aFileStates;
   inherited Create(False);
   FreeOnTerminate := True;
+  Inc(frmMain.LoadersRunning);
 end;
 
 destructor TLoaderThread.Destroy;
