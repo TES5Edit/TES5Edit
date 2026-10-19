@@ -8474,6 +8474,8 @@ begin
 end;
 
 procedure TwbFile.Scan;
+const
+  cModuleTypeNames: array[TwbModuleType] of string = ('full', 'medium', 'light');
 var
   Header      : IwbMainRecord;
 
@@ -8616,6 +8618,9 @@ begin
         end;
 
       if fsIsDeltaPatch in flStates then begin
+        if flComplexFileFileID and Assigned(flCompareToFile) and (GetModuleType <> flCompareToFile.ModuleType) then
+          raise Exception.CreateFmt('Delta patch: "%s" is a %s module and "%s" is a %s module. A delta patch can''t change the type of a module in %s%s',
+            [GetFileName, cModuleTypeNames[GetModuleType], flCompareToFile.FileName, cModuleTypeNames[flCompareToFile.ModuleType], lGameDef.AppName, flContextObj.Settings.ToolName]);
         MasterFilesAdded := False;
         if not Assigned(MasterFiles) then begin
           MasterFiles := Header.Add('Master Files', True) as IwbContainerElementRef;
