@@ -138,7 +138,9 @@ type
     procedure DoTestNewFile;
     procedure DoTestNewFileReport(const aFailure: string = '');
     procedure DoTestGameLink;
+    procedure TestGameLinkPointAt(const aRecord: IwbMainRecord);
     procedure TestGameLinkRunTimer(Sender: TObject);
+    procedure TestGameLinkAnswerTimer(Sender: TObject);
     procedure TestGameLinkWrite(const aBody: string);
     procedure DoTestFormIDSearch;
     procedure TestFormIDSearchRunTimer(Sender: TObject);
@@ -2910,19 +2912,26 @@ begin
         lModule := lFile;
     if not Assigned(lModule) then
       raise Exception.Create('no module ' + xeTestSwitches.GameLinkModule);
+    TestHost.TestGameLinkSecond := nil;
     for var j := 0 to Pred(lModule.RecordCount) do begin
       var lRecord := lModule.Records[j];
-      if (lRecord.Signature <> 'TES4') and lRecord.MasterOrSelf.Equals(lRecord) and not lRecord.IsInjected then begin
-        TestHost.TestGameLinkTarget := lRecord;
-        Break;
-      end;
+      if (lRecord.Signature <> 'TES4') and lRecord.MasterOrSelf.Equals(lRecord) and not lRecord.IsInjected then
+        if not Assigned(TestHost.TestGameLinkTarget) then
+          TestHost.TestGameLinkTarget := lRecord
+        else if lRecord.EditorID <> '' then begin
+          TestHost.TestGameLinkSecond := lRecord;
+          Break;
+        end;
     end;
     if not Assigned(TestHost.TestGameLinkTarget) then
       raise Exception.Create('no record of its own in ' + lModule.FileName);
-    var lFolder := xeContext.Settings.DataPath + 'xEdit\';
-    ForceDirectories(lFolder);
-    TFile.WriteAllText(lFolder + 'xEditLink.ini', '[Console]'#13#10'selectedRefID=' +
-      TestHost.TestGameLinkTarget.LoadOrderFormID.ToString + #13#10);
+    if xeTestSwitches.GameLinkRefusedClose then begin
+      if not Assigned(TestHost.TestGameLinkSecond) then
+        raise Exception.Create('no second record of its own with an EditorID in ' + lModule.FileName);
+      xeContext.Settings.DontSave := False;
+      EditWarnOk := True;
+    end;
+    TestGameLinkPointAt(TestHost.TestGameLinkTarget);
     DoSetActiveRecord(nil);
     pmuMainPopup(Self);
     if not mniMainPluggyLinkReference.Visible then
@@ -2944,23 +2953,136 @@ begin
   TestHost.TestGameLinkTimer.Enabled := True;
 end;
 
-procedure TxeTestFormHelper.TestGameLinkRunTimer(Sender: TObject);
+procedure TxeTestFormHelper.TestGameLinkPointAt(const aRecord: IwbMainRecord);
 begin
-  if not Assigned(ActiveRecord) and (GetTickCount64 < TestHost.TestGameLinkStart + 20000) then
+  var lFolder := xeContext.Settings.DataPath + 'xEdit\';
+  ForceDirectories(lFolder);
+  TestHost.TestGameLinkPointed := GetTickCount64;
+  try
+    var lBytes := TEncoding.ASCII.GetBytes('[Console]'#13#10'selectedRefID=' + aRecord.LoadOrderFormID.ToString + #13#10);
+    var lStream := TFileStream.Create(lFolder + 'xEditLink.ini', fmCreate or fmShareDenyWrite);
+    try
+      lStream.WriteBuffer(lBytes[0], Length(lBytes));
+    finally
+      lStream.Free;
+    end;
+  except
+    on E: Exception do
+      Inc(TestHost.TestGameLinkPointFailures);
+  end;
+end;
+
+procedure TxeTestFormHelper.TestGameLinkRunTimer(Sender: TObject);
+
+  function ActiveText: string;
+  begin
+    Result := 'none';
+    if Assigned(ActiveRecord) then
+      Result := ActiveRecord.Name + #9 + ActiveRecord._File.FileName + #9 + ActiveRecord.LoadOrderFormID.ToString;
+  end;
+
+begin
+  case TestHost.TestGameLinkPhase of
+    3: begin
+      if GetTickCount64 < TestHost.TestGameLinkStart + 1500 then
+        Exit;
+      wbForceTerminate := False;
+      TestGameLinkPointAt(TestHost.TestGameLinkSecond);
+      TestHost.TestGameLinkStart := GetTickCount64;
+      TestHost.TestGameLinkPhase := 2;
+      Exit;
+    end;
+    1: begin
+      if not TestHost.TestGameLinkAnswered or not Assigned(FindComponent('vstNav')) then
+        Exit;
+      for var i := 0 to Pred(Screen.CustomFormCount) do
+        if Screen.CustomForms[i] is TfrmFileSelect then
+          Exit;
+      TestHost.TestGameLinkBody := TestHost.TestGameLinkBody + #13#10'refused' + #9 + 'terminate ' + BoolToStr(wbForceTerminate, True);
+      TestGameLinkPointAt(TestHost.TestGameLinkSecond);
+      TestHost.TestGameLinkStart := GetTickCount64;
+      TestHost.TestGameLinkPhase := 2;
+      Exit;
+    end;
+    2: begin
+      var lSecond := TestHost.TestGameLinkSecond;
+      var lFollowed := Assigned(ActiveRecord) and ActiveRecord.Equals(lSecond.WinningOverride);
+      if not lFollowed and (GetTickCount64 < TestHost.TestGameLinkStart + 20000) then begin
+        if GetTickCount64 >= TestHost.TestGameLinkPointed + 3000 then
+          TestGameLinkPointAt(lSecond);
+        Exit;
+      end;
+      TestHost.TestGameLinkTimer.Enabled := False;
+      TestHost.TestGameLinkSecond := nil;
+      if lFollowed then
+        CheckResult := 0
+      else
+        CheckResult := 1;
+      xeContext.Settings.DontSave := True;
+      TestGameLinkWrite(TestHost.TestGameLinkBody + #13#10 +
+        'second' + #9 + lSecond.Name + #9 + lSecond._File.FileName + #9 + lSecond.LoadOrderFormID.ToString + #13#10 +
+        'after' + #9 + ActiveText + #13#10 +
+        'pointfailures' + #9 + IntToStr(TestHost.TestGameLinkPointFailures));
+      PostMessage(Handle, WM_CLOSE, 0, 0);
+      Exit;
+    end;
+  end;
+  if not Assigned(TestHost.TestGameLinkTarget) or not Assigned(ActiveRecord) and (GetTickCount64 < TestHost.TestGameLinkStart + 20000) then
     Exit;
-  TestHost.TestGameLinkTimer.Enabled := False;
   var lTarget := TestHost.TestGameLinkTarget;
   TestHost.TestGameLinkTarget := nil;
-  var lActive := 'none';
-  if Assigned(ActiveRecord) then
-    lActive := ActiveRecord.Name + #9 + ActiveRecord._File.FileName + #9 + ActiveRecord.LoadOrderFormID.ToString;
-  if Assigned(ActiveRecord) and ActiveRecord.Equals(lTarget.WinningOverride) then
-    CheckResult := 0
-  else
-    CheckResult := 1;
-  TestGameLinkWrite(
+  var lFound := Assigned(ActiveRecord) and ActiveRecord.Equals(lTarget.WinningOverride);
+  TestHost.TestGameLinkBody :=
     'target' + #9 + lTarget.Name + #9 + lTarget._File.FileName + #9 + lTarget.LoadOrderFormID.ToString + #13#10 +
-    'active' + #9 + lActive);
+    'active' + #9 + ActiveText;
+  if not xeTestSwitches.GameLinkRefusedClose or not lFound then begin
+    TestHost.TestGameLinkTimer.Enabled := False;
+    if lFound then
+      CheckResult := 0
+    else
+      CheckResult := 1;
+    TestGameLinkWrite(TestHost.TestGameLinkBody);
+    if xeTestSwitches.GameLinkRefusedClose then begin
+      xeContext.Settings.DontSave := True;
+      PostMessage(Handle, WM_CLOSE, 0, 0);
+    end;
+    Exit;
+  end;
+  if xeTestSwitches.GameLinkCancel then begin
+    TestHost.TestGameLinkBody := TestHost.TestGameLinkBody + #13#10'terminate' + #9 + 'set for 1.5 s';
+    wbForceTerminate := True;
+    TestHost.TestGameLinkStart := GetTickCount64;
+    TestHost.TestGameLinkPhase := 3;
+    Exit;
+  end;
+  if xeTestSwitches.GameLinkNoClose then begin
+    TestHost.TestGameLinkBody := TestHost.TestGameLinkBody + #13#10'noclose';
+    TestGameLinkPointAt(TestHost.TestGameLinkSecond);
+    TestHost.TestGameLinkStart := GetTickCount64;
+    TestHost.TestGameLinkPhase := 2;
+    Exit;
+  end;
+  TestHost.TestGameLinkSecond.EditorID := TestHost.TestGameLinkSecond.EditorID + 'RC';
+  TestHost.TestGameLinkBody := TestHost.TestGameLinkBody + #13#10'changed' + #9 + TestHost.TestGameLinkSecond.Name;
+  TestHost.TestGameLinkAnswer := TTimer.Create(Self);
+  TestHost.TestGameLinkAnswer.Interval := 100;
+  TestHost.TestGameLinkAnswer.OnTimer := TestGameLinkAnswerTimer;
+  TestHost.TestGameLinkAnswer.Enabled := True;
+  TestHost.TestGameLinkPhase := 1;
+  PostMessage(Handle, WM_CLOSE, 0, 0);
+end;
+
+procedure TxeTestFormHelper.TestGameLinkAnswerTimer(Sender: TObject);
+begin
+  for var i := 0 to Pred(Screen.CustomFormCount) do
+    if (Screen.CustomForms[i] is TfrmFileSelect) and Screen.CustomForms[i].Visible and
+       (fsModal in Screen.CustomForms[i].FormState) and (Screen.CustomForms[i].ModalResult = mrNone) then begin
+      TestHost.TestGameLinkAnswer.Enabled := False;
+      TestHost.TestGameLinkBody := TestHost.TestGameLinkBody + #13#10'dialog' + #9 + 'cancel';
+      Screen.CustomForms[i].ModalResult := mrCancel;
+      TestHost.TestGameLinkAnswered := True;
+      Exit;
+    end;
 end;
 
 procedure TxeTestFormHelper.TestGameLinkWrite(const aBody: string);

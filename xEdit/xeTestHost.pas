@@ -62,6 +62,13 @@ type
     TestGameLinkTimer        : TTimer;
     TestGameLinkTarget       : IwbMainRecord;
     TestGameLinkStart        : UInt64;
+    TestGameLinkSecond       : IwbMainRecord;
+    TestGameLinkPhase        : Integer;
+    TestGameLinkBody         : string;
+    TestGameLinkAnswer       : TTimer;
+    TestGameLinkAnswered     : Boolean;
+    TestGameLinkPointed      : UInt64;
+    TestGameLinkPointFailures : Integer;
     TestFormIDSearchTimer    : TTimer;
     TestFormIDSearchTarget   : IwbMainRecord;
     TestFormIDSearchStart    : UInt64;
@@ -221,6 +228,9 @@ type
     GameLink              : Boolean;
     GameLinkFile          : string;
     GameLinkModule        : string;
+    GameLinkRefusedClose  : Boolean;
+    GameLinkNoClose       : Boolean;
+    GameLinkCancel        : Boolean;
     FormIDSearch          : Boolean;
     FormIDSearchFile      : string;
     FormIDSearchModule    : string;
@@ -536,9 +546,13 @@ begin
 
   if wbFindCmdLineParam('testgamelink', GameLinkFile) then begin
     if (GameLinkFile = '') or not wbFindCmdLineParam('testgamelinkmodule', GameLinkModule) then begin
-      ShowMessage('testgamelink requires -testgamelink:<filename> -testgamelinkmodule:<module>');
+      ShowMessage('testgamelink requires -testgamelink:<filename> -testgamelinkmodule:<module> ' +
+        '[-testgamelinkrefusedclose [-testgamelinknoclose | -testgamelinkcancel]]');
       Exit(False);
     end;
+    GameLinkRefusedClose := FindCmdLineSwitch('testgamelinkrefusedclose');
+    GameLinkNoClose := FindCmdLineSwitch('testgamelinknoclose');
+    GameLinkCancel := FindCmdLineSwitch('testgamelinkcancel');
     GameLink := True;
     xeAutoLoad := True;
   end;
