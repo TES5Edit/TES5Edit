@@ -8000,8 +8000,14 @@ begin
         var Cells := 0;
         for var R := Low(flRecords) to High(flRecords) do begin
           var C := flRecords[R] as IwbMainRecord;
-          if (C.Signature = 'CELL') and (C.ElementNativeValues['DATA'] and $1 = 1) then
-            Inc(Cells);
+          if C.Signature = 'CELL' then begin
+            var lCellGroup: IwbGroupRecord;
+            var lCellContainer := C.Container;
+            while Supports(lCellContainer, IwbGroupRecord, lCellGroup) and (lCellGroup.GroupType <> 0) do
+              lCellContainer := lCellGroup.Container;
+            if Assigned(lCellGroup) and (lCellGroup.GroupLabelSignature = 'CELL') then
+              Inc(Cells);
+          end;
         end;
         INCC.EditValue := Cells.ToString;
       end;
