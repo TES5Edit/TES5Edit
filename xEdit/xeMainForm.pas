@@ -19297,7 +19297,7 @@ begin
         end;
       if Assigned(NewFile) and (fsIsDeltaPatch in NewFile.FileStates) then
         MasterFile := NewFile.CompareToFile;
-      if Assigned(NewFile) and Assigned(MasterFile) and not MasterFile.Equals(NewFile) then begin
+      if not xeContext.LoaderError and Assigned(NewFile) and Assigned(MasterFile) and not MasterFile.Equals(NewFile) then begin
         if fsIsDeltaPatch in NewFile.FileStates then try
 
           PerformLongAction('Creating Delta Patch', '', procedure
