@@ -20995,6 +20995,10 @@ begin
       MainRecord.SetGridCell(GridCell);
       if Persistent then
         MainRecord.IsPersistent := True;
+    end else if (Signature = 'CELL') and not Assigned(MainRecord.ElementBySignature['DATA']) then begin
+      var lData := MainRecord.Add('DATA', True);
+      if Assigned(lData) then
+        lData.EditValue := '1';
     end;
   finally
     MainRecord.EndUpdate;
