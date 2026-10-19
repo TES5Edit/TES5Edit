@@ -2992,7 +2992,10 @@ begin
         mniMainPluggyLinkReference.Checked := True;
         mniMainPluggyLinkReference.Click;
       end;
-      TestGameLinkPointAt(TestHost.TestGameLinkSecond);
+      if SameText(xeTestSwitches.GameLinkLocked, 'hold') then
+        TestHost.TestGameLinkPointed := High(UInt64) - 100000
+      else
+        TestGameLinkPointAt(TestHost.TestGameLinkSecond);
       TestHost.TestGameLinkStart := GetTickCount64;
       TestHost.TestGameLinkPhase := 2;
       Exit;
@@ -3063,13 +3066,27 @@ begin
     Exit;
   end;
   if xeTestSwitches.GameLinkLocked <> '' then begin
-    var lFile := xeContext.Settings.DataPath + 'xEdit\xEditLink.ini';
-    var lBytes := TEncoding.ASCII.GetBytes('[Console]'#13#10'selectedRefID=' + lTarget.LoadOrderFormID.ToString + #13#10);
-    TestHost.TestGameLinkLock := TFileStream.Create(lFile, fmOpenReadWrite or fmShareExclusive);
-    TestHost.TestGameLinkLock.Size := 0;
-    TestHost.TestGameLinkLock.WriteBuffer(lBytes[0], Length(lBytes));
-    FlushFileBuffers(TestHost.TestGameLinkLock.Handle);
-    TestHost.TestGameLinkBody := TestHost.TestGameLinkBody + #13#10'locked' + #9 + 'the link file held without sharing for 2 s, written once';
+    var lHold := SameText(xeTestSwitches.GameLinkLocked, 'hold');
+    var lWritten := lTarget;
+    if lHold then
+      lWritten := TestHost.TestGameLinkSecond;
+    try
+      var lBytes := TEncoding.ASCII.GetBytes('[Console]'#13#10'selectedRefID=' + lWritten.LoadOrderFormID.ToString + #13#10);
+      TestHost.TestGameLinkLock := TFileStream.Create(xeContext.Settings.DataPath + 'xEdit\xEditLink.ini', fmOpenReadWrite or fmShareExclusive);
+      TestHost.TestGameLinkLock.Size := 0;
+      TestHost.TestGameLinkLock.WriteBuffer(lBytes[0], Length(lBytes));
+      FlushFileBuffers(TestHost.TestGameLinkLock.Handle);
+    except
+      on E: Exception do begin
+        FreeAndNil(TestHost.TestGameLinkLock);
+        TestHost.TestGameLinkTimer.Enabled := False;
+        CheckResult := 2;
+        TestGameLinkWrite(TestHost.TestGameLinkBody + #13#10'# FAILED: ' + E.ClassName + ': ' + E.Message);
+        Exit;
+      end;
+    end;
+    TestHost.TestGameLinkBody := TestHost.TestGameLinkBody + #13#10'locked' + #9 + 'the link file held without sharing for 2 s, ' +
+      IfThen(lHold, 'the second record written while held, nothing written after', 'written once');
     TestHost.TestGameLinkStart := GetTickCount64;
     TestHost.TestGameLinkPhase := 4;
     Exit;

@@ -549,7 +549,7 @@ begin
   if wbFindCmdLineParam('testgamelink', GameLinkFile) then begin
     if (GameLinkFile = '') or not wbFindCmdLineParam('testgamelinkmodule', GameLinkModule) then begin
       ShowMessage('testgamelink requires -testgamelink:<filename> -testgamelinkmodule:<module> ' +
-        '[-testgamelinkrefusedclose [-testgamelinknoclose | -testgamelinkcancel]] [-testgamelinklocked:<once|repick>]');
+        '[-testgamelinkrefusedclose [-testgamelinknoclose | -testgamelinkcancel]] [-testgamelinklocked:<once|repick|hold>]');
       Exit(False);
     end;
     wbFindCmdLineParam('testgamelinklocked', GameLinkLocked);
