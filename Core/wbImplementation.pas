@@ -22129,7 +22129,8 @@ begin
 
   if Assigned(dcEndPtr) then begin
     New(p);
-    p^ := grStruct^;
+    p^ := Default(TwbGroupRecordStruct);
+    Move(grStruct^, p^, GameDefObj.SizeOfMainRecordStruct);
     dcBasePtr := p;
     dcEndPtr := nil;
   end;
@@ -22895,8 +22896,10 @@ var
 begin
   var lContext := ContextObj;
   CurrentPosition := aStream.Position;
-  grs := grStruct^;
-  aStream.WriteBuffer(grs, GameDefObj.SizeOfMainRecordStruct );
+  var lSizeOfMainRecordStruct := GameDefObj.SizeOfMainRecordStruct;
+  grs := Default(TwbGroupRecordStruct);
+  Move(grStruct^, grs, lSizeOfMainRecordStruct);
+  aStream.WriteBuffer(grs, lSizeOfMainRecordStruct);
   if lContext.Settings.ForceNewHeader then begin
     var lNewHeaderAddon := lContext.Settings.NewHeaderAddon;
     aStream.WriteBuffer(lNewHeaderAddon, SizeOf(lNewHeaderAddon) );
