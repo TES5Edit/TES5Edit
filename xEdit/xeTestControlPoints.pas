@@ -156,6 +156,7 @@ type
     procedure DoTestFilter;
     procedure TestFilterImages(aLines: TStrings);
     procedure DoTestSaveContextsCompare;
+    procedure DoTestEndSession;
     procedure TestWriteStateManifest(const aTarget: IwbFile);
     procedure TestWriteStateManifestEnd;
     procedure TestWriteFileLists;
@@ -3497,6 +3498,67 @@ begin
       AddMessage('[Test Delta Patch] FAILED: ' + E.ClassName + ': ' + E.Message);
   end;
   PostMessage(Handle, WM_CLOSE, 0, 0);
+end;
+
+procedure TxeTestFormHelper.DoTestEndSession;
+var
+  lLines : TStringList;
+
+  function FindFile(const aName: string): IwbFile;
+  begin
+    for var i := Low(Files) to High(Files) do
+      if SameText(Files[i].FileName, aName) then
+        Exit(Files[i]);
+    raise Exception.Create('no module ' + aName);
+  end;
+
+  procedure Touch(const aFile: IwbFile);
+  begin
+    for var i := 0 to Pred(aFile.RecordCount) do
+      if aFile.Records[i].EditorID <> '' then begin
+        aFile.Records[i].EditorID := aFile.Records[i].EditorID + 'ES';
+        lLines.Add('changed' + #9 + aFile.FileName + #9 + aFile.Records[i].Name);
+        Exit;
+      end;
+    raise Exception.Create('no record with an EditorID in ' + aFile.FileName);
+  end;
+
+begin
+  xeContext.Settings.DontSave := False;
+  EditWarnOk := True;
+  CheckResult := 2;
+  lLines := TStringList.Create;
+  try
+    lLines.Add('# xEdit end-session probe');
+    lLines.Add('# ' + xeApplicationTitle);
+    try
+      Touch(FindFile(xeTestSwitches.EndSessionSave));
+      lLines.Add('save' + #9 + IntToStr(Ord(SaveChanged(True))));
+      lLines.Add('renamequeue' + #9 + BoolToStr(xeContext.HasRenameQueue, True));
+      if xeTestSwitches.EndSessionUnsaved <> '' then
+        Touch(FindFile(xeTestSwitches.EndSessionUnsaved));
+      for var lName in TDirectory.GetFiles(xeContext.Settings.DataPath) do
+        lLines.Add('data' + #9 + ExtractFileName(lName));
+      lLines.Add('queryendsession' + #9 + 'form' + #9 + IntToStr(SendMessage(Handle, WM_QUERYENDSESSION, 0, LPARAM(ENDSESSION_LOGOFF))));
+      lLines.Add('queryendsession' + #9 + 'application' + #9 +
+        IntToStr(SendMessage(Application.Handle, WM_QUERYENDSESSION, 0, LPARAM(ENDSESSION_LOGOFF))));
+      CheckResult := 0;
+    except
+      on E: Exception do
+        lLines.Add('# FAILED: ' + E.ClassName + ': ' + E.Message);
+    end;
+    lLines.Add('# checkResult = ' + IntToStr(CheckResult));
+    lLines.SaveToFile(xeTestSwitches.EndSessionFile, TEncoding.UTF8);
+  finally
+    lLines.Free;
+  end;
+  if CheckResult = 0 then begin
+    AddMessage('[Test End Session] sending WM_ENDSESSION');
+    SendMessage(Handle, WM_ENDSESSION, 1, LPARAM(ENDSESSION_LOGOFF));
+    SendMessage(Application.Handle, WM_ENDSESSION, 1, LPARAM(ENDSESSION_LOGOFF));
+  end;
+  if xeAutoExit then
+    tmrShutdown.Enabled := True;
 end;
 
 procedure TxeTestFormHelper.DoTestDeltaPatchStart;

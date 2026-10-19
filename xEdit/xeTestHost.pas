@@ -236,6 +236,10 @@ type
     DeltaPatchCompareTo   : string;
     DeltaPatchSecond      : string;
     DeltaPatchClose       : Boolean;
+    EndSession            : Boolean;
+    EndSessionFile        : string;
+    EndSessionSave        : string;
+    EndSessionUnsaved     : string;
     Merge                 : Boolean;
     MergeFile             : string;
     MergeSource           : string;
@@ -580,6 +584,16 @@ begin
     xeAutoLoad       := True;
   end;
 
+  if wbFindCmdLineParam('testendsession', EndSessionFile) then begin
+    if (EndSessionFile = '') or not wbFindCmdLineParam('testendsessionsave', EndSessionSave) then begin
+      ShowMessage('testendsession requires -testendsession:<filename> -testendsessionsave:<module> [-testendsessionunsaved:<module>]');
+      Exit(False);
+    end;
+    wbFindCmdLineParam('testendsessionunsaved', EndSessionUnsaved);
+    EndSession := True;
+    xeAutoLoad       := True;
+  end;
+
   if wbFindCmdLineParam('testmerge', MergeFile) then begin
     if (MergeFile = '') or
        not wbFindCmdLineParam('testmergesource', MergeSource) or
@@ -764,7 +778,7 @@ end;
 function TxeTestSwitches.Any: Boolean;
 begin
   Result := Conflicts or NavCopy or ViewText or ViewTree or Options or CopyIntoGap or NewFile or GameLink or FormIDSearch or SplitTreeLOD or DropMaster or DeltaPatch or Merge or MergedPatch or CopyInto or
-    Renumber or ChangeFormID or Hide or Filter or SaveContexts or (Pump <> '') or (StateManifest <> '');
+    Renumber or ChangeFormID or Hide or Filter or SaveContexts or EndSession or (Pump <> '') or (StateManifest <> '');
 end;
 
 initialization
