@@ -5528,6 +5528,9 @@ begin
   end;
 
   SaveLogs(True);
+{$IFDEF XE_TEST_CONTROL_POINTS}
+  TestLoaderHoldRelease;
+{$ENDIF}
 
   if DirectoryExists(xeContext.Settings.TempPath) and xeRemoveTempPath then
     DeleteDirectory(xeContext.Settings.TempPath); // remove temp folder unless it existed
@@ -19956,6 +19959,9 @@ begin
     if ltMaster = '' then
       ltLoadOrderOffset := -1;
     frmMain.SendLoaderDone(wbStartTime, ltLoadOrderOffset);
+{$IFDEF XE_TEST_CONTROL_POINTS}
+    frmMain.TestLoaderHoldAfterDone;
+{$ENDIF}
     LoaderProgress('finished');
     _wbProgressCallback := nil;
   end;

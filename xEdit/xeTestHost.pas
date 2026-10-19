@@ -178,6 +178,7 @@ type
     FileLists             : string;
     ToolModeAuto          : Boolean;
     ToolModeFault         : Boolean;
+    LoaderHold            : Boolean;
     ViewTree              : Boolean;
     ViewTreeFile          : string;
     ViewTreeList          : string;
@@ -386,6 +387,7 @@ begin
   if ToolModeAuto then
     xeAutoLoad := True;
   ToolModeFault := FindCmdLineSwitch('testtoolmodefault');
+  LoaderHold := FindCmdLineSwitch('testloaderhold');
 end;
 
 function TxeTestSwitches.ParseEdit: Boolean;

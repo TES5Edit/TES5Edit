@@ -100,6 +100,8 @@ type
     procedure TestChangeFormIDSave;
     procedure TestChangeFormIDWrite;
     procedure TestChangeFormIDOnClose;
+    procedure TestLoaderHoldAfterDone;
+    procedure TestLoaderHoldRelease;
     procedure TestDeltaPatchStates(const aWhen: string);
     procedure TestDeltaPatchWrite;
     procedure TestDeltaPatchLoad(const aMaster: IwbFile);
@@ -7134,4 +7136,21 @@ begin
   end;
 end;
 
+var
+  _TestLoaderHoldReleased: THandle;
+
+procedure TxeTestFormHelper.TestLoaderHoldAfterDone;
+begin
+  if xeTestSwitches.LoaderHold then
+    WaitForSingleObject(_TestLoaderHoldReleased, 30000);
+end;
+
+procedure TxeTestFormHelper.TestLoaderHoldRelease;
+begin
+  if xeTestSwitches.LoaderHold then
+    SetEvent(_TestLoaderHoldReleased);
+end;
+
+initialization
+  _TestLoaderHoldReleased := CreateEvent(nil, True, False, nil);
 end.
