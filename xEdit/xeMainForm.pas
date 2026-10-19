@@ -15858,7 +15858,7 @@ begin
     frmMain.Close;   // Wait until NewMessages are processed.
   end;
 
-  if (xeToolMode in cLoadReportModes) and xeContext.LoaderDone and not xeMasterUpdateDone and not InNestedLoop then begin
+  if (xeToolMode in cLoadReportModes) and xeContext.LoaderDone and not wbForceTerminate and not xeMasterUpdateDone and not InNestedLoop then begin
     xeMasterUpdateDone := True;
     ChangesMade := False;
     if xeContext.LoaderError then begin
@@ -19115,6 +19115,8 @@ begin
 
         if wbForceTerminate then begin
           GeneralProgressNoAbortCheck('Loading of modules got terminated early. Editing is disabled.');
+          if xeUnattended and (CheckResult = 0) then
+            CheckResult := xeFailureExitCode;
           Exit;
         end;
 
