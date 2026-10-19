@@ -157,6 +157,16 @@ type
     procedure TestFilterImages(aLines: TStrings);
     procedure DoTestSaveContextsCompare;
     procedure DoTestEndSession;
+    procedure TestEndSessionBegin;
+    procedure TestEndSessionStartTimer;
+    procedure TestEndSessionDuringLoad;
+    procedure TestEndSessionRunTimer(Sender: TObject);
+    procedure TestEndSessionAnswerTimer(Sender: TObject);
+    procedure TestEndSessionLoad(const aMaster: IwbFile);
+    procedure TestEndSessionAdd(const aLine: string);
+    procedure TestEndSessionWrite;
+    procedure TestEndSessionLoaderDone;
+    procedure TestEndSessionStage(const aStage: string);
     procedure TestWriteStateManifest(const aTarget: IwbFile);
     procedure TestWriteStateManifestEnd;
     procedure TestWriteFileLists;
@@ -3500,68 +3510,189 @@ begin
   PostMessage(Handle, WM_CLOSE, 0, 0);
 end;
 
+function TestEndSessionFindFile(const aFiles: TwbFiles; const aName: string): IwbFile;
+begin
+  for var i := Low(aFiles) to High(aFiles) do
+    if SameText(aFiles[i].FileName, aName) then
+      Exit(aFiles[i]);
+  raise Exception.Create('no module ' + aName);
+end;
+
 procedure TxeTestFormHelper.DoTestEndSession;
-var
-  lLines : TStringList;
 
-  function FindFile(const aName: string): IwbFile;
-  begin
-    for var i := Low(Files) to High(Files) do
-      if SameText(Files[i].FileName, aName) then
-        Exit(Files[i]);
-    raise Exception.Create('no module ' + aName);
-  end;
-
-  procedure Touch(const aFile: IwbFile);
+  function Touch(const aFile: IwbFile): IwbMainRecord;
   begin
     for var i := 0 to Pred(aFile.RecordCount) do
       if aFile.Records[i].EditorID <> '' then begin
         aFile.Records[i].EditorID := aFile.Records[i].EditorID + 'ES';
-        lLines.Add('changed' + #9 + aFile.FileName + #9 + aFile.Records[i].Name);
-        Exit;
+        TestEndSessionAdd('changed' + #9 + aFile.FileName + #9 + aFile.Records[i].Name);
+        Exit(aFile.Records[i]);
       end;
     raise Exception.Create('no record with an EditorID in ' + aFile.FileName);
   end;
 
 begin
+  TestEndSessionBegin;
+  try
+    var lTouched := Touch(TestEndSessionFindFile(Files, xeTestSwitches.EndSessionSave));
+    var lSaved := SaveChanged(True);
+    TestEndSessionAdd('save' + #9 + IntToStr(Ord(lSaved)));
+    TestEndSessionAdd('renamequeue' + #9 + BoolToStr(xeContext.HasRenameQueue, True));
+    if (lSaved <> srAllDone) or not xeContext.HasRenameQueue then
+      raise Exception.Create('the save was not written and queued for renaming');
+    if xeTestSwitches.EndSessionUnsaved <> '' then
+      lTouched := Touch(TestEndSessionFindFile(Files, xeTestSwitches.EndSessionUnsaved));
+    JumpTo(lTouched, False);
+    TestEndSessionAdd('activerecord' + #9 + BoolToStr(Assigned(ActiveRecord), True));
+    TestEndSessionStartTimer;
+  except
+    on E: Exception do begin
+      TestEndSessionAdd('# FAILED: ' + E.ClassName + ': ' + E.Message);
+      TestEndSessionWrite;
+      if xeAutoExit then
+        tmrShutdown.Enabled := True;
+    end;
+  end;
+end;
+
+procedure TxeTestFormHelper.TestEndSessionBegin;
+begin
   xeContext.Settings.DontSave := False;
   EditWarnOk := True;
   CheckResult := 2;
-  lLines := TStringList.Create;
+  TestHost.TestEndSessionLines := TStringList.Create;
+  TestEndSessionAdd('# xEdit end-session probe');
+  TestEndSessionAdd('# ' + xeApplicationTitle);
+end;
+
+procedure TxeTestFormHelper.TestEndSessionStartTimer;
+begin
+  TestHost.TestEndSessionTimer := TTimer.Create(Self);
+  TestHost.TestEndSessionTimer.Interval := 50;
+  TestHost.TestEndSessionTimer.OnTimer := TestEndSessionRunTimer;
+  TestHost.TestEndSessionTimer.Enabled := True;
+end;
+
+procedure TxeTestFormHelper.TestEndSessionDuringLoad;
+begin
+  TestEndSessionBegin;
+  TestEndSessionAdd('during the first load');
+  TestEndSessionStartTimer;
+end;
+
+procedure TxeTestFormHelper.TestEndSessionRunTimer(Sender: TObject);
+begin
+  TestHost.TestEndSessionTimer.Enabled := False;
   try
-    lLines.Add('# xEdit end-session probe');
-    lLines.Add('# ' + xeApplicationTitle);
-    try
-      Touch(FindFile(xeTestSwitches.EndSessionSave));
-      var lSaved := SaveChanged(True);
-      lLines.Add('save' + #9 + IntToStr(Ord(lSaved)));
-      lLines.Add('renamequeue' + #9 + BoolToStr(xeContext.HasRenameQueue, True));
-      if (lSaved <> srAllDone) or not xeContext.HasRenameQueue then
-        raise Exception.Create('the save was not written and queued for renaming');
-      if xeTestSwitches.EndSessionUnsaved <> '' then
-        Touch(FindFile(xeTestSwitches.EndSessionUnsaved));
-      for var lName in TDirectory.GetFiles(xeContext.Settings.DataPath) do
-        lLines.Add('data' + #9 + ExtractFileName(lName));
-      lLines.Add('queryendsession' + #9 + 'form' + #9 + IntToStr(SendMessage(Handle, WM_QUERYENDSESSION, 0, LPARAM(ENDSESSION_LOGOFF))));
-      lLines.Add('queryendsession' + #9 + 'application' + #9 +
-        IntToStr(SendMessage(Application.Handle, WM_QUERYENDSESSION, 0, LPARAM(ENDSESSION_LOGOFF))));
+    if xeTestSwitches.EndSessionLoad <> '' then
+      TestEndSessionLoad(TestEndSessionFindFile(Files, xeTestSwitches.EndSessionSave));
+    if xeTestSwitches.EndSessionClose then begin
       CheckResult := 0;
-    except
-      on E: Exception do
-        lLines.Add('# FAILED: ' + E.ClassName + ': ' + E.Message);
+      TestEndSessionWrite;
+      PostMessage(Handle, WM_CLOSE, 0, 0);
+      Exit;
     end;
-    lLines.Add('# checkResult = ' + IntToStr(CheckResult));
-    lLines.SaveToFile(xeTestSwitches.EndSessionFile, TEncoding.UTF8);
-  finally
-    lLines.Free;
-  end;
-  if CheckResult = 0 then begin
-    AddMessage('[Test End Session] sending WM_ENDSESSION');
-    SendMessage(Handle, WM_ENDSESSION, 1, LPARAM(ENDSESSION_LOGOFF));
-    SendMessage(Application.Handle, WM_ENDSESSION, 1, LPARAM(ENDSESSION_LOGOFF));
+    TestHost.TestEndSessionAnswer := TTimer.Create(Self);
+    TestHost.TestEndSessionAnswer.Interval := 100;
+    TestHost.TestEndSessionAnswer.OnTimer := TestEndSessionAnswerTimer;
+    TestHost.TestEndSessionAnswer.Enabled := True;
+    var lForm := SendMessage(Handle, WM_QUERYENDSESSION, 0, LPARAM(ENDSESSION_LOGOFF));
+    var lApplication := SendMessage(Application.Handle, WM_QUERYENDSESSION, 0, LPARAM(ENDSESSION_LOGOFF));
+    TestEndSessionAdd('queryendsession' + #9 + 'form' + #9 + IntToStr(lForm));
+    TestEndSessionAdd('queryendsession' + #9 + 'application' + #9 + IntToStr(lApplication));
+    for var lName in TDirectory.GetFiles(xeContext.Settings.DataPath) do
+      TestEndSessionAdd('data' + #9 + ExtractFileName(lName));
+    var lEnding := ((lForm <> 0) and (lApplication <> 0)) or (xeTestSwitches.EndSessionLoad <> '');
+    TestEndSessionAdd('endsession' + #9 + BoolToStr(lEnding, True));
+    CheckResult := 0;
+    TestEndSessionWrite;
+    AddMessage('[Test End Session] sending WM_ENDSESSION ' + BoolToStr(lEnding, True));
+    SendMessage(Handle, WM_ENDSESSION, WPARAM(lEnding), LPARAM(ENDSESSION_LOGOFF));
+    SendMessage(Application.Handle, WM_ENDSESSION, WPARAM(lEnding), LPARAM(ENDSESSION_LOGOFF));
+    TestEndSessionAdd('running' + #9 + 'after WM_ENDSESSION ' + BoolToStr(lEnding, True));
+    if lEnding then
+      CheckResult := 2;
+  except
+    on E: Exception do begin
+      TestEndSessionAdd('# FAILED: ' + E.ClassName + ': ' + E.Message);
+      CheckResult := 2;
+      TestEndSessionWrite;
+    end;
   end;
   if xeAutoExit then
     tmrShutdown.Enabled := True;
+end;
+
+procedure TxeTestFormHelper.TestEndSessionAnswerTimer(Sender: TObject);
+begin
+  for var i := 0 to Pred(Screen.CustomFormCount) do
+    if (Screen.CustomForms[i] is TfrmFileSelect) and Screen.CustomForms[i].Visible and
+       (fsModal in Screen.CustomForms[i].FormState) and (Screen.CustomForms[i].ModalResult = mrNone) then begin
+      var lAnswers := xeTestSwitches.EndSessionAnswer.Split([',']);
+      var lAnswer := 'cancel (unscripted)';
+      if TestHost.TestEndSessionAnswerIndex < Length(lAnswers) then
+        lAnswer := Trim(lAnswers[TestHost.TestEndSessionAnswerIndex]);
+      Inc(TestHost.TestEndSessionAnswerIndex);
+      var lList := TfrmFileSelect(Screen.CustomForms[i]).CheckListBox1;
+      var lItems := '';
+      for var j := 0 to Pred(lList.Count) do
+        if lList.Checked[j] then
+          lItems := lItems + ' ' + lList.Items[j];
+      TestEndSessionAdd('dialog' + #9 + IntToStr(TestHost.TestEndSessionAnswerIndex) + #9 + Trim(lItems) + #9 + lAnswer);
+      if SameText(lAnswer, 'ok') then
+        Screen.CustomForms[i].ModalResult := mrOk
+      else
+        Screen.CustomForms[i].ModalResult := mrCancel;
+      Exit;
+    end;
+end;
+
+procedure TxeTestFormHelper.TestEndSessionLoad(const aMaster: IwbFile);
+begin
+  var lTarget := xeContext.Settings.DataPath + ChangeFileExt(aMaster.FileName, '') + 'EndSession.esu';
+  if FileExists(lTarget) then
+    raise Exception.Create(lTarget + ' already exists');
+  if not CopyFile(PChar(xeTestSwitches.EndSessionLoad), PChar(lTarget), True) then
+    RaiseLastOSError;
+  TestEndSessionAdd('load' + #9 + ExtractFileName(lTarget));
+  vstNav.PopupMenu := nil;
+  bnMainMenu.Enabled := False;
+  xeContext.LoaderError := False;
+  wbStartTime := Now;
+  TLoaderThread.Create(lTarget, aMaster, [fsIsDeltaPatch]);
+end;
+
+procedure TxeTestFormHelper.TestEndSessionAdd(const aLine: string);
+begin
+  if TestHost.TestEndSessionWritten then
+    TFile.AppendAllText(xeTestSwitches.EndSessionFile, aLine + sLineBreak, TEncoding.UTF8)
+  else
+    TestHost.TestEndSessionLines.Add(aLine);
+end;
+
+procedure TxeTestFormHelper.TestEndSessionWrite;
+begin
+  if TestHost.TestEndSessionWritten then
+    Exit;
+  TestHost.TestEndSessionLines.Add('# checkResult = ' + IntToStr(CheckResult));
+  TestHost.TestEndSessionLines.SaveToFile(xeTestSwitches.EndSessionFile, TEncoding.UTF8);
+  FreeAndNil(TestHost.TestEndSessionLines);
+  TestHost.TestEndSessionWritten := True;
+end;
+
+procedure TxeTestFormHelper.TestEndSessionLoaderDone;
+begin
+  if xeTestSwitches.EndSession then
+    Inc(TestHost.TestEndSessionLoaderDones);
+end;
+
+procedure TxeTestFormHelper.TestEndSessionStage(const aStage: string);
+begin
+  if not xeTestSwitches.EndSession or not TestHost.TestEndSessionWritten then
+    Exit;
+  TestEndSessionAdd('stage' + #9 + aStage + #9 + 'navtree ' + BoolToStr(Assigned(FindComponent('vstNav')), True) +
+    #9 + 'viewtree ' + BoolToStr(Assigned(FindComponent('vstView')), True) + #9 + 'activerecord ' + BoolToStr(Assigned(ActiveRecord), True) +
+    #9 + 'files ' + IntToStr(Length(Files)) + #9 + 'loaderdones ' + IntToStr(TestHost.TestEndSessionLoaderDones));
 end;
 
 procedure TxeTestFormHelper.DoTestDeltaPatchStart;

@@ -76,6 +76,12 @@ type
     TestDeltaPatchComparing  : Boolean;
     TestDeltaPatchSecondDone : Boolean;
     TestDeltaPatchMasterFile : IwbFile;
+    TestEndSessionLines      : TStringList;
+    TestEndSessionWritten    : Boolean;
+    TestEndSessionTimer      : TTimer;
+    TestEndSessionAnswer     : TTimer;
+    TestEndSessionAnswerIndex : Integer;
+    TestEndSessionLoaderDones : Integer;
     TestHideTimer            : TTimer;
     TestMergeLines           : TStringList;
     TestMergeTimer           : TTimer;
@@ -240,6 +246,10 @@ type
     EndSessionFile        : string;
     EndSessionSave        : string;
     EndSessionUnsaved     : string;
+    EndSessionAnswer      : string;
+    EndSessionLoad        : string;
+    EndSessionClose       : Boolean;
+    EndSessionDuringLoad  : Boolean;
     Merge                 : Boolean;
     MergeFile             : string;
     MergeSource           : string;
@@ -586,10 +596,15 @@ begin
 
   if wbFindCmdLineParam('testendsession', EndSessionFile) then begin
     if (EndSessionFile = '') or not wbFindCmdLineParam('testendsessionsave', EndSessionSave) then begin
-      ShowMessage('testendsession requires -testendsession:<filename> -testendsessionsave:<module> [-testendsessionunsaved:<module>]');
+      ShowMessage('testendsession requires -testendsession:<filename> -testendsessionsave:<module> [-testendsessionunsaved:<module>] ' +
+        '[-testendsessionanswer:<ok|cancel>[,...]] [-testendsessionload:<file> [-testendsessionclose]] [-testendsessionduringload]');
       Exit(False);
     end;
     wbFindCmdLineParam('testendsessionunsaved', EndSessionUnsaved);
+    wbFindCmdLineParam('testendsessionanswer', EndSessionAnswer);
+    wbFindCmdLineParam('testendsessionload', EndSessionLoad);
+    EndSessionClose := FindCmdLineSwitch('testendsessionclose');
+    EndSessionDuringLoad := FindCmdLineSwitch('testendsessionduringload');
     EndSession := True;
     xeAutoLoad       := True;
   end;

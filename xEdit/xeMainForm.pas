@@ -1667,6 +1667,8 @@ begin
 {$IFDEF XE_TEST_CONTROL_POINTS}
   if xeTestSwitches.SaveContexts then
     TestSaveContextsReport('AFTER-FORCECLOSEDFILES');
+  if Assigned(frmMain) then
+    frmMain.TestEndSessionStage('forceclosedfiles');
 {$ENDIF}
 
   if xeContext.Settings.DontSave then
@@ -4664,6 +4666,10 @@ begin
         TestPumpStart;
 {$ENDIF}
       TLoaderThread.Create(sl);
+{$IFDEF XE_TEST_CONTROL_POINTS}
+      if xeTestSwitches.EndSession and xeTestSwitches.EndSessionDuringLoad then
+        TestEndSessionDuringLoad;
+{$ENDIF}
     finally
       FreeAndNil(sl);
     end;
@@ -18967,6 +18973,9 @@ begin
   var lModGroups := xeContext.ModGroupList;
   var lGameDef := xeContext.GameDefObj;
   var lLoaderStartTime := PDateTime(Message.WParam)^;
+{$IFDEF XE_TEST_CONTROL_POINTS}
+  TestEndSessionLoaderDone;
+{$ENDIF}
   try
     xeContext.LoaderDone := True;
     wbStartTime := PDateTime(Message.WParam)^;
@@ -19276,7 +19285,7 @@ begin
         if xeTestSwitches.SaveContexts then
           DoTestSaveContextsCompare;
 
-        if xeTestSwitches.EndSession then
+        if xeTestSwitches.EndSession and not xeTestSwitches.EndSessionDuringLoad then
           DoTestEndSession;
 {$ENDIF}
       finally
