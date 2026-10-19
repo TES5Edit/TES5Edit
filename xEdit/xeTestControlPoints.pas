@@ -3490,7 +3490,12 @@ begin
   AddMessage('[Test Delta Patch] closing the editor while the delta patch loads');
   TestHost.TestDeltaPatchLines.Add('# closed while the delta patch loads');
   CheckResult := 0;
-  TestDeltaPatchWrite(False);
+  try
+    TestDeltaPatchWrite(False);
+  except
+    on E: Exception do
+      AddMessage('[Test Delta Patch] FAILED: ' + E.ClassName + ': ' + E.Message);
+  end;
   PostMessage(Handle, WM_CLOSE, 0, 0);
 end;
 
