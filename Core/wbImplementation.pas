@@ -20958,8 +20958,12 @@ begin
       FormID := TwbFormID.FromCardinal($00000014)
     else
       FormID := _File.NewFormID
-  else
-    FormID := _File.LoadOrderFormIDtoFileFormID(ContextObj.FormIDOf(Self), True);
+  else begin
+    FormID := ContextObj.FormIDOf(Self);
+    if not FormID.IsNull and (FormID.ObjectID[ContextObj.SlotLayout] = 0) then
+      raise Exception.Create('FormID [' + FormID.ToDisplayString(ContextObj.SlotLayout) + '] has the ObjectID 000, which no record can use');
+    FormID := _File.LoadOrderFormIDtoFileFormID(FormID, True);
+  end;
   if FormID.IsNull then
     Exit;
 
