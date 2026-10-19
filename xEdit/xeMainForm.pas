@@ -18956,6 +18956,7 @@ begin
   var lModules := xeContext.ModuleList;
   var lModGroups := xeContext.ModGroupList;
   var lGameDef := xeContext.GameDefObj;
+  var lLoaderStartTime := PDateTime(Message.WParam)^;
   try
     xeContext.LoaderDone := True;
     wbStartTime := PDateTime(Message.WParam)^;
@@ -19379,6 +19380,7 @@ begin
       vstNav.PopupMenu := pmuNav;
       bnMainMenu.Enabled := True;
     end;
+    PostAddMessage('[' + wbFormatElapsedTime(Now - lLoaderStartTime) + '] Background Loader: finished');
   end;
 end;
 
@@ -19962,7 +19964,6 @@ begin
 {$IFDEF XE_TEST_CONTROL_POINTS}
     frmMain.TestLoaderHoldAfterDone;
 {$ENDIF}
-    LoaderProgress('finished');
     _wbProgressCallback := nil;
   end;
   {
