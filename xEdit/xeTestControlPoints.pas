@@ -161,7 +161,9 @@ type
     procedure TestEndSessionStartTimer;
     procedure TestEndSessionDuringLoad;
     procedure TestEndSessionRunTimer(Sender: TObject);
+    procedure TestEndSessionStartAnswer;
     procedure TestEndSessionAnswerTimer(Sender: TObject);
+    procedure TestEndSessionRefusedTimer(Sender: TObject);
     procedure TestEndSessionLoad(const aMaster: IwbFile);
     procedure TestEndSessionAdd(const aLine: string);
     procedure TestEndSessionWrite;
@@ -3589,13 +3591,18 @@ begin
     if xeTestSwitches.EndSessionClose then begin
       CheckResult := 0;
       TestEndSessionWrite;
+      if xeTestSwitches.EndSessionAnswer <> '' then
+        TestEndSessionStartAnswer;
+      if xeTestSwitches.EndSessionRefused then begin
+        TestHost.TestEndSessionRefusedTimer := TTimer.Create(Self);
+        TestHost.TestEndSessionRefusedTimer.Interval := 200;
+        TestHost.TestEndSessionRefusedTimer.OnTimer := TestEndSessionRefusedTimer;
+        TestHost.TestEndSessionRefusedTimer.Enabled := True;
+      end;
       PostMessage(Handle, WM_CLOSE, 0, 0);
       Exit;
     end;
-    TestHost.TestEndSessionAnswer := TTimer.Create(Self);
-    TestHost.TestEndSessionAnswer.Interval := 100;
-    TestHost.TestEndSessionAnswer.OnTimer := TestEndSessionAnswerTimer;
-    TestHost.TestEndSessionAnswer.Enabled := True;
+    TestEndSessionStartAnswer;
     var lForm := SendMessage(Handle, WM_QUERYENDSESSION, 0, LPARAM(ENDSESSION_LOGOFF));
     var lApplication := SendMessage(Application.Handle, WM_QUERYENDSESSION, 0, LPARAM(ENDSESSION_LOGOFF));
     TestEndSessionAdd('queryendsession' + #9 + 'form' + #9 + IntToStr(lForm));
@@ -3621,6 +3628,54 @@ begin
   end;
   if xeAutoExit then
     tmrShutdown.Enabled := True;
+end;
+
+procedure TxeTestFormHelper.TestEndSessionStartAnswer;
+begin
+  TestHost.TestEndSessionAnswer := TTimer.Create(Self);
+  TestHost.TestEndSessionAnswer.Interval := 100;
+  TestHost.TestEndSessionAnswer.OnTimer := TestEndSessionAnswerTimer;
+  TestHost.TestEndSessionAnswer.Enabled := True;
+end;
+
+procedure TxeTestFormHelper.TestEndSessionRefusedTimer(Sender: TObject);
+begin
+  if (LoadersRunning > 0) or (TestHost.TestEndSessionAnswerIndex = 0) or not Assigned(FindComponent('vstNav')) then
+    Exit;
+  for var i := 0 to Pred(Screen.CustomFormCount) do
+    if Screen.CustomForms[i] is TfrmFileSelect then
+      Exit;
+  TestHost.TestEndSessionRefusedTimer.Enabled := False;
+  try
+    TestEndSessionAdd('refused' + #9 + 'terminate ' + BoolToStr(wbForceTerminate, True) + #9 + 'loaderdone ' +
+      BoolToStr(xeContext.LoaderDone, True) + #9 + 'files ' + IntToStr(Length(Files)));
+    for var i := Low(Files) to High(Files) do
+      TestEndSessionAdd('file' + #9 + Files[i].FileName + #9 + 'unsaved ' + BoolToStr(esUnsaved in Files[i].ElementStates, True) +
+        #9 + 'deltapatch ' + BoolToStr(fsIsDeltaPatch in Files[i].FileStates, True) + #9 + 'records ' + IntToStr(Files[i].RecordCount));
+    try
+      wbProgress('[Test End Session] a progress line after the refused close');
+      TestEndSessionAdd('progress' + #9 + 'returned');
+    except
+      on E: Exception do
+        TestEndSessionAdd('progress' + #9 + E.ClassName + ': ' + E.Message);
+    end;
+    var lSaved := SaveChanged(True);
+    TestEndSessionAdd('save' + #9 + IntToStr(Ord(lSaved)));
+    for var i := Low(Files) to High(Files) do
+      if esUnsaved in Files[i].ElementStates then begin
+        TestEndSessionAdd('stillunsaved' + #9 + Files[i].FileName);
+        xeContext.Settings.DontSave := True;
+      end;
+    for var lName in TDirectory.GetFiles(xeContext.Settings.DataPath) do
+      TestEndSessionAdd('data' + #9 + ExtractFileName(lName));
+  except
+    on E: Exception do begin
+      TestEndSessionAdd('# FAILED: ' + E.ClassName + ': ' + E.Message);
+      xeContext.Settings.DontSave := True;
+    end;
+  end;
+  TestEndSessionAdd('closing' + #9 + 'dontsave ' + BoolToStr(xeContext.Settings.DontSave, True));
+  PostMessage(Handle, WM_CLOSE, 0, 0);
 end;
 
 procedure TxeTestFormHelper.TestEndSessionAnswerTimer(Sender: TObject);

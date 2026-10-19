@@ -82,6 +82,7 @@ type
     TestEndSessionAnswer     : TTimer;
     TestEndSessionAnswerIndex : Integer;
     TestEndSessionLoaderDones : Integer;
+    TestEndSessionRefusedTimer : TTimer;
     TestHideTimer            : TTimer;
     TestMergeLines           : TStringList;
     TestMergeTimer           : TTimer;
@@ -251,6 +252,7 @@ type
     EndSessionClose       : Boolean;
     EndSessionDuringLoad  : Boolean;
     EndSessionLoadTerminated : Boolean;
+    EndSessionRefused     : Boolean;
     Merge                 : Boolean;
     MergeFile             : string;
     MergeSource           : string;
@@ -598,8 +600,8 @@ begin
   if wbFindCmdLineParam('testendsession', EndSessionFile) then begin
     if (EndSessionFile = '') or not wbFindCmdLineParam('testendsessionsave', EndSessionSave) then begin
       ShowMessage('testendsession requires -testendsession:<filename> -testendsessionsave:<module> [-testendsessionunsaved:<module>] ' +
-        '[-testendsessionanswer:<ok|cancel>[,...]] [-testendsessionload:<file> [-testendsessionclose] [-testendsessionloadterminated]] ' +
-        '[-testendsessionduringload]');
+        '[-testendsessionanswer:<ok|cancel>[,...]] [-testendsessionload:<file> [-testendsessionclose [-testendsessionrefused]] ' +
+        '[-testendsessionloadterminated]] [-testendsessionduringload]');
       Exit(False);
     end;
     wbFindCmdLineParam('testendsessionunsaved', EndSessionUnsaved);
@@ -608,6 +610,7 @@ begin
     EndSessionClose := FindCmdLineSwitch('testendsessionclose');
     EndSessionDuringLoad := FindCmdLineSwitch('testendsessionduringload');
     EndSessionLoadTerminated := FindCmdLineSwitch('testendsessionloadterminated');
+    EndSessionRefused := FindCmdLineSwitch('testendsessionrefused');
     EndSession := True;
     xeAutoLoad       := True;
   end;
