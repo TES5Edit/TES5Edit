@@ -3410,9 +3410,8 @@ begin
   if xeTestSwitches.DeltaPatchHideRecord = '' then
     Exit;
   lRecord := nil;
-  for var i := Low(Files) to High(Files) do
-    if SameText(Files[i].FileName, xeTestSwitches.DeltaPatchMaster) then
-      lRecord := Files[i].RecordByFormID[TwbFormID.FromStr(xeTestSwitches.DeltaPatchHideRecord), True, True];
+  if Assigned(TestHost.TestDeltaPatchMasterFile) then
+    lRecord := TestHost.TestDeltaPatchMasterFile.RecordByFormID[TwbFormID.FromStr(xeTestSwitches.DeltaPatchHideRecord), True, True];
   if Assigned(lRecord) then
     TestHost.TestDeltaPatchLines.Add('record' + #9 + aWhen + #9 + lRecord.Name + #9 +
       'member=' + BoolToStr(ConflictView.Hidden.Contains(lRecord), True) + #9 + 'hidden=' + BoolToStr(ConflictView.Hidden.IsHidden(lRecord), True));
@@ -3430,6 +3429,7 @@ begin
       RaiseLastOSError;
   finally
     FreeAndNil(TestHost.TestDeltaPatchLines);
+    TestHost.TestDeltaPatchMasterFile := nil;
     if xeAutoExit then
       tmrShutdown.Enabled := True;
   end;
@@ -3440,6 +3440,7 @@ var
   lRecord : IwbMainRecord;
   lTarget : string;
 begin
+  TestHost.TestDeltaPatchMasterFile := aMaster;
   TestDeltaPatchStates('loaded');
   if xeTestSwitches.DeltaPatchHide <> '' then
     for var i := Low(Files) to High(Files) do
@@ -3565,8 +3566,8 @@ begin
   if TestHost.TestDeltaPatchComparing then begin
     TestHost.TestDeltaPatchComparing := False;
     try
-      if xeContext.LoaderError then
-        raise Exception.Create('the compare load failed');
+      if xeContext.LoaderError or wbForceTerminate then
+        raise Exception.Create('the compare load failed or was cancelled');
       var lCopy: IwbFile := nil;
       for var i := High(Files) downto Low(Files) do
         if (fsIsCompareLoad in Files[i].FileStates) and not (fsIsDeltaPatch in Files[i].FileStates) and
@@ -3576,7 +3577,7 @@ begin
         end;
       if not Assigned(lCopy) then
         raise Exception.Create('no compare copy of ' + xeTestSwitches.DeltaPatchMaster + ' is loaded');
-      TestHost.TestDeltaPatchLines.Add('# the delta patch is made of the compare copy ' + lCopy.FileName);
+      TestHost.TestDeltaPatchLines.Add('# the delta patch is loaded against the compare copy ' + lCopy.FileName);
       TestDeltaPatchLoad(lCopy);
     except
       on E: Exception do begin
@@ -3621,6 +3622,15 @@ begin
       end;
     if not lFound then
       raise Exception.Create('no delta patch file is loaded');
+    if xeTestSwitches.DeltaPatchCompareTo <> '' then begin
+      var lPaired := False;
+      for var i := Low(Files) to High(Files) do
+        if (fsIsDeltaPatch in Files[i].FileStates) and Assigned(Files[i].CompareToFile) and
+           Files[i].CompareToFile.Equals(TestHost.TestDeltaPatchMasterFile) then
+          lPaired := True;
+      if not lPaired then
+        raise Exception.Create('no delta patch is loaded against the compare copy');
+    end;
     CheckResult := 0;
   except
     on E: Exception do begin

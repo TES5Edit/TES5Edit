@@ -74,6 +74,7 @@ type
     TestDeltaPatchTimer      : TTimer;
     TestDeltaPatchCancelled  : Boolean;
     TestDeltaPatchComparing  : Boolean;
+    TestDeltaPatchMasterFile : IwbFile;
     TestHideTimer            : TTimer;
     TestMergeLines           : TStringList;
     TestMergeTimer           : TTimer;
