@@ -2223,8 +2223,11 @@ begin
     CloseDown;
     DoRename(True);
   except
-    on E: Exception do
+    on E: Exception do begin
       xeSaveLogs('Error: ' + E.ClassName + ': ' + E.Message, False);
+      if ExitCode = 0 then
+        ExitCode := xeFailureExitCode;
+    end;
   end;
 end;
 
@@ -19762,12 +19765,12 @@ begin
   var lGameDef := xeContext.GameDefObj;
   StartTime := Now;
   wbStartTime := StartTime;
-  LoaderProgress('starting...');
   try
     frmMain.LoaderStarted := True;
     _wbProgressCallback := LoaderProgress;
     wbCurrentTick := GetTickCount64;
     try
+      LoaderProgress('starting...');
       {if ltLoadOrderOffset + ltLoadList.Count >= 255 then begin
         LoaderProgress('Too many plugins selected. Adding '+IntToStr(ltLoadList.Count)+' files would exceed the maximum index of 254');
         xeContext.LoaderError := True;
