@@ -65,7 +65,7 @@ type
     procedure TestFilterAnswerTimer(Sender: TObject);
     procedure TestViewModalAnswerTimer(Sender: TObject);
     procedure TestPumpStart;
-    procedure TestPumpEndSessionWait(aEnd: Boolean);
+    procedure TestPumpEndSessionWait(const aMode: string);
     procedure TestPumpCloseDeferred;
     procedure TestPumpBrowseStep;
     procedure TestPumpEdidWalkStep;
@@ -7323,23 +7323,55 @@ begin
   TestHost.TestPumpTimer.OnTimer := TestPumpTimerTimer;
 end;
 
-procedure TxeTestFormHelper.TestPumpEndSessionWait(aEnd: Boolean);
-begin
-  var lForm := SendMessage(Handle, WM_QUERYENDSESSION, 0, LPARAM(ENDSESSION_LOGOFF));
-  var lApplication := SendMessage(Application.Handle, WM_QUERYENDSESSION, 0, LPARAM(ENDSESSION_LOGOFF));
-  TestPumpNote('WM_QUERYENDSESSION answered: form ' + IntToStr(lForm) + ', application ' + IntToStr(lApplication) +
-    '; pumping 1500 ms before WM_ENDSESSION, as while other programs answer');
-  var lUntil := GetTickCount64 + 1500;
-  while GetTickCount64 < lUntil do begin
-    Application.ProcessMessages;
-    Sleep(10);
+procedure TxeTestFormHelper.TestPumpEndSessionWait(const aMode: string);
+
+  procedure Pump;
+  begin
+    TestPumpNote('pumping 1500 ms, as while other programs answer; generator started ' + BoolToStr(GeneratorStarted, True));
+    var lUntil := GetTickCount64 + 1500;
+    while GetTickCount64 < lUntil do begin
+      Application.ProcessMessages;
+      Sleep(10);
+    end;
   end;
-  var lEnding := aEnd and (lForm <> 0) and (lApplication <> 0);
-  TestPumpNote('sending WM_ENDSESSION ' + BoolToStr(lEnding, True) + '; generator started ' + BoolToStr(GeneratorStarted, True) +
-    ', files ' + IntToStr(Length(Files)));
-  SendMessage(Handle, WM_ENDSESSION, WPARAM(lEnding), LPARAM(ENDSESSION_LOGOFF));
-  SendMessage(Application.Handle, WM_ENDSESSION, WPARAM(lEnding), LPARAM(ENDSESSION_LOGOFF));
-  TestPumpNote('after WM_ENDSESSION ' + BoolToStr(lEnding, True));
+
+  function Query(aWnd: HWND; const aName: string): Boolean;
+  begin
+    Result := SendMessage(aWnd, WM_QUERYENDSESSION, 0, LPARAM(ENDSESSION_LOGOFF)) <> 0;
+    TestPumpNote('WM_QUERYENDSESSION to the ' + aName + ' answered ' + BoolToStr(Result, True));
+  end;
+
+  procedure EndSession(aWnd: HWND; const aName: string; aEnding: Boolean);
+  begin
+    TestPumpNote('sending WM_ENDSESSION ' + BoolToStr(aEnding, True) + ' to the ' + aName + '; generator started ' +
+      BoolToStr(GeneratorStarted, True) + ', files ' + IntToStr(Length(Files)));
+    SendMessage(aWnd, WM_ENDSESSION, WPARAM(aEnding), LPARAM(ENDSESSION_LOGOFF));
+  end;
+
+begin
+  if SameText(aMode, 'endsessionappfirst') then begin
+    if not Query(Application.Handle, 'application window') then
+      Exit;
+    Pump;
+    var lForm := Query(Handle, 'form');
+    EndSession(Handle, 'form', lForm);
+    EndSession(Application.Handle, 'application window', lForm);
+  end else begin
+    if not Query(Handle, 'form') then
+      Exit;
+    if SameText(aMode, 'endsessioncancelform') then begin
+      Pump;
+      EndSession(Handle, 'form', False);
+    end else begin
+      var lApplication := Query(Application.Handle, 'application window');
+      Pump;
+      var lEnding := SameText(aMode, 'endsessionwait') and lApplication;
+      EndSession(Handle, 'form', lEnding);
+      if lApplication then
+        EndSession(Application.Handle, 'application window', lEnding);
+    end;
+  end;
+  TestPumpNote('the session end messages are sent');
 end;
 
 procedure TxeTestFormHelper.TestPumpCloseDeferred;
@@ -7557,8 +7589,9 @@ begin
     end else if SameText(xeTestSwitches.Pump, 'endsession') then
       TestPumpNote('WM_QUERYENDSESSION answered ' + IntToStr(SendMessage(Handle, WM_QUERYENDSESSION, 0, 0)) +
         '; close deferred ' + BoolToStr(CloseDeferred, True))
-    else if SameText(xeTestSwitches.Pump, 'endsessionwait') or SameText(xeTestSwitches.Pump, 'endsessioncancel') then
-      TestPumpEndSessionWait(SameText(xeTestSwitches.Pump, 'endsessionwait'))
+    else if SameText(xeTestSwitches.Pump, 'endsessionwait') or SameText(xeTestSwitches.Pump, 'endsessioncancel') or
+            SameText(xeTestSwitches.Pump, 'endsessioncancelform') or SameText(xeTestSwitches.Pump, 'endsessionappfirst') then
+      TestPumpEndSessionWait(xeTestSwitches.Pump)
     else if SameText(xeTestSwitches.Pump, 'closedeferred') then
       TestPumpCloseDeferred
     else if SameText(xeTestSwitches.Pump, 'hotkey') then begin
