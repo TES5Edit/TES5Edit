@@ -20515,33 +20515,33 @@ var
   SelectedRefID: TwbFormID;
   SelectedBaseID: TwbFormID;
 begin
+  sl := TStringList.Create;
   try
-    Stream := TBufferedFileStream.Create(glFolder + 'xEditLink.ini', fmOpenRead or fmShareDenyNone);
-  except
-    on E: EFOpenError do begin
-      if not glReadPending then
-        frmMain.PostAddMessage('[GameLink] Error: ' + E.Message + ' (retrying every second)');
-      glReadPending := True;
-      Exit;
-    end;
-  end;
-  glReadPending := False;
-  try
-    sl := TStringList.Create;
     try
-      sl.LoadFromStream(Stream);
-      with TMemIniFile.Create('') do try
-        SetStrings(sl);
-        SelectedRefID := TwbFormID.FromStrDef(ReadString('Console', 'selectedRefID', '00000000'));
-        SelectedBaseID := TwbFormID.FromStrDef(ReadString('Console', 'selectedBaseID', '00000000'));
+      Stream := TBufferedFileStream.Create(glFolder + 'xEditLink.ini', fmOpenRead or fmShareDenyNone);
+      try
+        sl.LoadFromStream(Stream);
       finally
-        Free;
+        Stream.Free;
       end;
+    except
+      on E: EStreamError do begin
+        if not glReadPending then
+          frmMain.PostAddMessage('[GameLink] Error: ' + E.Message + ' (retrying every second)');
+        glReadPending := True;
+        Exit;
+      end;
+    end;
+    glReadPending := False;
+    with TMemIniFile.Create('') do try
+      SetStrings(sl);
+      SelectedRefID := TwbFormID.FromStrDef(ReadString('Console', 'selectedRefID', '00000000'));
+      SelectedBaseID := TwbFormID.FromStrDef(ReadString('Console', 'selectedBaseID', '00000000'));
     finally
-      sl.Free;
+      Free;
     end;
   finally
-    Stream.Free;
+    sl.Free;
   end;
 
   if not SelectedRefID.IsNull then
