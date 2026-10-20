@@ -7350,15 +7350,19 @@ procedure TxeTestFormHelper.TestPumpEndSessionWait(const aMode: string);
 
 begin
   if SameText(aMode, 'endsessionappfirst') then begin
-    if not Query(Application.Handle, 'application window') then
+    if not Query(Application.Handle, 'application window') then begin
+      EndSession(Application.Handle, 'application window', False);
       Exit;
+    end;
     Pump;
     var lForm := Query(Handle, 'form');
     EndSession(Handle, 'form', lForm);
     EndSession(Application.Handle, 'application window', lForm);
   end else begin
-    if not Query(Handle, 'form') then
+    if not Query(Handle, 'form') then begin
+      EndSession(Handle, 'form', False);
       Exit;
+    end;
     if SameText(aMode, 'endsessioncancelform') then begin
       Pump;
       EndSession(Handle, 'form', False);
@@ -7367,8 +7371,7 @@ begin
       Pump;
       var lEnding := SameText(aMode, 'endsessionwait') and lApplication;
       EndSession(Handle, 'form', lEnding);
-      if lApplication then
-        EndSession(Application.Handle, 'application window', lEnding);
+      EndSession(Application.Handle, 'application window', lEnding);
     end;
   end;
   TestPumpNote('the session end messages are sent');

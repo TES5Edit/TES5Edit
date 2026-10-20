@@ -400,6 +400,7 @@ begin
        ((SameText(Pump, 'browse') or SameText(Pump, 'browseclose') or SameText(Pump, 'edidwalk') or
          SameText(Pump, 'initwalk')) and (PumpDuringLoad = '')) or
        (SameText(Pump, 'closedeferred') and not PumpBeforeGenerator) or
+       (SameText(Pump, 'endsession') and PumpBeforeGenerator) or
        (SameText(Pump, 'hotkey') <> (PumpHotkey <> '')) or
        (SameText(Pump, 'edidsearch') <> (PumpSearch <> '')) then begin
       ShowMessage('testpump requires -testpump:<close|ctrlo|xback|pendingset|tab|cancelctrlo|cancelshortcut|endsession|endsessionwait|endsessioncancel|' +
@@ -411,7 +412,8 @@ begin
         '[-testpumphotkey:<script file>] [-testpumpsearch:<EditorID>]; browse, browseclose, edidwalk and initwalk only with -testpumpduringload, hotkey only with ' +
         '-testpumphotkey, edidsearch only with -testpumpsearch, ' +
         'xback and pendingset not with -testpumpduringload, endsessionwait and endsessioncancel send the query to the form and the ' +
-        'application window, pump messages 1.5 s, then send WM_ENDSESSION true or false (a refusal stops the messages, as Windows does), ' +
+        'application window, pump messages 1.5 s, then send WM_ENDSESSION true or false (a refusal ends the queries and sends ' +
+        'WM_ENDSESSION false to every window queried, as Windows does; endsession, a query alone, not with -testpumpbeforegenerator), ' +
         'endsessioncancelform queries the form only and sends it WM_ENDSESSION false, endsessionappfirst queries the application window, ' +
         'pumps 1.5 s, then queries the form and ends, closedeferred (only with -testpumpbeforegenerator) posts WM_CLOSE and pumps ' +
         '1.5 s through DoProcessMessages, beforegenerator (the arrival held <ms> after the generator is armed) ' +
