@@ -3860,7 +3860,11 @@ var
       lWinner := nil;
       for l := Low(aRow.Lists) to High(aRow.Lists) do begin
         lIsOrderedList := False;
-        if Supports(ListOf(aMaster), IwbSortableContainer, lSortable) then
+        var lProbe := ListOf(aMaster);
+        for j := 0 to Pred(aMaster.OverrideCount) do
+          if not Assigned(lProbe) then
+            lProbe := ListOf(aMaster.Overrides[j]);
+        if Supports(lProbe, IwbSortableContainer, lSortable) then
           if not lSortable.Sorted then begin
             lEditorID := aMaster.EditorID;
             if Length(lEditorID) > Length(OrderedList) then
