@@ -233,6 +233,8 @@ type
     GameLinkNoClose       : Boolean;
     GameLinkCancel        : Boolean;
     GameLinkLocked        : string;
+    GameLinkPluggy        : string;
+    GameLinkMyGames       : string;
     FormIDSearch          : Boolean;
     FormIDSearchFile      : string;
     FormIDSearchModule    : string;
@@ -549,10 +551,13 @@ begin
   if wbFindCmdLineParam('testgamelink', GameLinkFile) then begin
     if (GameLinkFile = '') or not wbFindCmdLineParam('testgamelinkmodule', GameLinkModule) then begin
       ShowMessage('testgamelink requires -testgamelink:<filename> -testgamelinkmodule:<module> ' +
-        '[-testgamelinkrefusedclose [-testgamelinknoclose | -testgamelinkcancel]] [-testgamelinklocked:<once|repick|hold|range|rangehold|badutf8>]');
+        '[-testgamelinkrefusedclose [-testgamelinknoclose | -testgamelinkcancel]] [-testgamelinklocked:<once|repick|hold|range|rangehold|badutf8>] ' +
+        '[-testgamelinkpluggy:<missing|stay>]');
       Exit(False);
     end;
     wbFindCmdLineParam('testgamelinklocked', GameLinkLocked);
+    wbFindCmdLineParam('testgamelinkpluggy', GameLinkPluggy);
+    wbFindCmdLineParam('M', GameLinkMyGames);
     GameLinkRefusedClose := FindCmdLineSwitch('testgamelinkrefusedclose');
     GameLinkNoClose := FindCmdLineSwitch('testgamelinknoclose');
     GameLinkCancel := FindCmdLineSwitch('testgamelinkcancel');

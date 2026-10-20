@@ -145,6 +145,8 @@ type
     function TestGameLinkLockedRange: Boolean;
     function TestGameLinkLockedHold: Boolean;
     procedure TestGameLinkReleaseLock;
+    function TestGameLinkPluggyFile(const aView: string): string;
+    procedure TestGameLinkWriteFile(const aFileName, aText: string);
     procedure DoTestFormIDSearch;
     procedure TestFormIDSearchRunTimer(Sender: TObject);
     procedure TestFormIDSearchWrite(const aBody: string);
@@ -2907,8 +2909,14 @@ begin
   xeContext.Settings.DontSave := True;
   TestHost.TestGameLinkTarget := nil;
   try
-    if xeContext.GameDefObj.GameMode = gmTES4 then
-      raise Exception.Create('Oblivion links through Pluggy''s files, which this switch does not write');
+    if xeContext.GameDefObj.GameMode = gmTES4 then begin
+      if (xeTestSwitches.GameLinkMyGames = '') or
+         not SameText(IncludeTrailingPathDelimiter(xeTestSwitches.GameLinkMyGames), IncludeTrailingPathDelimiter(xeContext.Settings.MyGamesTheGamePath)) then
+        raise Exception.Create('Oblivion links through Pluggy''s files under My Games: give -M:<a scratch folder>');
+      if xeTestSwitches.GameLinkLocked <> '' then
+        raise Exception.Create('-testgamelinklocked writes xEditLink.ini, which Oblivion''s link does not read');
+    end else if xeTestSwitches.GameLinkPluggy <> '' then
+      raise Exception.Create('-testgamelinkpluggy needs Oblivion');
     var lModule: IwbFile := nil;
     for var lFile in Files do
       if SameText(lFile.FileName, xeTestSwitches.GameLinkModule) and not (fsIsCompareLoad in lFile.FileStates) then
@@ -2928,13 +2936,17 @@ begin
     end;
     if not Assigned(TestHost.TestGameLinkTarget) then
       raise Exception.Create('no record of its own in ' + lModule.FileName);
-    if (xeTestSwitches.GameLinkRefusedClose or (xeTestSwitches.GameLinkLocked <> '')) and not Assigned(TestHost.TestGameLinkSecond) then
+    if (xeTestSwitches.GameLinkRefusedClose or (xeTestSwitches.GameLinkLocked <> '') or (xeTestSwitches.GameLinkPluggy <> '')) and
+       not Assigned(TestHost.TestGameLinkSecond) then
       raise Exception.Create('no second record of its own with an EditorID in ' + lModule.FileName);
     if xeTestSwitches.GameLinkRefusedClose then begin
       xeContext.Settings.DontSave := False;
       EditWarnOk := True;
     end;
     TestGameLinkPointAt(TestHost.TestGameLinkTarget);
+    if SameText(xeTestSwitches.GameLinkPluggy, 'missing') then
+      if not System.SysUtils.DeleteFile(TestGameLinkPluggyFile('ViewSpells')) then
+        RaiseLastOSError;
     DoSetActiveRecord(nil);
     pmuMainPopup(Self);
     if not mniMainPluggyLinkReference.Visible then
@@ -2958,20 +2970,37 @@ end;
 
 procedure TxeTestFormHelper.TestGameLinkPointAt(const aRecord: IwbMainRecord);
 begin
-  var lFolder := xeContext.Settings.DataPath + 'xEdit\';
-  ForceDirectories(lFolder);
   TestHost.TestGameLinkPointed := GetTickCount64;
   try
-    var lBytes := TEncoding.ASCII.GetBytes('[Console]'#13#10'selectedRefID=' + aRecord.LoadOrderFormID.ToString + #13#10);
-    var lStream := TFileStream.Create(lFolder + 'xEditLink.ini', fmCreate or fmShareDenyWrite);
-    try
-      lStream.WriteBuffer(lBytes[0], Length(lBytes));
-    finally
-      lStream.Free;
-    end;
+    var lID := aRecord.LoadOrderFormID.ToString;
+    if xeContext.GameDefObj.GameMode = gmTES4 then begin
+      if not FileExists(TestGameLinkPluggyFile('ViewInventory')) then begin
+        TestGameLinkWriteFile(TestGameLinkPluggyFile('ViewInventory'), 'ItemID,EnchantmentID'#13#10'00000000,00000000'#13#10);
+        TestGameLinkWriteFile(TestGameLinkPluggyFile('ViewSpells'), 'SpellID,Name'#13#10'00000000,none'#13#10);
+      end;
+      TestGameLinkWriteFile(TestGameLinkPluggyFile('ViewWorld'), 'RefID,BaseID'#13#10 + lID + ',' + lID + #13#10);
+    end else
+      TestGameLinkWriteFile(xeContext.Settings.DataPath + 'xEdit\xEditLink.ini', '[Console]'#13#10'selectedRefID=' + lID + #13#10);
   except
     on E: Exception do
       Inc(TestHost.TestGameLinkPointFailures);
+  end;
+end;
+
+function TxeTestFormHelper.TestGameLinkPluggyFile(const aView: string): string;
+begin
+  Result := xeContext.Settings.MyGamesTheGamePath + 'Pluggy\User Files\Pluggy' + xeContext.GameDefObj.AppName + aView + '.csv';
+end;
+
+procedure TxeTestFormHelper.TestGameLinkWriteFile(const aFileName, aText: string);
+begin
+  ForceDirectories(ExtractFilePath(aFileName));
+  var lBytes := TEncoding.ASCII.GetBytes(aText);
+  var lStream := TFileStream.Create(aFileName, fmCreate or fmShareDenyWrite);
+  try
+    lStream.WriteBuffer(lBytes[0], Length(lBytes));
+  finally
+    lStream.Free;
   end;
 end;
 
@@ -2986,6 +3015,25 @@ procedure TxeTestFormHelper.TestGameLinkRunTimer(Sender: TObject);
 
 begin
   case TestHost.TestGameLinkPhase of
+    5: begin
+      if GetTickCount64 < TestHost.TestGameLinkStart + 3000 then
+        Exit;
+      var lSecond := TestHost.TestGameLinkSecond;
+      var lStayed := Assigned(ActiveRecord) and ActiveRecord.Equals(lSecond.WinningOverride);
+      TestHost.TestGameLinkTimer.Enabled := False;
+      TestHost.TestGameLinkSecond := nil;
+      if lStayed then
+        CheckResult := 0
+      else
+        CheckResult := 1;
+      xeContext.Settings.DontSave := True;
+      TestGameLinkWrite(TestHost.TestGameLinkBody + #13#10 +
+        'second' + #9 + lSecond.Name + #9 + lSecond._File.FileName + #9 + lSecond.LoadOrderFormID.ToString + #13#10 +
+        'after' + #9 + ActiveText + #13#10 +
+        'pointfailures' + #9 + IntToStr(TestHost.TestGameLinkPointFailures));
+      PostMessage(Handle, WM_CLOSE, 0, 0);
+      Exit;
+    end;
     4: begin
       if GetTickCount64 < TestHost.TestGameLinkStart + 2000 then
         Exit;
@@ -3047,6 +3095,11 @@ begin
       Exit;
     end;
   end;
+  if SameText(xeTestSwitches.GameLinkPluggy, 'missing') and Assigned(TestHost.TestGameLinkTarget) and
+     (GetTickCount64 >= TestHost.TestGameLinkStart + 2000) and not FileExists(TestGameLinkPluggyFile('ViewSpells')) then begin
+    TestGameLinkWriteFile(TestGameLinkPluggyFile('ViewSpells'), 'SpellID,Name'#13#10'00000000,none'#13#10);
+    AddMessage('[Test GameLink] the spells file written 2 s after the link started');
+  end;
   if not Assigned(TestHost.TestGameLinkTarget) or not Assigned(ActiveRecord) and (GetTickCount64 < TestHost.TestGameLinkStart + 20000) then
     Exit;
   var lTarget := TestHost.TestGameLinkTarget;
@@ -3055,7 +3108,10 @@ begin
   TestHost.TestGameLinkBody :=
     'target' + #9 + lTarget.Name + #9 + lTarget._File.FileName + #9 + lTarget.LoadOrderFormID.ToString + #13#10 +
     'active' + #9 + ActiveText;
-  if not (xeTestSwitches.GameLinkRefusedClose or (xeTestSwitches.GameLinkLocked <> '')) or not lFound then begin
+  if SameText(xeTestSwitches.GameLinkPluggy, 'missing') then
+    TestHost.TestGameLinkBody := TestHost.TestGameLinkBody + #13#10'missing' + #9 + 'the spells file absent when the link started, written 2 s later';
+  if not (xeTestSwitches.GameLinkRefusedClose or (xeTestSwitches.GameLinkLocked <> '') or SameText(xeTestSwitches.GameLinkPluggy, 'stay')) or
+     not lFound then begin
     TestHost.TestGameLinkTimer.Enabled := False;
     if lFound then
       CheckResult := 0
@@ -3114,6 +3170,15 @@ begin
         IfThen(lHold, 'the second record written while held, nothing written after', 'written once');
     TestHost.TestGameLinkStart := GetTickCount64;
     TestHost.TestGameLinkPhase := 4;
+    Exit;
+  end;
+  if SameText(xeTestSwitches.GameLinkPluggy, 'stay') then begin
+    JumpTo(TestHost.TestGameLinkSecond, False);
+    TestGameLinkWriteFile(TestGameLinkPluggyFile('ViewSpells'), 'SpellID,Name'#13#10'00000000,none'#13#10);
+    TestHost.TestGameLinkBody := TestHost.TestGameLinkBody + #13#10'stay' + #9 +
+      'the editor moved to the second record, then the spells file rewritten unchanged';
+    TestHost.TestGameLinkStart := GetTickCount64;
+    TestHost.TestGameLinkPhase := 5;
     Exit;
   end;
   if xeTestSwitches.GameLinkCancel then begin
