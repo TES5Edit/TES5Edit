@@ -20294,14 +20294,18 @@ procedure TPluggyLinkThread.ChangeDetected;
 
   function ReadTail(const aView: string): string;
   var
-    Bytes : TBytes;
+    Bytes    : TBytes;
+    TailSize : Int64;
   begin
     with TBufferedFileStream.Create(plFolder + 'Pluggy'+xeContext.GameDefObj.AppName+aView+'.csv', fmOpenRead or fmShareDenyNone) do try
-      if Size > 2024 then
-        Position := Size - 2024;
-      SetLength(Bytes, Size - Position);
-      if Length(Bytes) > 0 then
-        SetLength(Bytes, Read(Bytes[0], Length(Bytes)));
+      TailSize := Size;
+      if TailSize > 2024 then begin
+        Position := TailSize - 2024;
+        TailSize := 2024;
+      end;
+      SetLength(Bytes, TailSize);
+      if TailSize > 0 then
+        ReadBuffer(Bytes[0], TailSize);
     finally
       Free;
     end;
