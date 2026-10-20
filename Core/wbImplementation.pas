@@ -3780,6 +3780,7 @@ var
     lEditorID      : string;
     lCountElement  : IwbElement;
     lEntries       : IwbContainerElementRef;
+    lParent        : IwbContainerElementRef;
     j, k, l        : Integer;
 
     function BuildList(const aEntries: IwbElement): TStringList;
@@ -3824,6 +3825,33 @@ var
       end;
     end;
 
+    function ListName: string;
+    begin
+      Result := Copy(aRow.Lists[l], Succ(LastDelimiter('\', aRow.Lists[l])), MaxInt);
+    end;
+
+    function ListParent(const aRecord: IwbMainRecord): IwbContainerElementRef;
+    var
+      lPos : Integer;
+    begin
+      lPos := LastDelimiter('\', aRow.Lists[l]);
+      if lPos = 0 then
+        Result := aRecord as IwbContainerElementRef
+      else if not Supports(aRecord.ElementByPath[Copy(aRow.Lists[l], 1, Pred(lPos))], IwbContainerElementRef, Result) then
+        Result := nil;
+    end;
+
+    function ListOf(const aRecord: IwbMainRecord): IwbElement;
+    var
+      lParent : IwbContainerElementRef;
+    begin
+      lParent := ListParent(aRecord);
+      if Assigned(lParent) then
+        Result := lParent.ElementByName[ListName]
+      else
+        Result := nil;
+    end;
+
   begin
     SetLength(lTargetLists, Length(aRow.Lists));
     SetLength(lWinningLists, Length(aRow.Lists));
@@ -3832,7 +3860,7 @@ var
       lWinner := nil;
       for l := Low(aRow.Lists) to High(aRow.Lists) do begin
         lIsOrderedList := False;
-        if Supports(aMaster.ElementByName[aRow.Lists[l]], IwbSortableContainer, lSortable) then
+        if Supports(ListOf(aMaster), IwbSortableContainer, lSortable) then
           if not lSortable.Sorted then begin
             lEditorID := aMaster.EditorID;
             if Length(lEditorID) > Length(OrderedList) then
@@ -3842,10 +3870,10 @@ var
               Continue;
           end;
 
-        lTargetLists[l] := BuildList(aMaster.ElementByName[aRow.Lists[l]]);
+        lTargetLists[l] := BuildList(ListOf(aMaster));
         for j := 0 to Pred(aMaster.OverrideCount) do begin
           lOverride := aMaster.Overrides[j];
-          lCurrentList := BuildList(lOverride.ElementByName[aRow.Lists[l]]);
+          lCurrentList := BuildList(ListOf(lOverride));
           try
             lMasters := lOverride.MasterRecordsFromMasterFilesAndSelf;
             lCurrentMaster := nil;
@@ -3856,7 +3884,7 @@ var
               end;
             if not Assigned(lCurrentMaster) then
               Continue;
-            lMasterList := BuildList(lCurrentMaster.ElementByName[aRow.Lists[l]]);
+            lMasterList := BuildList(ListOf(lCurrentMaster));
             try
               if lIsOrderedList then begin
                 if not ListsEqual(lMasterList, lCurrentList, True) then
@@ -3877,7 +3905,7 @@ var
         if lIsFaulty then
           Break;
         lWinner := aMaster.WinningOverride;
-        lWinningLists[l] := BuildList(lWinner.ElementByName[aRow.Lists[l]]);
+        lWinningLists[l] := BuildList(ListOf(lWinner));
       end;
 
       if lIsFaulty then begin
@@ -3888,9 +3916,9 @@ var
 
       for l := Low(aRow.Lists) to High(aRow.Lists) do
         if Assigned(lTargetLists[l]) and Assigned(lWinningLists[l]) and not ListsEqual(lTargetLists[l], lWinningLists[l]) then begin
-          var lList := lWinner.ElementByName[aRow.Lists[l]];
+          var lList := ListOf(lWinner);
           if not Assigned(lList) then
-            lList := aMaster.ElementByName[aRow.Lists[l]];
+            lList := ListOf(aMaster);
           var lListDef: IwbSubRecordArrayDef;
           if Assigned(lList) and Supports(lList.Def, IwbSubRecordArrayDef, lListDef) and (lListDef.MaxCount > 0) and
              (UInt64(lTargetLists[l].Count) > lListDef.MaxCount) then begin
@@ -3913,18 +3941,32 @@ var
               end;
             end;
 
-            lTargetRecord.RemoveElement(aRow.Lists[l]);
-            for j := 0 to Pred(lTargetLists[l].Count) do
-              lTargetRecord.AddCopy(IwbElement(Pointer(lTargetLists[l].Objects[j])), [cfAsNew, cfDeepCopy]);
+            if ListName = aRow.Lists[l] then begin
+              lTargetRecord.RemoveElement(aRow.Lists[l]);
+              for j := 0 to Pred(lTargetLists[l].Count) do
+                lTargetRecord.AddCopy(IwbElement(Pointer(lTargetLists[l].Objects[j])), [cfAsNew, cfDeepCopy]);
+            end else begin
+              if Supports(ListOf(lTargetRecord), IwbContainerElementRef, lEntries) then
+                for j := Pred(lEntries.ElementCount) downto 0 do
+                  lEntries.Elements[j].Remove;
+              for j := 0 to Pred(lTargetLists[l].Count) do
+                if Supports(ListOf(lTargetRecord), IwbContainerElementRef, lEntries) then
+                  lEntries.AddIfMissing(IwbElement(Pointer(lTargetLists[l].Objects[j])), [cfAsNew, cfDeepCopy], wbNoCopyRules)
+                else
+                  lTargetRecord.AddCopy(IwbElement(Pointer(lTargetLists[l].Objects[j])), [cfAsNew, cfDeepCopy]);
+            end;
 
             if (l <= High(aRow.Counts)) and (aRow.Counts[l] <> '') then begin
-              lTargetRecord.Add(aRow.Counts[l], True);
-              lCountElement := lTargetRecord.ElementByPath[aRow.Counts[l]];
-              if Assigned(lCountElement) then
-                if Supports(lTargetRecord.ElementByName[aRow.Lists[l]], IwbContainerElementRef, lEntries) then
-                  lCountElement.NativeValue := lEntries.ElementCount
-                else
-                  lCountElement.Remove;
+              lParent := ListParent(lTargetRecord);
+              if Assigned(lParent) then begin
+                lParent.Add(aRow.Counts[l], True);
+                lCountElement := lParent.ElementByPath[aRow.Counts[l]];
+                if Assigned(lCountElement) then
+                  if Supports(lParent.ElementByName[ListName], IwbContainerElementRef, lEntries) then
+                    lCountElement.NativeValue := lEntries.ElementCount
+                  else
+                    lCountElement.Remove;
+              end;
             end;
           end;
       if Assigned(lTargetRecord) then

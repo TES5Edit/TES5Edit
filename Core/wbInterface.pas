@@ -6518,11 +6518,17 @@ var
 
 begin
   lLists := nil;
+  var lItems := 'Items';
+  var lPerks := 'Perks';
+  if aGameMode = gmSF1 then begin
+    lItems := 'Container Items\Items';
+    lPerks := 'Perks\Perks';
+  end;
   Add('LVLI', ['Leveled List Entries'], ['LLCT']);
   Add('LVLC', ['Leveled List Entries'], ['LLCT']);
   Add('LVLN', ['Leveled List Entries'], ['LLCT']);
   Add('LVSP', ['Leveled List Entries'], ['LLCT']);
-  Add('CONT', ['Items'], ['COCT']);
+  Add('CONT', [lItems], ['COCT']);
   Add('FACT', ['Relations'], []);
   Add('RACE', ['HNAM - Hairs', 'ENAM - Eyes', 'Actor Effects'], ['', '', 'SPCT']);
   Add('FLST', ['FormIDs'], [], True);
@@ -6532,7 +6538,7 @@ begin
     Add('DIAL', ['Added Quests'], []);
   // exclude Head Parts for Skyrim, causes issues
   if aGameMode >= gmTES5 then
-    Add('NPC_', ['Items', 'Factions', 'Actor Effects', 'Perks'], ['COCT', '', 'SPCT', 'PRKZ'])
+    Add('NPC_', [lItems, 'Factions', 'Actor Effects', lPerks], ['COCT', '', 'SPCT', 'PRKZ'])
   else
     Add('NPC_', ['Items', 'Factions', 'Head Parts', 'Actor Effects'], []);
   Result := lLists;
