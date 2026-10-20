@@ -65,6 +65,8 @@ type
     procedure TestFilterAnswerTimer(Sender: TObject);
     procedure TestViewModalAnswerTimer(Sender: TObject);
     procedure TestPumpStart;
+    procedure TestPumpEndSessionWait(aEnd: Boolean);
+    procedure TestPumpCloseDeferred;
     procedure TestPumpBrowseStep;
     procedure TestPumpEdidWalkStep;
     procedure TestPumpInitWalkStep;
@@ -7321,6 +7323,38 @@ begin
   TestHost.TestPumpTimer.OnTimer := TestPumpTimerTimer;
 end;
 
+procedure TxeTestFormHelper.TestPumpEndSessionWait(aEnd: Boolean);
+begin
+  var lForm := SendMessage(Handle, WM_QUERYENDSESSION, 0, LPARAM(ENDSESSION_LOGOFF));
+  var lApplication := SendMessage(Application.Handle, WM_QUERYENDSESSION, 0, LPARAM(ENDSESSION_LOGOFF));
+  TestPumpNote('WM_QUERYENDSESSION answered: form ' + IntToStr(lForm) + ', application ' + IntToStr(lApplication) +
+    '; pumping 1500 ms before WM_ENDSESSION, as while other programs answer');
+  var lUntil := GetTickCount64 + 1500;
+  while GetTickCount64 < lUntil do begin
+    Application.ProcessMessages;
+    Sleep(10);
+  end;
+  var lEnding := aEnd and (lForm <> 0) and (lApplication <> 0);
+  TestPumpNote('sending WM_ENDSESSION ' + BoolToStr(lEnding, True) + '; generator started ' + BoolToStr(GeneratorStarted, True) +
+    ', files ' + IntToStr(Length(Files)));
+  SendMessage(Handle, WM_ENDSESSION, WPARAM(lEnding), LPARAM(ENDSESSION_LOGOFF));
+  SendMessage(Application.Handle, WM_ENDSESSION, WPARAM(lEnding), LPARAM(ENDSESSION_LOGOFF));
+  TestPumpNote('after WM_ENDSESSION ' + BoolToStr(lEnding, True));
+end;
+
+procedure TxeTestFormHelper.TestPumpCloseDeferred;
+begin
+  PostMessage(Handle, WM_CLOSE, 0, 0);
+  TestPumpNote('WM_CLOSE posted; pumping 1500 ms through DoProcessMessages, as a nested pump does');
+  var lUntil := GetTickCount64 + 1500;
+  while GetTickCount64 < lUntil do begin
+    DoProcessMessages;
+    Sleep(10);
+  end;
+  TestPumpNote('the nested pump ended; close deferred ' + BoolToStr(CloseDeferred, True) + ', generator started ' +
+    BoolToStr(GeneratorStarted, True));
+end;
+
 procedure TxeTestFormHelper.TestPumpBrowseStep;
 begin
   var lNode := TestHost.TestPumpBrowseNode;
@@ -7523,6 +7557,10 @@ begin
     end else if SameText(xeTestSwitches.Pump, 'endsession') then
       TestPumpNote('WM_QUERYENDSESSION answered ' + IntToStr(SendMessage(Handle, WM_QUERYENDSESSION, 0, 0)) +
         '; close deferred ' + BoolToStr(CloseDeferred, True))
+    else if SameText(xeTestSwitches.Pump, 'endsessionwait') or SameText(xeTestSwitches.Pump, 'endsessioncancel') then
+      TestPumpEndSessionWait(SameText(xeTestSwitches.Pump, 'endsessionwait'))
+    else if SameText(xeTestSwitches.Pump, 'closedeferred') then
+      TestPumpCloseDeferred
     else if SameText(xeTestSwitches.Pump, 'hotkey') then begin
       if not Assigned(ScriptHotkeys) then
         ScriptHotkeys := TStringList.Create;
@@ -7574,6 +7612,8 @@ begin
 
   if xeTestSwitches.PumpDuringLoad <> '' then
     lWhere := IfThen(TestPumpInside, 'while the loader runs', 'after the loader')
+  else if xeTestSwitches.PumpBeforeGenerator then
+    lWhere := IfThen(TestPumpInside, 'while the generator waits', 'after the generator wait')
   else if xeTestSwitches.PumpModal then
     lWhere := IfThen(TestPumpInside, 'inside the modal loop', 'outside any modal loop')
   else
@@ -7677,6 +7717,10 @@ begin
         '; close deferred ' + BoolToStr(CloseDeferred, True) + '; observing for 2 s')
     else if xeTestSwitches.PumpModal then
       TestPumpNote('the modal loop has ended; close deferred ' + BoolToStr(CloseDeferred, True) + '; observing for 2 s')
+    else if xeTestSwitches.PumpBeforeGenerator then
+      TestPumpNote('the generator no longer waits (started ' + BoolToStr(GeneratorStarted, True) + ', armed ' +
+        BoolToStr(tmrGenerator.Enabled, True) + '); close deferred ' + BoolToStr(CloseDeferred, True) +
+        '; observing for 2 s, dialogs no longer answered')
     else
       TestPumpNote('back in the outermost message loop; close deferred ' + BoolToStr(CloseDeferred, True) + '; observing for 2 s');
   end;

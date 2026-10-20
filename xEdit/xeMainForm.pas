@@ -5523,7 +5523,8 @@ begin
     var lShown := '';
     if Assigned(ActiveRecord) then
       lShown := ', the View tab shows ' + ActiveRecord.Name;
-    TestPumpNote('FormClose entered: inside ' + IfThen(xeTestSwitches.PumpModal, 'a modal loop ', 'a nested pump ') + BoolToStr(TestPumpInside, True) +
+    TestPumpNote('FormClose entered: inside ' + IfThen(xeTestSwitches.PumpModal, 'a modal loop ',
+      IfThen(xeTestSwitches.PumpBeforeGenerator, 'the generator wait ', 'a nested pump ')) + BoolToStr(TestPumpInside, True) +
       ', client panel enabled ' + BoolToStr(pnlClient.Enabled, True) + ', action "' + wbCurrentAction + '"' + lShown);
   end;
   if Assigned(TestHost) and Assigned(TestHost.TestChangeFormIDLines) then begin

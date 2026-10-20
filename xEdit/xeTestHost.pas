@@ -390,6 +390,7 @@ begin
        not (SameText(Pump, 'close') or SameText(Pump, 'ctrlo') or SameText(Pump, 'xback') or
             SameText(Pump, 'pendingset') or SameText(Pump, 'tab') or SameText(Pump, 'cancelctrlo') or
             SameText(Pump, 'cancelshortcut') or SameText(Pump, 'endsession') or
+            SameText(Pump, 'endsessionwait') or SameText(Pump, 'endsessioncancel') or SameText(Pump, 'closedeferred') or
             SameText(Pump, 'browse') or SameText(Pump, 'browseclose') or SameText(Pump, 'edidwalk') or
             SameText(Pump, 'initwalk') or SameText(Pump, 'hotkey') or SameText(Pump, 'edidsearch')) or
        not ((PumpClient = '') or SameText(PumpClient, 'enabled') or SameText(PumpClient, 'disabled')) or
@@ -399,13 +400,16 @@ begin
          SameText(Pump, 'initwalk')) and (PumpDuringLoad = '')) or
        (SameText(Pump, 'hotkey') <> (PumpHotkey <> '')) or
        (SameText(Pump, 'edidsearch') <> (PumpSearch <> '')) then begin
-      ShowMessage('testpump requires -testpump:<close|ctrlo|xback|pendingset|tab|cancelctrlo|cancelshortcut|endsession|browse|browseclose|edidwalk|initwalk|hotkey|edidsearch> ' +
+      ShowMessage('testpump requires -testpump:<close|ctrlo|xback|pendingset|tab|cancelctrlo|cancelshortcut|endsession|endsessionwait|endsessioncancel|closedeferred|' +
+        'browse|browseclose|edidwalk|initwalk|hotkey|edidsearch> ' +
         '-testpumpfile:<filename> [-testpumpaction:<text in the current action or caption>] [-testpumpclient:<enabled|disabled>] ' +
         '[-testpumpanswer:<yes|no>] [-testpumpgenerator] [-testpumpdirect] [-testpumpmodal] [-testpumpduringload:<any|refs>] ' +
         '[-testpumpbeforegenerator:<ms>] ' +
         '[-testpumphotkey:<script file>] [-testpumpsearch:<EditorID>]; browse, browseclose, edidwalk and initwalk only with -testpumpduringload, hotkey only with ' +
         '-testpumphotkey, edidsearch only with -testpumpsearch, ' +
-        'xback and pendingset not with -testpumpduringload, beforegenerator (the arrival held <ms> after the generator is armed) ' +
+        'xback and pendingset not with -testpumpduringload, endsessionwait and endsessioncancel send the query to the form and the ' +
+        'application window, pump messages 1.5 s, then send WM_ENDSESSION true or false, closedeferred posts WM_CLOSE and pumps ' +
+        '1.5 s through DoProcessMessages, beforegenerator (the arrival held <ms> after the generator is armed) ' +
         'only in script or LODgen mode and not with -testpumpduringload, -testpumpgenerator or -testpumpmodal');
       Exit(False);
     end;
