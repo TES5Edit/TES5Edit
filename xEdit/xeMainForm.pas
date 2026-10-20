@@ -10996,6 +10996,9 @@ begin
   if not Supports(NodeData.Element, IwbFile, _File) then
     Exit;
 
+  if not _File.IsEditable then
+    Exit;
+
   lFiles := TStringList.Create;
   try
     fLocalize := not _File.IsLocalized;
@@ -13344,7 +13347,8 @@ begin
   mniNavLocalizationSwitch.Visible :=
      Assigned(Element) and
     (Element.ElementType = etFile) and
-    (Element._File.LoadOrder > 0);
+    (Element._File.LoadOrder > 0) and
+    Element.IsEditable;
   if mniNavLocalizationSwitch.Visible then
     if Element._File.IsLocalized then
       mniNavLocalizationSwitch.Caption := 'Delocalize plugin'
