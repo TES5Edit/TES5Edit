@@ -993,6 +993,7 @@ type
     NewMessages: TStringList;
     SessionEnding: Boolean;
     ClosedDown: Boolean;
+    CloseInProgress: Boolean;
     MainLoadTerminated: Boolean;
     ActiveIndex: TColumnIndex;
     ActiveRecordLock: Integer;
@@ -2197,19 +2198,26 @@ begin
       PostAddMessage('[' + wbFormatElapsedTime(Now - wbStartTime) + '] Windows session end refused: modules are being loaded.')
     else
       Message.Result := LRESULT(inherited CloseQuery);
-  end else if inherited CloseQuery then begin
-    if not UnattendedSaveFailed then
-      case SaveChanged of
-        srAbort:
-          Exit;
-        srError:
-          if xeUnattended then begin
-            if CheckResult = 0 then
-              CheckResult := xeFailureExitCode;
-          end else
-            Exit;
+  end else begin
+    CloseInProgress := True;
+    try
+      if inherited CloseQuery then begin
+        if not UnattendedSaveFailed then
+          case SaveChanged of
+            srAbort:
+              Exit;
+            srError:
+              if xeUnattended then begin
+                if CheckResult = 0 then
+                  CheckResult := xeFailureExitCode;
+              end else
+                Exit;
+          end;
+        Message.Result := 1;
       end;
-    Message.Result := 1;
+    finally
+      CloseInProgress := False;
+    end;
   end;
 end;
 
@@ -5524,18 +5532,23 @@ begin
   end;
 {$ENDIF}
   Action := caFree;
-  StopBackgroundWork;
+  CloseInProgress := True;
+  try
+    StopBackgroundWork;
 
-  if not UnattendedSaveFailed and (SaveChanged >= srAbort) then
-    if xeUnattended then begin
-      if CheckResult = 0 then
-        CheckResult := xeFailureExitCode;
-    end else begin
-      Action := caNone;
-      Exit;
-    end;
+    if not UnattendedSaveFailed and (SaveChanged >= srAbort) then
+      if xeUnattended then begin
+        if CheckResult = 0 then
+          CheckResult := xeFailureExitCode;
+      end else begin
+        Action := caNone;
+        Exit;
+      end;
 
-  CloseDown;
+    CloseDown;
+  finally
+    CloseInProgress := False;
+  end;
 end;
 
 procedure TfrmMain.StopBackgroundWork;
@@ -5600,6 +5613,14 @@ begin
       Settings.WriteInteger(Name, 'Width', Width);
       Settings.WriteInteger(Name, 'Height', Height);
     Settings.UpdateFile;
+  end;
+
+  if tmrGenerator.Enabled then begin
+    tmrGenerator.Enabled := False;
+    if xeUnattended and (CheckResult = 0) then begin
+      PostAddMessage('Error: Closed before the ' + IfThen(xeToolMode = tmLODGen, 'LOD generation', 'script') + ' started.');
+      CheckResult := xeFailureExitCode;
+    end;
   end;
 
   FlushPostedMessages;
@@ -15770,8 +15791,11 @@ procedure TfrmMain.tmrGeneratorTimer(Sender: TObject);
 begin
 {$IFDEF XE_TEST_CONTROL_POINTS}
   if xeTestSwitches.Pump <> '' then
-    TestPumpNote('generator tick: closed down ' + BoolToStr(ClosedDown, True) + ', generator started ' + BoolToStr(GeneratorStarted, True));
+    TestPumpNote('generator tick: closed down ' + BoolToStr(ClosedDown, True) + ', generator started ' + BoolToStr(GeneratorStarted, True) +
+      ', close in progress ' + BoolToStr(CloseInProgress, True));
 {$ENDIF}
+  if CloseInProgress or ClosedDown then
+    Exit;
   tmrGenerator.Enabled := False;
   if GeneratorStarted then
     Exit;
