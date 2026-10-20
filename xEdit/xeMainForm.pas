@@ -1250,6 +1250,7 @@ type
     plLastInventoryFormID   : TwbFormID;
     plLastEnchantmentFormID : TwbFormID;
     plLastSpellFormID       : TwbFormID;
+    plReadPending           : Boolean;
   protected
     procedure Execute; override; final;
     procedure ChangeDetected;
@@ -20290,73 +20291,81 @@ end;
 { TPluggyLinkThread }
 
 procedure TPluggyLinkThread.ChangeDetected;
+
+  function ReadTail(const aView: string): string;
+  var
+    Bytes : TBytes;
+  begin
+    with TBufferedFileStream.Create(plFolder + 'Pluggy'+xeContext.GameDefObj.AppName+aView+'.csv', fmOpenRead or fmShareDenyNone) do try
+      if Size > 2024 then
+        Position := Size - 2024;
+      SetLength(Bytes, Size - Position);
+      if Length(Bytes) > 0 then
+        SetLength(Bytes, Read(Bytes[0], Length(Bytes)));
+    finally
+      Free;
+    end;
+    Result := TEncoding.Default.GetString(Bytes);
+  end;
+
 var
   s                                                : string;
   FormID, BaseFormID, InventoryFormID, EnchantmentFormID, SpellFormID : TwbFormID;
 begin
-  with TBufferedFileStream.Create(plFolder + 'Pluggy'+xeContext.GameDefObj.AppName+'ViewWorld.csv', fmOpenRead or fmShareDenyNone) do try
-    Position := Size - 2024;
-    SetLength(s, 64 * 1024);
-    SetLength(s, Read(s[1], 64 * 1024));
-  finally
-    Free;
-  end;
-  with TStringList.Create do try
-    Text := s;
-    if Count < 2 then
+  try
+    s := ReadTail('ViewWorld');
+    with TStringList.Create do try
+      Text := s;
+      if Count < 2 then
+        Exit;
+      CommaText := Strings[Pred(Count)];
+      if Count < 2 then
+        Exit;
+      FormID := TwbFormID.FromStr(Strings[0]);
+      BaseFormID := TwbFormID.FromStr(Strings[1]);
+    finally
+      Free;
+    end;
+    s := ReadTail('ViewInventory');
+    with TStringList.Create do try
+      Text := s;
+      if Count < 2 then
+        Exit;
+      CommaText := Strings[Pred(Count)];
+      if Count < 2 then
+        Exit;
+      InventoryFormID := TwbFormID.FromStr(Strings[0]);
+      EnchantmentFormID := TwbFormID.FromStr(Strings[1]);
+    finally
+      Free;
+    end;
+    s := ReadTail('ViewSpells');
+    with TStringList.Create do try
+      Text := s;
+      if Count < 2 then
+        Exit;
+      CommaText := Strings[Pred(Count)];
+      if Count < 1 then
+        Exit;
+      SpellFormID := TwbFormID.FromStr(Strings[0]);
+    finally
+      Free;
+    end;
+  except
+    on E: Exception do begin
+      if not plReadPending then
+        frmMain.PostAddMessage('[PluggyLink] Error: ' + E.Message + ' (retrying every second)');
+      plReadPending := True;
       Exit;
-    CommaText := Strings[Pred(Count)];
-    if Count < 2 then
-      Exit;
-    FormID := TwbFormID.FromStr(Strings[0]);
-    BaseFormID := TwbFormID.FromStr(Strings[1]);
-  finally
-    Free;
+    end;
   end;
-  with TBufferedFileStream.Create(plFolder + 'Pluggy'+xeContext.GameDefObj.AppName+'ViewInventory.csv', fmOpenRead or fmShareDenyNone) do try
-    Position := Size - 2024;
-    SetLength(s, 64 * 1024);
-    SetLength(s, Read(s[1], 64 * 1024));
-  finally
-    Free;
-  end;
-  with TStringList.Create do try
-    Text := s;
-    if Count < 2 then
-      Exit;
-    CommaText := Strings[Pred(Count)];
-    if Count < 2 then
-      Exit;
-    InventoryFormID := TwbFormID.FromStr(Strings[0]);
-    EnchantmentFormID := TwbFormID.FromStr(Strings[1]);
-  finally
-    Free;
-  end;
-  with TBufferedFileStream.Create(plFolder + 'Pluggy'+xeContext.GameDefObj.AppName+'ViewSpells.csv', fmOpenRead or fmShareDenyNone) do try
-    Position := Size - 2024;
-    SetLength(s, 64 * 1024);
-    SetLength(s, Read(s[1], 64 * 1024));
-  finally
-    Free;
-  end;
-  with TStringList.Create do try
-    Text := s;
-    if Count < 2 then
-      Exit;
-    CommaText := Strings[Pred(Count)];
-    if Count < 1 then
-      Exit;
-    SpellFormID := TwbFormID.FromStr(Strings[0]);
-  finally
-    Free;
-  end;
-
+  plReadPending := False;
 
   if (FormID <> plLastFormID) or
      (BaseFormID <> plLastBaseFormID) or
-     (InventoryFormID <> plLastBaseFormID) or
-     (EnchantmentFormID <> plLastBaseFormID) or
-     (SpellFormID <> plLastBaseFormID) then begin
+     (InventoryFormID <> plLastInventoryFormID) or
+     (EnchantmentFormID <> plLastEnchantmentFormID) or
+     (SpellFormID <> plLastSpellFormID) then begin
 
     plLastFormID := FormID;
     plLastBaseFormID := BaseFormID;
@@ -20391,6 +20400,9 @@ begin
             if not FindNextChangeNotification(WaitHandle) then
               RaiseLastOSError;
           end;
+          WAIT_TIMEOUT:
+            if plReadPending then
+              ChangeDetected;
           WAIT_FAILED:
             RaiseLastOSError;
         end;
