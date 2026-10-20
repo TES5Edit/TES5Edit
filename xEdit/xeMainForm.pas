@@ -994,6 +994,7 @@ type
     SessionEnding: Boolean;
     ClosedDown: Boolean;
     CloseInProgress: Boolean;
+    SessionEndPending: Boolean;
     MainLoadTerminated: Boolean;
     ActiveIndex: TColumnIndex;
     ActiveRecordLock: Integer;
@@ -2191,6 +2192,7 @@ end;
 procedure TfrmMain.WMQueryEndSession(var Message: TWMQueryEndSession);
 begin
   Message.Result := 0;
+  SessionEndPending := False;
   if InNestedLoop or (LongActionDepth > 0) or not pnlClient.Enabled then
     PostAddMessage('[' + wbFormatElapsedTime(Now - wbStartTime) + '] Windows session end refused: an operation is running.')
   else if LoadersRunning > 0 then begin
@@ -2219,13 +2221,18 @@ begin
       CloseInProgress := False;
     end;
   end;
+  SessionEndPending := Message.Result <> 0;
 end;
 
 function TfrmMain.AppWindowHook(var Message: TMessage): Boolean;
 begin
   Result := False;
-  if (Message.Msg <> WM_ENDSESSION) or not TWMEndSession(Message).EndSession then
+  if Message.Msg <> WM_ENDSESSION then
     Exit;
+  if not TWMEndSession(Message).EndSession then begin
+    SessionEndPending := False;
+    Exit;
+  end;
   Result := SessionEnding or ClosedDown;
   if Result or InNestedLoop or (LongActionDepth > 0) or not pnlClient.Enabled then
     Exit;
@@ -5618,9 +5625,10 @@ begin
 
   if tmrGenerator.Enabled then begin
     tmrGenerator.Enabled := False;
-    if xeUnattended and (CheckResult = 0) then begin
+    if xeUnattended then begin
       PostAddMessage('Error: Closed before the ' + IfThen(xeToolMode = tmLODGen, 'LOD generation', 'script') + ' started.');
-      CheckResult := xeFailureExitCode;
+      if CheckResult = 0 then
+        CheckResult := xeFailureExitCode;
     end;
   end;
 
@@ -15793,9 +15801,10 @@ begin
 {$IFDEF XE_TEST_CONTROL_POINTS}
   if xeTestSwitches.Pump <> '' then
     TestPumpNote('generator tick: closed down ' + BoolToStr(ClosedDown, True) + ', generator started ' + BoolToStr(GeneratorStarted, True) +
-      ', close in progress ' + BoolToStr(CloseInProgress, True));
+      ', close in progress ' + BoolToStr(CloseInProgress, True) + ', close deferred ' + BoolToStr(CloseDeferred, True) +
+      ', session end pending ' + BoolToStr(SessionEndPending, True));
 {$ENDIF}
-  if CloseInProgress or ClosedDown then
+  if CloseInProgress or CloseDeferred or SessionEndPending or ClosedDown then
     Exit;
   tmrGenerator.Enabled := False;
   if GeneratorStarted then
