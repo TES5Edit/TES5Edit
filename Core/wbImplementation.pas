@@ -3880,7 +3880,8 @@ var
             var lValueArrayDef: IwbArrayDef;
             if Assigned(lProbe) and Supports(lProbe.Def, IwbSubRecordDef, lValueRecordDef) and
                Supports(lValueRecordDef.Value, IwbArrayDef, lValueArrayDef) then
-              lUnsorted := not (ContextObj.Settings.SortSubRecords and lValueArrayDef.Sorted);
+              lUnsorted := not (ContextObj.Settings.SortSubRecords and lValueArrayDef.Sorted and
+                not ContextObj.Settings.CompareRawData);
           end;
         end;
         if lUnsorted then begin
