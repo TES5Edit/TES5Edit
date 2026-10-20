@@ -382,7 +382,7 @@ begin
 
     lMyGamesTheGamePath := aSettings.DefaultMyGamesPath(xeGameMode, xeMyProfileName, isEpicNV);
   end else if lMyGamesTheGamePath <> '' then
-    lMyGamesTheGamePath := IncludeTrailingPathDelimiter(lMyGamesTheGamePath);
+    lMyGamesTheGamePath := IncludeTrailingPathDelimiter(ExpandFileName(lMyGamesTheGamePath));
 
   if not wbFindCmdLineParam('I', lTheGameIniFileName) then
     lTheGameIniFileName := aSettings.DefaultGameIniFileName(xeGameMode, lMyGamesTheGamePath);
