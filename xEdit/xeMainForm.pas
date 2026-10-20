@@ -20525,7 +20525,7 @@ begin
         Stream.Free;
       end;
     except
-      on E: EStreamError do begin
+      on E: Exception do begin
         if not glReadPending then
           frmMain.PostAddMessage('[GameLink] Error: ' + E.Message + ' (retrying every second)');
         glReadPending := True;
