@@ -5938,8 +5938,21 @@ begin
           TestChangeFormIDViewAdd(lLines)
         else if not Assigned(lMenuItem) then
           TestChangeFormIDLocView(lLines)
-        else
+        else begin
           mniNavChangeFormIDClick(lMenuItem);
+          if xeTestSwitches.ChangeFormIDTwice then begin
+            lLines.Add('returned');
+            vstNav.ClearSelection;
+            for var lSecondRecord in TestHost.TestChangeFormIDRecords do begin
+              var lSecondNode := FindNodeForElement(lSecondRecord);
+              if Assigned(lSecondNode) then
+                vstNav.Selected[lSecondNode] := True;
+            end;
+            lLines.Add('second' + #9 + 'selected ' + IntToStr(vstNav.SelectedCount));
+            if vstNav.SelectedCount > 0 then
+              mniNavChangeFormIDClick(lMenuItem);
+          end;
+        end;
         lLines.Add('returned');
       except
         on E: Exception do
@@ -6346,6 +6359,16 @@ begin
   lResult := mrNone;
   if lForm is TfrmModuleSelect then begin
     lExtra := 'offered: ' + string.Join(' | ', TfrmModuleSelect(lForm).AllModules.ToStrings(False));
+    if xeTestSwitches.ChangeFormIDTwice then begin
+      var lFocused := 'none';
+      var lTree := TfrmModuleSelect(lForm).vstModules;
+      if Assigned(lTree.FocusedNode) then begin
+        var lData := PModuleNodeData(lTree.GetNodeData(lTree.FocusedNode));
+        if Assigned(lData) and Assigned(lData.mndModule) then
+          lFocused := lData.mndModule.miName;
+      end;
+      lExtra := lExtra + '; focused: ' + lFocused;
+    end;
     var lOffered: PwbModuleInfo := nil;
     for var lInfo in TfrmModuleSelect(lForm).AllModules do
       if Assigned(TestHost.TestChangeFormIDTarget) then begin

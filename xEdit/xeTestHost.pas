@@ -302,6 +302,7 @@ type
     ChangeFormIDFile      : string;
     ChangeFormIDRecords   : string;
     ChangeFormIDShift     : Boolean;
+    ChangeFormIDTwice     : Boolean;
     ChangeFormIDTarget    : string;
     ChangeFormIDIds       : string;
     ChangeFormIDAnswers   : string;
@@ -726,6 +727,7 @@ begin
     wbFindCmdLineParam('testchangeformidpinned', ChangeFormIDPinned);
     wbFindCmdLineParam('testchangeformidrow', ChangeFormIDRow);
     ChangeFormIDShift := FindCmdLineSwitch('testchangeformidshift');
+    ChangeFormIDTwice := FindCmdLineSwitch('testchangeformidtwice');
     if ChangeFormIDOp = '' then
       ChangeFormIDOp := 'changeformid';
     if (ChangeFormIDFile = '') or
