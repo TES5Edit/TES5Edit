@@ -142,6 +142,9 @@ type
     procedure TestGameLinkRunTimer(Sender: TObject);
     procedure TestGameLinkAnswerTimer(Sender: TObject);
     procedure TestGameLinkWrite(const aBody: string);
+    function TestGameLinkLockedRange: Boolean;
+    function TestGameLinkLockedHold: Boolean;
+    procedure TestGameLinkReleaseLock;
     procedure DoTestFormIDSearch;
     procedure TestFormIDSearchRunTimer(Sender: TObject);
     procedure TestFormIDSearchWrite(const aBody: string);
@@ -2986,13 +2989,13 @@ begin
     4: begin
       if GetTickCount64 < TestHost.TestGameLinkStart + 2000 then
         Exit;
-      FreeAndNil(TestHost.TestGameLinkLock);
+      TestGameLinkReleaseLock;
       if SameText(xeTestSwitches.GameLinkLocked, 'repick') then begin
         TestHost.TestGameLinkBody := TestHost.TestGameLinkBody + #13#10'repick' + #9 + 'the menu item picked again';
         mniMainPluggyLinkReference.Checked := True;
         mniMainPluggyLinkReference.Click;
       end;
-      if SameText(xeTestSwitches.GameLinkLocked, 'hold') then
+      if TestGameLinkLockedHold then
         TestHost.TestGameLinkPointed := High(UInt64) - 100000
       else
         TestGameLinkPointAt(TestHost.TestGameLinkSecond);
@@ -3066,26 +3069,33 @@ begin
     Exit;
   end;
   if xeTestSwitches.GameLinkLocked <> '' then begin
-    var lHold := SameText(xeTestSwitches.GameLinkLocked, 'hold');
+    var lRange := TestGameLinkLockedRange;
+    var lHold := TestGameLinkLockedHold;
     var lWritten := lTarget;
     if lHold then
       lWritten := TestHost.TestGameLinkSecond;
     try
       var lBytes := TEncoding.ASCII.GetBytes('[Console]'#13#10'selectedRefID=' + lWritten.LoadOrderFormID.ToString + #13#10);
-      TestHost.TestGameLinkLock := TFileStream.Create(xeContext.Settings.DataPath + 'xEdit\xEditLink.ini', fmOpenReadWrite or fmShareExclusive);
+      if lRange then begin
+        TestHost.TestGameLinkLock := TFileStream.Create(xeContext.Settings.DataPath + 'xEdit\xEditLink.ini', fmOpenReadWrite or fmShareDenyNone);
+        if not LockFile(TestHost.TestGameLinkLock.Handle, 0, 0, $10000, 0) then
+          RaiseLastOSError;
+      end else
+        TestHost.TestGameLinkLock := TFileStream.Create(xeContext.Settings.DataPath + 'xEdit\xEditLink.ini', fmOpenReadWrite or fmShareExclusive);
       TestHost.TestGameLinkLock.Size := 0;
       TestHost.TestGameLinkLock.WriteBuffer(lBytes[0], Length(lBytes));
       FlushFileBuffers(TestHost.TestGameLinkLock.Handle);
     except
       on E: Exception do begin
-        FreeAndNil(TestHost.TestGameLinkLock);
+        TestGameLinkReleaseLock;
         TestHost.TestGameLinkTimer.Enabled := False;
         CheckResult := 2;
         TestGameLinkWrite(TestHost.TestGameLinkBody + #13#10'# FAILED: ' + E.ClassName + ': ' + E.Message);
         Exit;
       end;
     end;
-    TestHost.TestGameLinkBody := TestHost.TestGameLinkBody + #13#10'locked' + #9 + 'the link file held without sharing for 2 s, ' +
+    TestHost.TestGameLinkBody := TestHost.TestGameLinkBody + #13#10'locked' + #9 +
+      IfThen(lRange, 'the link file shared and its bytes locked for 2 s, ', 'the link file held without sharing for 2 s, ') +
       IfThen(lHold, 'the second record written while held, nothing written after', 'written once');
     TestHost.TestGameLinkStart := GetTickCount64;
     TestHost.TestGameLinkPhase := 4;
@@ -3126,6 +3136,23 @@ begin
       TestHost.TestGameLinkAnswered := True;
       Exit;
     end;
+end;
+
+function TxeTestFormHelper.TestGameLinkLockedRange: Boolean;
+begin
+  Result := SameText(xeTestSwitches.GameLinkLocked, 'range') or SameText(xeTestSwitches.GameLinkLocked, 'rangehold');
+end;
+
+function TxeTestFormHelper.TestGameLinkLockedHold: Boolean;
+begin
+  Result := SameText(xeTestSwitches.GameLinkLocked, 'hold') or SameText(xeTestSwitches.GameLinkLocked, 'rangehold');
+end;
+
+procedure TxeTestFormHelper.TestGameLinkReleaseLock;
+begin
+  if Assigned(TestHost.TestGameLinkLock) and TestGameLinkLockedRange then
+    UnlockFile(TestHost.TestGameLinkLock.Handle, 0, 0, $10000, 0);
+  FreeAndNil(TestHost.TestGameLinkLock);
 end;
 
 procedure TxeTestFormHelper.TestGameLinkWrite(const aBody: string);
