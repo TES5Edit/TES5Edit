@@ -3071,20 +3071,31 @@ begin
   if xeTestSwitches.GameLinkLocked <> '' then begin
     var lRange := TestGameLinkLockedRange;
     var lHold := TestGameLinkLockedHold;
+    var lBadText := SameText(xeTestSwitches.GameLinkLocked, 'badutf8');
     var lWritten := lTarget;
     if lHold then
       lWritten := TestHost.TestGameLinkSecond;
     try
       var lBytes := TEncoding.ASCII.GetBytes('[Console]'#13#10'selectedRefID=' + lWritten.LoadOrderFormID.ToString + #13#10);
-      if lRange then begin
-        TestHost.TestGameLinkLock := TFileStream.Create(xeContext.Settings.DataPath + 'xEdit\xEditLink.ini', fmOpenReadWrite or fmShareDenyNone);
-        if not LockFile(TestHost.TestGameLinkLock.Handle, 0, 0, $10000, 0) then
-          RaiseLastOSError;
-      end else
-        TestHost.TestGameLinkLock := TFileStream.Create(xeContext.Settings.DataPath + 'xEdit\xEditLink.ini', fmOpenReadWrite or fmShareExclusive);
-      TestHost.TestGameLinkLock.Size := 0;
-      TestHost.TestGameLinkLock.WriteBuffer(lBytes[0], Length(lBytes));
-      FlushFileBuffers(TestHost.TestGameLinkLock.Handle);
+      if lBadText then begin
+        lBytes := [$EF, $BB, $BF, $5B, $C3, $28, $5D, $0D, $0A];
+        var lStream := TFileStream.Create(xeContext.Settings.DataPath + 'xEdit\xEditLink.ini', fmCreate or fmShareDenyWrite);
+        try
+          lStream.WriteBuffer(lBytes[0], Length(lBytes));
+        finally
+          lStream.Free;
+        end;
+      end else begin
+        if lRange then begin
+          TestHost.TestGameLinkLock := TFileStream.Create(xeContext.Settings.DataPath + 'xEdit\xEditLink.ini', fmOpenReadWrite or fmShareDenyNone);
+          if not LockFile(TestHost.TestGameLinkLock.Handle, 0, 0, $10000, 0) then
+            RaiseLastOSError;
+        end else
+          TestHost.TestGameLinkLock := TFileStream.Create(xeContext.Settings.DataPath + 'xEdit\xEditLink.ini', fmOpenReadWrite or fmShareExclusive);
+        TestHost.TestGameLinkLock.Size := 0;
+        TestHost.TestGameLinkLock.WriteBuffer(lBytes[0], Length(lBytes));
+        FlushFileBuffers(TestHost.TestGameLinkLock.Handle);
+      end;
     except
       on E: Exception do begin
         TestGameLinkReleaseLock;
@@ -3094,9 +3105,13 @@ begin
         Exit;
       end;
     end;
-    TestHost.TestGameLinkBody := TestHost.TestGameLinkBody + #13#10'locked' + #9 +
-      IfThen(lRange, 'the link file shared and its bytes locked for 2 s, ', 'the link file held without sharing for 2 s, ') +
-      IfThen(lHold, 'the second record written while held, nothing written after', 'written once');
+    if lBadText then
+      TestHost.TestGameLinkBody := TestHost.TestGameLinkBody + #13#10'locked' + #9 +
+        'the link file rewritten as a UTF-8 BOM and an invalid UTF-8 sequence, the second record written 2 s later'
+    else
+      TestHost.TestGameLinkBody := TestHost.TestGameLinkBody + #13#10'locked' + #9 +
+        IfThen(lRange, 'the link file shared and its bytes locked for 2 s, ', 'the link file held without sharing for 2 s, ') +
+        IfThen(lHold, 'the second record written while held, nothing written after', 'written once');
     TestHost.TestGameLinkStart := GetTickCount64;
     TestHost.TestGameLinkPhase := 4;
     Exit;
