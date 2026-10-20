@@ -1362,6 +1362,7 @@ type
 var
   frmMain                     : TfrmMain;
   _PreviousCopyIntoSelectedModules: TwbModuleInfos;
+  _PreviousChangeFormIDTarget: PwbModuleInfo;
 
 procedure DoRename(aSessionEnd: Boolean = False);
 
@@ -8626,12 +8627,16 @@ begin
       FilterFlag := mfHasFile;
       SelectFlag := mfTagged;
       AllModules.ExcludeAll(mfTagged);
+      for var lModule in AllModules do
+        if lModule = _PreviousChangeFormIDTarget then
+          Include(lModule.miFlags, mfTagged);
       MaxSelect := 1;
       AllowCancel;
 
       if ShowModal <> mrOK then
         Exit;
       Assert(Length(SelectedModules)=1);
+      _PreviousChangeFormIDTarget := SelectedModules[0];
       _File := SelectedModules[0]^._File;
     finally
       Free;
