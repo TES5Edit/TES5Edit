@@ -3947,8 +3947,11 @@ var
                 lTargetRecord.AddCopy(IwbElement(Pointer(lTargetLists[l].Objects[j])), [cfAsNew, cfDeepCopy]);
             end else begin
               if Supports(ListOf(lTargetRecord), IwbContainerElementRef, lEntries) then
-                for j := Pred(lEntries.ElementCount) downto 0 do
-                  lEntries.Elements[j].Remove;
+                if lTargetLists[l].Count = 0 then
+                  lEntries.Remove
+                else
+                  for j := Pred(lEntries.ElementCount) downto 0 do
+                    lEntries.Elements[j].Remove;
               for j := 0 to Pred(lTargetLists[l].Count) do
                 if Supports(ListOf(lTargetRecord), IwbContainerElementRef, lEntries) then
                   lEntries.AddIfMissing(IwbElement(Pointer(lTargetLists[l].Objects[j])), [cfAsNew, cfDeepCopy], wbNoCopyRules)
@@ -3967,6 +3970,12 @@ var
                   else
                     lCountElement.Remove;
               end;
+            end;
+
+            if ListName <> aRow.Lists[l] then begin
+              lParent := ListParent(lTargetRecord);
+              if Assigned(lParent) and (lParent.ElementCount = 0) then
+                lParent.Remove;
             end;
           end;
       if Assigned(lTargetRecord) then
