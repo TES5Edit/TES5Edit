@@ -976,6 +976,7 @@ type
   private
     procedure WMClose(var Message: TWMClose); message WM_CLOSE;
     procedure WMQueryEndSession(var Message: TWMQueryEndSession); message WM_QUERYENDSESSION;
+    procedure WMEndSession(var Message: TWMEndSession); message WM_ENDSESSION;
     function AppWindowHook(var Message: TMessage): Boolean;
     procedure StopBackgroundWork;
     procedure CloseDown;
@@ -2192,7 +2193,6 @@ end;
 procedure TfrmMain.WMQueryEndSession(var Message: TWMQueryEndSession);
 begin
   Message.Result := 0;
-  SessionEndPending := False;
   if InNestedLoop or (LongActionDepth > 0) or not pnlClient.Enabled then
     PostAddMessage('[' + wbFormatElapsedTime(Now - wbStartTime) + '] Windows session end refused: an operation is running.')
   else if LoadersRunning > 0 then begin
@@ -2221,12 +2221,24 @@ begin
       CloseInProgress := False;
     end;
   end;
-  SessionEndPending := Message.Result <> 0;
+  if Message.Result <> 0 then
+    SessionEndPending := True;
+end;
+
+procedure TfrmMain.WMEndSession(var Message: TWMEndSession);
+begin
+  if not Message.EndSession then
+    SessionEndPending := False;
+  inherited;
 end;
 
 function TfrmMain.AppWindowHook(var Message: TMessage): Boolean;
 begin
   Result := False;
+  if Message.Msg = WM_QUERYENDSESSION then begin
+    SessionEndPending := True;
+    Exit;
+  end;
   if Message.Msg <> WM_ENDSESSION then
     Exit;
   if not TWMEndSession(Message).EndSession then begin
