@@ -1098,7 +1098,8 @@ type
     function IsNone   : Boolean; inline;
 
     function IsHardcoded: Boolean; inline;
-    procedure CheckAssignable;
+    procedure CheckObjectID(aLayout: TwbSlotLayout);
+    procedure CheckAssignable(aLayout: TwbSlotLayout);
 
     procedure SetObjectID(aLayout: TwbSlotLayout; const Value: Cardinal; aSilent: Boolean); overload;
 
@@ -6516,11 +6517,17 @@ var
 
 begin
   lLists := nil;
+  var lItems := 'Items';
+  var lPerks := 'Perks';
+  if aGameMode = gmSF1 then begin
+    lItems := 'Container Items\Items';
+    lPerks := 'Perks\Perks';
+  end;
   Add('LVLI', ['Leveled List Entries'], ['LLCT']);
   Add('LVLC', ['Leveled List Entries'], ['LLCT']);
   Add('LVLN', ['Leveled List Entries'], ['LLCT']);
   Add('LVSP', ['Leveled List Entries'], ['LLCT']);
-  Add('CONT', ['Items'], ['COCT']);
+  Add('CONT', [lItems], ['COCT']);
   Add('FACT', ['Relations'], []);
   Add('RACE', ['HNAM - Hairs', 'ENAM - Eyes', 'Actor Effects'], ['', '', 'SPCT']);
   Add('FLST', ['FormIDs'], [], True);
@@ -6530,7 +6537,7 @@ begin
     Add('DIAL', ['Added Quests'], []);
   // exclude Head Parts for Skyrim, causes issues
   if aGameMode >= gmTES5 then
-    Add('NPC_', ['Items', 'Factions', 'Actor Effects', 'Perks'], ['COCT', '', 'SPCT', 'PRKZ'])
+    Add('NPC_', [lItems, 'Factions', 'Actor Effects', lPerks], ['COCT', '', 'SPCT', 'PRKZ'])
   else
     Add('NPC_', ['Items', 'Factions', 'Head Parts', 'Actor Effects'], []);
   Result := lLists;
@@ -19964,20 +19971,21 @@ begin
 end;
 
 procedure TwbFormIDDefFormater.FindUsedMasters(aInt: Int64; aMasters: PwbUsedMasters; const aElement: IwbElement);
-var
-  OldValue   : Cardinal;
-  FileID     : Integer;
 begin
   if dfUseLoadOrder in defFlags then
     Exit;
   if (aInt < $800) or (aInt = $FFFFFFFF) and IsValid('ACVA') then
     Exit;
+  if not Assigned(aElement) then
+    Exit;
 
-  OldValue := aInt;
-  if OldValue <> 0 then begin
-    FileID := OldValue shr 24;
-    aMasters[FileID] := True;
-  end;
+  var lFile := aElement._File;
+  if not Assigned(lFile) then
+    Exit;
+
+  var lMasterIndex := lFile.GetMasterIndexForFileID(TwbFormID.FromCardinal(aInt).FileID[defSlotLayout(aElement)], False);
+  if lMasterIndex >= 0 then
+    aMasters[lMasterIndex] := True;
 end;
 
 function TwbFormIDDefFormater.FromEditValue(const aValue: string; const aElement: IwbElement): Int64;
@@ -25126,12 +25134,19 @@ begin
   Result := _FormID = $00000014;
 end;
 
-procedure TwbFormID.CheckAssignable;
+procedure TwbFormID.CheckObjectID(aLayout: TwbSlotLayout);
+begin
+  if not IsNull and (GetObjectID(aLayout) = 0) then
+    raise Exception.Create('FormID [' + ToDisplayString(aLayout) + '] has the ObjectID 000, which no record can use');
+end;
+
+procedure TwbFormID.CheckAssignable(aLayout: TwbSlotLayout);
 begin
   if IsNull then
     raise Exception.Create('00000000 is not a valid FormID');
   if IsPlayer then
     raise Exception.Create('00000014 is not a valid FormID');
+  CheckObjectID(aLayout);
 end;
 
 class operator TwbFormID.LessThan(const A, B: TwbFormID): Boolean;

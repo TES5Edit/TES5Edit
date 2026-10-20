@@ -775,6 +775,7 @@ type
     NodeForViewFocusedElement: PVirtualNode;
     ColumnForViewFocusedElement: Integer;
     LoaderStarted: Boolean;
+    LoadersRunning: Integer;
     ShowFlagEnumValue: Boolean;
     ScriptRunning: Boolean;
     RebuildingViewTree: Boolean;
@@ -977,6 +978,10 @@ type
   private
     procedure WMClose(var Message: TWMClose); message WM_CLOSE;
     procedure WMQueryEndSession(var Message: TWMQueryEndSession); message WM_QUERYENDSESSION;
+    procedure WMEndSession(var Message: TWMEndSession); message WM_ENDSESSION;
+    function AppWindowHook(var Message: TMessage): Boolean;
+    procedure StopBackgroundWork;
+    procedure CloseDown;
     procedure WMUser(var Message: TMessage); message WM_USER;
     procedure WMUser1(var Message: TMessage); message WM_USER + 1;
     procedure WMUserLoaderDone(var Message: TMessage); message WM_USER + 2;
@@ -989,6 +994,11 @@ type
     Files: TwbFiles;
   private
     NewMessages: TStringList;
+    SessionEnding: Boolean;
+    ClosedDown: Boolean;
+    CloseInProgress: Boolean;
+    SessionEndPending: Boolean;
+    MainLoadTerminated: Boolean;
     ActiveIndex: TColumnIndex;
     ActiveRecordLock: Integer;
     ActiveMaster: IwbMainRecord;
@@ -1171,6 +1181,7 @@ type
     procedure vstCreateEditor(const aElement: IwbElement; out EditLink: IVTEditLink);
 
     procedure SaveLogs(aAllowReplace: Boolean);
+    procedure FlushPostedMessages;
     procedure UpdateActiveFromPluggyLink;
   public
     Settings: TMemIniFile;
@@ -1244,6 +1255,7 @@ type
     plLastInventoryFormID   : TwbFormID;
     plLastEnchantmentFormID : TwbFormID;
     plLastSpellFormID       : TwbFormID;
+    plReadPending           : Boolean;
   protected
     procedure Execute; override; final;
     procedure ChangeDetected;
@@ -1254,6 +1266,7 @@ type
     glFolder         : string;
     glLastFormID     : TwbFormID;
     glLastBaseFormID : TwbFormID;
+    glReadPending    : Boolean;
   protected
     procedure Execute; override; final;
     procedure ChangeDetected;
@@ -1354,8 +1367,9 @@ type
 var
   frmMain                     : TfrmMain;
   _PreviousCopyIntoSelectedModules: TwbModuleInfos;
+  _PreviousChangeFormIDTarget: PwbModuleInfo;
 
-procedure DoRename;
+procedure DoRename(aSessionEnd: Boolean = False);
 
 function LockProcessMessages: Integer;
 function UnLockProcessMessages: Integer;
@@ -1649,7 +1663,7 @@ begin
     GeneralProgress(s);
 end;
 
-procedure DoRename;
+procedure DoRename(aSessionEnd: Boolean = False);
 var
   AnyError : Boolean;
 begin
@@ -1668,6 +1682,8 @@ begin
 {$IFDEF XE_TEST_CONTROL_POINTS}
   if xeTestSwitches.SaveContexts then
     TestSaveContextsReport('AFTER-FORCECLOSEDFILES');
+  if Assigned(frmMain) then
+    frmMain.TestEndSessionStage('forceclosedfiles');
 {$ENDIF}
 
   if xeContext.Settings.DontSave then
@@ -1682,7 +1698,7 @@ begin
   wbProgress(wbCurrentAction);
 
   _SaveProgress := False;
-  var lUnattended := xeUnattended;
+  var lUnattended := xeUnattended or aSessionEnd;
   AnyError := not xeContext.RenamePendingSaves(
     procedure(const aText: string)
     begin
@@ -2178,11 +2194,74 @@ end;
 
 procedure TfrmMain.WMQueryEndSession(var Message: TWMQueryEndSession);
 begin
-  if (NestedPumpDepth > 0) or (LongActionDepth > 0) or not pnlClient.Enabled then begin
-    Message.Result := 0;
-    PostAddMessage('[' + wbFormatElapsedTime(Now - wbStartTime) + '] Windows session end refused: an operation is running.');
-  end else
-    Message.Result := LRESULT(inherited CloseQuery);
+  Message.Result := 0;
+  if InNestedLoop or (LongActionDepth > 0) or not pnlClient.Enabled then
+    PostAddMessage('[' + wbFormatElapsedTime(Now - wbStartTime) + '] Windows session end refused: an operation is running.')
+  else if LoadersRunning > 0 then begin
+    if Length(Files) > 0 then
+      PostAddMessage('[' + wbFormatElapsedTime(Now - wbStartTime) + '] Windows session end refused: modules are being loaded.')
+    else
+      Message.Result := LRESULT(inherited CloseQuery);
+  end else begin
+    CloseInProgress := True;
+    try
+      if inherited CloseQuery then begin
+        if not UnattendedSaveFailed then
+          case SaveChanged of
+            srAbort:
+              Exit;
+            srError:
+              if xeUnattended then begin
+                if CheckResult = 0 then
+                  CheckResult := xeFailureExitCode;
+              end else
+                Exit;
+          end;
+        Message.Result := 1;
+      end;
+    finally
+      CloseInProgress := False;
+    end;
+  end;
+  if Message.Result <> 0 then
+    SessionEndPending := True;
+end;
+
+procedure TfrmMain.WMEndSession(var Message: TWMEndSession);
+begin
+  if not Message.EndSession then
+    SessionEndPending := False;
+  inherited;
+end;
+
+function TfrmMain.AppWindowHook(var Message: TMessage): Boolean;
+begin
+  Result := False;
+  if Message.Msg = WM_QUERYENDSESSION then begin
+    SessionEndPending := True;
+    Exit;
+  end;
+  if Message.Msg <> WM_ENDSESSION then
+    Exit;
+  if not TWMEndSession(Message).EndSession then begin
+    SessionEndPending := False;
+    Exit;
+  end;
+  Result := SessionEnding or ClosedDown;
+  if Result or InNestedLoop or (LongActionDepth > 0) or not pnlClient.Enabled then
+    Exit;
+  SessionEnding := True;
+  try
+    StopBackgroundWork;
+    CloseDown;
+    DoRename(True);
+  except
+    on E: Exception do begin
+      xeSaveLogs('Error: ' + E.ClassName + ': ' + E.Message, False);
+      if ExitCode = 0 then
+        ExitCode := xeFailureExitCode;
+    end;
+  end;
 end;
 
 function TfrmMain.IsShortCut(var Message: TWMKey): Boolean;
@@ -2296,7 +2375,7 @@ begin
   else
     PluggyLinkState := plsNone;
 
-  if (PluggyLinkState = plsNone) or Assigned(PluggyLinkThread) and (PluggyLinkThread.Terminated) then
+  if (PluggyLinkState = plsNone) or Assigned(PluggyLinkThread) and (PluggyLinkThread.Terminated or PluggyLinkThread.Finished) then
     FreeAndNil(PluggyLinkThread);
 
   if (PluggyLinkState <> plsNone) then
@@ -2868,10 +2947,7 @@ begin
 
   if InputQuery('New FormID', 'Please enter the new FormID in hex. e.g. 0404CC43. The FormID needs to be a load order corrected form ID.', s) then try
     NewFormID := TwbFormID.FromStr(s);
-    if NewFormID.IsNull then
-      raise Exception.Create('00000000 is not a valid FormID');
-    if NewFormID.IsPlayer then
-      raise Exception.Create('00000014 is not a valid FormID');
+    NewFormID.CheckAssignable(xeContext.SlotLayout);
 
     OldFormID := MainRecord.LoadOrderFormID;
     if NewFormID = OldFormID then begin
@@ -3978,6 +4054,7 @@ end;
 
 destructor TfrmMain.Destroy;
 begin
+  Application.UnhookMainWindow(AppWindowHook);
   inherited;
   for var lHook in MessageScopeHooks do
     lHook.Free;
@@ -4394,7 +4471,7 @@ begin
     wbPatron := Settings.ReadBool('Options', 'Patron', wbPatron);
     if (not wbPatron or not xeAutoLoad)
 {$IFDEF XE_TEST_CONTROL_POINTS}
-      and not (xeTestSwitches.Conflicts or xeTestSwitches.NavCopy or xeTestSwitches.ViewText or xeTestSwitches.ViewTree or xeTestSwitches.Options or xeTestSwitches.CopyIntoGap or xeTestSwitches.NewFile or xeTestSwitches.GameLink or xeTestSwitches.FormIDSearch or xeTestSwitches.SplitTreeLOD or xeTestSwitches.DropMaster or xeTestSwitches.DeltaPatch or xeTestSwitches.Merge or xeTestSwitches.MergedPatch or xeTestSwitches.CopyInto or xeTestSwitches.Renumber or xeTestSwitches.ChangeFormID or xeTestSwitches.Hide or xeTestSwitches.Filter or xeTestSwitches.SaveContexts or (xeTestSwitches.PumpDuringLoad <> ''))
+      and not (xeTestSwitches.Conflicts or xeTestSwitches.NavCopy or xeTestSwitches.ViewText or xeTestSwitches.ViewTree or xeTestSwitches.Options or xeTestSwitches.CopyIntoGap or xeTestSwitches.NewFile or xeTestSwitches.GameLink or xeTestSwitches.FormIDSearch or xeTestSwitches.SplitTreeLOD or xeTestSwitches.DropMaster or xeTestSwitches.DeltaPatch or xeTestSwitches.Merge or xeTestSwitches.MergedPatch or xeTestSwitches.CopyInto or xeTestSwitches.Renumber or xeTestSwitches.ChangeFormID or xeTestSwitches.Hide or xeTestSwitches.Filter or xeTestSwitches.SaveContexts or xeTestSwitches.EndSession or (xeTestSwitches.PumpDuringLoad <> ''))
 {$ENDIF}
     then
       ShowDeveloperMessage;
@@ -4668,6 +4745,10 @@ begin
         TestPumpStart;
 {$ENDIF}
       TLoaderThread.Create(sl);
+{$IFDEF XE_TEST_CONTROL_POINTS}
+      if xeTestSwitches.EndSession and xeTestSwitches.EndSessionDuringLoad then
+        TestEndSessionDuringLoad;
+{$ENDIF}
     finally
       FreeAndNil(sl);
     end;
@@ -5422,6 +5503,23 @@ begin
   xeSaveLogs(mmoMessages.Lines.Text, aAllowReplace);
 end;
 
+procedure TfrmMain.FlushPostedMessages;
+var
+  lMsg: TMsg;
+begin
+  while PeekMessage(lMsg, Handle, WM_USER, WM_USER, PM_REMOVE) do begin
+    if lMsg.message = WM_QUIT then begin
+      PostQuitMessage(Integer(lMsg.wParam));
+      Break;
+    end;
+    DispatchMessage(lMsg);
+  end;
+  if Assigned(NewMessages) and (NewMessages.Count > 0) then begin
+    mmoMessages.Lines.AddStrings(NewMessages);
+    NewMessages.Clear;
+  end;
+end;
+
 procedure TfrmMain.SaveModGroupsSelection(const aModGroups: TwbModGroupPtrs);
 var
   i  : Integer;
@@ -5440,47 +5538,66 @@ begin
 end;
 
 procedure TfrmMain.FormClose(Sender: TObject; var Action: TCloseAction);
-
-var
-  i: Integer;
-
 begin
 {$IFDEF XE_TEST_CONTROL_POINTS}
   if xeTestSwitches.Pump <> '' then begin
     var lShown := '';
     if Assigned(ActiveRecord) then
       lShown := ', the View tab shows ' + ActiveRecord.Name;
-    TestPumpNote('FormClose entered: inside ' + IfThen(xeTestSwitches.PumpModal, 'a modal loop ', 'a nested pump ') + BoolToStr(TestPumpInside, True) +
+    TestPumpNote('FormClose entered: inside ' + IfThen(xeTestSwitches.PumpModal, 'a modal loop ',
+      IfThen(xeTestSwitches.PumpBeforeGenerator, 'the generator wait ', 'a nested pump ')) + BoolToStr(TestPumpInside, True) +
       ', client panel enabled ' + BoolToStr(pnlClient.Enabled, True) + ', action "' + wbCurrentAction + '"' + lShown);
   end;
   if Assigned(TestHost) and Assigned(TestHost.TestChangeFormIDLines) then begin
-    var lMsg: TMsg;
-    while PeekMessage(lMsg, Handle, WM_USER, WM_USER, PM_REMOVE) do
-      DispatchMessage(lMsg);
-    if Assigned(NewMessages) and (NewMessages.Count > 0) then begin
-      mmoMessages.Lines.AddStrings(NewMessages);
-      NewMessages.Clear;
-    end;
+    FlushPostedMessages;
     TestChangeFormIDOnClose;
   end;
 {$ENDIF}
   Action := caFree;
-  if LoaderStarted and not xeContext.LoaderDone then begin
+  CloseInProgress := True;
+  try
+    StopBackgroundWork;
+
+    if not UnattendedSaveFailed and (SaveChanged >= srAbort) then
+      if xeUnattended then begin
+        if CheckResult = 0 then
+          CheckResult := xeFailureExitCode;
+      end else begin
+        Action := caNone;
+        Exit;
+      end;
+
+    CloseDown;
+  finally
+    CloseInProgress := False;
+  end;
+end;
+
+procedure TfrmMain.StopBackgroundWork;
+begin
+  if LoadersRunning > 0 then begin
     wbForceTerminate := True;
     Caption := 'Waiting for Background Loader to terminate...';
     pnlClient.Enabled := False;
     MessageScopeClose(0);
     try
-      while not xeContext.LoaderDone do begin
+      while LoadersRunning > 0 do begin
         DoProcessMessages;
         Sleep(100);
       end;
     finally
+      wbForceTerminate := False;
+      Caption := Application.Title;
       pnlClient.Enabled := True;
       UpdatePnlCancelVisible;
     end;
   end;
+end;
 
+procedure TfrmMain.CloseDown;
+var
+  i: Integer;
+begin
   if Assigned(PluggyLinkThread) then
     PluggyLinkThread.Terminate;
   FreeAndNil(PluggyLinkThread);
@@ -5505,15 +5622,6 @@ begin
     end;
   end;
 
-  if not UnattendedSaveFailed and (SaveChanged >= srAbort) then
-    if xeUnattended then begin
-      if CheckResult = 0 then
-        CheckResult := xeFailureExitCode;
-    end else begin
-      Action := caNone;
-      Exit;
-    end;
-
   if Assigned(Settings) then begin
     if Assigned(pnlNav) then
       Settings.WriteInteger(Name, 'pnlNavWidth', pnlNav.Width);
@@ -5529,7 +5637,20 @@ begin
     Settings.UpdateFile;
   end;
 
+  if tmrGenerator.Enabled then begin
+    tmrGenerator.Enabled := False;
+    if xeUnattended then begin
+      PostAddMessage('Error: Closed before the ' + IfThen(xeToolMode = tmLODGen, 'LOD generation', 'script') + ' started.');
+      if CheckResult = 0 then
+        CheckResult := xeFailureExitCode;
+    end;
+  end;
+
+  FlushPostedMessages;
   SaveLogs(True);
+{$IFDEF XE_TEST_CONTROL_POINTS}
+  TestLoaderHoldRelease;
+{$ENDIF}
 
   if DirectoryExists(xeContext.Settings.TempPath) and xeRemoveTempPath then
     DeleteDirectory(xeContext.Settings.TempPath); // remove temp folder unless it existed
@@ -5558,6 +5679,7 @@ begin
   Files := nil;
   _wbProgressCallback := nil;
   ExitCode := CheckResult;
+  ClosedDown := True;
 end;
 
 procedure xeApplyFontAndScale(aForm: TForm);
@@ -5638,6 +5760,7 @@ begin
   if xeTestSwitches.Any then
     TestHost := TxeTestHost.Create(Self);
 {$ENDIF}
+  Application.HookMainWindow(AppWindowHook);
   lvReferencedByAllItems := TObjectList<TRefByListItem>.Create(True);
   lvReferencedByFilteredItems := TList<TRefByListItem>.Create;
 
@@ -8548,12 +8671,16 @@ begin
       FilterFlag := mfHasFile;
       SelectFlag := mfTagged;
       AllModules.ExcludeAll(mfTagged);
+      for var lModule in AllModules do
+        if lModule = _PreviousChangeFormIDTarget then
+          Include(lModule.miFlags, mfTagged);
       MaxSelect := 1;
       AllowCancel;
 
       if ShowModal <> mrOK then
         Exit;
       Assert(Length(SelectedModules)=1);
+      _PreviousChangeFormIDTarget := SelectedModules[0];
       _File := SelectedModules[0]^._File;
     finally
       Free;
@@ -8592,7 +8719,7 @@ begin
           end;
         end;
         NewFormID := TwbFormID.FromStr(s);
-        NewFormID.CheckAssignable;
+        NewFormID.CheckAssignable(xeContext.SlotLayout);
       end else
         Exit;
 
@@ -10892,6 +11019,9 @@ begin
     Exit;
 
   if not Supports(NodeData.Element, IwbFile, _File) then
+    Exit;
+
+  if not _File.IsEditable then
     Exit;
 
   lFiles := TStringList.Create;
@@ -13242,7 +13372,8 @@ begin
   mniNavLocalizationSwitch.Visible :=
      Assigned(Element) and
     (Element.ElementType = etFile) and
-    (Element._File.LoadOrder > 0);
+    (Element._File.LoadOrder > 0) and
+    Element.IsEditable;
   if mniNavLocalizationSwitch.Visible then
     if Element._File.IsLocalized then
       mniNavLocalizationSwitch.Caption := 'Delocalize plugin'
@@ -15696,6 +15827,14 @@ end;
 
 procedure TfrmMain.tmrGeneratorTimer(Sender: TObject);
 begin
+{$IFDEF XE_TEST_CONTROL_POINTS}
+  if xeTestSwitches.Pump <> '' then
+    TestPumpNote('generator tick: closed down ' + BoolToStr(ClosedDown, True) + ', generator started ' + BoolToStr(GeneratorStarted, True) +
+      ', close in progress ' + BoolToStr(CloseInProgress, True) + ', close deferred ' + BoolToStr(CloseDeferred, True) +
+      ', session end pending ' + BoolToStr(SessionEndPending, True));
+{$ENDIF}
+  if CloseInProgress or CloseDeferred or SessionEndPending or ClosedDown then
+    Exit;
   tmrGenerator.Enabled := False;
   if GeneratorStarted then
     Exit;
@@ -15796,7 +15935,7 @@ begin
     frmMain.Close;   // Wait until NewMessages are processed.
   end;
 
-  if (xeToolMode in cLoadReportModes) and xeContext.LoaderDone and not xeMasterUpdateDone and not InNestedLoop then begin
+  if (xeToolMode in cLoadReportModes) and xeContext.LoaderDone and not MainLoadTerminated and not xeMasterUpdateDone and not InNestedLoop then begin
     xeMasterUpdateDone := True;
     ChangesMade := False;
     if xeContext.LoaderError then begin
@@ -18966,6 +19105,11 @@ begin
   var lModules := xeContext.ModuleList;
   var lModGroups := xeContext.ModGroupList;
   var lGameDef := xeContext.GameDefObj;
+  var lLoaderStartTime := PDateTime(Message.WParam)^;
+  Dec(LoadersRunning);
+{$IFDEF XE_TEST_CONTROL_POINTS}
+  TestEndSessionLoaderDone;
+{$ENDIF}
   try
     xeContext.LoaderDone := True;
     wbStartTime := PDateTime(Message.WParam)^;
@@ -18986,7 +19130,7 @@ begin
 {$IFDEF XE_TEST_CONTROL_POINTS}
           if xeTestSwitches.Conflicts or xeTestSwitches.NavCopy or xeTestSwitches.Merge or xeTestSwitches.MergedPatch or
              xeTestSwitches.CopyInto or xeTestSwitches.Renumber or xeTestSwitches.ChangeFormID or xeTestSwitches.NewFile or
-             xeTestSwitches.GameLink or xeTestSwitches.FormIDSearch or xeTestSwitches.SplitTreeLOD then begin
+             xeTestSwitches.GameLink or xeTestSwitches.FormIDSearch or xeTestSwitches.SplitTreeLOD or xeTestSwitches.EndSession then begin
             wbProgress('Test mode FAILED: an error occured while loading modules');
             CheckResult := 255;
             if xeAutoExit then
@@ -19009,7 +19153,9 @@ begin
             TestPumpStart;
 {$ENDIF}
           if not wbForceTerminate then
-            tmrGenerator.Enabled := True;
+            tmrGenerator.Enabled := True
+          else if xeUnattended and (CheckResult = 0) then
+            CheckResult := xeFailureExitCode;
           Exit;
         end;
 
@@ -19047,7 +19193,10 @@ begin
         tbsAMMOSpreadsheet.TabVisible := lGameDef.IsOblivion or lGameDef.IsSkyrim;
 
         if wbForceTerminate then begin
+          MainLoadTerminated := True;
           GeneralProgressNoAbortCheck('Loading of modules got terminated early. Editing is disabled.');
+          if xeUnattended and (CheckResult = 0) then
+            CheckResult := xeFailureExitCode;
           Exit;
         end;
 
@@ -19274,6 +19423,9 @@ begin
 
         if xeTestSwitches.SaveContexts then
           DoTestSaveContextsCompare;
+
+        if xeTestSwitches.EndSession and not xeTestSwitches.EndSessionDuringLoad then
+          DoTestEndSession;
 {$ENDIF}
       finally
         Dec(wbShowStartTime);
@@ -19291,7 +19443,9 @@ begin
           MasterFile := Files[i];
           Break;
         end;
-      if Assigned(NewFile) and Assigned(MasterFile) and not MasterFile.Equals(NewFile) then begin
+      if Assigned(NewFile) and (fsIsDeltaPatch in NewFile.FileStates) then
+        MasterFile := NewFile.CompareToFile;
+      if not xeContext.LoaderError and not wbForceTerminate and Assigned(NewFile) and Assigned(MasterFile) and not MasterFile.Equals(NewFile) then begin
         if fsIsDeltaPatch in NewFile.FileStates then try
 
           PerformLongAction('Creating Delta Patch', '', procedure
@@ -19387,6 +19541,7 @@ begin
       vstNav.PopupMenu := pmuNav;
       bnMainMenu.Enabled := True;
     end;
+    PostAddMessage('[' + wbFormatElapsedTime(Now - lLoaderStartTime) + '] Background Loader: finished');
   end;
 end;
 
@@ -19614,6 +19769,7 @@ begin
   ltStates := aFileStates;
   inherited Create(False);
   FreeOnTerminate := True;
+  Inc(frmMain.LoadersRunning);
 end;
 
 constructor TLoaderThread.Create(const aFileName: string; const aMaster: IwbFile; aFileStates: TwbFileStates = []);
@@ -19627,6 +19783,7 @@ begin
   ltStates := aFileStates;
   inherited Create(False);
   FreeOnTerminate := True;
+  Inc(frmMain.LoadersRunning);
 end;
 
 destructor TLoaderThread.Destroy;
@@ -19690,12 +19847,12 @@ begin
   var lGameDef := xeContext.GameDefObj;
   StartTime := Now;
   wbStartTime := StartTime;
-  LoaderProgress('starting...');
   try
     frmMain.LoaderStarted := True;
     _wbProgressCallback := LoaderProgress;
     wbCurrentTick := GetTickCount64;
     try
+      LoaderProgress('starting...');
       {if ltLoadOrderOffset + ltLoadList.Count >= 255 then begin
         LoaderProgress('Too many plugins selected. Adding '+IntToStr(ltLoadList.Count)+' files would exceed the maximum index of 254');
         xeContext.LoaderError := True;
@@ -19967,7 +20124,9 @@ begin
     if ltMaster = '' then
       ltLoadOrderOffset := -1;
     frmMain.SendLoaderDone(wbStartTime, ltLoadOrderOffset);
-    LoaderProgress('finished');
+{$IFDEF XE_TEST_CONTROL_POINTS}
+    frmMain.TestLoaderHoldAfterDone;
+{$ENDIF}
     _wbProgressCallback := nil;
   end;
   {
@@ -20204,73 +20363,85 @@ end;
 { TPluggyLinkThread }
 
 procedure TPluggyLinkThread.ChangeDetected;
+
+  function ReadTail(const aView: string): string;
+  var
+    Bytes    : TBytes;
+    TailSize : Int64;
+  begin
+    with TBufferedFileStream.Create(plFolder + 'Pluggy'+xeContext.GameDefObj.AppName+aView+'.csv', fmOpenRead or fmShareDenyNone) do try
+      TailSize := Size;
+      if TailSize > 2024 then begin
+        Position := TailSize - 2024;
+        TailSize := 2024;
+      end;
+      SetLength(Bytes, TailSize);
+      if TailSize > 0 then
+        ReadBuffer(Bytes[0], TailSize);
+    finally
+      Free;
+    end;
+    Result := TEncoding.Default.GetString(Bytes);
+  end;
+
 var
   s                                                : string;
   FormID, BaseFormID, InventoryFormID, EnchantmentFormID, SpellFormID : TwbFormID;
 begin
-  with TBufferedFileStream.Create(plFolder + 'Pluggy'+xeContext.GameDefObj.AppName+'ViewWorld.csv', fmOpenRead or fmShareDenyNone) do try
-    Position := Size - 2024;
-    SetLength(s, 64 * 1024);
-    SetLength(s, Read(s[1], 64 * 1024));
-  finally
-    Free;
-  end;
-  with TStringList.Create do try
-    Text := s;
-    if Count < 2 then
+  try
+    s := ReadTail('ViewWorld');
+    with TStringList.Create do try
+      Text := s;
+      if Count < 2 then
+        Exit;
+      CommaText := Strings[Pred(Count)];
+      if Count < 2 then
+        Exit;
+      FormID := TwbFormID.FromStr(Strings[0]);
+      BaseFormID := TwbFormID.FromStr(Strings[1]);
+    finally
+      Free;
+    end;
+    s := ReadTail('ViewInventory');
+    with TStringList.Create do try
+      Text := s;
+      if Count < 2 then
+        Exit;
+      CommaText := Strings[Pred(Count)];
+      if Count < 2 then
+        Exit;
+      InventoryFormID := TwbFormID.FromStr(Strings[0]);
+      EnchantmentFormID := TwbFormID.FromStr(Strings[1]);
+    finally
+      Free;
+    end;
+    s := ReadTail('ViewSpells');
+    with TStringList.Create do try
+      Text := s;
+      if Count < 2 then
+        Exit;
+      CommaText := Strings[Pred(Count)];
+      if Count < 1 then
+        Exit;
+      SpellFormID := TwbFormID.FromStr(Strings[0]);
+    finally
+      Free;
+    end;
+  except
+    on E: Exception do begin
+      if not plReadPending then
+        frmMain.PostAddMessage('[PluggyLink] Error: ' + E.Message + ' (retrying every second)');
+      plReadPending := True;
       Exit;
-    CommaText := Strings[Pred(Count)];
-    if Count < 2 then
-      Exit;
-    FormID := TwbFormID.FromStr(Strings[0]);
-    BaseFormID := TwbFormID.FromStr(Strings[1]);
-  finally
-    Free;
+    end;
   end;
-  with TBufferedFileStream.Create(plFolder + 'Pluggy'+xeContext.GameDefObj.AppName+'ViewInventory.csv', fmOpenRead or fmShareDenyNone) do try
-    Position := Size - 2024;
-    SetLength(s, 64 * 1024);
-    SetLength(s, Read(s[1], 64 * 1024));
-  finally
-    Free;
-  end;
-  with TStringList.Create do try
-    Text := s;
-    if Count < 2 then
-      Exit;
-    CommaText := Strings[Pred(Count)];
-    if Count < 2 then
-      Exit;
-    InventoryFormID := TwbFormID.FromStr(Strings[0]);
-    EnchantmentFormID := TwbFormID.FromStr(Strings[1]);
-  finally
-    Free;
-  end;
-  with TBufferedFileStream.Create(plFolder + 'Pluggy'+xeContext.GameDefObj.AppName+'ViewSpells.csv', fmOpenRead or fmShareDenyNone) do try
-    Position := Size - 2024;
-    SetLength(s, 64 * 1024);
-    SetLength(s, Read(s[1], 64 * 1024));
-  finally
-    Free;
-  end;
-  with TStringList.Create do try
-    Text := s;
-    if Count < 2 then
-      Exit;
-    CommaText := Strings[Pred(Count)];
-    if Count < 1 then
-      Exit;
-    SpellFormID := TwbFormID.FromStr(Strings[0]);
-  finally
-    Free;
-  end;
-
+  plReadPending := False;
 
   if (FormID <> plLastFormID) or
      (BaseFormID <> plLastBaseFormID) or
-     (InventoryFormID <> plLastBaseFormID) or
-     (EnchantmentFormID <> plLastBaseFormID) or
-     (SpellFormID <> plLastBaseFormID) then begin
+     (InventoryFormID <> plLastInventoryFormID) or
+     (EnchantmentFormID <> plLastEnchantmentFormID) or
+     (SpellFormID <> plLastSpellFormID) then begin
 
     plLastFormID := FormID;
     plLastBaseFormID := BaseFormID;
@@ -20305,10 +20476,13 @@ begin
             if not FindNextChangeNotification(WaitHandle) then
               RaiseLastOSError;
           end;
+          WAIT_TIMEOUT:
+            if plReadPending then
+              ChangeDetected;
           WAIT_FAILED:
             RaiseLastOSError;
         end;
-      until Terminated or wbForceTerminate;
+      until Terminated;
     finally
       if not FindCloseChangeNotification(WaitHandle) then
         RaiseLastOSError;
@@ -20429,23 +20603,33 @@ var
   SelectedRefID: TwbFormID;
   SelectedBaseID: TwbFormID;
 begin
-  Stream := TBufferedFileStream.Create(glFolder + 'xEditLink.ini', fmOpenRead or fmShareDenyNone);
+  sl := TStringList.Create;
   try
-    sl := TStringList.Create;
     try
-      sl.LoadFromStream(Stream);
-      with TMemIniFile.Create('') do try
-        SetStrings(sl);
-        SelectedRefID := TwbFormID.FromStrDef(ReadString('Console', 'selectedRefID', '00000000'));
-        SelectedBaseID := TwbFormID.FromStrDef(ReadString('Console', 'selectedBaseID', '00000000'));
+      Stream := TBufferedFileStream.Create(glFolder + 'xEditLink.ini', fmOpenRead or fmShareDenyNone);
+      try
+        sl.LoadFromStream(Stream);
       finally
-        Free;
+        Stream.Free;
       end;
+    except
+      on E: Exception do begin
+        if not glReadPending then
+          frmMain.PostAddMessage('[GameLink] Error: ' + E.Message + ' (retrying every second)');
+        glReadPending := True;
+        Exit;
+      end;
+    end;
+    glReadPending := False;
+    with TMemIniFile.Create('') do try
+      SetStrings(sl);
+      SelectedRefID := TwbFormID.FromStrDef(ReadString('Console', 'selectedRefID', '00000000'));
+      SelectedBaseID := TwbFormID.FromStrDef(ReadString('Console', 'selectedBaseID', '00000000'));
     finally
-      sl.Free;
+      Free;
     end;
   finally
-    Stream.Free;
+    sl.Free;
   end;
 
   if not SelectedRefID.IsNull then
@@ -20482,10 +20666,13 @@ begin
             if not FindNextChangeNotification(WaitHandle) then
               RaiseLastOSError;
           end;
+          WAIT_TIMEOUT:
+            if glReadPending then
+              ChangeDetected;
           WAIT_FAILED:
             RaiseLastOSError;
         end;
-      until Terminated or wbForceTerminate;
+      until Terminated;
     finally
       if not FindCloseChangeNotification(WaitHandle) then
         RaiseLastOSError;

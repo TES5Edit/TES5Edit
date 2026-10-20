@@ -2421,6 +2421,18 @@ begin
     IwbFile(Pointer(List.Objects[Index2])).LoadOrder);
 end;
 
+type
+  TwbMasterSortEntry = record
+    mseFile  : Pointer;
+    mseIndex : Integer;
+  end;
+  PwbMasterSortEntry = ^TwbMasterSortEntry;
+
+function CompareMasterSortEntries(Item1, Item2: Pointer): Integer;
+begin
+  Result := CompareLoadOrder(PwbMasterSortEntry(Item1).mseFile, PwbMasterSortEntry(Item2).mseFile);
+end;
+
 { TwbFile }
 
 var
@@ -2776,6 +2788,17 @@ var
     Result := Int64(lStart.ObjectID[lLayout]) + aDelta <= lMax;
   end;
 
+  function InjectedWithin(aSpan: Integer): Integer;
+  begin
+    Result := 0;
+    var lLast := lStart.Offset(lLayout, aSpan);
+    for var lIndex := Low(flInjectedRecords) to High(flInjectedRecords) do begin
+      var lFormID := flInjectedRecords[lIndex].LoadOrderFormID;
+      if (lFormID >= lStart) and (lFormID <= lLast) then
+        Inc(Result);
+    end;
+  end;
+
 begin
   lLayout := flContextObj.SlotLayout;
   lSelf := Self;
@@ -2811,25 +2834,47 @@ begin
   lStart := aPlan.Start;
   lStart.FileID[lLayout] := lTarget.LoadOrderFileID;
   lMax := lStart.FileID[lLayout].ModuleType.MaxObjectID;
+  if lTarget.IsLight then begin
+    if lMax > $FFF then
+      lMax := $FFF;
+  end else if lTarget.IsMedium then
+    if lMax > $FFFF then
+      lMax := $FFFF;
   aPlan.HighFormID := lStart;
   if aPlan.Kind = fckCompact then
     lEnd := TwbFormID.FromCardinal(aPlan.Goal.MaxObjectID).ChangeFileID(lLayout, lTarget.LoadOrderFileID)
   else if not lTarget.Equals(lSelf) then begin
     if lTarget.IsLight then
       lEnd := TwbFormID.FromCardinal($FFF).ChangeFileID(lLayout, lTarget.LoadOrderFileID)
+    else if lTarget.IsMedium then
+      lEnd := TwbFormID.FromCardinal($FFFF).ChangeFileID(lLayout, lTarget.LoadOrderFileID)
     else
       lEnd := TwbFormID.FromCardinal($FFFFFF).ChangeFileID(lLayout, lTarget.LoadOrderFileID);
   end else begin
-    if not OffsetFits(j) then begin
+    if not OffsetFits(Pred(j)) then begin
       Refuse(fcrTooMany);
       Exit;
     end;
-    lEnd := lStart.Offset(lLayout, j);
+    var lBase := j;
+    if not OffsetFits(lBase) then
+      lBase := Pred(j);
+    var lSpan := lBase;
+    repeat
+      var lWanted := lBase + InjectedWithin(lSpan);
+      if lWanted = lSpan then
+        Break;
+      if not OffsetFits(lWanted) then begin
+        lSpan := Integer(lMax - lStart.ObjectID[lLayout]);
+        Break;
+      end;
+      lSpan := lWanted;
+    until False;
+    lEnd := lStart.Offset(lLayout, lSpan);
     aPlan.HighFormID := lEnd;
   end;
   lFloor := lTarget.ObjectIDFloor;
 
-  if lTarget.Equals(lSelf) then
+  if lTarget.Equals(lSelf) then begin
     for i := Low(lOwn) to High(lOwn) do begin
       lOld := lOwn[i].LoadOrderFormID;
       if (lOld >= lStart) and (lOld <= lEnd) then begin
@@ -2839,6 +2884,16 @@ begin
         lTaken[j] := True;
       end;
     end;
+    for i := Low(flInjectedRecords) to High(flInjectedRecords) do begin
+      lOld := flInjectedRecords[i].LoadOrderFormID;
+      if (lOld >= lStart) and (lOld <= lEnd) then begin
+        j := lOld - lStart;
+        if j > High(lTaken) then
+          SetLength(lTaken, Succ(j));
+        lTaken[j] := True;
+      end;
+    end;
+  end;
 
   lSignatures := TStringList.Create;
   try
@@ -3194,7 +3249,7 @@ begin
 
       s := lLine[2];
       j := StrToIntDef(s, -1);
-      if (j < 0) or (j > $FFFFFF) then begin
+      if (j < 0) or (Cardinal(j) > lOldMaster.FileFileID[True].ModuleType.MaxObjectID) then begin
         Report('Skipping line '+IntToStr(i+1)+': Old FormID "'+s+'" is not in the valid range.');
         Continue;
       end;
@@ -3206,7 +3261,7 @@ begin
 
       s := lLine[6];
       j := StrToIntDef(s, -1);
-      if (j < 0) or (j > $FFFFFF) then begin
+      if (j < 0) or (Cardinal(j) > lNewMaster.FileFileID[True].ModuleType.MaxObjectID) then begin
         Report('Skipping line '+IntToStr(i+1)+': New FormID "'+s+'" is not in the valid range.');
         Continue;
       end;
@@ -3725,6 +3780,7 @@ var
     lEditorID      : string;
     lCountElement  : IwbElement;
     lEntries       : IwbContainerElementRef;
+    lParent        : IwbContainerElementRef;
     j, k, l        : Integer;
 
     function BuildList(const aEntries: IwbElement): TStringList;
@@ -3769,6 +3825,33 @@ var
       end;
     end;
 
+    function ListName: string;
+    begin
+      Result := Copy(aRow.Lists[l], Succ(LastDelimiter('\', aRow.Lists[l])), MaxInt);
+    end;
+
+    function ListParent(const aRecord: IwbMainRecord): IwbContainerElementRef;
+    var
+      lPos : Integer;
+    begin
+      lPos := LastDelimiter('\', aRow.Lists[l]);
+      if lPos = 0 then
+        Result := aRecord as IwbContainerElementRef
+      else if not Supports(aRecord.ElementByPath[Copy(aRow.Lists[l], 1, Pred(lPos))], IwbContainerElementRef, Result) then
+        Result := nil;
+    end;
+
+    function ListOf(const aRecord: IwbMainRecord): IwbElement;
+    var
+      lParent : IwbContainerElementRef;
+    begin
+      lParent := ListParent(aRecord);
+      if Assigned(lParent) then
+        Result := lParent.ElementByName[ListName]
+      else
+        Result := nil;
+    end;
+
   begin
     SetLength(lTargetLists, Length(aRow.Lists));
     SetLength(lWinningLists, Length(aRow.Lists));
@@ -3777,8 +3860,31 @@ var
       lWinner := nil;
       for l := Low(aRow.Lists) to High(aRow.Lists) do begin
         lIsOrderedList := False;
-        if Supports(aMaster.ElementByName[aRow.Lists[l]], IwbSortableContainer, lSortable) then
-          if not lSortable.Sorted then begin
+        var lUnsorted := False;
+        var lProbe := ListOf(aMaster);
+        if Supports(lProbe, IwbSortableContainer, lSortable) then
+          lUnsorted := not lSortable.Sorted
+        else begin
+          for j := 0 to Pred(aMaster.OverrideCount) do
+            if not Assigned(lProbe) then
+              lProbe := ListOf(aMaster.Overrides[j]);
+          var lProbeDef: IwbSubRecordArrayDef;
+          if Assigned(lProbe) and Supports(lProbe.Def, IwbSubRecordArrayDef, lProbeDef) then begin
+            var lMasterContainer: IwbContainer;
+            if not Supports(ListParent(aMaster), IwbContainer, lMasterContainer) then
+              lMasterContainer := aMaster;
+            lUnsorted := not (ContextObj.Settings.SortSubRecords and lProbeDef.Sorted[lMasterContainer] and
+              not ContextObj.Settings.CompareRawData);
+          end else begin
+            var lValueRecordDef: IwbSubRecordDef;
+            var lValueArrayDef: IwbArrayDef;
+            if Assigned(lProbe) and Supports(lProbe.Def, IwbSubRecordDef, lValueRecordDef) and
+               Supports(lValueRecordDef.Value, IwbArrayDef, lValueArrayDef) then
+              lUnsorted := not (ContextObj.Settings.SortSubRecords and lValueArrayDef.Sorted and
+                not ContextObj.Settings.CompareRawData);
+          end;
+        end;
+        if lUnsorted then begin
             lEditorID := aMaster.EditorID;
             if Length(lEditorID) > Length(OrderedList) then
               Delete(lEditorID, 1, Length(lEditorID) - Length(OrderedList));
@@ -3787,10 +3893,10 @@ var
               Continue;
           end;
 
-        lTargetLists[l] := BuildList(aMaster.ElementByName[aRow.Lists[l]]);
+        lTargetLists[l] := BuildList(ListOf(aMaster));
         for j := 0 to Pred(aMaster.OverrideCount) do begin
           lOverride := aMaster.Overrides[j];
-          lCurrentList := BuildList(lOverride.ElementByName[aRow.Lists[l]]);
+          lCurrentList := BuildList(ListOf(lOverride));
           try
             lMasters := lOverride.MasterRecordsFromMasterFilesAndSelf;
             lCurrentMaster := nil;
@@ -3801,7 +3907,7 @@ var
               end;
             if not Assigned(lCurrentMaster) then
               Continue;
-            lMasterList := BuildList(lCurrentMaster.ElementByName[aRow.Lists[l]]);
+            lMasterList := BuildList(ListOf(lCurrentMaster));
             try
               if lIsOrderedList then begin
                 if not ListsEqual(lMasterList, lCurrentList, True) then
@@ -3822,7 +3928,7 @@ var
         if lIsFaulty then
           Break;
         lWinner := aMaster.WinningOverride;
-        lWinningLists[l] := BuildList(lWinner.ElementByName[aRow.Lists[l]]);
+        lWinningLists[l] := BuildList(ListOf(lWinner));
       end;
 
       if lIsFaulty then begin
@@ -3833,9 +3939,9 @@ var
 
       for l := Low(aRow.Lists) to High(aRow.Lists) do
         if Assigned(lTargetLists[l]) and Assigned(lWinningLists[l]) and not ListsEqual(lTargetLists[l], lWinningLists[l]) then begin
-          var lList := lWinner.ElementByName[aRow.Lists[l]];
+          var lList := ListOf(lWinner);
           if not Assigned(lList) then
-            lList := aMaster.ElementByName[aRow.Lists[l]];
+            lList := ListOf(aMaster);
           var lListDef: IwbSubRecordArrayDef;
           if Assigned(lList) and Supports(lList.Def, IwbSubRecordArrayDef, lListDef) and (lListDef.MaxCount > 0) and
              (UInt64(lTargetLists[l].Count) > lListDef.MaxCount) then begin
@@ -3858,18 +3964,41 @@ var
               end;
             end;
 
-            lTargetRecord.RemoveElement(aRow.Lists[l]);
-            for j := 0 to Pred(lTargetLists[l].Count) do
-              lTargetRecord.AddCopy(IwbElement(Pointer(lTargetLists[l].Objects[j])), [cfAsNew, cfDeepCopy]);
+            if ListName = aRow.Lists[l] then begin
+              lTargetRecord.RemoveElement(aRow.Lists[l]);
+              for j := 0 to Pred(lTargetLists[l].Count) do
+                lTargetRecord.AddCopy(IwbElement(Pointer(lTargetLists[l].Objects[j])), [cfAsNew, cfDeepCopy]);
+            end else begin
+              if Supports(ListOf(lTargetRecord), IwbContainerElementRef, lEntries) then
+                if lTargetLists[l].Count = 0 then
+                  lEntries.Remove
+                else
+                  for j := Pred(lEntries.ElementCount) downto 0 do
+                    lEntries.Elements[j].Remove;
+              for j := 0 to Pred(lTargetLists[l].Count) do
+                if Supports(ListOf(lTargetRecord), IwbContainerElementRef, lEntries) then
+                  lEntries.AddIfMissing(IwbElement(Pointer(lTargetLists[l].Objects[j])), [cfAsNew, cfDeepCopy], wbNoCopyRules)
+                else
+                  lTargetRecord.AddCopy(IwbElement(Pointer(lTargetLists[l].Objects[j])), [cfAsNew, cfDeepCopy]);
+            end;
 
             if (l <= High(aRow.Counts)) and (aRow.Counts[l] <> '') then begin
-              lTargetRecord.Add(aRow.Counts[l], True);
-              lCountElement := lTargetRecord.ElementByPath[aRow.Counts[l]];
-              if Assigned(lCountElement) then
-                if Supports(lTargetRecord.ElementByName[aRow.Lists[l]], IwbContainerElementRef, lEntries) then
-                  lCountElement.NativeValue := lEntries.ElementCount
-                else
-                  lCountElement.Remove;
+              lParent := ListParent(lTargetRecord);
+              if Assigned(lParent) then begin
+                lParent.Add(aRow.Counts[l], True);
+                lCountElement := lParent.ElementByPath[aRow.Counts[l]];
+                if Assigned(lCountElement) then
+                  if Supports(lParent.ElementByName[ListName], IwbContainerElementRef, lEntries) then
+                    lCountElement.NativeValue := lEntries.ElementCount
+                  else
+                    lCountElement.Remove;
+              end;
+            end;
+
+            if ListName <> aRow.Lists[l] then begin
+              lParent := ListParent(lTargetRecord);
+              if Assigned(lParent) and (lParent.ElementCount = 0) then
+                lParent.Remove;
             end;
           end;
       if Assigned(lTargetRecord) then
@@ -5438,6 +5567,10 @@ begin
 
       FillChar(UsedMasters, SizeOf(UsedMasters), 0);
       FindUsedMasters(@UsedMasters);
+      if fsIsCompareLoad in flStates then
+        for i := Low(flMasters) to High(flMasters) do
+          if flMasters[i].Equals(flCompareToFile) then
+            UsedMasters[i] := True;
       //!!! SF1 support
       KeepMasters := TStringList.Create;
       KeepMasters.Sorted := True;
@@ -7732,6 +7865,8 @@ var
 begin
   if GetIsUpdate then
     raise Exception.Create('File ' + GetFileName + ' is an update and can not contain new records.');
+  if not GetHasLoadOrderFileID then
+    raise Exception.Create('File ' + GetFileName + ' has no load order slot and can not contain new records until it is loaded again.');
 
   Assert(not (fsMastersUpdating in flStates));
 
@@ -7779,7 +7914,14 @@ begin
     end;
   end;
 
-  Result := TwbFormID.FromCardinal(NextObjectID).ChangeFileID(flContextObj.SlotLayout, GetFileFileID(True));
+  var lFileID := GetFileFileID(True);
+  if fsIsCompareLoad in flStates then begin
+    var lCompareIndex := GetCompareMasterIndex(True);
+    if (lCompareIndex >= 0) and GetMaster(lCompareIndex, True).Equals(flCompareToFile) then
+      lFileID := GetCompareSelfFileID(True);
+  end;
+
+  Result := TwbFormID.FromCardinal(NextObjectID).ChangeFileID(flContextObj.SlotLayout, lFileID);
   First := Result;
   while GetRecordByFormID(Result, True, True) <> nil do begin
     Inc(NextObjectID);
@@ -7789,7 +7931,7 @@ begin
       else
         NextObjectID := $800;
     end;
-    Result := TwbFormID.FromCardinal(NextObjectID).ChangeFileID(flContextObj.SlotLayout, GetFileFileID(True));
+    Result := TwbFormID.FromCardinal(NextObjectID).ChangeFileID(flContextObj.SlotLayout, lFileID);
     if Result = First then //we've gone through all possible FormIDs once, no more space free
       raise ERangeError.Create('File ' + GetFileName + ' has no more space for a new FormID');
   end;
@@ -7934,8 +8076,14 @@ begin
         var Cells := 0;
         for var R := Low(flRecords) to High(flRecords) do begin
           var C := flRecords[R] as IwbMainRecord;
-          if (C.Signature = 'CELL') and (C.ElementNativeValues['DATA'] and $1 = 1) then
-            Inc(Cells);
+          if C.Signature = 'CELL' then begin
+            var lCellGroup: IwbGroupRecord;
+            var lCellContainer := C.Container;
+            while Supports(lCellContainer, IwbGroupRecord, lCellGroup) and (lCellGroup.GroupType <> 0) do
+              lCellContainer := lCellGroup.Container;
+            if Assigned(lCellGroup) and (lCellGroup.GroupLabelSignature = 'CELL') then
+              Inc(Cells);
+          end;
         end;
         INCC.EditValue := Cells.ToString;
       end;
@@ -7947,7 +8095,6 @@ begin
           ;
 
         var lLayout := flContextObj.SlotLayout;
-        {!!!!! SF1 support? }
         if Supports(FileHeader.ElementByName['Master Files'], IwbContainerElementRef, MasterFiles) then
           for i := 0 to Pred(MasterFiles.ElementCount) do begin
             if Supports(MasterFiles.Elements[i], IwbContainerElementRef, MasterFile) then begin
@@ -7959,12 +8106,18 @@ begin
                   while j <= High(flRecords) do begin
                     Current := flRecords[j];
                     FormID := Current.FixedFormID;
-                    var FileID := FormID.FileID[lLayout].FullSlot;
-                    if FileID > i then
-                      Break;
+                    if flComplexFileFileID then begin
+                      Inc(j);
+                      if Current.IsMaster then
+                        Continue;
+                    end else begin
+                      var FileID := FormID.FileID[lLayout].FullSlot;
+                      if FileID > i then
+                        Break;
 
-                    Assert(FileID = i);
-                    Inc(j);
+                      Assert(FileID = i);
+                      Inc(j);
+                    end;
 
                     Signature := Current.Signature;
                     if (Signature = 'CELL') or
@@ -8402,6 +8555,8 @@ begin
 end;
 
 procedure TwbFile.Scan;
+const
+  cModuleTypeNames: array[TwbModuleType] of string = ('full', 'medium', 'light');
 var
   Header      : IwbMainRecord;
 
@@ -8497,6 +8652,9 @@ begin
         flLoadOrderFileID := flCompareToFile.LoadOrderFileID
       end else
         flLoadOrderFileID := TwbFileID.CreateFull($FF);
+      if (fsIsDeltaPatch in flStates) and flComplexFileFileID and Assigned(flCompareToFile) and (GetModuleType <> flCompareToFile.ModuleType) then
+        raise Exception.CreateFmt('Delta patch: "%s" is a %s module and "%s" is a %s module. A delta patch can''t change the type of a module in %s%s',
+          [GetFileName, cModuleTypeNames[GetModuleType], flCompareToFile.FileName, cModuleTypeNames[flCompareToFile.ModuleType], lGameDef.AppName, flContextObj.Settings.ToolName]);
     end;
 
     if gcHardcodedFileIsFirstMaster in lGameDef.Capabilities then
@@ -9013,37 +9171,35 @@ end;
 
 procedure TwbFile.SortMasters;
 var
-  OldList     : TStringList;
   i, j        : Integer;
   Old,New     : TwbFileIDs;
   Header      : IwbContainerElementRef;
   MasterFiles : IwbContainerElementRef;
   Rec            : IwbRecord;
+  lEntries    : array of TwbMasterSortEntry;
+  lOrder      : array of Pointer;
+  lOldIDs     : TwbFileIDs;
+  lNextFull   : Integer;
+  lNextLight  : Integer;
+  lNextMedium : Integer;
 
-  function GetOldFileID(aName: string): TwbFileID;
+  function NextFileID(const aFile: IwbFile): TwbFileID;
   begin
-      var nextFullID := 0;
-      var nextSmallID := 0;
-      var nextMediumID := 0;
-
-      for var lFile in flOldMasters do
-        case lFile.GetModuleType of
-          mtFull:
-            if SameText(lFile.FileName, aName) then
-              Exit(TwbFileID.CreateFull(nextFullID))
-            else
-              Inc(nextFullID);
-          mtLight:
-            if SameText(lFile.FileName, aName) then
-              Exit(TwbFileID.CreateLight(nextSmallID, flContextObj.SlotLayout))
-            else
-              Inc(nextSmallID);
-          mtMedium:
-            if SameText(lFile.FileName, aName) then
-              Exit(TwbFileID.CreateMedium(nextMediumID, flContextObj.SlotLayout))
-            else
-              Inc(nextMediumID);
+    if flComplexFileFileID then
+      case aFile.GetModuleType of
+        mtLight: begin
+          Result := TwbFileID.CreateLight(lNextLight, flContextObj.SlotLayout);
+          Inc(lNextLight);
+          Exit;
         end;
+        mtMedium: begin
+          Result := TwbFileID.CreateMedium(lNextMedium, flContextObj.SlotLayout);
+          Inc(lNextMedium);
+          Exit;
+        end;
+      end;
+    Result := TwbFileID.CreateFull(lNextFull);
+    Inc(lNextFull);
   end;
 
 begin
@@ -9061,82 +9217,59 @@ begin
       MasterFiles := Header.ElementByName['Master Files'] as IwbContainerElementRef;
       Assert(Assigned(MasterFiles));
       Assert(MasterFiles.ElementCount = Length(flMasters));
-      OldList := TStringList.Create;
-      OldList.Sorted := True;
-      OldList.Duplicates := dupError;
-      try
-        for i := Low(flMasters) to High(flMasters) do begin
-          Rec := (MasterFiles[i] as IwbContainer).RecordBySignature['MAST'];
-          Assert(Assigned(Rec));
-          Assert(SameText(Rec.EditValue, flMasters[i].FileName));
-          OldList.AddObject(flMasters[i].FileName, Pointer(i));
-          MasterFiles[i].SortOrder := i;
-        end;
+      SetLength(lEntries, Length(flMasters));
+      SetLength(lOrder, Length(flMasters));
+      for i := Low(flMasters) to High(flMasters) do begin
+        Rec := (MasterFiles[i] as IwbContainer).RecordBySignature['MAST'];
+        Assert(Assigned(Rec));
+        Assert(SameText(Rec.EditValue, flMasters[i].FileName));
+        lEntries[i].mseFile := Pointer(flMasters[i]);
+        lEntries[i].mseIndex := i;
+        lOrder[i] := @lEntries[i];
+        MasterFiles[i].SortOrder := i;
+      end;
 
-        wbMergeSortPtr(@flMasters[0], Length(flMasters), CompareLoadOrder);
-        //!!! SF1 support
-        Old := nil;
-        New := nil;
-        var nextFullID := 0;
-        var nextSmallID := 0;
-        var nextMediumID := 0;
-        for i := Low(flMasters) to High(flMasters) do begin
-          j := Integer(OldList.Objects[OldList.IndexOf(flMasters[i].FileName)]);
-          if i <> j then begin
-            MasterFiles[j].SortOrder := i;
-            SetLength(Old, Succ(Length(Old)));
-            SetLength(New, Succ(Length(New)));
-
-            if not flComplexFileFileID then
-            begin
-              Old[High(Old)] := TwbFileID.CreateFull(j);
-              New[High(New)] := TwbFileID.CreateFull(i);
-            end else
-            case flMasters[i].GetModuleType of
-              mtFull:
-                begin
-                  Old[High(Old)] := GetOldFileID(flMasters[i].FileName);
-                  New[High(New)] := TwbFileID.CreateFull(nextFullID);
-                  Inc(nextFullID);
-                end;
-              mtLight:
-                begin
-                  Old[High(Old)] := GetOldFileID(flMasters[i].FileName);
-                  New[High(New)] := TwbFileID.CreateLight(nextSmallID, flContextObj.SlotLayout);
-                  Inc(nextSmallID)
-                end;
-              mtMedium:
-                begin
-                  Old[High(Old)] := GetOldFileID(flMasters[i].FileName);
-                  New[High(New)] := TwbFileID.CreateMedium(nextMediumID, flContextObj.SlotLayout);
-                  Inc(nextMediumID);
-                end;
-            end;
-          end else
-          case flMasters[i].GetModuleType of
-              mtFull: Inc(nextFullID);
-              mtLight: Inc(nextSmallID);
-              mtMedium: Inc(nextMediumID);
-            end;
+      wbMergeSortPtr(@lOrder[0], Length(lOrder), CompareMasterSortEntries);
+      //!!! SF1 support
+      SetLength(lOldIDs, Length(flOldMasters));
+      lNextFull := 0;
+      lNextLight := 0;
+      lNextMedium := 0;
+      for i := Low(flOldMasters) to High(flOldMasters) do
+        lOldIDs[i] := NextFileID(flOldMasters[i]);
+      Old := nil;
+      New := nil;
+      lNextFull := 0;
+      lNextLight := 0;
+      lNextMedium := 0;
+      for i := Low(flMasters) to High(flMasters) do begin
+        j := PwbMasterSortEntry(lOrder[i]).mseIndex;
+        flMasters[i] := flOldMasters[j];
+        var lNewID := NextFileID(flMasters[i]);
+        if i <> j then
+          MasterFiles[j].SortOrder := i;
+        if (i <> j) or (lNewID <> lOldIDs[j]) then begin
+          SetLength(Old, Succ(Length(Old)));
+          SetLength(New, Succ(Length(New)));
+          Old[High(Old)] := lOldIDs[j];
+          New[High(New)] := lNewID;
         end;
-        if Length(Old) > 0 then begin
-          if flContextObj.BeginInternalEdit(True) then try
-            (MasterFiles as IwbContainerInternal).SortBySortOrder;
-          finally
-            wbEndInternalEdit;
-          end else
-            Assert(False);
-          if gcMasterSlotsInFormID in flContextObj.GameDefObj.Capabilities then
-          begin
-            var lOldCount := TwbSlotCounts.Create(flOldMasters, flComplexFileFileID);
-            var lNewCount := TwbSlotCounts.Create(flMasters, flComplexFileFileID);
+      end;
+      if Length(Old) > 0 then begin
+        if flContextObj.BeginInternalEdit(True) then try
+          (MasterFiles as IwbContainerInternal).SortBySortOrder;
+        finally
+          wbEndInternalEdit;
+        end else
+          Assert(False);
+        if gcMasterSlotsInFormID in flContextObj.GameDefObj.Capabilities then
+        begin
+          var lOldCount := TwbSlotCounts.Create(flOldMasters, flComplexFileFileID);
+          var lNewCount := TwbSlotCounts.Create(flMasters, flComplexFileFileID);
 
-            MastersUpdated(Old, New, lOldCount, lNewCount);
-          end;
-          SetModified(True);
+          MastersUpdated(Old, New, lOldCount, lNewCount);
         end;
-      finally
-        OldList.Free;
+        SetModified(True);
       end;
       SortRecords;
     finally
@@ -13155,6 +13288,8 @@ begin
   InitDataPtr; // reset...
 
   if mrStruct.mrsFlags(gcFormIDInRecordHeader in GameDefObj.Capabilities).IsCompressed then try
+    if mrStruct.mrsDataSize < SizeOf(Cardinal) then
+      raise Exception.CreateFmt('compressed data of %d bytes is too short to hold its uncompressed length', [mrStruct.mrsDataSize]);
     UncompressedLength := PCardinal(dcDataBasePtr)^;
     if UncompressedLength > 0 then begin
       SetLength(mrDataStorage, UncompressedLength );
@@ -13307,7 +13442,7 @@ var
 begin
   lSelfRef := Self;
   Result := 0;
-  aNewFormID.CheckAssignable;
+  aNewFormID.CheckAssignable(ContextObj.SlotLayout);
 
   lMaster := lSelfRef.MasterOrSelf;
   k := -1;
@@ -16310,8 +16445,9 @@ begin
 
   if not (mrsBasePtrAllocated in mrStates) then begin
     New(p);
+    p^ := Default(TwbMainRecordStruct);
+    Move(mrStruct^, p^, GameDefObj.SizeOfMainRecordStruct);
     Include(mrStates, mrsBasePtrAllocated);
-    p^ := mrStruct^;
     dcBasePtr := p;
     dcEndPtr := nil;
 
@@ -18122,6 +18258,7 @@ begin
       Exit;
 
     var lLayout := ContextObj.SlotLayout;
+    aFormID.CheckObjectID(lLayout);
     if (aFormID.ObjectID[lLayout] < $800) and not aFormID.IsHardcoded then begin
       if _File.MasterCount[GetMastersUpdated] < 1 then
         raise Exception.Create('Using FormID [' + aFormID.ToDisplayString(lLayout) + '] requires "' + _File.Name + '" to have at least 1 master' );
@@ -18715,7 +18852,8 @@ var
       SelfRef := Self as IwbContainerElementRef;
       DoInit(True);
 
-      mrs := mrStruct^;
+      mrs := Default(TwbMainRecordStruct);
+      Move(mrStruct^, mrs, lSizeOfMainRecordStruct);
 
       CurrentPosition := aStream.Position;
 
@@ -20897,8 +21035,11 @@ begin
       FormID := TwbFormID.FromCardinal($00000014)
     else
       FormID := _File.NewFormID
-  else
-    FormID := _File.LoadOrderFormIDtoFileFormID(ContextObj.FormIDOf(Self), True);
+  else begin
+    FormID := ContextObj.FormIDOf(Self);
+    FormID.CheckObjectID(ContextObj.SlotLayout);
+    FormID := _File.LoadOrderFormIDtoFileFormID(FormID, True);
+  end;
   if FormID.IsNull then
     Exit;
 
@@ -20944,6 +21085,10 @@ begin
       MainRecord.SetGridCell(GridCell);
       if Persistent then
         MainRecord.IsPersistent := True;
+    end else if (Signature = 'CELL') and not Assigned(MainRecord.ElementBySignature['DATA']) then begin
+      var lData := MainRecord.Add('DATA', True);
+      if Assigned(lData) then
+        lData.EditValue := '1';
     end;
   finally
     MainRecord.EndUpdate;
@@ -22084,7 +22229,8 @@ begin
 
   if Assigned(dcEndPtr) then begin
     New(p);
-    p^ := grStruct^;
+    p^ := Default(TwbGroupRecordStruct);
+    Move(grStruct^, p^, GameDefObj.SizeOfMainRecordStruct);
     dcBasePtr := p;
     dcEndPtr := nil;
   end;
@@ -22850,8 +22996,10 @@ var
 begin
   var lContext := ContextObj;
   CurrentPosition := aStream.Position;
-  grs := grStruct^;
-  aStream.WriteBuffer(grs, GameDefObj.SizeOfMainRecordStruct );
+  var lSizeOfMainRecordStruct := GameDefObj.SizeOfMainRecordStruct;
+  grs := Default(TwbGroupRecordStruct);
+  Move(grStruct^, grs, lSizeOfMainRecordStruct);
+  aStream.WriteBuffer(grs, lSizeOfMainRecordStruct);
   if lContext.Settings.ForceNewHeader then begin
     var lNewHeaderAddon := lContext.Settings.NewHeaderAddon;
     aStream.WriteBuffer(lNewHeaderAddon, SizeOf(lNewHeaderAddon) );

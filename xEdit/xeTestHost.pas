@@ -62,6 +62,14 @@ type
     TestGameLinkTimer        : TTimer;
     TestGameLinkTarget       : IwbMainRecord;
     TestGameLinkStart        : UInt64;
+    TestGameLinkSecond       : IwbMainRecord;
+    TestGameLinkPhase        : Integer;
+    TestGameLinkBody         : string;
+    TestGameLinkAnswer       : TTimer;
+    TestGameLinkAnswered     : Boolean;
+    TestGameLinkPointed      : UInt64;
+    TestGameLinkPointFailures : Integer;
+    TestGameLinkLock         : TFileStream;
     TestFormIDSearchTimer    : TTimer;
     TestFormIDSearchTarget   : IwbMainRecord;
     TestFormIDSearchStart    : UInt64;
@@ -73,6 +81,16 @@ type
     TestDeltaPatchLines      : TStringList;
     TestDeltaPatchTimer      : TTimer;
     TestDeltaPatchCancelled  : Boolean;
+    TestDeltaPatchComparing  : Boolean;
+    TestDeltaPatchSecondDone : Boolean;
+    TestDeltaPatchMasterFile : IwbFile;
+    TestEndSessionLines      : TStringList;
+    TestEndSessionWritten    : Boolean;
+    TestEndSessionTimer      : TTimer;
+    TestEndSessionAnswer     : TTimer;
+    TestEndSessionAnswerIndex : Integer;
+    TestEndSessionLoaderDones : Integer;
+    TestEndSessionRefusedTimer : TTimer;
     TestHideTimer            : TTimer;
     TestMergeLines           : TStringList;
     TestMergeTimer           : TTimer;
@@ -123,6 +141,7 @@ type
     TestPumpDelivered        : Boolean;
     TestPumpEnded            : Boolean;
     TestPumpEndTick          : UInt64;
+    TestPumpStartTick        : UInt64;
     TestPumpLastDialog       : HWND;
     TestPumpSeen             : string;
     TestPumpCtrlDown         : Boolean;
@@ -176,6 +195,7 @@ type
     FileLists             : string;
     ToolModeAuto          : Boolean;
     ToolModeFault         : Boolean;
+    LoaderHold            : Boolean;
     ViewTree              : Boolean;
     ViewTreeFile          : string;
     ViewTreeList          : string;
@@ -210,6 +230,12 @@ type
     GameLink              : Boolean;
     GameLinkFile          : string;
     GameLinkModule        : string;
+    GameLinkRefusedClose  : Boolean;
+    GameLinkNoClose       : Boolean;
+    GameLinkCancel        : Boolean;
+    GameLinkLocked        : string;
+    GameLinkPluggy        : string;
+    GameLinkMyGames       : string;
     FormIDSearch          : Boolean;
     FormIDSearchFile      : string;
     FormIDSearchModule    : string;
@@ -229,6 +255,19 @@ type
     DeltaPatchHideRecord  : string;
     DeltaPatchCancel      : Boolean;
     DeltaPatchSave        : string;
+    DeltaPatchCompareTo   : string;
+    DeltaPatchSecond      : string;
+    DeltaPatchClose       : Boolean;
+    EndSession            : Boolean;
+    EndSessionFile        : string;
+    EndSessionSave        : string;
+    EndSessionUnsaved     : string;
+    EndSessionAnswer      : string;
+    EndSessionLoad        : string;
+    EndSessionClose       : Boolean;
+    EndSessionDuringLoad  : Boolean;
+    EndSessionLoadTerminated : Boolean;
+    EndSessionRefused     : Boolean;
     Merge                 : Boolean;
     MergeFile             : string;
     MergeSource           : string;
@@ -264,6 +303,7 @@ type
     ChangeFormIDFile      : string;
     ChangeFormIDRecords   : string;
     ChangeFormIDShift     : Boolean;
+    ChangeFormIDTwice     : Boolean;
     ChangeFormIDTarget    : string;
     ChangeFormIDIds       : string;
     ChangeFormIDAnswers   : string;
@@ -295,6 +335,8 @@ type
     PumpDirect            : Boolean;
     PumpModal             : Boolean;
     PumpDuringLoad        : string;
+    PumpBeforeGenerator   : Boolean;
+    PumpBeforeGeneratorHold : Integer;
     PumpHotkey            : string;
     PumpSearch            : string;
     SaveContexts          : Boolean;
@@ -323,6 +365,8 @@ uses
   xeInit;
 
 function TxeTestSwitches.ParsePump: Boolean;
+var
+  s: string;
 begin
   Result := True;
   if wbFindCmdLineParam('testpump', Pump) then begin
@@ -334,13 +378,20 @@ begin
     PumpDirect := FindCmdLineSwitch('testpumpdirect');
     PumpModal := FindCmdLineSwitch('testpumpmodal');
     wbFindCmdLineParam('testpumpduringload', PumpDuringLoad);
+    PumpBeforeGenerator := wbFindCmdLineParam('testpumpbeforegenerator', s);
+    if PumpBeforeGenerator then
+      PumpBeforeGeneratorHold := StrToIntDef(s, -1);
     wbFindCmdLineParam('testpumphotkey', PumpHotkey);
     wbFindCmdLineParam('testpumpsearch', PumpSearch);
     if (PumpFile = '') or
+       (PumpBeforeGenerator and ((PumpBeforeGeneratorHold < 0) or not (xeToolMode in [tmLODgen, tmScript]) or
+         (PumpDuringLoad <> '') or PumpGenerator or PumpModal)) or
        not ((PumpAnswer = '') or SameText(PumpAnswer, 'yes') or SameText(PumpAnswer, 'no')) or
        not (SameText(Pump, 'close') or SameText(Pump, 'ctrlo') or SameText(Pump, 'xback') or
             SameText(Pump, 'pendingset') or SameText(Pump, 'tab') or SameText(Pump, 'cancelctrlo') or
             SameText(Pump, 'cancelshortcut') or SameText(Pump, 'endsession') or
+            SameText(Pump, 'endsessionwait') or SameText(Pump, 'endsessioncancel') or SameText(Pump, 'endsessioncancelform') or
+            SameText(Pump, 'endsessionappfirst') or SameText(Pump, 'closedeferred') or
             SameText(Pump, 'browse') or SameText(Pump, 'browseclose') or SameText(Pump, 'edidwalk') or
             SameText(Pump, 'initwalk') or SameText(Pump, 'hotkey') or SameText(Pump, 'edidsearch')) or
        not ((PumpClient = '') or SameText(PumpClient, 'enabled') or SameText(PumpClient, 'disabled')) or
@@ -348,14 +399,25 @@ begin
        ((PumpDuringLoad <> '') and (SameText(Pump, 'xback') or SameText(Pump, 'pendingset'))) or
        ((SameText(Pump, 'browse') or SameText(Pump, 'browseclose') or SameText(Pump, 'edidwalk') or
          SameText(Pump, 'initwalk')) and (PumpDuringLoad = '')) or
+       (SameText(Pump, 'closedeferred') and not PumpBeforeGenerator) or
+       (SameText(Pump, 'endsession') and PumpBeforeGenerator) or
        (SameText(Pump, 'hotkey') <> (PumpHotkey <> '')) or
        (SameText(Pump, 'edidsearch') <> (PumpSearch <> '')) then begin
-      ShowMessage('testpump requires -testpump:<close|ctrlo|xback|pendingset|tab|cancelctrlo|cancelshortcut|endsession|browse|browseclose|edidwalk|initwalk|hotkey|edidsearch> ' +
+      ShowMessage('testpump requires -testpump:<close|ctrlo|xback|pendingset|tab|cancelctrlo|cancelshortcut|endsession|endsessionwait|endsessioncancel|' +
+        'endsessioncancelform|endsessionappfirst|closedeferred|' +
+        'browse|browseclose|edidwalk|initwalk|hotkey|edidsearch> ' +
         '-testpumpfile:<filename> [-testpumpaction:<text in the current action or caption>] [-testpumpclient:<enabled|disabled>] ' +
         '[-testpumpanswer:<yes|no>] [-testpumpgenerator] [-testpumpdirect] [-testpumpmodal] [-testpumpduringload:<any|refs>] ' +
+        '[-testpumpbeforegenerator:<ms>] ' +
         '[-testpumphotkey:<script file>] [-testpumpsearch:<EditorID>]; browse, browseclose, edidwalk and initwalk only with -testpumpduringload, hotkey only with ' +
         '-testpumphotkey, edidsearch only with -testpumpsearch, ' +
-        'xback and pendingset not with -testpumpduringload');
+        'xback and pendingset not with -testpumpduringload, endsessionwait and endsessioncancel send the query to the form and the ' +
+        'application window, pump messages 1.5 s, then send WM_ENDSESSION true or false (a refusal ends the queries and sends ' +
+        'WM_ENDSESSION false to every window queried, as Windows does; endsession, a query alone, not with -testpumpbeforegenerator), ' +
+        'endsessioncancelform queries the form only and sends it WM_ENDSESSION false, endsessionappfirst queries the application window, ' +
+        'pumps 1.5 s, then queries the form and ends, closedeferred (only with -testpumpbeforegenerator) posts WM_CLOSE and pumps ' +
+        '1.5 s through DoProcessMessages, beforegenerator (the arrival held <ms> after the generator is armed) ' +
+        'only in script or LODgen mode and not with -testpumpduringload, -testpumpgenerator or -testpumpmodal');
       Exit(False);
     end;
     if xeToolMode = tmLODgen then
@@ -383,6 +445,7 @@ begin
   if ToolModeAuto then
     xeAutoLoad := True;
   ToolModeFault := FindCmdLineSwitch('testtoolmodefault');
+  LoaderHold := FindCmdLineSwitch('testloaderhold');
 end;
 
 function TxeTestSwitches.ParseEdit: Boolean;
@@ -511,9 +574,17 @@ begin
 
   if wbFindCmdLineParam('testgamelink', GameLinkFile) then begin
     if (GameLinkFile = '') or not wbFindCmdLineParam('testgamelinkmodule', GameLinkModule) then begin
-      ShowMessage('testgamelink requires -testgamelink:<filename> -testgamelinkmodule:<module>');
+      ShowMessage('testgamelink requires -testgamelink:<filename> -testgamelinkmodule:<module> ' +
+        '[-testgamelinkrefusedclose [-testgamelinknoclose | -testgamelinkcancel]] [-testgamelinklocked:<once|repick|hold|range|rangehold|badutf8>] ' +
+        '[-testgamelinkpluggy:<missing|stay>]');
       Exit(False);
     end;
+    wbFindCmdLineParam('testgamelinklocked', GameLinkLocked);
+    wbFindCmdLineParam('testgamelinkpluggy', GameLinkPluggy);
+    wbFindCmdLineParam('M', GameLinkMyGames);
+    GameLinkRefusedClose := FindCmdLineSwitch('testgamelinkrefusedclose');
+    GameLinkNoClose := FindCmdLineSwitch('testgamelinknoclose');
+    GameLinkCancel := FindCmdLineSwitch('testgamelinkcancel');
     GameLink := True;
     xeAutoLoad := True;
   end;
@@ -557,14 +628,36 @@ begin
        not wbFindCmdLineParam('testdeltapatchname', DeltaPatchName) then begin
       ShowMessage('testdeltapatch requires -testdeltapatch:<filename> -testdeltapatchmaster:<module> ' +
         '-testdeltapatchnewer:<file> -testdeltapatchname:<name> [-testdeltapatchhide:<module>] [-testdeltapatchhiderec:<formid>] ' +
-        '[-testdeltapatchcancel] [-testdeltapatchsave:<file>]');
+        '[-testdeltapatchcancel] [-testdeltapatchsave:<file>] [-testdeltapatchcompareto:<file>] [-testdeltapatchsecond:<file>] ' +
+        '[-testdeltapatchclose]');
       Exit(False);
     end;
     wbFindCmdLineParam('testdeltapatchhide', DeltaPatchHide);
     wbFindCmdLineParam('testdeltapatchhiderec', DeltaPatchHideRecord);
     wbFindCmdLineParam('testdeltapatchsave', DeltaPatchSave);
+    wbFindCmdLineParam('testdeltapatchcompareto', DeltaPatchCompareTo);
+    wbFindCmdLineParam('testdeltapatchsecond', DeltaPatchSecond);
     DeltaPatchCancel := FindCmdLineSwitch('testdeltapatchcancel');
+    DeltaPatchClose := FindCmdLineSwitch('testdeltapatchclose');
     DeltaPatch := True;
+    xeAutoLoad       := True;
+  end;
+
+  if wbFindCmdLineParam('testendsession', EndSessionFile) then begin
+    if (EndSessionFile = '') or not wbFindCmdLineParam('testendsessionsave', EndSessionSave) then begin
+      ShowMessage('testendsession requires -testendsession:<filename> -testendsessionsave:<module> [-testendsessionunsaved:<module>] ' +
+        '[-testendsessionanswer:<ok|cancel>[,...]] [-testendsessionload:<file> [-testendsessionclose [-testendsessionrefused]] ' +
+        '[-testendsessionloadterminated]] [-testendsessionduringload]');
+      Exit(False);
+    end;
+    wbFindCmdLineParam('testendsessionunsaved', EndSessionUnsaved);
+    wbFindCmdLineParam('testendsessionanswer', EndSessionAnswer);
+    wbFindCmdLineParam('testendsessionload', EndSessionLoad);
+    EndSessionClose := FindCmdLineSwitch('testendsessionclose');
+    EndSessionDuringLoad := FindCmdLineSwitch('testendsessionduringload');
+    EndSessionLoadTerminated := FindCmdLineSwitch('testendsessionloadterminated');
+    EndSessionRefused := FindCmdLineSwitch('testendsessionrefused');
+    EndSession := True;
     xeAutoLoad       := True;
   end;
 
@@ -657,6 +750,7 @@ begin
     wbFindCmdLineParam('testchangeformidpinned', ChangeFormIDPinned);
     wbFindCmdLineParam('testchangeformidrow', ChangeFormIDRow);
     ChangeFormIDShift := FindCmdLineSwitch('testchangeformidshift');
+    ChangeFormIDTwice := FindCmdLineSwitch('testchangeformidtwice');
     if ChangeFormIDOp = '' then
       ChangeFormIDOp := 'changeformid';
     if (ChangeFormIDFile = '') or
@@ -752,7 +846,7 @@ end;
 function TxeTestSwitches.Any: Boolean;
 begin
   Result := Conflicts or NavCopy or ViewText or ViewTree or Options or CopyIntoGap or NewFile or GameLink or FormIDSearch or SplitTreeLOD or DropMaster or DeltaPatch or Merge or MergedPatch or CopyInto or
-    Renumber or ChangeFormID or Hide or Filter or SaveContexts or (Pump <> '') or (StateManifest <> '');
+    Renumber or ChangeFormID or Hide or Filter or SaveContexts or EndSession or (Pump <> '') or (StateManifest <> '');
 end;
 
 initialization

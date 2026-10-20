@@ -65,6 +65,8 @@ type
     procedure TestFilterAnswerTimer(Sender: TObject);
     procedure TestViewModalAnswerTimer(Sender: TObject);
     procedure TestPumpStart;
+    procedure TestPumpEndSessionWait(const aMode: string);
+    procedure TestPumpCloseDeferred;
     procedure TestPumpBrowseStep;
     procedure TestPumpEdidWalkStep;
     procedure TestPumpInitWalkStep;
@@ -100,9 +102,14 @@ type
     procedure TestChangeFormIDSave;
     procedure TestChangeFormIDWrite;
     procedure TestChangeFormIDOnClose;
+    procedure TestLoaderHoldAfterDone;
+    procedure TestLoaderHoldRelease;
     procedure TestDeltaPatchStates(const aWhen: string);
-    procedure TestDeltaPatchWrite;
+    procedure TestDeltaPatchWrite(aShutdown: Boolean = True);
+    procedure TestDeltaPatchClose;
+    procedure TestDeltaPatchLoad(const aMaster: IwbFile);
     procedure TestDeltaPatchCancelTimer(Sender: TObject);
+    procedure TestDeltaPatchSecondTimer(Sender: TObject);
     procedure TestHideRunTimer(Sender: TObject);
     procedure TestOptionsRunTimer(Sender: TObject);
     procedure TestOptionsAnswerTimer(Sender: TObject);
@@ -133,8 +140,16 @@ type
     procedure DoTestNewFile;
     procedure DoTestNewFileReport(const aFailure: string = '');
     procedure DoTestGameLink;
+    procedure TestGameLinkPointAt(const aRecord: IwbMainRecord);
     procedure TestGameLinkRunTimer(Sender: TObject);
+    procedure TestGameLinkAnswerTimer(Sender: TObject);
     procedure TestGameLinkWrite(const aBody: string);
+    function TestGameLinkLockedRange: Boolean;
+    function TestGameLinkLockedHold: Boolean;
+    procedure TestGameLinkReleaseLock;
+    function TestGameLinkPluggyFile(const aView: string): string;
+    function TestGameLinkPluggyWorld(const aRecord: IwbMainRecord): string;
+    procedure TestGameLinkWriteFile(const aFileName, aText: string);
     procedure DoTestFormIDSearch;
     procedure TestFormIDSearchRunTimer(Sender: TObject);
     procedure TestFormIDSearchWrite(const aBody: string);
@@ -151,6 +166,19 @@ type
     procedure DoTestFilter;
     procedure TestFilterImages(aLines: TStrings);
     procedure DoTestSaveContextsCompare;
+    procedure DoTestEndSession;
+    procedure TestEndSessionBegin;
+    procedure TestEndSessionStartTimer;
+    procedure TestEndSessionDuringLoad;
+    procedure TestEndSessionRunTimer(Sender: TObject);
+    procedure TestEndSessionStartAnswer;
+    procedure TestEndSessionAnswerTimer(Sender: TObject);
+    procedure TestEndSessionRefusedTimer(Sender: TObject);
+    procedure TestEndSessionLoad(const aMaster: IwbFile);
+    procedure TestEndSessionAdd(const aLine: string);
+    procedure TestEndSessionWrite;
+    procedure TestEndSessionLoaderDone;
+    procedure TestEndSessionStage(const aStage: string);
     procedure TestWriteStateManifest(const aTarget: IwbFile);
     procedure TestWriteStateManifestEnd;
     procedure TestWriteFileLists;
@@ -2884,27 +2912,48 @@ begin
   xeContext.Settings.DontSave := True;
   TestHost.TestGameLinkTarget := nil;
   try
-    if xeContext.GameDefObj.GameMode = gmTES4 then
-      raise Exception.Create('Oblivion links through Pluggy''s files, which this switch does not write');
+    if xeContext.GameDefObj.GameMode = gmTES4 then begin
+      if (xeTestSwitches.GameLinkMyGames = '') or not xeContext.Settings.MyGamesTheGamePath.EndsWith('\') or
+         not SameText(IncludeTrailingPathDelimiter(xeTestSwitches.GameLinkMyGames), xeContext.Settings.MyGamesTheGamePath) then
+        raise Exception.Create('Oblivion links through Pluggy''s files under My Games: name a scratch folder with -M:<folder>\');
+      if SameText(xeTestSwitches.GameLinkLocked, 'badutf8') then
+        raise Exception.Create('Oblivion''s link decodes its files with the system code page, which cannot fail');
+    end else if xeTestSwitches.GameLinkPluggy <> '' then
+      raise Exception.Create('-testgamelinkpluggy needs Oblivion');
     var lModule: IwbFile := nil;
     for var lFile in Files do
       if SameText(lFile.FileName, xeTestSwitches.GameLinkModule) and not (fsIsCompareLoad in lFile.FileStates) then
         lModule := lFile;
     if not Assigned(lModule) then
       raise Exception.Create('no module ' + xeTestSwitches.GameLinkModule);
+    TestHost.TestGameLinkSecond := nil;
     for var j := 0 to Pred(lModule.RecordCount) do begin
       var lRecord := lModule.Records[j];
-      if (lRecord.Signature <> 'TES4') and lRecord.MasterOrSelf.Equals(lRecord) and not lRecord.IsInjected then begin
-        TestHost.TestGameLinkTarget := lRecord;
-        Break;
-      end;
+      if (lRecord.Signature <> 'TES4') and lRecord.MasterOrSelf.Equals(lRecord) and not lRecord.IsInjected then
+        if not Assigned(TestHost.TestGameLinkTarget) then
+          TestHost.TestGameLinkTarget := lRecord
+        else if lRecord.EditorID <> '' then begin
+          TestHost.TestGameLinkSecond := lRecord;
+          Break;
+        end;
     end;
     if not Assigned(TestHost.TestGameLinkTarget) then
       raise Exception.Create('no record of its own in ' + lModule.FileName);
-    var lFolder := xeContext.Settings.DataPath + 'xEdit\';
-    ForceDirectories(lFolder);
-    TFile.WriteAllText(lFolder + 'xEditLink.ini', '[Console]'#13#10'selectedRefID=' +
-      TestHost.TestGameLinkTarget.LoadOrderFormID.ToString + #13#10);
+    if (xeTestSwitches.GameLinkRefusedClose or (xeTestSwitches.GameLinkLocked <> '') or (xeTestSwitches.GameLinkPluggy <> '')) and
+       not Assigned(TestHost.TestGameLinkSecond) then
+      raise Exception.Create('no second record of its own with an EditorID in ' + lModule.FileName);
+    if xeTestSwitches.GameLinkRefusedClose then begin
+      xeContext.Settings.DontSave := False;
+      EditWarnOk := True;
+    end;
+    if xeContext.GameDefObj.GameMode = gmTES4 then begin
+      TestGameLinkWriteFile(TestGameLinkPluggyFile('ViewInventory'), 'ItemID,EnchantmentID'#13#10'00000000,00000000'#13#10);
+      if not SameText(xeTestSwitches.GameLinkPluggy, 'missing') then
+        TestGameLinkWriteFile(TestGameLinkPluggyFile('ViewSpells'), 'SpellID,Name'#13#10'00000000,none'#13#10)
+      else if FileExists(TestGameLinkPluggyFile('ViewSpells')) and not System.SysUtils.DeleteFile(TestGameLinkPluggyFile('ViewSpells')) then
+        RaiseLastOSError;
+    end;
+    TestGameLinkPointAt(TestHost.TestGameLinkTarget);
     DoSetActiveRecord(nil);
     pmuMainPopup(Self);
     if not mniMainPluggyLinkReference.Visible then
@@ -2926,23 +2975,279 @@ begin
   TestHost.TestGameLinkTimer.Enabled := True;
 end;
 
-procedure TxeTestFormHelper.TestGameLinkRunTimer(Sender: TObject);
+procedure TxeTestFormHelper.TestGameLinkPointAt(const aRecord: IwbMainRecord);
 begin
-  if not Assigned(ActiveRecord) and (GetTickCount64 < TestHost.TestGameLinkStart + 20000) then
+  TestHost.TestGameLinkPointed := GetTickCount64;
+  try
+    if xeContext.GameDefObj.GameMode = gmTES4 then
+      TestGameLinkWriteFile(TestGameLinkPluggyFile('ViewWorld'), TestGameLinkPluggyWorld(aRecord))
+    else
+      TestGameLinkWriteFile(xeContext.Settings.DataPath + 'xEdit\xEditLink.ini', '[Console]'#13#10'selectedRefID=' + aRecord.LoadOrderFormID.ToString + #13#10);
+  except
+    on E: Exception do
+      Inc(TestHost.TestGameLinkPointFailures);
+  end;
+end;
+
+function TxeTestFormHelper.TestGameLinkPluggyFile(const aView: string): string;
+begin
+  Result := xeContext.Settings.MyGamesTheGamePath + 'Pluggy\User Files\Pluggy' + xeContext.GameDefObj.AppName + aView + '.csv';
+end;
+
+function TxeTestFormHelper.TestGameLinkPluggyWorld(const aRecord: IwbMainRecord): string;
+begin
+  Result := 'RefID,BaseID'#13#10;
+  for var i := 1 to 150 do
+    Result := Result + '00000000,00000000'#13#10;
+  Result := Result + aRecord.LoadOrderFormID.ToString + ',' + aRecord.LoadOrderFormID.ToString + #13#10;
+end;
+
+procedure TxeTestFormHelper.TestGameLinkWriteFile(const aFileName, aText: string);
+begin
+  ForceDirectories(ExtractFilePath(aFileName));
+  var lBytes := TEncoding.ASCII.GetBytes(aText);
+  var lStream := TFileStream.Create(aFileName, fmCreate or fmShareDenyWrite);
+  try
+    lStream.WriteBuffer(lBytes[0], Length(lBytes));
+  finally
+    lStream.Free;
+  end;
+end;
+
+procedure TxeTestFormHelper.TestGameLinkRunTimer(Sender: TObject);
+
+  function ActiveText: string;
+  begin
+    Result := 'none';
+    if Assigned(ActiveRecord) then
+      Result := ActiveRecord.Name + #9 + ActiveRecord._File.FileName + #9 + ActiveRecord.LoadOrderFormID.ToString;
+  end;
+
+begin
+  case TestHost.TestGameLinkPhase of
+    5: begin
+      if GetTickCount64 < TestHost.TestGameLinkStart + 3000 then
+        Exit;
+      var lSecond := TestHost.TestGameLinkSecond;
+      var lStayed := Assigned(ActiveRecord) and ActiveRecord.Equals(lSecond.WinningOverride);
+      TestHost.TestGameLinkTimer.Enabled := False;
+      TestHost.TestGameLinkSecond := nil;
+      if lStayed then
+        CheckResult := 0
+      else
+        CheckResult := 1;
+      xeContext.Settings.DontSave := True;
+      TestGameLinkWrite(TestHost.TestGameLinkBody + #13#10 +
+        'second' + #9 + lSecond.Name + #9 + lSecond._File.FileName + #9 + lSecond.LoadOrderFormID.ToString + #13#10 +
+        'after' + #9 + ActiveText + #13#10 +
+        'pointfailures' + #9 + IntToStr(TestHost.TestGameLinkPointFailures));
+      PostMessage(Handle, WM_CLOSE, 0, 0);
+      Exit;
+    end;
+    4: begin
+      if GetTickCount64 < TestHost.TestGameLinkStart + 2000 then
+        Exit;
+      TestGameLinkReleaseLock;
+      if SameText(xeTestSwitches.GameLinkLocked, 'repick') then begin
+        TestHost.TestGameLinkBody := TestHost.TestGameLinkBody + #13#10'repick' + #9 + 'the menu item picked again';
+        mniMainPluggyLinkReference.Checked := True;
+        mniMainPluggyLinkReference.Click;
+      end;
+      if TestGameLinkLockedHold then
+        TestHost.TestGameLinkPointed := High(UInt64) - 100000
+      else
+        TestGameLinkPointAt(TestHost.TestGameLinkSecond);
+      TestHost.TestGameLinkStart := GetTickCount64;
+      TestHost.TestGameLinkPhase := 2;
+      Exit;
+    end;
+    3: begin
+      if GetTickCount64 < TestHost.TestGameLinkStart + 1500 then
+        Exit;
+      wbForceTerminate := False;
+      TestGameLinkPointAt(TestHost.TestGameLinkSecond);
+      TestHost.TestGameLinkStart := GetTickCount64;
+      TestHost.TestGameLinkPhase := 2;
+      Exit;
+    end;
+    1: begin
+      if not TestHost.TestGameLinkAnswered or not Assigned(FindComponent('vstNav')) then
+        Exit;
+      for var i := 0 to Pred(Screen.CustomFormCount) do
+        if Screen.CustomForms[i] is TfrmFileSelect then
+          Exit;
+      TestHost.TestGameLinkBody := TestHost.TestGameLinkBody + #13#10'refused' + #9 + 'terminate ' + BoolToStr(wbForceTerminate, True);
+      TestGameLinkPointAt(TestHost.TestGameLinkSecond);
+      TestHost.TestGameLinkStart := GetTickCount64;
+      TestHost.TestGameLinkPhase := 2;
+      Exit;
+    end;
+    2: begin
+      var lSecond := TestHost.TestGameLinkSecond;
+      var lFollowed := Assigned(ActiveRecord) and ActiveRecord.Equals(lSecond.WinningOverride);
+      if not lFollowed and (GetTickCount64 < TestHost.TestGameLinkStart + 20000) then begin
+        if GetTickCount64 >= TestHost.TestGameLinkPointed + 3000 then
+          TestGameLinkPointAt(lSecond);
+        Exit;
+      end;
+      TestHost.TestGameLinkTimer.Enabled := False;
+      TestHost.TestGameLinkSecond := nil;
+      if lFollowed then
+        CheckResult := 0
+      else
+        CheckResult := 1;
+      xeContext.Settings.DontSave := True;
+      TestGameLinkWrite(TestHost.TestGameLinkBody + #13#10 +
+        'second' + #9 + lSecond.Name + #9 + lSecond._File.FileName + #9 + lSecond.LoadOrderFormID.ToString + #13#10 +
+        'after' + #9 + ActiveText + #13#10 +
+        'pointfailures' + #9 + IntToStr(TestHost.TestGameLinkPointFailures));
+      PostMessage(Handle, WM_CLOSE, 0, 0);
+      Exit;
+    end;
+  end;
+  if SameText(xeTestSwitches.GameLinkPluggy, 'missing') and Assigned(TestHost.TestGameLinkTarget) and
+     (GetTickCount64 >= TestHost.TestGameLinkStart + 2000) and not FileExists(TestGameLinkPluggyFile('ViewSpells')) then begin
+    TestGameLinkWriteFile(TestGameLinkPluggyFile('ViewSpells'), 'SpellID,Name'#13#10'00000000,none'#13#10);
+    AddMessage('[Test GameLink] the spells file written 2 s after the link started');
+  end;
+  if not Assigned(TestHost.TestGameLinkTarget) or not Assigned(ActiveRecord) and (GetTickCount64 < TestHost.TestGameLinkStart + 20000) then
     Exit;
-  TestHost.TestGameLinkTimer.Enabled := False;
   var lTarget := TestHost.TestGameLinkTarget;
   TestHost.TestGameLinkTarget := nil;
-  var lActive := 'none';
-  if Assigned(ActiveRecord) then
-    lActive := ActiveRecord.Name + #9 + ActiveRecord._File.FileName + #9 + ActiveRecord.LoadOrderFormID.ToString;
-  if Assigned(ActiveRecord) and ActiveRecord.Equals(lTarget.WinningOverride) then
-    CheckResult := 0
-  else
-    CheckResult := 1;
-  TestGameLinkWrite(
+  var lFound := Assigned(ActiveRecord) and ActiveRecord.Equals(lTarget.WinningOverride);
+  TestHost.TestGameLinkBody :=
     'target' + #9 + lTarget.Name + #9 + lTarget._File.FileName + #9 + lTarget.LoadOrderFormID.ToString + #13#10 +
-    'active' + #9 + lActive);
+    'active' + #9 + ActiveText;
+  if SameText(xeTestSwitches.GameLinkPluggy, 'missing') then
+    TestHost.TestGameLinkBody := TestHost.TestGameLinkBody + #13#10'missing' + #9 + 'the spells file absent when the link started, written 2 s later';
+  if not (xeTestSwitches.GameLinkRefusedClose or (xeTestSwitches.GameLinkLocked <> '') or SameText(xeTestSwitches.GameLinkPluggy, 'stay')) or
+     not lFound then begin
+    TestHost.TestGameLinkTimer.Enabled := False;
+    if lFound then
+      CheckResult := 0
+    else
+      CheckResult := 1;
+    TestGameLinkWrite(TestHost.TestGameLinkBody);
+    if xeTestSwitches.GameLinkRefusedClose then begin
+      xeContext.Settings.DontSave := True;
+      PostMessage(Handle, WM_CLOSE, 0, 0);
+    end;
+    Exit;
+  end;
+  if xeTestSwitches.GameLinkLocked <> '' then begin
+    var lRange := TestGameLinkLockedRange;
+    var lHold := TestGameLinkLockedHold;
+    var lBadText := SameText(xeTestSwitches.GameLinkLocked, 'badutf8');
+    var lWritten := lTarget;
+    if lHold then
+      lWritten := TestHost.TestGameLinkSecond;
+    try
+      var lPath := xeContext.Settings.DataPath + 'xEdit\xEditLink.ini';
+      var lBytes := TEncoding.ASCII.GetBytes('[Console]'#13#10'selectedRefID=' + lWritten.LoadOrderFormID.ToString + #13#10);
+      if xeContext.GameDefObj.GameMode = gmTES4 then begin
+        lPath := TestGameLinkPluggyFile('ViewWorld');
+        lBytes := TEncoding.ASCII.GetBytes(TestGameLinkPluggyWorld(lWritten));
+      end;
+      if lBadText then begin
+        lBytes := [$EF, $BB, $BF, $5B, $C3, $28, $5D, $0D, $0A];
+        var lStream := TFileStream.Create(lPath, fmCreate or fmShareDenyWrite);
+        try
+          lStream.WriteBuffer(lBytes[0], Length(lBytes));
+        finally
+          lStream.Free;
+        end;
+      end else begin
+        if lRange then begin
+          TestHost.TestGameLinkLock := TFileStream.Create(lPath, fmOpenReadWrite or fmShareDenyNone);
+          if not LockFile(TestHost.TestGameLinkLock.Handle, 0, 0, $10000, 0) then
+            RaiseLastOSError;
+        end else
+          TestHost.TestGameLinkLock := TFileStream.Create(lPath, fmOpenReadWrite or fmShareExclusive);
+        TestHost.TestGameLinkLock.Size := 0;
+        TestHost.TestGameLinkLock.WriteBuffer(lBytes[0], Length(lBytes));
+        FlushFileBuffers(TestHost.TestGameLinkLock.Handle);
+      end;
+    except
+      on E: Exception do begin
+        TestGameLinkReleaseLock;
+        TestHost.TestGameLinkTimer.Enabled := False;
+        CheckResult := 2;
+        TestGameLinkWrite(TestHost.TestGameLinkBody + #13#10'# FAILED: ' + E.ClassName + ': ' + E.Message);
+        Exit;
+      end;
+    end;
+    if lBadText then
+      TestHost.TestGameLinkBody := TestHost.TestGameLinkBody + #13#10'locked' + #9 +
+        'the link file rewritten as a UTF-8 BOM and an invalid UTF-8 sequence, the second record written 2 s later'
+    else
+      TestHost.TestGameLinkBody := TestHost.TestGameLinkBody + #13#10'locked' + #9 +
+        IfThen(lRange, 'the link file shared and its bytes locked for 2 s, ', 'the link file held without sharing for 2 s, ') +
+        IfThen(lHold, 'the second record written while held, nothing written after', 'written once');
+    TestHost.TestGameLinkStart := GetTickCount64;
+    TestHost.TestGameLinkPhase := 4;
+    Exit;
+  end;
+  if SameText(xeTestSwitches.GameLinkPluggy, 'stay') then begin
+    JumpTo(TestHost.TestGameLinkSecond.WinningOverride, False);
+    TestGameLinkWriteFile(TestGameLinkPluggyFile('ViewSpells'), 'SpellID,Name'#13#10'00000000,none'#13#10);
+    TestHost.TestGameLinkBody := TestHost.TestGameLinkBody + #13#10'stay' + #9 +
+      'the editor moved to the second record, then the spells file rewritten unchanged';
+    TestHost.TestGameLinkStart := GetTickCount64;
+    TestHost.TestGameLinkPhase := 5;
+    Exit;
+  end;
+  if xeTestSwitches.GameLinkCancel then begin
+    TestHost.TestGameLinkBody := TestHost.TestGameLinkBody + #13#10'terminate' + #9 + 'set for 1.5 s';
+    wbForceTerminate := True;
+    TestHost.TestGameLinkStart := GetTickCount64;
+    TestHost.TestGameLinkPhase := 3;
+    Exit;
+  end;
+  if xeTestSwitches.GameLinkNoClose then begin
+    TestHost.TestGameLinkBody := TestHost.TestGameLinkBody + #13#10'noclose';
+    TestGameLinkPointAt(TestHost.TestGameLinkSecond);
+    TestHost.TestGameLinkStart := GetTickCount64;
+    TestHost.TestGameLinkPhase := 2;
+    Exit;
+  end;
+  TestHost.TestGameLinkSecond.EditorID := TestHost.TestGameLinkSecond.EditorID + 'RC';
+  TestHost.TestGameLinkBody := TestHost.TestGameLinkBody + #13#10'changed' + #9 + TestHost.TestGameLinkSecond.Name;
+  TestHost.TestGameLinkAnswer := TTimer.Create(Self);
+  TestHost.TestGameLinkAnswer.Interval := 100;
+  TestHost.TestGameLinkAnswer.OnTimer := TestGameLinkAnswerTimer;
+  TestHost.TestGameLinkAnswer.Enabled := True;
+  TestHost.TestGameLinkPhase := 1;
+  PostMessage(Handle, WM_CLOSE, 0, 0);
+end;
+
+procedure TxeTestFormHelper.TestGameLinkAnswerTimer(Sender: TObject);
+begin
+  for var i := 0 to Pred(Screen.CustomFormCount) do
+    if (Screen.CustomForms[i] is TfrmFileSelect) and Screen.CustomForms[i].Visible and
+       (fsModal in Screen.CustomForms[i].FormState) and (Screen.CustomForms[i].ModalResult = mrNone) then begin
+      TestHost.TestGameLinkAnswer.Enabled := False;
+      TestHost.TestGameLinkBody := TestHost.TestGameLinkBody + #13#10'dialog' + #9 + 'cancel';
+      Screen.CustomForms[i].ModalResult := mrCancel;
+      TestHost.TestGameLinkAnswered := True;
+      Exit;
+    end;
+end;
+
+function TxeTestFormHelper.TestGameLinkLockedRange: Boolean;
+begin
+  Result := SameText(xeTestSwitches.GameLinkLocked, 'range') or SameText(xeTestSwitches.GameLinkLocked, 'rangehold');
+end;
+
+function TxeTestFormHelper.TestGameLinkLockedHold: Boolean;
+begin
+  Result := SameText(xeTestSwitches.GameLinkLocked, 'hold') or SameText(xeTestSwitches.GameLinkLocked, 'rangehold');
+end;
+
+procedure TxeTestFormHelper.TestGameLinkReleaseLock;
+begin
+  if Assigned(TestHost.TestGameLinkLock) and TestGameLinkLockedRange then
+    UnlockFile(TestHost.TestGameLinkLock.Handle, 0, 0, $10000, 0);
+  FreeAndNil(TestHost.TestGameLinkLock);
 end;
 
 procedure TxeTestFormHelper.TestGameLinkWrite(const aBody: string);
@@ -3409,15 +3714,14 @@ begin
   if xeTestSwitches.DeltaPatchHideRecord = '' then
     Exit;
   lRecord := nil;
-  for var i := Low(Files) to High(Files) do
-    if SameText(Files[i].FileName, xeTestSwitches.DeltaPatchMaster) then
-      lRecord := Files[i].RecordByFormID[TwbFormID.FromStr(xeTestSwitches.DeltaPatchHideRecord), True, True];
+  if Assigned(TestHost.TestDeltaPatchMasterFile) then
+    lRecord := TestHost.TestDeltaPatchMasterFile.RecordByFormID[TwbFormID.FromStr(xeTestSwitches.DeltaPatchHideRecord), True, True];
   if Assigned(lRecord) then
     TestHost.TestDeltaPatchLines.Add('record' + #9 + aWhen + #9 + lRecord.Name + #9 +
       'member=' + BoolToStr(ConflictView.Hidden.Contains(lRecord), True) + #9 + 'hidden=' + BoolToStr(ConflictView.Hidden.IsHidden(lRecord), True));
 end;
 
-procedure TxeTestFormHelper.TestDeltaPatchWrite;
+procedure TxeTestFormHelper.TestDeltaPatchWrite(aShutdown: Boolean);
 var
   lTmp : string;
 begin
@@ -3429,16 +3733,316 @@ begin
       RaiseLastOSError;
   finally
     FreeAndNil(TestHost.TestDeltaPatchLines);
-    if xeAutoExit then
+    TestHost.TestDeltaPatchMasterFile := nil;
+    if xeAutoExit and aShutdown then
       tmrShutdown.Enabled := True;
   end;
+end;
+
+procedure TxeTestFormHelper.TestDeltaPatchLoad(const aMaster: IwbFile);
+var
+  lRecord : IwbMainRecord;
+  lTarget : string;
+begin
+  TestHost.TestDeltaPatchMasterFile := aMaster;
+  TestDeltaPatchStates('loaded');
+  if xeTestSwitches.DeltaPatchHide <> '' then
+    for var i := Low(Files) to High(Files) do
+      if SameText(Files[i].FileName, xeTestSwitches.DeltaPatchHide) then
+        ConflictView.Hidden.Hide(Files[i]);
+  if xeTestSwitches.DeltaPatchHideRecord <> '' then begin
+    lRecord := aMaster.RecordByFormID[TwbFormID.FromStr(xeTestSwitches.DeltaPatchHideRecord), True, True];
+    if not Assigned(lRecord) then
+      raise Exception.Create('no record ' + xeTestSwitches.DeltaPatchHideRecord + ' in ' + aMaster.FileName);
+    ConflictView.Hidden.Hide(lRecord);
+  end;
+  TestDeltaPatchStates('before');
+
+  lTarget := xeContext.Settings.DataPath + xeTestSwitches.DeltaPatchName + '.esu';
+  if FileExists(lTarget) then
+    raise Exception.Create(lTarget + ' already exists');
+  if not CopyFile(PChar(xeTestSwitches.DeltaPatchNewer), PChar(lTarget), True) then
+    RaiseLastOSError;
+  TestHost.TestDeltaPatchLines.Add('# delta patch file = ' + lTarget);
+
+  vstNav.PopupMenu := nil;
+  bnMainMenu.Enabled := False;
+  xeContext.LoaderDone := False;
+  xeContext.LoaderError := False;
+  DoSetActiveRecord(nil);
+  mniNavFilterRemoveClick(Self);
+  wbStartTime := Now;
+  DoSetActiveRecord(nil);
+  pgMain.ActivePage := tbsMessages;
+  TLoaderThread.Create(lTarget, aMaster, [fsIsDeltaPatch]);
+  if xeTestSwitches.DeltaPatchCancel then begin
+    TestHost.TestDeltaPatchTimer := TTimer.Create(Self);
+    TestHost.TestDeltaPatchTimer.Interval := 50;
+    TestHost.TestDeltaPatchTimer.OnTimer := TestDeltaPatchCancelTimer;
+    TestHost.TestDeltaPatchTimer.Enabled := True;
+  end;
+  if xeTestSwitches.DeltaPatchClose and (xeTestSwitches.DeltaPatchSecond = '') then
+    TestDeltaPatchClose;
+end;
+
+procedure TxeTestFormHelper.TestDeltaPatchClose;
+begin
+  AddMessage('[Test Delta Patch] closing the editor while the delta patch loads');
+  TestHost.TestDeltaPatchLines.Add('# closed while the delta patch loads');
+  CheckResult := 0;
+  try
+    TestDeltaPatchWrite(False);
+  except
+    on E: Exception do
+      AddMessage('[Test Delta Patch] FAILED: ' + E.ClassName + ': ' + E.Message);
+  end;
+  PostMessage(Handle, WM_CLOSE, 0, 0);
+end;
+
+function TestEndSessionFindFile(const aFiles: TwbFiles; const aName: string): IwbFile;
+begin
+  for var i := Low(aFiles) to High(aFiles) do
+    if SameText(aFiles[i].FileName, aName) then
+      Exit(aFiles[i]);
+  raise Exception.Create('no module ' + aName);
+end;
+
+procedure TxeTestFormHelper.DoTestEndSession;
+
+  function Touch(const aFile: IwbFile): IwbMainRecord;
+  begin
+    for var i := 0 to Pred(aFile.RecordCount) do
+      if aFile.Records[i].EditorID <> '' then begin
+        aFile.Records[i].EditorID := aFile.Records[i].EditorID + 'ES';
+        TestEndSessionAdd('changed' + #9 + aFile.FileName + #9 + aFile.Records[i].Name);
+        Exit(aFile.Records[i]);
+      end;
+    raise Exception.Create('no record with an EditorID in ' + aFile.FileName);
+  end;
+
+begin
+  TestEndSessionBegin;
+  try
+    var lTouched := Touch(TestEndSessionFindFile(Files, xeTestSwitches.EndSessionSave));
+    var lSaved := SaveChanged(True);
+    TestEndSessionAdd('save' + #9 + IntToStr(Ord(lSaved)));
+    TestEndSessionAdd('renamequeue' + #9 + BoolToStr(xeContext.HasRenameQueue, True));
+    if (lSaved <> srAllDone) or not xeContext.HasRenameQueue then
+      raise Exception.Create('the save was not written and queued for renaming');
+    if xeTestSwitches.EndSessionUnsaved <> '' then
+      lTouched := Touch(TestEndSessionFindFile(Files, xeTestSwitches.EndSessionUnsaved));
+    JumpTo(lTouched, False);
+    TestEndSessionAdd('activerecord' + #9 + BoolToStr(Assigned(ActiveRecord), True));
+    TestEndSessionStartTimer;
+  except
+    on E: Exception do begin
+      TestEndSessionAdd('# FAILED: ' + E.ClassName + ': ' + E.Message);
+      TestEndSessionWrite;
+      if xeAutoExit then
+        tmrShutdown.Enabled := True;
+    end;
+  end;
+end;
+
+procedure TxeTestFormHelper.TestEndSessionBegin;
+begin
+  xeContext.Settings.DontSave := False;
+  EditWarnOk := True;
+  CheckResult := 2;
+  TestHost.TestEndSessionLines := TStringList.Create;
+  TestEndSessionAdd('# xEdit end-session probe');
+  TestEndSessionAdd('# ' + xeApplicationTitle);
+end;
+
+procedure TxeTestFormHelper.TestEndSessionStartTimer;
+begin
+  TestHost.TestEndSessionTimer := TTimer.Create(Self);
+  TestHost.TestEndSessionTimer.Interval := 50;
+  TestHost.TestEndSessionTimer.OnTimer := TestEndSessionRunTimer;
+  TestHost.TestEndSessionTimer.Enabled := True;
+end;
+
+procedure TxeTestFormHelper.TestEndSessionDuringLoad;
+begin
+  TestEndSessionBegin;
+  TestEndSessionAdd('during the first load');
+  TestEndSessionStartTimer;
+end;
+
+procedure TxeTestFormHelper.TestEndSessionRunTimer(Sender: TObject);
+begin
+  TestHost.TestEndSessionTimer.Enabled := False;
+  try
+    if xeTestSwitches.EndSessionLoad <> '' then
+      TestEndSessionLoad(TestEndSessionFindFile(Files, xeTestSwitches.EndSessionSave));
+    if xeTestSwitches.EndSessionClose then begin
+      CheckResult := 0;
+      TestEndSessionWrite;
+      if xeTestSwitches.EndSessionAnswer <> '' then
+        TestEndSessionStartAnswer;
+      if xeTestSwitches.EndSessionRefused then begin
+        TestHost.TestEndSessionRefusedTimer := TTimer.Create(Self);
+        TestHost.TestEndSessionRefusedTimer.Interval := 200;
+        TestHost.TestEndSessionRefusedTimer.OnTimer := TestEndSessionRefusedTimer;
+        TestHost.TestEndSessionRefusedTimer.Enabled := True;
+      end;
+      PostMessage(Handle, WM_CLOSE, 0, 0);
+      Exit;
+    end;
+    TestEndSessionStartAnswer;
+    var lForm := SendMessage(Handle, WM_QUERYENDSESSION, 0, LPARAM(ENDSESSION_LOGOFF));
+    var lApplication := SendMessage(Application.Handle, WM_QUERYENDSESSION, 0, LPARAM(ENDSESSION_LOGOFF));
+    TestEndSessionAdd('queryendsession' + #9 + 'form' + #9 + IntToStr(lForm));
+    TestEndSessionAdd('queryendsession' + #9 + 'application' + #9 + IntToStr(lApplication));
+    for var lName in TDirectory.GetFiles(xeContext.Settings.DataPath) do
+      TestEndSessionAdd('data' + #9 + ExtractFileName(lName));
+    var lEnding := ((lForm <> 0) and (lApplication <> 0)) or (xeTestSwitches.EndSessionLoad <> '');
+    TestEndSessionAdd('endsession' + #9 + BoolToStr(lEnding, True));
+    CheckResult := 0;
+    TestEndSessionWrite;
+    AddMessage('[Test End Session] sending WM_ENDSESSION ' + BoolToStr(lEnding, True));
+    SendMessage(Handle, WM_ENDSESSION, WPARAM(lEnding), LPARAM(ENDSESSION_LOGOFF));
+    SendMessage(Application.Handle, WM_ENDSESSION, WPARAM(lEnding), LPARAM(ENDSESSION_LOGOFF));
+    TestEndSessionAdd('running' + #9 + 'after WM_ENDSESSION ' + BoolToStr(lEnding, True));
+    if lEnding then
+      CheckResult := 2;
+  except
+    on E: Exception do begin
+      TestEndSessionAdd('# FAILED: ' + E.ClassName + ': ' + E.Message);
+      CheckResult := 2;
+      TestEndSessionWrite;
+    end;
+  end;
+  if xeAutoExit then
+    tmrShutdown.Enabled := True;
+end;
+
+procedure TxeTestFormHelper.TestEndSessionStartAnswer;
+begin
+  TestHost.TestEndSessionAnswer := TTimer.Create(Self);
+  TestHost.TestEndSessionAnswer.Interval := 100;
+  TestHost.TestEndSessionAnswer.OnTimer := TestEndSessionAnswerTimer;
+  TestHost.TestEndSessionAnswer.Enabled := True;
+end;
+
+procedure TxeTestFormHelper.TestEndSessionRefusedTimer(Sender: TObject);
+begin
+  if (LoadersRunning > 0) or (TestHost.TestEndSessionAnswerIndex = 0) or not Assigned(FindComponent('vstNav')) then
+    Exit;
+  for var i := 0 to Pred(Screen.CustomFormCount) do
+    if Screen.CustomForms[i] is TfrmFileSelect then
+      Exit;
+  TestHost.TestEndSessionRefusedTimer.Enabled := False;
+  try
+    TestEndSessionAdd('refused' + #9 + 'terminate ' + BoolToStr(wbForceTerminate, True) + #9 + 'loaderdone ' +
+      BoolToStr(xeContext.LoaderDone, True) + #9 + 'files ' + IntToStr(Length(Files)));
+    TestEndSessionAdd('caption' + #9 + Caption + #9 + 'application title ' + Application.Title);
+    for var i := Low(Files) to High(Files) do
+      TestEndSessionAdd('file' + #9 + Files[i].FileName + #9 + 'unsaved ' + BoolToStr(esUnsaved in Files[i].ElementStates, True) +
+        #9 + 'deltapatch ' + BoolToStr(fsIsDeltaPatch in Files[i].FileStates, True) + #9 + 'records ' + IntToStr(Files[i].RecordCount));
+    try
+      wbProgress('[Test End Session] a progress line after the refused close');
+      TestEndSessionAdd('progress' + #9 + 'returned');
+    except
+      on E: Exception do
+        TestEndSessionAdd('progress' + #9 + E.ClassName + ': ' + E.Message);
+    end;
+    var lSaved := SaveChanged(True);
+    TestEndSessionAdd('save' + #9 + IntToStr(Ord(lSaved)));
+    for var i := Low(Files) to High(Files) do
+      if esUnsaved in Files[i].ElementStates then begin
+        TestEndSessionAdd('stillunsaved' + #9 + Files[i].FileName);
+        xeContext.Settings.DontSave := True;
+      end;
+    for var lName in TDirectory.GetFiles(xeContext.Settings.DataPath) do
+      TestEndSessionAdd('data' + #9 + ExtractFileName(lName));
+  except
+    on E: Exception do begin
+      TestEndSessionAdd('# FAILED: ' + E.ClassName + ': ' + E.Message);
+      xeContext.Settings.DontSave := True;
+    end;
+  end;
+  TestEndSessionAdd('closing' + #9 + 'dontsave ' + BoolToStr(xeContext.Settings.DontSave, True));
+  PostMessage(Handle, WM_CLOSE, 0, 0);
+end;
+
+procedure TxeTestFormHelper.TestEndSessionAnswerTimer(Sender: TObject);
+begin
+  for var i := 0 to Pred(Screen.CustomFormCount) do
+    if (Screen.CustomForms[i] is TfrmFileSelect) and Screen.CustomForms[i].Visible and
+       (fsModal in Screen.CustomForms[i].FormState) and (Screen.CustomForms[i].ModalResult = mrNone) then begin
+      var lAnswers := xeTestSwitches.EndSessionAnswer.Split([',']);
+      var lAnswer := 'cancel (unscripted)';
+      if TestHost.TestEndSessionAnswerIndex < Length(lAnswers) then
+        lAnswer := Trim(lAnswers[TestHost.TestEndSessionAnswerIndex]);
+      Inc(TestHost.TestEndSessionAnswerIndex);
+      var lList := TfrmFileSelect(Screen.CustomForms[i]).CheckListBox1;
+      var lItems := '';
+      for var j := 0 to Pred(lList.Count) do
+        if lList.Checked[j] then
+          lItems := lItems + ' ' + lList.Items[j];
+      TestEndSessionAdd('dialog' + #9 + IntToStr(TestHost.TestEndSessionAnswerIndex) + #9 + Trim(lItems) + #9 + lAnswer);
+      if SameText(lAnswer, 'ok') then
+        Screen.CustomForms[i].ModalResult := mrOk
+      else
+        Screen.CustomForms[i].ModalResult := mrCancel;
+      Exit;
+    end;
+end;
+
+procedure TxeTestFormHelper.TestEndSessionLoad(const aMaster: IwbFile);
+begin
+  var lTarget := xeContext.Settings.DataPath + ChangeFileExt(aMaster.FileName, '') + 'EndSession.esu';
+  if FileExists(lTarget) then
+    raise Exception.Create(lTarget + ' already exists');
+  if not CopyFile(PChar(xeTestSwitches.EndSessionLoad), PChar(lTarget), True) then
+    RaiseLastOSError;
+  TestEndSessionAdd('load' + #9 + ExtractFileName(lTarget) + IfThen(xeTestSwitches.EndSessionLoadTerminated, #9'terminated before it starts', ''));
+  vstNav.PopupMenu := nil;
+  bnMainMenu.Enabled := False;
+  xeContext.LoaderError := False;
+  wbStartTime := Now;
+  if xeTestSwitches.EndSessionLoadTerminated then
+    wbForceTerminate := True;
+  TLoaderThread.Create(lTarget, aMaster, [fsIsDeltaPatch]);
+end;
+
+procedure TxeTestFormHelper.TestEndSessionAdd(const aLine: string);
+begin
+  if TestHost.TestEndSessionWritten then
+    TFile.AppendAllText(xeTestSwitches.EndSessionFile, aLine + sLineBreak, TEncoding.UTF8)
+  else
+    TestHost.TestEndSessionLines.Add(aLine);
+end;
+
+procedure TxeTestFormHelper.TestEndSessionWrite;
+begin
+  if TestHost.TestEndSessionWritten then
+    Exit;
+  TestHost.TestEndSessionLines.Add('# checkResult = ' + IntToStr(CheckResult));
+  TestHost.TestEndSessionLines.SaveToFile(xeTestSwitches.EndSessionFile, TEncoding.UTF8);
+  FreeAndNil(TestHost.TestEndSessionLines);
+  TestHost.TestEndSessionWritten := True;
+end;
+
+procedure TxeTestFormHelper.TestEndSessionLoaderDone;
+begin
+  if xeTestSwitches.EndSession then
+    Inc(TestHost.TestEndSessionLoaderDones);
+end;
+
+procedure TxeTestFormHelper.TestEndSessionStage(const aStage: string);
+begin
+  if not xeTestSwitches.EndSession or not TestHost.TestEndSessionWritten then
+    Exit;
+  TestEndSessionAdd('stage' + #9 + aStage + #9 + 'navtree ' + BoolToStr(Assigned(FindComponent('vstNav')), True) +
+    #9 + 'viewtree ' + BoolToStr(Assigned(FindComponent('vstView')), True) + #9 + 'activerecord ' + BoolToStr(Assigned(ActiveRecord), True) +
+    #9 + 'files ' + IntToStr(Length(Files)) + #9 + 'loaderdones ' + IntToStr(TestHost.TestEndSessionLoaderDones));
 end;
 
 procedure TxeTestFormHelper.DoTestDeltaPatchStart;
 var
   lMaster : IwbFile;
-  lRecord : IwbMainRecord;
-  lTarget : string;
 begin
   xeContext.Settings.DontSave := True;
   EditWarnOk := True;
@@ -3448,6 +4052,8 @@ begin
   TestHost.TestDeltaPatchLines.Add('# ' + xeApplicationTitle);
   TestHost.TestDeltaPatchLines.Add('# master = ' + xeTestSwitches.DeltaPatchMaster + ', newer = ' + xeTestSwitches.DeltaPatchNewer +
     ', name = ' + xeTestSwitches.DeltaPatchName + ', hide = ' + xeTestSwitches.DeltaPatchHide + ', hide record = ' + xeTestSwitches.DeltaPatchHideRecord);
+  if xeTestSwitches.DeltaPatchCompareTo <> '' then
+    TestHost.TestDeltaPatchLines.Add('# compare to = ' + xeTestSwitches.DeltaPatchCompareTo);
   TestHost.TestDeltaPatchLines.Add('# Columns, tab separated: what / when / name / states');
   try
     lMaster := nil;
@@ -3456,26 +4062,37 @@ begin
         lMaster := Files[i];
     if not Assigned(lMaster) then
       raise Exception.Create('no module ' + xeTestSwitches.DeltaPatchMaster);
-    TestDeltaPatchStates('loaded');
-    if xeTestSwitches.DeltaPatchHide <> '' then
-      for var i := Low(Files) to High(Files) do
-        if SameText(Files[i].FileName, xeTestSwitches.DeltaPatchHide) then
-          ConflictView.Hidden.Hide(Files[i]);
-    if xeTestSwitches.DeltaPatchHideRecord <> '' then begin
-      lRecord := lMaster.RecordByFormID[TwbFormID.FromStr(xeTestSwitches.DeltaPatchHideRecord), True, True];
-      if not Assigned(lRecord) then
-        raise Exception.Create('no record ' + xeTestSwitches.DeltaPatchHideRecord + ' in ' + xeTestSwitches.DeltaPatchMaster);
-      ConflictView.Hidden.Hide(lRecord);
+    if xeTestSwitches.DeltaPatchCompareTo <> '' then begin
+      TestHost.TestDeltaPatchComparing := True;
+      DoCompareTo(lMaster, xeTestSwitches.DeltaPatchCompareTo);
+      if xeContext.LoaderDone then begin
+        TestHost.TestDeltaPatchComparing := False;
+        raise Exception.Create('the compare load of ' + xeTestSwitches.DeltaPatchCompareTo + ' did not start');
+      end;
+      Exit;
     end;
-    TestDeltaPatchStates('before');
+    TestDeltaPatchLoad(lMaster);
+  except
+    on E: Exception do begin
+      AddMessage('[Test Delta Patch] FAILED: ' + E.ClassName + ': ' + E.Message);
+      TestHost.TestDeltaPatchLines.Add('# FAILED: ' + E.ClassName + ': ' + E.Message);
+      TestDeltaPatchWrite;
+    end;
+  end;
+end;
 
-    lTarget := xeContext.Settings.DataPath + xeTestSwitches.DeltaPatchName + '.esu';
+procedure TxeTestFormHelper.TestDeltaPatchSecondTimer(Sender: TObject);
+var
+  lTarget : string;
+begin
+  TestHost.TestDeltaPatchTimer.Enabled := False;
+  try
+    lTarget := xeContext.Settings.DataPath + xeTestSwitches.DeltaPatchName + '2.esu';
     if FileExists(lTarget) then
       raise Exception.Create(lTarget + ' already exists');
-    if not CopyFile(PChar(xeTestSwitches.DeltaPatchNewer), PChar(lTarget), True) then
+    if not CopyFile(PChar(xeTestSwitches.DeltaPatchSecond), PChar(lTarget), True) then
       RaiseLastOSError;
-    TestHost.TestDeltaPatchLines.Add('# delta patch file = ' + lTarget);
-
+    TestHost.TestDeltaPatchLines.Add('# second delta patch file = ' + lTarget);
     vstNav.PopupMenu := nil;
     bnMainMenu.Enabled := False;
     xeContext.LoaderDone := False;
@@ -3483,15 +4100,10 @@ begin
     DoSetActiveRecord(nil);
     mniNavFilterRemoveClick(Self);
     wbStartTime := Now;
-    DoSetActiveRecord(nil);
     pgMain.ActivePage := tbsMessages;
-    TLoaderThread.Create(lTarget, lMaster, [fsIsDeltaPatch]);
-    if xeTestSwitches.DeltaPatchCancel then begin
-      TestHost.TestDeltaPatchTimer := TTimer.Create(Self);
-      TestHost.TestDeltaPatchTimer.Interval := 50;
-      TestHost.TestDeltaPatchTimer.OnTimer := TestDeltaPatchCancelTimer;
-      TestHost.TestDeltaPatchTimer.Enabled := True;
-    end;
+    TLoaderThread.Create(lTarget, TestHost.TestDeltaPatchMasterFile, [fsIsDeltaPatch]);
+    if xeTestSwitches.DeltaPatchClose then
+      TestDeltaPatchClose;
   except
     on E: Exception do begin
       AddMessage('[Test Delta Patch] FAILED: ' + E.ClassName + ': ' + E.Message);
@@ -3544,6 +4156,41 @@ var
 begin
   if not Assigned(TestHost.TestDeltaPatchLines) then
     Exit;
+  if TestHost.TestDeltaPatchComparing then begin
+    TestHost.TestDeltaPatchComparing := False;
+    try
+      if xeContext.LoaderError or wbForceTerminate then
+        raise Exception.Create('the compare load failed or was cancelled');
+      var lCopy: IwbFile := nil;
+      for var i := High(Files) downto Low(Files) do
+        if (fsIsCompareLoad in Files[i].FileStates) and not (fsIsDeltaPatch in Files[i].FileStates) and
+           Assigned(Files[i].CompareToFile) and SameText(Files[i].CompareToFile.FileName, xeTestSwitches.DeltaPatchMaster) then begin
+          lCopy := Files[i];
+          Break;
+        end;
+      if not Assigned(lCopy) then
+        raise Exception.Create('no compare copy of ' + xeTestSwitches.DeltaPatchMaster + ' is loaded');
+      TestHost.TestDeltaPatchLines.Add('# the delta patch is loaded against the compare copy ' + lCopy.FileName);
+      TestDeltaPatchLoad(lCopy);
+    except
+      on E: Exception do begin
+        AddMessage('[Test Delta Patch] FAILED: ' + E.ClassName + ': ' + E.Message);
+        TestHost.TestDeltaPatchLines.Add('# FAILED: ' + E.ClassName + ': ' + E.Message);
+        TestDeltaPatchWrite;
+      end;
+    end;
+    Exit;
+  end;
+  if (xeTestSwitches.DeltaPatchSecond <> '') and not TestHost.TestDeltaPatchSecondDone then begin
+    TestHost.TestDeltaPatchSecondDone := True;
+    TestHost.TestDeltaPatchLines.Add('# the first delta patch load failed: ' + BoolToStr(xeContext.LoaderError, True) +
+      '; the second follows');
+    TestHost.TestDeltaPatchTimer := TTimer.Create(Self);
+    TestHost.TestDeltaPatchTimer.Interval := 50;
+    TestHost.TestDeltaPatchTimer.OnTimer := TestDeltaPatchSecondTimer;
+    TestHost.TestDeltaPatchTimer.Enabled := True;
+    Exit;
+  end;
   try
     if xeContext.LoaderError then
       raise Exception.Create('the delta patch load failed');
@@ -3553,6 +4200,8 @@ begin
       if fsIsDeltaPatch in Files[i].FileStates then begin
         lFound := True;
         TestHost.TestDeltaPatchLines.Add('patch' + #9 + Files[i].FileName + #9 + 'records ' + IntToStr(Files[i].RecordCount));
+        if (xeTestSwitches.DeltaPatchCompareTo <> '') and Assigned(Files[i].CompareToFile) then
+          TestHost.TestDeltaPatchLines.Add('patchmaster' + #9 + Files[i].CompareToFile.FileName);
         for var j := 0 to Pred(Files[i].RecordCount) do begin
           lRecord := Files[i].Records[j];
           TestHost.TestDeltaPatchLines.Add('patchrecord' + #9 + string(lRecord.Signature) + #9 + IntToHex(lRecord.LoadOrderFormID.ToCardinal, 8) + #9 +
@@ -3576,6 +4225,15 @@ begin
       end;
     if not lFound then
       raise Exception.Create('no delta patch file is loaded');
+    if xeTestSwitches.DeltaPatchCompareTo <> '' then begin
+      var lPaired := False;
+      for var i := Low(Files) to High(Files) do
+        if (fsIsDeltaPatch in Files[i].FileStates) and Assigned(Files[i].CompareToFile) and
+           Files[i].CompareToFile.Equals(TestHost.TestDeltaPatchMasterFile) then
+          lPaired := True;
+      if not lPaired then
+        raise Exception.Create('no delta patch is loaded against the compare copy');
+    end;
     CheckResult := 0;
   except
     on E: Exception do begin
@@ -5282,8 +5940,21 @@ begin
           TestChangeFormIDViewAdd(lLines)
         else if not Assigned(lMenuItem) then
           TestChangeFormIDLocView(lLines)
-        else
+        else begin
           mniNavChangeFormIDClick(lMenuItem);
+          if xeTestSwitches.ChangeFormIDTwice then begin
+            lLines.Add('returned');
+            vstNav.ClearSelection;
+            for var lSecondRecord in TestHost.TestChangeFormIDRecords do begin
+              var lSecondNode := FindNodeForElement(lSecondRecord);
+              if Assigned(lSecondNode) then
+                vstNav.Selected[lSecondNode] := True;
+            end;
+            lLines.Add('second' + #9 + 'selected ' + IntToStr(vstNav.SelectedCount));
+            if vstNav.SelectedCount > 0 then
+              mniNavChangeFormIDClick(lMenuItem);
+          end;
+        end;
         lLines.Add('returned');
       except
         on E: Exception do
@@ -5690,6 +6361,16 @@ begin
   lResult := mrNone;
   if lForm is TfrmModuleSelect then begin
     lExtra := 'offered: ' + string.Join(' | ', TfrmModuleSelect(lForm).AllModules.ToStrings(False));
+    if xeTestSwitches.ChangeFormIDTwice then begin
+      var lFocused := 'none';
+      var lTree := TfrmModuleSelect(lForm).vstModules;
+      if Assigned(lTree.FocusedNode) then begin
+        var lData := PModuleNodeData(lTree.GetNodeData(lTree.FocusedNode));
+        if Assigned(lData) and Assigned(lData.mndModule) then
+          lFocused := lData.mndModule.miName;
+      end;
+      lExtra := lExtra + '; focused: ' + lFocused;
+    end;
     var lOffered: PwbModuleInfo := nil;
     for var lInfo in TfrmModuleSelect(lForm).AllModules do
       if Assigned(TestHost.TestChangeFormIDTarget) then begin
@@ -6573,6 +7254,8 @@ begin
   if xeTestSwitches.PumpDuringLoad <> '' then
     Result := LoaderStarted and not xeContext.LoaderDone and
       (SameText(xeTestSwitches.PumpDuringLoad, 'any') or xeContext.BuildingRefsParallel)
+  else if xeTestSwitches.PumpBeforeGenerator then
+    Result := tmrGenerator.Enabled and not GeneratorStarted
   else if xeTestSwitches.PumpGenerator then
     Result := GeneratorStarted and not GeneratorDone
   else if xeTestSwitches.PumpModal then
@@ -6622,6 +7305,7 @@ begin
   end;
   TestHost.TestPumpDelivered := False;
   TestHost.TestPumpEnded := False;
+  TestHost.TestPumpStartTick := GetTickCount64;
   TestHost.TestPumpBrowseNode := nil;
   TestHost.TestPumpBrowseCount := 0;
   TestHost.TestPumpClosePosted := False;
@@ -6637,6 +7321,73 @@ begin
   TestHost.TestPumpTimer := TTimer.Create(Self);
   TestHost.TestPumpTimer.Interval := 1;
   TestHost.TestPumpTimer.OnTimer := TestPumpTimerTimer;
+end;
+
+procedure TxeTestFormHelper.TestPumpEndSessionWait(const aMode: string);
+
+  procedure Pump;
+  begin
+    TestPumpNote('pumping 1500 ms, as while other programs answer; generator started ' + BoolToStr(GeneratorStarted, True));
+    var lUntil := GetTickCount64 + 1500;
+    while GetTickCount64 < lUntil do begin
+      Application.ProcessMessages;
+      Sleep(10);
+    end;
+  end;
+
+  function Query(aWnd: HWND; const aName: string): Boolean;
+  begin
+    Result := SendMessage(aWnd, WM_QUERYENDSESSION, 0, LPARAM(ENDSESSION_LOGOFF)) <> 0;
+    TestPumpNote('WM_QUERYENDSESSION to the ' + aName + ' answered ' + BoolToStr(Result, True));
+  end;
+
+  procedure EndSession(aWnd: HWND; const aName: string; aEnding: Boolean);
+  begin
+    TestPumpNote('sending WM_ENDSESSION ' + BoolToStr(aEnding, True) + ' to the ' + aName + '; generator started ' +
+      BoolToStr(GeneratorStarted, True) + ', files ' + IntToStr(Length(Files)));
+    SendMessage(aWnd, WM_ENDSESSION, WPARAM(aEnding), LPARAM(ENDSESSION_LOGOFF));
+  end;
+
+begin
+  if SameText(aMode, 'endsessionappfirst') then begin
+    if not Query(Application.Handle, 'application window') then begin
+      EndSession(Application.Handle, 'application window', False);
+      Exit;
+    end;
+    Pump;
+    var lForm := Query(Handle, 'form');
+    EndSession(Handle, 'form', lForm);
+    EndSession(Application.Handle, 'application window', lForm);
+  end else begin
+    if not Query(Handle, 'form') then begin
+      EndSession(Handle, 'form', False);
+      Exit;
+    end;
+    if SameText(aMode, 'endsessioncancelform') then begin
+      Pump;
+      EndSession(Handle, 'form', False);
+    end else begin
+      var lApplication := Query(Application.Handle, 'application window');
+      Pump;
+      var lEnding := SameText(aMode, 'endsessionwait') and lApplication;
+      EndSession(Handle, 'form', lEnding);
+      EndSession(Application.Handle, 'application window', lEnding);
+    end;
+  end;
+  TestPumpNote('the session end messages are sent');
+end;
+
+procedure TxeTestFormHelper.TestPumpCloseDeferred;
+begin
+  PostMessage(Handle, WM_CLOSE, 0, 0);
+  TestPumpNote('WM_CLOSE posted; pumping 1500 ms through DoProcessMessages, as a nested pump does');
+  var lUntil := GetTickCount64 + 1500;
+  while GetTickCount64 < lUntil do begin
+    DoProcessMessages;
+    Sleep(10);
+  end;
+  TestPumpNote('the nested pump ended; close deferred ' + BoolToStr(CloseDeferred, True) + ', generator started ' +
+    BoolToStr(GeneratorStarted, True));
 end;
 
 procedure TxeTestFormHelper.TestPumpBrowseStep;
@@ -6806,7 +7557,11 @@ begin
     if Assigned(TestHost.TestPumpModalBase) then
       lModalName := TestHost.TestPumpModalBase.ClassName;
     var lDelivery := 'inside a nested pump';
-    if xeTestSwitches.PumpDuringLoad <> '' then
+    if xeTestSwitches.PumpBeforeGenerator then begin
+      while GetTickCount64 < TestHost.TestPumpStartTick + UInt64(xeTestSwitches.PumpBeforeGeneratorHold) do
+        Sleep(10);
+      lDelivery := 'before the generator starts, ' + IntToStr(GetTickCount64 - TestHost.TestPumpStartTick) + ' ms after it was armed';
+    end else if xeTestSwitches.PumpDuringLoad <> '' then
       lDelivery := 'while the loader runs'
     else if xeTestSwitches.PumpModal then
       lDelivery := 'inside a modal loop outside any pump';
@@ -6837,6 +7592,11 @@ begin
     end else if SameText(xeTestSwitches.Pump, 'endsession') then
       TestPumpNote('WM_QUERYENDSESSION answered ' + IntToStr(SendMessage(Handle, WM_QUERYENDSESSION, 0, 0)) +
         '; close deferred ' + BoolToStr(CloseDeferred, True))
+    else if SameText(xeTestSwitches.Pump, 'endsessionwait') or SameText(xeTestSwitches.Pump, 'endsessioncancel') or
+            SameText(xeTestSwitches.Pump, 'endsessioncancelform') or SameText(xeTestSwitches.Pump, 'endsessionappfirst') then
+      TestPumpEndSessionWait(xeTestSwitches.Pump)
+    else if SameText(xeTestSwitches.Pump, 'closedeferred') then
+      TestPumpCloseDeferred
     else if SameText(xeTestSwitches.Pump, 'hotkey') then begin
       if not Assigned(ScriptHotkeys) then
         ScriptHotkeys := TStringList.Create;
@@ -6888,6 +7648,8 @@ begin
 
   if xeTestSwitches.PumpDuringLoad <> '' then
     lWhere := IfThen(TestPumpInside, 'while the loader runs', 'after the loader')
+  else if xeTestSwitches.PumpBeforeGenerator then
+    lWhere := IfThen(TestPumpInside, 'while the generator waits', 'after the generator wait')
   else if xeTestSwitches.PumpModal then
     lWhere := IfThen(TestPumpInside, 'inside the modal loop', 'outside any modal loop')
   else
@@ -6991,6 +7753,10 @@ begin
         '; close deferred ' + BoolToStr(CloseDeferred, True) + '; observing for 2 s')
     else if xeTestSwitches.PumpModal then
       TestPumpNote('the modal loop has ended; close deferred ' + BoolToStr(CloseDeferred, True) + '; observing for 2 s')
+    else if xeTestSwitches.PumpBeforeGenerator then
+      TestPumpNote('the generator no longer waits (started ' + BoolToStr(GeneratorStarted, True) + ', armed ' +
+        BoolToStr(tmrGenerator.Enabled, True) + '); close deferred ' + BoolToStr(CloseDeferred, True) +
+        '; observing for 2 s, dialogs no longer answered')
     else
       TestPumpNote('back in the outermost message loop; close deferred ' + BoolToStr(CloseDeferred, True) + '; observing for 2 s');
   end;
@@ -7079,4 +7845,21 @@ begin
   end;
 end;
 
+var
+  _TestLoaderHoldReleased: THandle;
+
+procedure TxeTestFormHelper.TestLoaderHoldAfterDone;
+begin
+  if xeTestSwitches.LoaderHold then
+    WaitForSingleObject(_TestLoaderHoldReleased, 30000);
+end;
+
+procedure TxeTestFormHelper.TestLoaderHoldRelease;
+begin
+  if xeTestSwitches.LoaderHold then
+    SetEvent(_TestLoaderHoldReleased);
+end;
+
+initialization
+  _TestLoaderHoldReleased := CreateEvent(nil, True, False, nil);
 end.
