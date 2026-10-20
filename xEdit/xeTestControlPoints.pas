@@ -146,6 +146,7 @@ type
     function TestGameLinkLockedHold: Boolean;
     procedure TestGameLinkReleaseLock;
     function TestGameLinkPluggyFile(const aView: string): string;
+    function TestGameLinkPluggyWorld(const aRecord: IwbMainRecord): string;
     procedure TestGameLinkWriteFile(const aFileName, aText: string);
     procedure DoTestFormIDSearch;
     procedure TestFormIDSearchRunTimer(Sender: TObject);
@@ -2910,11 +2911,11 @@ begin
   TestHost.TestGameLinkTarget := nil;
   try
     if xeContext.GameDefObj.GameMode = gmTES4 then begin
-      if (xeTestSwitches.GameLinkMyGames = '') or
-         not SameText(IncludeTrailingPathDelimiter(xeTestSwitches.GameLinkMyGames), IncludeTrailingPathDelimiter(xeContext.Settings.MyGamesTheGamePath)) then
-        raise Exception.Create('Oblivion links through Pluggy''s files under My Games: give -M:<a scratch folder>');
-      if xeTestSwitches.GameLinkLocked <> '' then
-        raise Exception.Create('-testgamelinklocked writes xEditLink.ini, which Oblivion''s link does not read');
+      if (xeTestSwitches.GameLinkMyGames = '') or not xeContext.Settings.MyGamesTheGamePath.EndsWith('\') or
+         not SameText(IncludeTrailingPathDelimiter(xeTestSwitches.GameLinkMyGames), xeContext.Settings.MyGamesTheGamePath) then
+        raise Exception.Create('Oblivion links through Pluggy''s files under My Games: name a scratch folder with -M:<folder>\');
+      if SameText(xeTestSwitches.GameLinkLocked, 'badutf8') then
+        raise Exception.Create('Oblivion''s link decodes its files with the system code page, which cannot fail');
     end else if xeTestSwitches.GameLinkPluggy <> '' then
       raise Exception.Create('-testgamelinkpluggy needs Oblivion');
     var lModule: IwbFile := nil;
@@ -2943,10 +2944,14 @@ begin
       xeContext.Settings.DontSave := False;
       EditWarnOk := True;
     end;
-    TestGameLinkPointAt(TestHost.TestGameLinkTarget);
-    if SameText(xeTestSwitches.GameLinkPluggy, 'missing') then
-      if not System.SysUtils.DeleteFile(TestGameLinkPluggyFile('ViewSpells')) then
+    if xeContext.GameDefObj.GameMode = gmTES4 then begin
+      TestGameLinkWriteFile(TestGameLinkPluggyFile('ViewInventory'), 'ItemID,EnchantmentID'#13#10'00000000,00000000'#13#10);
+      if not SameText(xeTestSwitches.GameLinkPluggy, 'missing') then
+        TestGameLinkWriteFile(TestGameLinkPluggyFile('ViewSpells'), 'SpellID,Name'#13#10'00000000,none'#13#10)
+      else if FileExists(TestGameLinkPluggyFile('ViewSpells')) and not System.SysUtils.DeleteFile(TestGameLinkPluggyFile('ViewSpells')) then
         RaiseLastOSError;
+    end;
+    TestGameLinkPointAt(TestHost.TestGameLinkTarget);
     DoSetActiveRecord(nil);
     pmuMainPopup(Self);
     if not mniMainPluggyLinkReference.Visible then
@@ -2972,15 +2977,10 @@ procedure TxeTestFormHelper.TestGameLinkPointAt(const aRecord: IwbMainRecord);
 begin
   TestHost.TestGameLinkPointed := GetTickCount64;
   try
-    var lID := aRecord.LoadOrderFormID.ToString;
-    if xeContext.GameDefObj.GameMode = gmTES4 then begin
-      if not FileExists(TestGameLinkPluggyFile('ViewInventory')) then begin
-        TestGameLinkWriteFile(TestGameLinkPluggyFile('ViewInventory'), 'ItemID,EnchantmentID'#13#10'00000000,00000000'#13#10);
-        TestGameLinkWriteFile(TestGameLinkPluggyFile('ViewSpells'), 'SpellID,Name'#13#10'00000000,none'#13#10);
-      end;
-      TestGameLinkWriteFile(TestGameLinkPluggyFile('ViewWorld'), 'RefID,BaseID'#13#10 + lID + ',' + lID + #13#10);
-    end else
-      TestGameLinkWriteFile(xeContext.Settings.DataPath + 'xEdit\xEditLink.ini', '[Console]'#13#10'selectedRefID=' + lID + #13#10);
+    if xeContext.GameDefObj.GameMode = gmTES4 then
+      TestGameLinkWriteFile(TestGameLinkPluggyFile('ViewWorld'), TestGameLinkPluggyWorld(aRecord))
+    else
+      TestGameLinkWriteFile(xeContext.Settings.DataPath + 'xEdit\xEditLink.ini', '[Console]'#13#10'selectedRefID=' + aRecord.LoadOrderFormID.ToString + #13#10);
   except
     on E: Exception do
       Inc(TestHost.TestGameLinkPointFailures);
@@ -2990,6 +2990,14 @@ end;
 function TxeTestFormHelper.TestGameLinkPluggyFile(const aView: string): string;
 begin
   Result := xeContext.Settings.MyGamesTheGamePath + 'Pluggy\User Files\Pluggy' + xeContext.GameDefObj.AppName + aView + '.csv';
+end;
+
+function TxeTestFormHelper.TestGameLinkPluggyWorld(const aRecord: IwbMainRecord): string;
+begin
+  Result := 'RefID,BaseID'#13#10;
+  for var i := 1 to 150 do
+    Result := Result + '00000000,00000000'#13#10;
+  Result := Result + aRecord.LoadOrderFormID.ToString + ',' + aRecord.LoadOrderFormID.ToString + #13#10;
 end;
 
 procedure TxeTestFormHelper.TestGameLinkWriteFile(const aFileName, aText: string);
@@ -3132,10 +3140,15 @@ begin
     if lHold then
       lWritten := TestHost.TestGameLinkSecond;
     try
+      var lPath := xeContext.Settings.DataPath + 'xEdit\xEditLink.ini';
       var lBytes := TEncoding.ASCII.GetBytes('[Console]'#13#10'selectedRefID=' + lWritten.LoadOrderFormID.ToString + #13#10);
+      if xeContext.GameDefObj.GameMode = gmTES4 then begin
+        lPath := TestGameLinkPluggyFile('ViewWorld');
+        lBytes := TEncoding.ASCII.GetBytes(TestGameLinkPluggyWorld(lWritten));
+      end;
       if lBadText then begin
         lBytes := [$EF, $BB, $BF, $5B, $C3, $28, $5D, $0D, $0A];
-        var lStream := TFileStream.Create(xeContext.Settings.DataPath + 'xEdit\xEditLink.ini', fmCreate or fmShareDenyWrite);
+        var lStream := TFileStream.Create(lPath, fmCreate or fmShareDenyWrite);
         try
           lStream.WriteBuffer(lBytes[0], Length(lBytes));
         finally
@@ -3143,11 +3156,11 @@ begin
         end;
       end else begin
         if lRange then begin
-          TestHost.TestGameLinkLock := TFileStream.Create(xeContext.Settings.DataPath + 'xEdit\xEditLink.ini', fmOpenReadWrite or fmShareDenyNone);
+          TestHost.TestGameLinkLock := TFileStream.Create(lPath, fmOpenReadWrite or fmShareDenyNone);
           if not LockFile(TestHost.TestGameLinkLock.Handle, 0, 0, $10000, 0) then
             RaiseLastOSError;
         end else
-          TestHost.TestGameLinkLock := TFileStream.Create(xeContext.Settings.DataPath + 'xEdit\xEditLink.ini', fmOpenReadWrite or fmShareExclusive);
+          TestHost.TestGameLinkLock := TFileStream.Create(lPath, fmOpenReadWrite or fmShareExclusive);
         TestHost.TestGameLinkLock.Size := 0;
         TestHost.TestGameLinkLock.WriteBuffer(lBytes[0], Length(lBytes));
         FlushFileBuffers(TestHost.TestGameLinkLock.Handle);
@@ -3173,7 +3186,7 @@ begin
     Exit;
   end;
   if SameText(xeTestSwitches.GameLinkPluggy, 'stay') then begin
-    JumpTo(TestHost.TestGameLinkSecond, False);
+    JumpTo(TestHost.TestGameLinkSecond.WinningOverride, False);
     TestGameLinkWriteFile(TestGameLinkPluggyFile('ViewSpells'), 'SpellID,Name'#13#10'00000000,none'#13#10);
     TestHost.TestGameLinkBody := TestHost.TestGameLinkBody + #13#10'stay' + #9 +
       'the editor moved to the second record, then the spells file rewritten unchanged';
