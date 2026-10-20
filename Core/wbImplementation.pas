@@ -3875,7 +3875,8 @@ var
               lMasterContainer := aMaster;
             lUnsorted := not (ContextObj.Settings.SortSubRecords and lProbeDef.Sorted[lMasterContainer] and
               not ContextObj.Settings.CompareRawData);
-          end;
+          end else if Supports(lProbe, IwbSortableContainer, lSortable) then
+            lUnsorted := not lSortable.Sorted;
         end;
         if lUnsorted then begin
             lEditorID := aMaster.EditorID;
