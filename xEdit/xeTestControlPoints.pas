@@ -7252,6 +7252,8 @@ begin
   if xeTestSwitches.PumpDuringLoad <> '' then
     Result := LoaderStarted and not xeContext.LoaderDone and
       (SameText(xeTestSwitches.PumpDuringLoad, 'any') or xeContext.BuildingRefsParallel)
+  else if xeTestSwitches.PumpBeforeGenerator then
+    Result := tmrGenerator.Enabled and not GeneratorStarted
   else if xeTestSwitches.PumpGenerator then
     Result := GeneratorStarted and not GeneratorDone
   else if xeTestSwitches.PumpModal then
@@ -7301,6 +7303,7 @@ begin
   end;
   TestHost.TestPumpDelivered := False;
   TestHost.TestPumpEnded := False;
+  TestHost.TestPumpStartTick := GetTickCount64;
   TestHost.TestPumpBrowseNode := nil;
   TestHost.TestPumpBrowseCount := 0;
   TestHost.TestPumpClosePosted := False;
@@ -7485,7 +7488,11 @@ begin
     if Assigned(TestHost.TestPumpModalBase) then
       lModalName := TestHost.TestPumpModalBase.ClassName;
     var lDelivery := 'inside a nested pump';
-    if xeTestSwitches.PumpDuringLoad <> '' then
+    if xeTestSwitches.PumpBeforeGenerator then begin
+      while GetTickCount64 < TestHost.TestPumpStartTick + UInt64(xeTestSwitches.PumpBeforeGeneratorHold) do
+        Sleep(10);
+      lDelivery := 'before the generator starts, ' + IntToStr(GetTickCount64 - TestHost.TestPumpStartTick) + ' ms after it was armed';
+    end else if xeTestSwitches.PumpDuringLoad <> '' then
       lDelivery := 'while the loader runs'
     else if xeTestSwitches.PumpModal then
       lDelivery := 'inside a modal loop outside any pump';

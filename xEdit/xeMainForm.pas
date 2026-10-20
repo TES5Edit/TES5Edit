@@ -15768,6 +15768,10 @@ end;
 
 procedure TfrmMain.tmrGeneratorTimer(Sender: TObject);
 begin
+{$IFDEF XE_TEST_CONTROL_POINTS}
+  if xeTestSwitches.Pump <> '' then
+    TestPumpNote('generator tick: closed down ' + BoolToStr(ClosedDown, True) + ', generator started ' + BoolToStr(GeneratorStarted, True));
+{$ENDIF}
   tmrGenerator.Enabled := False;
   if GeneratorStarted then
     Exit;

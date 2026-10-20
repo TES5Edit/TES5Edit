@@ -141,6 +141,7 @@ type
     TestPumpDelivered        : Boolean;
     TestPumpEnded            : Boolean;
     TestPumpEndTick          : UInt64;
+    TestPumpStartTick        : UInt64;
     TestPumpLastDialog       : HWND;
     TestPumpSeen             : string;
     TestPumpCtrlDown         : Boolean;
@@ -334,6 +335,8 @@ type
     PumpDirect            : Boolean;
     PumpModal             : Boolean;
     PumpDuringLoad        : string;
+    PumpBeforeGenerator   : Boolean;
+    PumpBeforeGeneratorHold : Integer;
     PumpHotkey            : string;
     PumpSearch            : string;
     SaveContexts          : Boolean;
@@ -362,6 +365,8 @@ uses
   xeInit;
 
 function TxeTestSwitches.ParsePump: Boolean;
+var
+  s: string;
 begin
   Result := True;
   if wbFindCmdLineParam('testpump', Pump) then begin
@@ -373,9 +378,14 @@ begin
     PumpDirect := FindCmdLineSwitch('testpumpdirect');
     PumpModal := FindCmdLineSwitch('testpumpmodal');
     wbFindCmdLineParam('testpumpduringload', PumpDuringLoad);
+    PumpBeforeGenerator := wbFindCmdLineParam('testpumpbeforegenerator', s);
+    if PumpBeforeGenerator then
+      PumpBeforeGeneratorHold := StrToIntDef(s, -1);
     wbFindCmdLineParam('testpumphotkey', PumpHotkey);
     wbFindCmdLineParam('testpumpsearch', PumpSearch);
     if (PumpFile = '') or
+       (PumpBeforeGenerator and ((PumpBeforeGeneratorHold < 0) or not (xeToolMode in [tmLODgen, tmScript]) or
+         (PumpDuringLoad <> '') or PumpGenerator or PumpModal)) or
        not ((PumpAnswer = '') or SameText(PumpAnswer, 'yes') or SameText(PumpAnswer, 'no')) or
        not (SameText(Pump, 'close') or SameText(Pump, 'ctrlo') or SameText(Pump, 'xback') or
             SameText(Pump, 'pendingset') or SameText(Pump, 'tab') or SameText(Pump, 'cancelctrlo') or
@@ -392,9 +402,11 @@ begin
       ShowMessage('testpump requires -testpump:<close|ctrlo|xback|pendingset|tab|cancelctrlo|cancelshortcut|endsession|browse|browseclose|edidwalk|initwalk|hotkey|edidsearch> ' +
         '-testpumpfile:<filename> [-testpumpaction:<text in the current action or caption>] [-testpumpclient:<enabled|disabled>] ' +
         '[-testpumpanswer:<yes|no>] [-testpumpgenerator] [-testpumpdirect] [-testpumpmodal] [-testpumpduringload:<any|refs>] ' +
+        '[-testpumpbeforegenerator:<ms>] ' +
         '[-testpumphotkey:<script file>] [-testpumpsearch:<EditorID>]; browse, browseclose, edidwalk and initwalk only with -testpumpduringload, hotkey only with ' +
         '-testpumphotkey, edidsearch only with -testpumpsearch, ' +
-        'xback and pendingset not with -testpumpduringload');
+        'xback and pendingset not with -testpumpduringload, beforegenerator (the arrival held <ms> after the generator is armed) ' +
+        'only in script or LODgen mode and not with -testpumpduringload, -testpumpgenerator or -testpumpmodal');
       Exit(False);
     end;
     if xeToolMode = tmLODgen then
