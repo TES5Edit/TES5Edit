@@ -3796,14 +3796,13 @@ var
           Result.Sorted := True;
           Result.Duplicates := dupIgnore;
         end;
-        if not Supports(aEntries, IwbContainerElementRef, lList) then
-          Exit;
-        for var i := 0 to Pred(lList.ElementCount) do
-          if Supports(lList.Elements[i], IwbContainerElementRef, lEntry) then begin
-            SetLength(lKeepAlive, Succ(Length(lKeepAlive)));
-            lKeepAlive[High(lKeepAlive)] := lEntry;
-            Result.AddObject(lEntry.DisplaySortKey[True], Pointer(lEntry));
-          end;
+        if Supports(aEntries, IwbContainerElementRef, lList) then
+          for var i := 0 to Pred(lList.ElementCount) do
+            if Supports(lList.Elements[i], IwbContainerElementRef, lEntry) then begin
+              SetLength(lKeepAlive, Succ(Length(lKeepAlive)));
+              lKeepAlive[High(lKeepAlive)] := lEntry;
+              Result.AddObject(lEntry.DisplaySortKey[True], Pointer(lEntry));
+            end;
         if not aRow.AsSet then begin
           Result.Sort;
           lLast := '';
