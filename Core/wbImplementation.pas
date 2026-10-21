@@ -3824,7 +3824,7 @@ var
 
   function BaseKey(const aKey: string): string;
   begin
-    Result := Copy(aKey, 1, Length(aKey) - 5);
+    Result := Copy(aKey, 1, Pred(LastDelimiter(#1, aKey)));
   end;
 
   function ContentKey(const aElement: IwbElement): string;
@@ -3879,7 +3879,7 @@ var
 
   function KeyNumber(const aKey: string): Integer;
   begin
-    Result := StrToInt('$' + Copy(aKey, Length(aKey) - 3, 4));
+    Result := StrToInt('$' + Copy(aKey, Succ(LastDelimiter(#1, aKey)), MaxInt));
   end;
 
   function AlignList(aLeftList, aRightList: TStringList; aBaseList: TStringList = nil; aTargetList: TStringList = nil;
@@ -3989,7 +3989,7 @@ var
               lAddedTaken[lFree] := True;
               lKeys[j - lRight] := aTargetList[lAdded[lFree]];
             end else begin
-              lKeys[j - lRight] := lBase + '#' + IntToHex64(lNext, 4);
+              lKeys[j - lRight] := lBase + #1 + IntToHex64(lNext, 4);
               Inc(lNext);
             end;
           end;
@@ -4063,13 +4063,13 @@ var
           lCount := 0;
           for var i := 0 to Pred(Result.Count) do begin
             lKey := Copy(Result[i], 1, Pred(Pos(#0, Result[i])));
-            if lKey = lLast then
+            if SameText(lKey, lLast) then
               Inc(lCount)
             else begin
               lCount := 0;
               lLast := lKey;
             end;
-            Result[i] := lKey + '#' + IntToHex64(lCount, 4);
+            Result[i] := lKey + #1 + IntToHex64(lCount, 4);
           end;
           Result.Sorted := True;
         end;
