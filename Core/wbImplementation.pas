@@ -3703,6 +3703,11 @@ var
       aReport(aMessage);
   end;
 
+  function IsCompareCopy(const aRecord: IwbMainRecord): Boolean;
+  begin
+    Result := [fsIsCompareLoad, fsIsDeltaPatch] * aRecord._File.FileStates = [fsIsCompareLoad];
+  end;
+
   procedure UpdateOrderedTargetList(aLeftList, aRightList, aTargetList: TStringList);
   var
     lAdded : TDictionary<string, Integer>;
@@ -4148,7 +4153,7 @@ var
     begin
       for var i := Pred(aMaster.OverrideCount) downto 0 do begin
         Result := aMaster.Overrides[i];
-        if not (fsIsCompareLoad in Result._File.FileStates) and not Result.IsPartialForm then
+        if not IsCompareCopy(Result) and not Result.IsPartialForm then
           Exit;
       end;
       Result := aMaster;
@@ -4209,7 +4214,7 @@ var
           end;
           for j := 0 to Pred(aMaster.OverrideCount) do begin
             lOverride := aMaster.Overrides[j];
-            if fsIsCompareLoad in lOverride._File.FileStates then
+            if IsCompareCopy(lOverride) then
               Continue;
             lCurrentList := BuildList(ListOf(lOverride));
             try
@@ -4365,6 +4370,15 @@ var
   var
     lMainRecord : IwbMainRecord;
     lMaster     : IwbMainRecord;
+
+    function MergedOverrideCount: Integer;
+    begin
+      Result := 0;
+      for var k := 0 to Pred(lMaster.OverrideCount) do
+        if not IsCompareCopy(lMaster.Overrides[k]) then
+          Inc(Result);
+    end;
+
   begin
     if not Assigned(aGroup) then
       Exit;
@@ -4375,7 +4389,7 @@ var
         if lMet.Contains(lMaster) then
           Continue;
         lMet.Add(lMaster);
-        if lMaster.OverrideCount < 2 then
+        if MergedOverrideCount < 2 then
           Continue;
         MergeMaster(lMaster, aRow);
       except
