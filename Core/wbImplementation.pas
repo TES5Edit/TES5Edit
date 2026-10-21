@@ -3708,6 +3708,27 @@ var
       aTargetList.AddObject(aRightList[i], aRightList.Objects[i]);
   end;
 
+  function SameEntry(const aLeft, aRight: IwbElement): Boolean;
+  var
+    lLeft, lRight : IwbContainerElementRef;
+  begin
+    if (aLeft.ConflictPriority = cpIgnore) or (aRight.ConflictPriority = cpIgnore) then
+      Exit(True);
+    if Supports(aLeft, IwbContainerElementRef, lLeft) and Supports(aRight, IwbContainerElementRef, lRight) and
+       ((lLeft.ElementCount > 0) or (lRight.ElementCount > 0)) then begin
+      Result := lLeft.ElementCount = lRight.ElementCount;
+      for var i := 0 to Pred(lLeft.ElementCount) do
+        if Result then
+          Result := SameEntry(lLeft.Elements[i], lRight.Elements[i]);
+    end else
+      Result := SameStr(aLeft.DisplaySortKey[True], aRight.DisplaySortKey[True]);
+  end;
+
+  function SameObject(aLeftList, aRightList: TStringList; aLeft, aRight: Integer): Boolean;
+  begin
+    Result := SameEntry(IwbElement(Pointer(aLeftList.Objects[aLeft])), IwbElement(Pointer(aRightList.Objects[aRight])));
+  end;
+
   procedure UpdateTargetList(aLeftList, aRightList, aTargetList: TStringList);
   var
     lLeft, lRight : Integer;
@@ -3724,7 +3745,7 @@ var
           Inc(lLeft);
         end;
         0: begin
-          if aTargetList.Find(aLeftList[lLeft], lIndex) then
+          if aTargetList.Find(aLeftList[lLeft], lIndex) and not SameObject(aLeftList, aRightList, lLeft, lRight) then
             aTargetList.Objects[lIndex] := aRightList.Objects[lRight];
           Inc(lLeft);
           Inc(lRight);
@@ -3758,7 +3779,7 @@ var
 
     if Result then
       for var i := 0 to Pred(aLeft.Count) do
-        if not SameText(aLeft[i], aRight[i]) then
+        if not SameText(aLeft[i], aRight[i]) or not SameObject(aLeft, aRight, i, i) then
           Exit(False);
   end;
 
