@@ -6524,6 +6524,9 @@ begin
     lItems := 'Container Items\Items';
     lPerks := 'Perks\Perks';
   end;
+  var lNpcItems := lItems;
+  if aGameMode = gmFO76 then
+    lNpcItems := 'Inventory\Items';
   Add('LVLI', ['Leveled List Entries'], ['LLCT']);
   Add('LVLC', ['Leveled List Entries'], ['LLCT']);
   Add('LVLN', ['Leveled List Entries'], ['LLCT']);
@@ -6538,7 +6541,7 @@ begin
     Add('DIAL', ['Added Quests'], []);
   // exclude Head Parts for Skyrim, causes issues
   if aGameMode >= gmTES5 then
-    Add('NPC_', [lItems, 'Factions', 'Actor Effects', lPerks], ['COCT', '', 'SPCT', 'PRKZ'])
+    Add('NPC_', [lNpcItems, 'Factions', 'Actor Effects', lPerks], ['COCT', '', 'SPCT', 'PRKZ'])
   else
     Add('NPC_', ['Items', 'Factions', 'Head Parts', 'Actor Effects'], []);
   Result := lLists;
