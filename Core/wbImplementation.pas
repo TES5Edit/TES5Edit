@@ -3883,7 +3883,7 @@ var
   end;
 
   function AlignList(aLeftList, aRightList: TStringList; aBaseList: TStringList = nil; aTargetList: TStringList = nil;
-    aNext: TDictionary<string, Integer> = nil; const aSpaces: TArray<TStringList> = nil): TStringList;
+    aNext: TDictionary<string, Integer> = nil): TStringList;
   var
     lLeft, lLeftEnd   : Integer;
     lRight, lRightEnd : Integer;
@@ -3894,9 +3894,7 @@ var
     lKeys             : TArray<string>;
     lTaken            : TArray<Boolean>;
     lAdded            : TArray<Integer>;
-    lSpaceAt          : TArray<Integer>;
-    lKnownList        : TArray<TStringList>;
-    lKnownIndex       : TArray<Integer>;
+    lAddedTaken       : TArray<Boolean>;
 
     procedure SkipTo(aList: TStringList; var aIndex: Integer);
     begin
@@ -3915,22 +3913,6 @@ var
         lNext := Succ(KeyNumber(aKey));
     end;
 
-    function Taken(const aKey: string): Boolean;
-    begin
-      for var i := 0 to High(lKeys) do
-        if SameText(lKeys[i], aKey) then
-          Exit(True);
-      Result := False;
-    end;
-
-    procedure Know(aList: TStringList; aIndex: Integer);
-    begin
-      if not aLeftList.Find(aList[aIndex], lIndex) then begin
-        lKnownList := lKnownList + [aList];
-        lKnownIndex := lKnownIndex + [aIndex];
-      end;
-    end;
-
   begin
     Result := TStringList.Create;
     try
@@ -3939,7 +3921,6 @@ var
       lRight := 0;
       lBaseAt := 0;
       lTarget := 0;
-      SetLength(lSpaceAt, Length(aSpaces));
       while lRight < aRightList.Count do begin
         lBase := BaseKey(aRightList[lRight]);
         lRightEnd := lRight;
@@ -3974,23 +3955,12 @@ var
             end;
           end;
         lAdded := nil;
-        lKnownList := nil;
-        lKnownIndex := nil;
         if Assigned(aTargetList) then begin
           SkipTo(aBaseList, lBaseAt);
           while InGroup(aBaseList, lBaseAt) do begin
             Note(aBaseList[lBaseAt]);
-            Know(aBaseList, lBaseAt);
             Inc(lBaseAt);
           end;
-          for var s := 0 to High(aSpaces) do
-            if Assigned(aSpaces[s]) and (aSpaces[s] <> aBaseList) and (aSpaces[s] <> aLeftList) then begin
-              SkipTo(aSpaces[s], lSpaceAt[s]);
-              while InGroup(aSpaces[s], lSpaceAt[s]) do begin
-                Know(aSpaces[s], lSpaceAt[s]);
-                Inc(lSpaceAt[s]);
-              end;
-            end;
           SkipTo(aTargetList, lTarget);
           while InGroup(aTargetList, lTarget) do begin
             if not aLeftList.Find(aTargetList[lTarget], lIndex) and not aBaseList.Find(aTargetList[lTarget], lIndex) then
@@ -4000,21 +3970,25 @@ var
         end;
         if Assigned(aNext) and aNext.TryGetValue(UpperCase(lBase), lFree) and (lFree > lNext) then
           lNext := lFree;
+        lAddedTaken := nil;
+        SetLength(lAddedTaken, Length(lAdded));
         for var j := lRight to Pred(lRightEnd) do
           if lKeys[j - lRight] = '' then
-            for var k := 0 to High(lKnownList) do
-              if not Taken(lKnownList[k][lKnownIndex[k]]) and SameObject(lKnownList[k], aRightList, lKnownIndex[k], j) then begin
-                lKeys[j - lRight] := lKnownList[k][lKnownIndex[k]];
+            for var k := 0 to High(lAdded) do
+              if not lAddedTaken[k] and SameObject(aTargetList, aRightList, lAdded[k], j) then begin
+                lAddedTaken[k] := True;
+                lKeys[j - lRight] := aTargetList[lAdded[k]];
                 Break;
               end;
         lFree := 0;
         for var j := lRight to Pred(lRightEnd) do
           if lKeys[j - lRight] = '' then begin
-            while (lFree < Length(lAdded)) and Taken(aTargetList[lAdded[lFree]]) do
+            while (lFree < Length(lAdded)) and lAddedTaken[lFree] do
               Inc(lFree);
-            if lFree < Length(lAdded) then
-              lKeys[j - lRight] := aTargetList[lAdded[lFree]]
-            else begin
+            if lFree < Length(lAdded) then begin
+              lAddedTaken[lFree] := True;
+              lKeys[j - lRight] := aTargetList[lAdded[lFree]];
+            end else begin
               lKeys[j - lRight] := lBase + #1 + IntToHex64(lNext, 4);
               Inc(lNext);
             end;
@@ -4220,7 +4194,7 @@ var
                     lMasterList := BuildList(ListOf(lCurrentMaster));
                     lMasterSpace := lMasterList;
                   end;
-                  lSpaces[Succ(j)] := AlignList(lMasterSpace, lCurrentList, lSpaces[0], lTargetLists[l], lNext, lSpaces);
+                  lSpaces[Succ(j)] := AlignList(lMasterSpace, lCurrentList, lSpaces[0], lTargetLists[l], lNext);
                   UpdateTargetList(lMasterSpace, lSpaces[Succ(j)], lTargetLists[l]);
                 end;
               finally
