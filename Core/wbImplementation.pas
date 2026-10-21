@@ -3849,33 +3849,60 @@ var
     end;
   end;
 
-  function AlignList(aLeftList, aRightList: TStringList): TStringList;
+  function KeyNumber(const aKey: string): Integer;
+  begin
+    Result := StrToInt('$' + Copy(aKey, Length(aKey) - 3, 4));
+  end;
+
+  function AlignList(aLeftList, aRightList: TStringList; aBaseList: TStringList = nil; aTargetList: TStringList = nil;
+    aNext: TDictionary<string, Integer> = nil): TStringList;
   var
     lLeft, lLeftEnd   : Integer;
     lRight, lRightEnd : Integer;
+    lBaseAt, lTarget  : Integer;
     lFree, lNext      : Integer;
+    lIndex            : Integer;
     lBase             : string;
     lKeys             : TArray<string>;
     lTaken            : TArray<Boolean>;
+    lAdded            : TArray<Integer>;
+    lAddedTaken       : TArray<Boolean>;
+
+    procedure SkipTo(aList: TStringList; var aIndex: Integer);
+    begin
+      while (aIndex < aList.Count) and (CompareText(BaseKey(aList[aIndex]), lBase) < 0) do
+        Inc(aIndex);
+    end;
+
+    function InGroup(aList: TStringList; aIndex: Integer): Boolean;
+    begin
+      Result := (aIndex < aList.Count) and SameText(BaseKey(aList[aIndex]), lBase);
+    end;
+
+    procedure Note(const aKey: string);
+    begin
+      if KeyNumber(aKey) >= lNext then
+        lNext := Succ(KeyNumber(aKey));
+    end;
+
   begin
     Result := TStringList.Create;
     try
       Result.UseLocale := False;
       lLeft := 0;
       lRight := 0;
+      lBaseAt := 0;
+      lTarget := 0;
       while lRight < aRightList.Count do begin
         lBase := BaseKey(aRightList[lRight]);
         lRightEnd := lRight;
-        while (lRightEnd < aRightList.Count) and SameText(BaseKey(aRightList[lRightEnd]), lBase) do
+        while InGroup(aRightList, lRightEnd) do
           Inc(lRightEnd);
-        while (lLeft < aLeftList.Count) and (CompareText(BaseKey(aLeftList[lLeft]), lBase) < 0) do
-          Inc(lLeft);
+        SkipTo(aLeftList, lLeft);
         lLeftEnd := lLeft;
         lNext := 0;
-        while (lLeftEnd < aLeftList.Count) and SameText(BaseKey(aLeftList[lLeftEnd]), lBase) do begin
-          lFree := StrToInt('$' + Copy(aLeftList[lLeftEnd], Length(aLeftList[lLeftEnd]) - 3, 4));
-          if lFree >= lNext then
-            lNext := Succ(lFree);
+        while InGroup(aLeftList, lLeftEnd) do begin
+          Note(aLeftList[lLeftEnd]);
           Inc(lLeftEnd);
         end;
         lKeys := nil;
@@ -3897,11 +3924,49 @@ var
             if lFree < lLeftEnd then begin
               lTaken[lFree - lLeft] := True;
               lKeys[j - lRight] := aLeftList[lFree];
+            end;
+          end;
+        lAdded := nil;
+        if Assigned(aTargetList) then begin
+          SkipTo(aBaseList, lBaseAt);
+          while InGroup(aBaseList, lBaseAt) do begin
+            Note(aBaseList[lBaseAt]);
+            Inc(lBaseAt);
+          end;
+          SkipTo(aTargetList, lTarget);
+          while InGroup(aTargetList, lTarget) do begin
+            if not aLeftList.Find(aTargetList[lTarget], lIndex) and not aBaseList.Find(aTargetList[lTarget], lIndex) then
+              lAdded := lAdded + [lTarget];
+            Inc(lTarget);
+          end;
+        end;
+        if Assigned(aNext) and aNext.TryGetValue(UpperCase(lBase), lFree) and (lFree > lNext) then
+          lNext := lFree;
+        lAddedTaken := nil;
+        SetLength(lAddedTaken, Length(lAdded));
+        for var j := lRight to Pred(lRightEnd) do
+          if lKeys[j - lRight] = '' then
+            for var k := 0 to High(lAdded) do
+              if not lAddedTaken[k] and SameObject(aTargetList, aRightList, lAdded[k], j) then begin
+                lAddedTaken[k] := True;
+                lKeys[j - lRight] := aTargetList[lAdded[k]];
+                Break;
+              end;
+        lFree := 0;
+        for var j := lRight to Pred(lRightEnd) do
+          if lKeys[j - lRight] = '' then begin
+            while (lFree < Length(lAdded)) and lAddedTaken[lFree] do
+              Inc(lFree);
+            if lFree < Length(lAdded) then begin
+              lAddedTaken[lFree] := True;
+              lKeys[j - lRight] := aTargetList[lAdded[lFree]];
             end else begin
               lKeys[j - lRight] := lBase + '#' + IntToHex64(lNext, 4);
               Inc(lNext);
             end;
           end;
+        if Assigned(aNext) then
+          aNext.AddOrSetValue(UpperCase(lBase), lNext);
         for var j := lRight to Pred(lRightEnd) do
           Result.AddObject(lKeys[j - lRight], aRightList.Objects[j]);
         lRight := lRightEnd;
@@ -3926,6 +3991,9 @@ var
     lCurrentMaster : IwbMainRecord;
     lCurrentList   : TStringList;
     lMasterList    : TStringList;
+    lMasterSpace   : TStringList;
+    lSpaces        : TArray<TStringList>;
+    lNext          : TDictionary<string, Integer>;
     lMasters       : TDynMainRecords;
     lSortable      : IwbSortableContainer;
     lEditorID      : string;
@@ -4052,44 +4120,69 @@ var
           end;
 
         lTargetLists[l] := BuildList(ListOf(aMaster));
-        for j := 0 to Pred(aMaster.OverrideCount) do begin
-          lOverride := aMaster.Overrides[j];
-          lCurrentList := BuildList(ListOf(lOverride));
-          try
-            lMasters := lOverride.MasterRecordsFromMasterFilesAndSelf;
-            lCurrentMaster := nil;
-            for k := High(lMasters) downto Low(lMasters) do
-              if not lOverride.Equals(lMasters[k]) then begin
-                lCurrentMaster := lMasters[k];
-                Break;
-              end;
-            if not Assigned(lCurrentMaster) then
-              Continue;
-            lMasterList := BuildList(ListOf(lCurrentMaster));
+        lSpaces := nil;
+        lNext := nil;
+        try
+          if not aRow.AsSet and not lIsOrderedList then begin
+            SetLength(lSpaces, Succ(aMaster.OverrideCount));
+            lSpaces[0] := BuildList(ListOf(aMaster));
+            lNext := TDictionary<string, Integer>.Create;
+          end;
+          for j := 0 to Pred(aMaster.OverrideCount) do begin
+            lOverride := aMaster.Overrides[j];
+            lCurrentList := BuildList(ListOf(lOverride));
             try
-              if lIsOrderedList then begin
-                if not ListsEqual(lMasterList, lCurrentList, True) then
-                  lIsFaulty := True
-                else
-                  UpdateOrderedTargetList(lMasterList, lCurrentList, lTargetLists[l]);
-              end else if aRow.AsSet then
-                UpdateTargetList(lMasterList, lCurrentList, lTargetLists[l])
-              else begin
-                var lAligned := AlignList(lMasterList, lCurrentList);
-                try
-                  UpdateTargetList(lMasterList, lAligned, lTargetLists[l]);
-                finally
-                  lAligned.Free;
+              lMasters := lOverride.MasterRecordsFromMasterFilesAndSelf;
+              lCurrentMaster := nil;
+              for k := High(lMasters) downto Low(lMasters) do
+                if not lOverride.Equals(lMasters[k]) then begin
+                  lCurrentMaster := lMasters[k];
+                  Break;
                 end;
+              if not Assigned(lCurrentMaster) then
+                Continue;
+              lMasterList := nil;
+              try
+                if lIsOrderedList then begin
+                  lMasterList := BuildList(ListOf(lCurrentMaster));
+                  if not ListsEqual(lMasterList, lCurrentList, True) then
+                    lIsFaulty := True
+                  else
+                    UpdateOrderedTargetList(lMasterList, lCurrentList, lTargetLists[l]);
+                end else if aRow.AsSet then begin
+                  lMasterList := BuildList(ListOf(lCurrentMaster));
+                  UpdateTargetList(lMasterList, lCurrentList, lTargetLists[l]);
+                end else begin
+                  lMasterSpace := nil;
+                  if lCurrentMaster.Equals(aMaster) then
+                    lMasterSpace := lSpaces[0]
+                  else
+                    for k := Pred(j) downto 0 do
+                      if lCurrentMaster.Equals(aMaster.Overrides[k]) then begin
+                        lMasterSpace := lSpaces[Succ(k)];
+                        Break;
+                      end;
+                  if not Assigned(lMasterSpace) then begin
+                    lMasterList := BuildList(ListOf(lCurrentMaster));
+                    lMasterSpace := lMasterList;
+                  end;
+                  lSpaces[Succ(j)] := AlignList(lMasterSpace, lCurrentList, lSpaces[0], lTargetLists[l], lNext);
+                  UpdateTargetList(lMasterSpace, lSpaces[Succ(j)], lTargetLists[l]);
+                end;
+              finally
+                lMasterList.Free;
               end;
             finally
-              lMasterList.Free;
+              lCurrentList.Free;
             end;
-          finally
-            lCurrentList.Free;
+            if lIsFaulty then
+              Break;
           end;
-          if lIsFaulty then
-            Break;
+        finally
+          for var lSpace in lSpaces do
+            lSpace.Free;
+          lSpaces := nil;
+          lNext.Free;
         end;
         if lIsFaulty then
           Break;
