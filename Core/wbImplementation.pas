@@ -3787,7 +3787,9 @@ var
         end;
         1..High(Integer): begin
           if not aTargetList.Find(aRightList[lRight], lIndex) then
-            aTargetList.AddObject(aRightList[lRight], aRightList.Objects[lRight]);
+            aTargetList.AddObject(aRightList[lRight], aRightList.Objects[lRight])
+          else if not SameObject(aTargetList, aRightList, lIndex, lRight) then
+            aTargetList.Objects[lIndex] := aRightList.Objects[lRight];
           Inc(lRight);
         end;
       end;
@@ -3800,7 +3802,9 @@ var
 
     while (lRight < aRightList.Count) do begin
       if not aTargetList.Find(aRightList[lRight], lIndex) then
-        aTargetList.AddObject(aRightList[lRight], aRightList.Objects[lRight]);
+        aTargetList.AddObject(aRightList[lRight], aRightList.Objects[lRight])
+      else if not SameObject(aTargetList, aRightList, lIndex, lRight) then
+        aTargetList.Objects[lIndex] := aRightList.Objects[lRight];
       Inc(lRight);
     end;
   end;
