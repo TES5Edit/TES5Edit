@@ -3777,8 +3777,11 @@ var
           Inc(lLeft);
         end;
         0: begin
-          if aTargetList.Find(aLeftList[lLeft], lIndex) and not SameObject(aLeftList, aRightList, lLeft, lRight) then
-            aTargetList.Objects[lIndex] := aRightList.Objects[lRight];
+          if not SameObject(aLeftList, aRightList, lLeft, lRight) then
+            if aTargetList.Find(aLeftList[lLeft], lIndex) then
+              aTargetList.Objects[lIndex] := aRightList.Objects[lRight]
+            else
+              aTargetList.AddObject(aRightList[lRight], aRightList.Objects[lRight]);
           Inc(lLeft);
           Inc(lRight);
         end;
