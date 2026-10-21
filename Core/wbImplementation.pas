@@ -4214,7 +4214,7 @@ var
           end;
           for j := 0 to Pred(aMaster.OverrideCount) do begin
             lOverride := aMaster.Overrides[j];
-            if IsCompareCopy(lOverride) then
+            if IsCompareCopy(lOverride) and (aRow.AsSet or lIsOrderedList) then
               Continue;
             lCurrentList := BuildList(ListOf(lOverride));
             try
@@ -4253,8 +4253,10 @@ var
                     lMasterSpace := lMasterList;
                   end;
                   lSpaces[Succ(j)] := AlignList(lMasterSpace, lCurrentList, lTargetLists[l], lKnown);
-                  UpdateTargetList(lMasterSpace, lSpaces[Succ(j)], lTargetLists[l]);
-                  Remember(lKnown, lTargetLists[l]);
+                  if not IsCompareCopy(lOverride) then begin
+                    UpdateTargetList(lMasterSpace, lSpaces[Succ(j)], lTargetLists[l]);
+                    Remember(lKnown, lTargetLists[l]);
+                  end;
                 end;
               finally
                 lMasterList.Free;
