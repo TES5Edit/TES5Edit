@@ -3827,6 +3827,34 @@ var
     Result := Copy(aKey, 1, Length(aKey) - 5);
   end;
 
+  function ContentKey(const aElement: IwbElement): string;
+  var
+    lContainer : IwbContainerElementRef;
+    lStructDef : IwbStructDef;
+    lMember    : IwbElement;
+  begin
+    if aElement.ConflictPriority = cpIgnore then
+      Exit('');
+    if not Supports(aElement.ValueDef, IwbStructDef, lStructDef) or not Supports(aElement, IwbContainerElementRef, lContainer) or
+       (lContainer.ElementCount = 0) then
+      Exit(aElement.DisplaySortKey[True]);
+    Result := '';
+    if lStructDef.SortKeyCount[True] = 0 then
+      for var i := 0 to Pred(lContainer.ElementCount) do begin
+        if i > 0 then
+          Result := Result + '|';
+        Result := Result + ContentKey(lContainer.Elements[i]);
+      end
+    else
+      for var i := 0 to Pred(lStructDef.SortKeyCount[True]) do begin
+        lMember := lContainer.ElementBySortOrder[lStructDef.SortKeys[i, True]];
+        if Assigned(lMember) then
+          Result := Result + ContentKey(lMember);
+        if i < Pred(lStructDef.SortKeyCount[True]) then
+          Result := Result + '|';
+      end;
+  end;
+
   function EntryKey(const aEntry: IwbElement): string;
   var
     lStruct  : IwbContainerElementRef;
@@ -3843,7 +3871,7 @@ var
         if i < lSortKey.SortKeyCount[False] then
           Result := Result + EntryKey(lMember)
         else
-          Result := Result + lMember.DisplaySortKey[True];
+          Result := Result + ContentKey(lMember);
       if i < Pred(lSortKey.SortKeyCount[True]) then
         Result := Result + '|';
     end;

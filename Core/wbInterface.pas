@@ -3325,11 +3325,15 @@ type
     function GetMember(aIndex: Integer): IwbValueDef;
     function GetMemberByName(const aName: string): IwbValueDef;
     function GetOptionalFromElement: Integer;
+    function GetSortKey(aIndex: Integer; aExtended: Boolean): Integer;
+    function GetSortKeyCount(aExtended: Boolean): Integer;
 
     property MemberCount: Integer read GetMemberCount;
     property Members[aIndex: Integer]: IwbValueDef read GetMember;
     property MembersByName[const aName: string]: IwbValueDef read GetMemberByName;
     property OptionalFromElement: Integer read GetOptionalFromElement;
+    property SortKeys[aIndex: Integer; aExtended: Boolean]: Integer read GetSortKey;
+    property SortKeyCount[aExtended: Boolean]: Integer read GetSortKeyCount;
 
     function SetOptionalFrom(const aOptionalFrom: Integer): IwbStructDef;
     function SetSummaryKey(const aSummaryKey: array of Integer): {Self}IwbStructDef;
@@ -9679,6 +9683,8 @@ type
     function GetMember(aIndex: Integer): IwbValueDef;
     function GetMemberByName(const aName: string): IwbValueDef;
     function GetOptionalFromElement: Integer;
+    function GetSortKey(aIndex: Integer; aExtended: Boolean): Integer;
+    function GetSortKeyCount(aExtended: Boolean): Integer;
 
     function SetOptionalFrom(const aOptionalFrom: Integer): IwbStructDef;
     function SetSummaryKey(const aSummaryKey: array of Integer): {Self}IwbStructDef;
@@ -16893,6 +16899,21 @@ end;
 function TwbStructDef.GetOptionalFromElement: Integer;
 begin
   Result := stOptionalFromElement;
+end;
+
+function TwbStructDef.GetSortKey(aIndex: Integer; aExtended: Boolean): Integer;
+begin
+  if aIndex <= High(stSortKey) then
+    Result := stSortKey[aIndex]
+  else
+    Result := stExSortKey[aIndex - Length(stSortKey)];
+end;
+
+function TwbStructDef.GetSortKeyCount(aExtended: Boolean): Integer;
+begin
+  Result := Length(stSortKey);
+  if aExtended then
+    Inc(Result, Length(stExSortKey));
 end;
 
 function TwbStructDef.GetSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer;
