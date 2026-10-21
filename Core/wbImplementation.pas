@@ -3704,9 +3704,40 @@ var
   end;
 
   procedure UpdateOrderedTargetList(aLeftList, aRightList, aTargetList: TStringList);
+  var
+    lAdded : TDictionary<string, Integer>;
+    lCount : Integer;
+
+    function Content(aList: TStringList; aIndex: Integer): string;
+    begin
+      Result := IwbElement(Pointer(aList.Objects[aIndex])).DisplaySortKey[True];
+    end;
+
+    procedure Tally(aList: TStringList; aDelta: Integer);
+    begin
+      for var i := 0 to Pred(aList.Count) do begin
+        var lKey := Content(aList, i);
+        if not lAdded.TryGetValue(lKey, lCount) then
+          lCount := 0;
+        lAdded.AddOrSetValue(lKey, lCount + aDelta);
+      end;
+    end;
+
   begin
-    for var i := aLeftList.Count to Pred(aRightList.Count) do
-      aTargetList.AddObject(aRightList[i], aRightList.Objects[i]);
+    lAdded := TDictionary<string, Integer>.Create;
+    try
+      Tally(aTargetList, 1);
+      Tally(aLeftList, -1);
+      for var i := aLeftList.Count to Pred(aRightList.Count) do begin
+        var lKey := Content(aRightList, i);
+        if lAdded.TryGetValue(lKey, lCount) and (lCount > 0) then
+          lAdded[lKey] := Pred(lCount)
+        else
+          aTargetList.AddObject(aRightList[i], aRightList.Objects[i]);
+      end;
+    finally
+      lAdded.Free;
+    end;
   end;
 
   function IsEmptyEntry(const aElement: IwbElement): Boolean;
