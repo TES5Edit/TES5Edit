@@ -3815,6 +3815,75 @@ var
           Exit(False);
   end;
 
+  function BaseKey(const aKey: string): string;
+  begin
+    Result := Copy(aKey, 1, Length(aKey) - 5);
+  end;
+
+  function AlignList(aLeftList, aRightList: TStringList): TStringList;
+  var
+    lLeft, lLeftEnd   : Integer;
+    lRight, lRightEnd : Integer;
+    lFree, lNext      : Integer;
+    lBase             : string;
+    lKeys             : TArray<string>;
+    lTaken            : TArray<Boolean>;
+  begin
+    Result := TStringList.Create;
+    try
+      Result.UseLocale := False;
+      lLeft := 0;
+      lRight := 0;
+      while lRight < aRightList.Count do begin
+        lBase := BaseKey(aRightList[lRight]);
+        lRightEnd := lRight;
+        while (lRightEnd < aRightList.Count) and SameText(BaseKey(aRightList[lRightEnd]), lBase) do
+          Inc(lRightEnd);
+        while (lLeft < aLeftList.Count) and (CompareText(BaseKey(aLeftList[lLeft]), lBase) < 0) do
+          Inc(lLeft);
+        lLeftEnd := lLeft;
+        lNext := 0;
+        while (lLeftEnd < aLeftList.Count) and SameText(BaseKey(aLeftList[lLeftEnd]), lBase) do begin
+          lFree := StrToInt('$' + Copy(aLeftList[lLeftEnd], Length(aLeftList[lLeftEnd]) - 3, 4));
+          if lFree >= lNext then
+            lNext := Succ(lFree);
+          Inc(lLeftEnd);
+        end;
+        lKeys := nil;
+        SetLength(lKeys, lRightEnd - lRight);
+        lTaken := nil;
+        SetLength(lTaken, lLeftEnd - lLeft);
+        for var j := lRight to Pred(lRightEnd) do
+          for var k := lLeft to Pred(lLeftEnd) do
+            if not lTaken[k - lLeft] and SameObject(aLeftList, aRightList, k, j) then begin
+              lTaken[k - lLeft] := True;
+              lKeys[j - lRight] := aLeftList[k];
+              Break;
+            end;
+        lFree := lLeft;
+        for var j := lRight to Pred(lRightEnd) do
+          if lKeys[j - lRight] = '' then begin
+            while (lFree < lLeftEnd) and lTaken[lFree - lLeft] do
+              Inc(lFree);
+            if lFree < lLeftEnd then begin
+              lTaken[lFree - lLeft] := True;
+              lKeys[j - lRight] := aLeftList[lFree];
+            end else begin
+              lKeys[j - lRight] := lBase + '#' + IntToHex64(lNext, 4);
+              Inc(lNext);
+            end;
+          end;
+        for var j := lRight to Pred(lRightEnd) do
+          Result.AddObject(lKeys[j - lRight], aRightList.Objects[j]);
+        lRight := lRightEnd;
+      end;
+      Result.Sorted := True;
+    except
+      Result.Free;
+      raise;
+    end;
+  end;
+
   procedure MergeMaster(const aMaster: IwbMainRecord; const aRow: TwbMergedPatchList);
   var
     lKeepAlive     : TArray<IwbContainerElementRef>;
@@ -3972,8 +4041,16 @@ var
                   lIsFaulty := True
                 else
                   UpdateOrderedTargetList(lMasterList, lCurrentList, lTargetLists[l]);
-              end else
-                UpdateTargetList(lMasterList, lCurrentList, lTargetLists[l]);
+              end else if aRow.AsSet then
+                UpdateTargetList(lMasterList, lCurrentList, lTargetLists[l])
+              else begin
+                var lAligned := AlignList(lMasterList, lCurrentList);
+                try
+                  UpdateTargetList(lMasterList, lAligned, lTargetLists[l]);
+                finally
+                  lAligned.Free;
+                end;
+              end;
             finally
               lMasterList.Free;
             end;
@@ -3987,6 +4064,11 @@ var
           Break;
         lWinner := aMaster.WinningOverride;
         lWinningLists[l] := BuildList(ListOf(lWinner));
+        if not aRow.AsSet and not lIsOrderedList then begin
+          var lAligned := AlignList(lTargetLists[l], lWinningLists[l]);
+          lWinningLists[l].Free;
+          lWinningLists[l] := lAligned;
+        end;
       end;
 
       if lIsFaulty then begin
