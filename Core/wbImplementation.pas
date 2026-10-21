@@ -3820,6 +3820,28 @@ var
     Result := Copy(aKey, 1, Length(aKey) - 5);
   end;
 
+  function EntryKey(const aEntry: IwbElement): string;
+  var
+    lStruct  : IwbContainerElementRef;
+    lSortKey : IwbHasSortKeyDef;
+    lMember  : IwbElement;
+  begin
+    if (aEntry.ElementType <> etSubRecordStruct) or not Supports(aEntry.Def, IwbHasSortKeyDef, lSortKey) or
+       (lSortKey.SortKeyCount[False] = 0) or not Supports(aEntry, IwbContainerElementRef, lStruct) then
+      Exit(aEntry.DisplaySortKey[False]);
+    Result := '';
+    for var i := 0 to Pred(lSortKey.SortKeyCount[True]) do begin
+      lMember := lStruct.ElementBySortOrder[lSortKey.SortKeys[i, True]];
+      if Assigned(lMember) then
+        if i < lSortKey.SortKeyCount[False] then
+          Result := Result + EntryKey(lMember)
+        else
+          Result := Result + lMember.DisplaySortKey[True];
+      if i < Pred(lSortKey.SortKeyCount[True]) then
+        Result := Result + '|';
+    end;
+  end;
+
   function AlignList(aLeftList, aRightList: TStringList): TStringList;
   var
     lLeft, lLeftEnd   : Integer;
@@ -3926,8 +3948,10 @@ var
               lKeepAlive[High(lKeepAlive)] := lEntry;
               if aRow.AsSet then
                 Result.AddObject(lEntry.DisplaySortKey[True], Pointer(lEntry))
+              else if lIsOrderedList then
+                Result.AddObject(lEntry.DisplaySortKey[True] + #0 + lEntry.DisplaySortKey[True], Pointer(lEntry))
               else
-                Result.AddObject(lEntry.DisplaySortKey[False] + #0 + lEntry.DisplaySortKey[True], Pointer(lEntry));
+                Result.AddObject(EntryKey(lEntry) + #0 + lEntry.DisplaySortKey[True], Pointer(lEntry));
             end;
         if not aRow.AsSet then begin
           Result.UseLocale := False;
