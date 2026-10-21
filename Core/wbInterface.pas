@@ -6533,7 +6533,10 @@ begin
   Add('LVSP', ['Leveled List Entries'], ['LLCT']);
   Add('CONT', [lItems], ['COCT']);
   Add('FACT', ['Relations'], []);
-  Add('RACE', ['HNAM - Hairs', 'ENAM - Eyes', 'Actor Effects'], ['', '', 'SPCT']);
+  if aGameMode in [gmTES4, gmTES4R] then
+    Add('RACE', ['HNAM - Hairs', 'ENAM - Eyes', 'Spells'], [])
+  else
+    Add('RACE', ['HNAM - Hairs', 'ENAM - Eyes', 'Actor Effects'], ['', '', 'SPCT']);
   Add('FLST', ['FormIDs'], [], True);
   Add('CREA', ['Items', 'Factions'], ['COCT']);
   // FNV doesn't merge DIAL quests properly at runtime
@@ -6542,6 +6545,8 @@ begin
   // exclude Head Parts for Skyrim, causes issues
   if aGameMode >= gmTES5 then
     Add('NPC_', [lNpcItems, 'Factions', 'Actor Effects', lPerks], ['COCT', '', 'SPCT', 'PRKZ'])
+  else if aGameMode in [gmTES4, gmTES4R] then
+    Add('NPC_', ['Items', 'Factions', 'Spells'], [])
   else
     Add('NPC_', ['Items', 'Factions', 'Head Parts', 'Actor Effects'], []);
   Result := lLists;
