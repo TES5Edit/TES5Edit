@@ -3840,6 +3840,7 @@ var
     var
       lList  : IwbContainerElementRef;
       lEntry : IwbContainerElementRef;
+      lKey   : string;
       lLast  : string;
       lCount : Integer;
     begin
@@ -3854,20 +3855,25 @@ var
             if Supports(lList.Elements[i], IwbContainerElementRef, lEntry) then begin
               SetLength(lKeepAlive, Succ(Length(lKeepAlive)));
               lKeepAlive[High(lKeepAlive)] := lEntry;
-              Result.AddObject(lEntry.DisplaySortKey[True], Pointer(lEntry));
+              if aRow.AsSet then
+                Result.AddObject(lEntry.DisplaySortKey[True], Pointer(lEntry))
+              else
+                Result.AddObject(lEntry.DisplaySortKey[False] + #0 + lEntry.DisplaySortKey[True], Pointer(lEntry));
             end;
         if not aRow.AsSet then begin
+          Result.UseLocale := False;
           Result.Sort;
           lLast := '';
           lCount := 0;
           for var i := 0 to Pred(Result.Count) do begin
-            if Result[i] = lLast then
+            lKey := Copy(Result[i], 1, Pred(Pos(#0, Result[i])));
+            if lKey = lLast then
               Inc(lCount)
             else begin
               lCount := 0;
-              lLast := Result[i];
+              lLast := lKey;
             end;
-            Result[i] := Result[i] + '#' + IntToHex64(lCount, 4);
+            Result[i] := lKey + '#' + IntToHex64(lCount, 4);
           end;
           Result.Sorted := True;
         end;
