@@ -4167,6 +4167,14 @@ var
         Result := nil;
     end;
 
+    function BaseEntries: IwbElement;
+    begin
+      if IsCompareCopy(aMaster) then
+        Result := nil
+      else
+        Result := ListOf(aMaster);
+    end;
+
   begin
     SetLength(lTargetLists, Length(aRow.Lists));
     SetLength(lWinningLists, Length(aRow.Lists));
@@ -4208,7 +4216,7 @@ var
               Continue;
           end;
 
-        lTargetLists[l] := BuildList(ListOf(aMaster));
+        lTargetLists[l] := BuildList(BaseEntries);
         lSpaces := nil;
         lKnown := nil;
         try
