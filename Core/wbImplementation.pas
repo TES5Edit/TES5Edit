@@ -4064,7 +4064,6 @@ var
     lMasterSpace   : TStringList;
     lSpaces        : TArray<TStringList>;
     lKnown         : TStringList;
-    lMasters       : TDynMainRecords;
     lSortable      : IwbSortableContainer;
     lEditorID      : string;
     lCountElement  : IwbElement;
@@ -4175,6 +4174,15 @@ var
         Result := ListOf(aMaster);
     end;
 
+    function OwnMaster(const aRecord: IwbMainRecord): IwbMainRecord;
+    begin
+      var lRecords := aRecord.MasterRecordsFromMasterFilesAndSelf;
+      for var i := High(lRecords) downto Low(lRecords) do
+        if not aRecord.Equals(lRecords[i]) then
+          Exit(lRecords[i]);
+      Result := nil;
+    end;
+
   begin
     SetLength(lTargetLists, Length(aRow.Lists));
     SetLength(lWinningLists, Length(aRow.Lists));
@@ -4222,7 +4230,7 @@ var
         try
           if not aRow.AsSet and not lIsOrderedList then begin
             SetLength(lSpaces, Succ(aMaster.OverrideCount));
-            lSpaces[0] := BuildList(ListOf(aMaster));
+            lSpaces[0] := BuildList(BaseEntries);
             lKnown := TStringList.Create;
             lKnown.UseLocale := False;
             lKnown.Sorted := True;
@@ -4230,17 +4238,13 @@ var
           end;
           for j := 0 to Pred(aMaster.OverrideCount) do begin
             lOverride := aMaster.Overrides[j];
-            if IsCompareCopy(lOverride) and (aRow.AsSet or lIsOrderedList) then
+            if IsCompareCopy(lOverride) then
               Continue;
             lCurrentList := BuildList(ListOf(lOverride));
             try
-              lMasters := lOverride.MasterRecordsFromMasterFilesAndSelf;
-              lCurrentMaster := nil;
-              for k := High(lMasters) downto Low(lMasters) do
-                if not lOverride.Equals(lMasters[k]) then begin
-                  lCurrentMaster := lMasters[k];
-                  Break;
-                end;
+              lCurrentMaster := OwnMaster(lOverride);
+              while Assigned(lCurrentMaster) and IsCompareCopy(lCurrentMaster) do
+                lCurrentMaster := OwnMaster(lCurrentMaster);
               lMasterList := nil;
               try
                 if lIsOrderedList then begin
@@ -4268,10 +4272,8 @@ var
                     lMasterSpace := lMasterList;
                   end;
                   lSpaces[Succ(j)] := AlignList(lMasterSpace, lCurrentList, lTargetLists[l], lKnown);
-                  if not IsCompareCopy(lOverride) then begin
-                    UpdateTargetList(lMasterSpace, lSpaces[Succ(j)], lTargetLists[l]);
-                    Remember(lKnown, lTargetLists[l]);
-                  end;
+                  UpdateTargetList(lMasterSpace, lSpaces[Succ(j)], lTargetLists[l]);
+                  Remember(lKnown, lTargetLists[l]);
                 end;
               finally
                 lMasterList.Free;
