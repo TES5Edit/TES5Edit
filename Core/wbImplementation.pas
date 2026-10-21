@@ -3684,7 +3684,8 @@ end;
 
 function TwbFile.BuildMergedPatch(const aFiles: TwbFiles; const aReport: TProc<string>): TwbMergedPatchResult;
 const
-  OrderedList = 'OrderedList';
+  OrderedList      = 'OrderedList';
+  KeyCounterDigits = 8;
 var
   lMet    : THashSet<IwbMainRecord>;
   lMerged : TDynMainRecords;
@@ -3824,7 +3825,7 @@ var
 
   function BaseKey(const aKey: string): string;
   begin
-    Result := Copy(aKey, 1, Pred(LastDelimiter(#1, aKey)));
+    Result := Copy(aKey, 1, Length(aKey) - Succ(KeyCounterDigits));
   end;
 
   function ContentKey(const aElement: IwbElement): string;
@@ -3879,7 +3880,7 @@ var
 
   function KeyNumber(const aKey: string): Integer;
   begin
-    Result := StrToInt('$' + Copy(aKey, Succ(LastDelimiter(#1, aKey)), MaxInt));
+    Result := StrToInt('$' + Copy(aKey, Length(aKey) - Pred(KeyCounterDigits), KeyCounterDigits));
   end;
 
   procedure Remember(aKnown, aList: TStringList);
@@ -3997,7 +3998,7 @@ var
         TakeSlots(False, False);
         for var j := lRight to Pred(lRightEnd) do
           if lKeys[j - lRight] = '' then begin
-            lKeys[j - lRight] := lBase + #1 + IntToHex64(lNext, 4);
+            lKeys[j - lRight] := lBase + #0 + IntToHex64(lNext, KeyCounterDigits);
             Inc(lNext);
           end;
         for var j := lRight to Pred(lRightEnd) do
@@ -4046,6 +4047,7 @@ var
       Result := TStringList.Create;
       try
         if aRow.AsSet and not lIsOrderedList then begin
+          Result.UseLocale := False;
           Result.Sorted := True;
           Result.Duplicates := dupIgnore;
         end;
@@ -4074,7 +4076,7 @@ var
               lCount := 0;
               lLast := lKey;
             end;
-            Result[i] := lKey + #1 + IntToHex64(lCount, 4);
+            Result[i] := lKey + #0 + IntToHex64(lCount, KeyCounterDigits);
           end;
           Result.Sorted := True;
         end;
