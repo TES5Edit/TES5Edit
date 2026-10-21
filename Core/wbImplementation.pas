@@ -4144,6 +4144,16 @@ var
         Result := nil;
     end;
 
+    function Winner: IwbMainRecord;
+    begin
+      for var i := Pred(aMaster.OverrideCount) downto 0 do begin
+        Result := aMaster.Overrides[i];
+        if not (fsIsCompareLoad in Result._File.FileStates) and not Result.IsPartialForm then
+          Exit;
+      end;
+      Result := aMaster;
+    end;
+
   begin
     SetLength(lTargetLists, Length(aRow.Lists));
     SetLength(lWinningLists, Length(aRow.Lists));
@@ -4199,6 +4209,8 @@ var
           end;
           for j := 0 to Pred(aMaster.OverrideCount) do begin
             lOverride := aMaster.Overrides[j];
+            if fsIsCompareLoad in lOverride._File.FileStates then
+              Continue;
             lCurrentList := BuildList(ListOf(lOverride));
             try
               lMasters := lOverride.MasterRecordsFromMasterFilesAndSelf;
@@ -4256,7 +4268,7 @@ var
         end;
         if lIsFaulty then
           Break;
-        lWinner := aMaster.WinningOverride;
+        lWinner := Winner;
         lWinningLists[l] := BuildList(ListOf(lWinner));
         if not aRow.AsSet and not lIsOrderedList then begin
           var lAligned := AlignList(lTargetLists[l], lWinningLists[l]);
