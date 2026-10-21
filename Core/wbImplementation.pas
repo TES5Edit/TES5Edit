@@ -3882,19 +3882,30 @@ var
     Result := StrToInt('$' + Copy(aKey, Succ(LastDelimiter(#1, aKey)), MaxInt));
   end;
 
-  function AlignList(aLeftList, aRightList: TStringList; aBaseList: TStringList = nil; aTargetList: TStringList = nil;
-    aNext: TDictionary<string, Integer> = nil): TStringList;
+  procedure Remember(aKnown, aList: TStringList);
+  var
+    lIndex : Integer;
+  begin
+    for var i := 0 to Pred(aList.Count) do
+      if aKnown.Find(aList[i], lIndex) then
+        aKnown.Objects[lIndex] := aList.Objects[i]
+      else
+        aKnown.AddObject(aList[i], aList.Objects[i]);
+  end;
+
+  function AlignList(aLeftList, aRightList: TStringList; aTargetList: TStringList = nil; aKnown: TStringList = nil): TStringList;
   var
     lLeft, lLeftEnd   : Integer;
     lRight, lRightEnd : Integer;
-    lBaseAt, lTarget  : Integer;
+    lKnownAt          : Integer;
     lFree, lNext      : Integer;
     lIndex            : Integer;
     lBase             : string;
     lKeys             : TArray<string>;
     lTaken            : TArray<Boolean>;
-    lAdded            : TArray<Integer>;
-    lAddedTaken       : TArray<Boolean>;
+    lSlots            : TArray<Integer>;
+    lSlotLive         : TArray<Boolean>;
+    lSlotTaken        : TArray<Boolean>;
 
     procedure SkipTo(aList: TStringList; var aIndex: Integer);
     begin
@@ -3913,14 +3924,25 @@ var
         lNext := Succ(KeyNumber(aKey));
     end;
 
+    procedure TakeSlots(aLive, aEqual: Boolean);
+    begin
+      for var j := lRight to Pred(lRightEnd) do
+        if lKeys[j - lRight] = '' then
+          for var k := 0 to High(lSlots) do
+            if not lSlotTaken[k] and (lSlotLive[k] = aLive) and (not aEqual or SameObject(aKnown, aRightList, lSlots[k], j)) then begin
+              lSlotTaken[k] := True;
+              lKeys[j - lRight] := aKnown[lSlots[k]];
+              Break;
+            end;
+    end;
+
   begin
     Result := TStringList.Create;
     try
       Result.UseLocale := False;
       lLeft := 0;
       lRight := 0;
-      lBaseAt := 0;
-      lTarget := 0;
+      lKnownAt := 0;
       while lRight < aRightList.Count do begin
         lBase := BaseKey(aRightList[lRight]);
         lRightEnd := lRight;
@@ -3954,47 +3976,30 @@ var
               lKeys[j - lRight] := aLeftList[lFree];
             end;
           end;
-        lAdded := nil;
-        if Assigned(aTargetList) then begin
-          SkipTo(aBaseList, lBaseAt);
-          while InGroup(aBaseList, lBaseAt) do begin
-            Note(aBaseList[lBaseAt]);
-            Inc(lBaseAt);
-          end;
-          SkipTo(aTargetList, lTarget);
-          while InGroup(aTargetList, lTarget) do begin
-            if not aLeftList.Find(aTargetList[lTarget], lIndex) and not aBaseList.Find(aTargetList[lTarget], lIndex) then
-              lAdded := lAdded + [lTarget];
-            Inc(lTarget);
+        lSlots := nil;
+        lSlotLive := nil;
+        if Assigned(aKnown) and Assigned(aTargetList) then begin
+          SkipTo(aKnown, lKnownAt);
+          while InGroup(aKnown, lKnownAt) do begin
+            Note(aKnown[lKnownAt]);
+            if not aLeftList.Find(aKnown[lKnownAt], lIndex) then begin
+              lSlots := lSlots + [lKnownAt];
+              lSlotLive := lSlotLive + [aTargetList.Find(aKnown[lKnownAt], lIndex)];
+            end;
+            Inc(lKnownAt);
           end;
         end;
-        if Assigned(aNext) and aNext.TryGetValue(UpperCase(lBase), lFree) and (lFree > lNext) then
-          lNext := lFree;
-        lAddedTaken := nil;
-        SetLength(lAddedTaken, Length(lAdded));
-        for var j := lRight to Pred(lRightEnd) do
-          if lKeys[j - lRight] = '' then
-            for var k := 0 to High(lAdded) do
-              if not lAddedTaken[k] and SameObject(aTargetList, aRightList, lAdded[k], j) then begin
-                lAddedTaken[k] := True;
-                lKeys[j - lRight] := aTargetList[lAdded[k]];
-                Break;
-              end;
-        lFree := 0;
+        lSlotTaken := nil;
+        SetLength(lSlotTaken, Length(lSlots));
+        TakeSlots(True, True);
+        TakeSlots(False, True);
+        TakeSlots(True, False);
+        TakeSlots(False, False);
         for var j := lRight to Pred(lRightEnd) do
           if lKeys[j - lRight] = '' then begin
-            while (lFree < Length(lAdded)) and lAddedTaken[lFree] do
-              Inc(lFree);
-            if lFree < Length(lAdded) then begin
-              lAddedTaken[lFree] := True;
-              lKeys[j - lRight] := aTargetList[lAdded[lFree]];
-            end else begin
-              lKeys[j - lRight] := lBase + #1 + IntToHex64(lNext, 4);
-              Inc(lNext);
-            end;
+            lKeys[j - lRight] := lBase + #1 + IntToHex64(lNext, 4);
+            Inc(lNext);
           end;
-        if Assigned(aNext) then
-          aNext.AddOrSetValue(UpperCase(lBase), lNext);
         for var j := lRight to Pred(lRightEnd) do
           Result.AddObject(lKeys[j - lRight], aRightList.Objects[j]);
         lRight := lRightEnd;
@@ -4021,7 +4026,7 @@ var
     lMasterList    : TStringList;
     lMasterSpace   : TStringList;
     lSpaces        : TArray<TStringList>;
-    lNext          : TDictionary<string, Integer>;
+    lKnown         : TStringList;
     lMasters       : TDynMainRecords;
     lSortable      : IwbSortableContainer;
     lEditorID      : string;
@@ -4149,12 +4154,15 @@ var
 
         lTargetLists[l] := BuildList(ListOf(aMaster));
         lSpaces := nil;
-        lNext := nil;
+        lKnown := nil;
         try
           if not aRow.AsSet and not lIsOrderedList then begin
             SetLength(lSpaces, Succ(aMaster.OverrideCount));
             lSpaces[0] := BuildList(ListOf(aMaster));
-            lNext := TDictionary<string, Integer>.Create;
+            lKnown := TStringList.Create;
+            lKnown.UseLocale := False;
+            lKnown.Sorted := True;
+            Remember(lKnown, lTargetLists[l]);
           end;
           for j := 0 to Pred(aMaster.OverrideCount) do begin
             lOverride := aMaster.Overrides[j];
@@ -4194,8 +4202,9 @@ var
                     lMasterList := BuildList(ListOf(lCurrentMaster));
                     lMasterSpace := lMasterList;
                   end;
-                  lSpaces[Succ(j)] := AlignList(lMasterSpace, lCurrentList, lSpaces[0], lTargetLists[l], lNext);
+                  lSpaces[Succ(j)] := AlignList(lMasterSpace, lCurrentList, lTargetLists[l], lKnown);
                   UpdateTargetList(lMasterSpace, lSpaces[Succ(j)], lTargetLists[l]);
+                  Remember(lKnown, lTargetLists[l]);
                 end;
               finally
                 lMasterList.Free;
@@ -4210,7 +4219,7 @@ var
           for var lSpace in lSpaces do
             lSpace.Free;
           lSpaces := nil;
-          lNext.Free;
+          lKnown.Free;
         end;
         if lIsFaulty then
           Break;
