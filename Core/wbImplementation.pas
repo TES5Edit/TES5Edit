@@ -3942,6 +3942,9 @@ var
           var lList := ListOf(lWinner);
           if not Assigned(lList) then
             lList := ListOf(aMaster);
+          for j := 0 to Pred(aMaster.OverrideCount) do
+            if not Assigned(lList) then
+              lList := ListOf(aMaster.Overrides[j]);
           var lListDef: IwbSubRecordArrayDef;
           if Assigned(lList) and Supports(lList.Def, IwbSubRecordArrayDef, lListDef) and (lListDef.MaxCount > 0) and
              (UInt64(lTargetLists[l].Count) > lListDef.MaxCount) then begin
