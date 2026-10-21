@@ -3708,18 +3708,50 @@ var
       aTargetList.AddObject(aRightList[i], aRightList.Objects[i]);
   end;
 
+  function IsEmptyEntry(const aElement: IwbElement): Boolean;
+  var
+    lContainer : IwbContainerElementRef;
+  begin
+    if aElement.ConflictPriority = cpIgnore then
+      Exit(True);
+    if Supports(aElement, IwbContainerElementRef, lContainer) and (lContainer.ElementCount > 0) then begin
+      for var i := 0 to Pred(lContainer.ElementCount) do
+        if not IsEmptyEntry(lContainer.Elements[i]) then
+          Exit(False);
+      Result := True;
+    end else
+      Result := aElement.DisplaySortKey[True] = '';
+  end;
+
   function SameEntry(const aLeft, aRight: IwbElement): Boolean;
   var
     lLeft, lRight : IwbContainerElementRef;
+    lMember       : IwbElement;
   begin
+    if not Assigned(aRight) then
+      Exit(IsEmptyEntry(aLeft));
     if (aLeft.ConflictPriority = cpIgnore) or (aRight.ConflictPriority = cpIgnore) then
       Exit(True);
     if Supports(aLeft, IwbContainerElementRef, lLeft) and Supports(aRight, IwbContainerElementRef, lRight) and
        ((lLeft.ElementCount > 0) or (lRight.ElementCount > 0)) then begin
-      Result := lLeft.ElementCount = lRight.ElementCount;
-      for var i := 0 to Pred(lLeft.ElementCount) do
-        if Result then
-          Result := SameEntry(lLeft.Elements[i], lRight.Elements[i]);
+      if lLeft.ElementType = etSubRecordStruct then begin
+        for var i := 0 to Pred(lLeft.ElementCount) do begin
+          lMember := lLeft.Elements[i];
+          if not SameEntry(lMember, lRight.ElementBySortOrder[lMember.SortOrder]) then
+            Exit(False);
+        end;
+        for var i := 0 to Pred(lRight.ElementCount) do begin
+          lMember := lRight.Elements[i];
+          if not Assigned(lLeft.ElementBySortOrder[lMember.SortOrder]) and not IsEmptyEntry(lMember) then
+            Exit(False);
+        end;
+        Result := True;
+      end else begin
+        Result := lLeft.ElementCount = lRight.ElementCount;
+        for var i := 0 to Pred(lLeft.ElementCount) do
+          if Result then
+            Result := SameEntry(lLeft.Elements[i], lRight.Elements[i]);
+      end;
     end else
       Result := SameStr(aLeft.DisplaySortKey[True], aRight.DisplaySortKey[True]);
   end;
