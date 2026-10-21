@@ -4159,6 +4159,14 @@ var
       Result := aMaster;
     end;
 
+    function MasterEntries: IwbElement;
+    begin
+      if Assigned(lCurrentMaster) then
+        Result := ListOf(lCurrentMaster)
+      else
+        Result := nil;
+    end;
+
   begin
     SetLength(lTargetLists, Length(aRow.Lists));
     SetLength(lWinningLists, Length(aRow.Lists));
@@ -4225,31 +4233,30 @@ var
                   lCurrentMaster := lMasters[k];
                   Break;
                 end;
-              if not Assigned(lCurrentMaster) then
-                Continue;
               lMasterList := nil;
               try
                 if lIsOrderedList then begin
-                  lMasterList := BuildList(ListOf(lCurrentMaster));
+                  lMasterList := BuildList(MasterEntries);
                   if not ListsEqual(lMasterList, lCurrentList, True) then
                     lIsFaulty := True
                   else
                     UpdateOrderedTargetList(lMasterList, lCurrentList, lTargetLists[l]);
                 end else if aRow.AsSet then begin
-                  lMasterList := BuildList(ListOf(lCurrentMaster));
+                  lMasterList := BuildList(MasterEntries);
                   UpdateTargetList(lMasterList, lCurrentList, lTargetLists[l]);
                 end else begin
                   lMasterSpace := nil;
-                  if lCurrentMaster.Equals(aMaster) then
-                    lMasterSpace := lSpaces[0]
-                  else
-                    for k := Pred(j) downto 0 do
-                      if lCurrentMaster.Equals(aMaster.Overrides[k]) then begin
-                        lMasterSpace := lSpaces[Succ(k)];
-                        Break;
-                      end;
+                  if Assigned(lCurrentMaster) then
+                    if lCurrentMaster.Equals(aMaster) then
+                      lMasterSpace := lSpaces[0]
+                    else
+                      for k := Pred(j) downto 0 do
+                        if lCurrentMaster.Equals(aMaster.Overrides[k]) then begin
+                          lMasterSpace := lSpaces[Succ(k)];
+                          Break;
+                        end;
                   if not Assigned(lMasterSpace) then begin
-                    lMasterList := BuildList(ListOf(lCurrentMaster));
+                    lMasterList := BuildList(MasterEntries);
                     lMasterSpace := lMasterList;
                   end;
                   lSpaces[Succ(j)] := AlignList(lMasterSpace, lCurrentList, lTargetLists[l], lKnown);
