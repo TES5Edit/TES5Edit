@@ -18766,6 +18766,8 @@ begin
           mrName := '';
           mrShortName := '';
           mrDisplayName := '';
+          if not (gcFormIDInRecordHeader in GameDefObj.Capabilities) then
+            UpdateIdentityKey;
         end;
       end;
     end;
