@@ -3940,8 +3940,6 @@ var
     lBase             : string;
     lKeys             : TArray<string>;
     lTaken            : TArray<Boolean>;
-    lKept             : TArray<Boolean>;
-    lAbsorbed         : TArray<Boolean>;
     lSlots            : TArray<Integer>;
     lSlotLive         : TArray<Boolean>;
     lSlotTaken        : TArray<Boolean>;
@@ -3998,15 +3996,10 @@ var
         SetLength(lKeys, lRightEnd - lRight);
         lTaken := nil;
         SetLength(lTaken, lLeftEnd - lLeft);
-        lKept := nil;
-        SetLength(lKept, lLeftEnd - lLeft);
-        lAbsorbed := nil;
-        SetLength(lAbsorbed, lRightEnd - lRight);
         for var j := lRight to Pred(lRightEnd) do
           for var k := lLeft to Pred(lLeftEnd) do
             if not lTaken[k - lLeft] and SameObject(aLeftList, aRightList, k, j) then begin
               lTaken[k - lLeft] := True;
-              lKept[k - lLeft] := True;
               lKeys[j - lRight] := aLeftList[k];
               Break;
             end;
@@ -4036,16 +4029,6 @@ var
         lSlotTaken := nil;
         SetLength(lSlotTaken, Length(lSlots));
         TakeSlots(True, True);
-        if Assigned(aKnown) and Assigned(aTargetList) then
-          for var j := lRight to Pred(lRightEnd) do
-            if lKeys[j - lRight] = '' then
-              for var k := lLeft to Pred(lLeftEnd) do
-                if lKept[k - lLeft] and aTargetList.Find(aLeftList[k], lIndex) and SameObject(aTargetList, aRightList, lIndex, j) then begin
-                  lKept[k - lLeft] := False;
-                  lAbsorbed[j - lRight] := True;
-                  lKeys[j - lRight] := aLeftList[k];
-                  Break;
-                end;
         TakeSlots(False, True);
         TakeSlots(True, False);
         TakeSlots(False, False);
@@ -4055,8 +4038,7 @@ var
             Inc(lNext);
           end;
         for var j := lRight to Pred(lRightEnd) do
-          if not lAbsorbed[j - lRight] then
-            Result.AddObject(lKeys[j - lRight], aRightList.Objects[j]);
+          Result.AddObject(lKeys[j - lRight], aRightList.Objects[j]);
         lRight := lRightEnd;
       end;
       Result.Sorted := True;
