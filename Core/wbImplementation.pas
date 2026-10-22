@@ -19545,7 +19545,13 @@ begin
 
   aFile.AddMainRecord(Self);
 
-  if Assigned(Master) and not Assigned(mrMaster) and ((Master as IwbMainRecordInternal).ListedInjectedIn <> nil) then
+  var lMaster := IwbMainRecord(mrMaster);
+  if Assigned(lMaster) then begin
+    if (lMaster._File.LoadOrder > aFile.LoadOrder) or
+      ((lMaster._File.LoadOrder = aFile.LoadOrder) and not (fsIsCompareLoad in aFile.FileStates))
+    then
+      (lMaster as IwbMainRecordInternal).YouGotAMaster(Self);
+  end else if Assigned(Master) and ((Master as IwbMainRecordInternal).ListedInjectedIn <> nil) then
     (Master as IwbMainRecordInternal).YouGotAMaster(Self);
 
   ResetConflict;
