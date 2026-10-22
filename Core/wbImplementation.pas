@@ -4067,16 +4067,6 @@ var
               Break;
             end;
         end;
-        lFree := lLeft;
-        for var j := lRight to Pred(lRightEnd) do
-          if lKeys[j - lRight] = '' then begin
-            while (lFree < lLeftEnd) and lTaken[lFree - lLeft] do
-              Inc(lFree);
-            if lFree < lLeftEnd then begin
-              lTaken[lFree - lLeft] := True;
-              lKeys[j - lRight] := aLeftList[lFree];
-            end;
-          end;
         lSlots := nil;
         lSlotLive := nil;
         if Assigned(aKnown) and Assigned(aTargetList) then begin
@@ -4092,6 +4082,16 @@ var
         end;
         if Assigned(aAdded) then
           CountOnce;
+        lFree := lLeft;
+        for var j := lRight to Pred(lRightEnd) do
+          if lKeys[j - lRight] = '' then begin
+            while (lFree < lLeftEnd) and lTaken[lFree - lLeft] do
+              Inc(lFree);
+            if lFree < lLeftEnd then begin
+              lTaken[lFree - lLeft] := True;
+              lKeys[j - lRight] := aLeftList[lFree];
+            end;
+          end;
         lSlotTaken := nil;
         SetLength(lSlotTaken, Length(lSlots));
         TakeSlots(True, True);
