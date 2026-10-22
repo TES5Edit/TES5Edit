@@ -3798,10 +3798,35 @@ var
     Result := SameEntry(IwbElement(Pointer(aLeftList.Objects[aLeft])), IwbElement(Pointer(aRightList.Objects[aRight])));
   end;
 
-  procedure UpdateTargetList(aLeftList, aRightList, aTargetList: TStringList);
+  procedure UpdateTargetList(aLeftList, aRightList, aTargetList: TStringList; aAdded: TStringList = nil);
   var
     lLeft, lRight : Integer;
     lIndex        : Integer;
+
+    procedure Track(aAddition: Boolean);
+    var
+      lAt : Integer;
+    begin
+      if not Assigned(aAdded) then
+        Exit;
+      if aAdded.Find(aRightList[lRight], lAt) then begin
+        if not aAddition then
+          aAdded.Delete(lAt);
+      end else if aAddition then
+        aAdded.Add(aRightList[lRight]);
+    end;
+
+    procedure TakeAddition;
+    begin
+      if not aTargetList.Find(aRightList[lRight], lIndex) then begin
+        aTargetList.AddObject(aRightList[lRight], aRightList.Objects[lRight]);
+        Track(True);
+      end else if not SameObject(aTargetList, aRightList, lIndex, lRight) then begin
+        aTargetList.Objects[lIndex] := aRightList.Objects[lRight];
+        Track(True);
+      end;
+    end;
+
   begin
     lLeft := 0;
     lRight := 0;
@@ -3815,18 +3840,19 @@ var
         end;
         0: begin
           if not SameObject(aLeftList, aRightList, lLeft, lRight) then
-            if aTargetList.Find(aLeftList[lLeft], lIndex) then
-              aTargetList.Objects[lIndex] := aRightList.Objects[lRight]
-            else
+            if aTargetList.Find(aLeftList[lLeft], lIndex) then begin
+              if not SameObject(aTargetList, aRightList, lIndex, lRight) then
+                Track(False);
+              aTargetList.Objects[lIndex] := aRightList.Objects[lRight];
+            end else begin
               aTargetList.AddObject(aRightList[lRight], aRightList.Objects[lRight]);
+              Track(False);
+            end;
           Inc(lLeft);
           Inc(lRight);
         end;
         1..High(Integer): begin
-          if not aTargetList.Find(aRightList[lRight], lIndex) then
-            aTargetList.AddObject(aRightList[lRight], aRightList.Objects[lRight])
-          else if not SameObject(aTargetList, aRightList, lIndex, lRight) then
-            aTargetList.Objects[lIndex] := aRightList.Objects[lRight];
+          TakeAddition;
           Inc(lRight);
         end;
       end;
@@ -3838,10 +3864,7 @@ var
     end;
 
     while (lRight < aRightList.Count) do begin
-      if not aTargetList.Find(aRightList[lRight], lIndex) then
-        aTargetList.AddObject(aRightList[lRight], aRightList.Objects[lRight])
-      else if not SameObject(aTargetList, aRightList, lIndex, lRight) then
-        aTargetList.Objects[lIndex] := aRightList.Objects[lRight];
+      TakeAddition;
       Inc(lRight);
     end;
   end;
@@ -3930,7 +3953,8 @@ var
         aKnown.AddObject(aList[i], aList.Objects[i]);
   end;
 
-  function AlignList(aLeftList, aRightList: TStringList; aTargetList: TStringList = nil; aKnown: TStringList = nil): TStringList;
+  function AlignList(aLeftList, aRightList: TStringList; aTargetList: TStringList = nil; aKnown: TStringList = nil;
+    aAdded: TStringList = nil; aReserved: TStringList = nil): TStringList;
   var
     lLeft, lLeftEnd   : Integer;
     lRight, lRightEnd : Integer;
@@ -3939,6 +3963,7 @@ var
     lIndex            : Integer;
     lBase             : string;
     lKeys             : TArray<string>;
+    lEqual            : TArray<Integer>;
     lTaken            : TArray<Boolean>;
     lSlots            : TArray<Integer>;
     lSlotLive         : TArray<Boolean>;
@@ -3973,7 +3998,27 @@ var
             end;
     end;
 
+    procedure CountOnce;
+    begin
+      for var j := lRight to Pred(lRightEnd) do
+        if lKeys[j - lRight] = '' then
+          for var i := lRight to Pred(lRightEnd) do begin
+            var k := lEqual[i - lRight];
+            if (k >= 0) and aAdded.Find(aLeftList[k], lIndex) and aTargetList.Find(aLeftList[k], lIndex) and
+               not SameObject(aLeftList, aTargetList, k, lIndex) and SameObject(aTargetList, aRightList, lIndex, j) then begin
+              lEqual[i - lRight] := -1;
+              lKeys[j - lRight] := aLeftList[k];
+              lKeys[i - lRight] := lBase + #0 + IntToHex64(lNext, KeyCounterDigits);
+              aReserved.Add(lKeys[i - lRight]);
+              Inc(lNext);
+              Break;
+            end;
+          end;
+    end;
+
   begin
+    if Assigned(aReserved) then
+      aReserved.Clear;
     Result := TStringList.Create;
     try
       Result.UseLocale := False;
@@ -3994,15 +4039,20 @@ var
         end;
         lKeys := nil;
         SetLength(lKeys, lRightEnd - lRight);
+        lEqual := nil;
+        SetLength(lEqual, lRightEnd - lRight);
         lTaken := nil;
         SetLength(lTaken, lLeftEnd - lLeft);
-        for var j := lRight to Pred(lRightEnd) do
+        for var j := lRight to Pred(lRightEnd) do begin
+          lEqual[j - lRight] := -1;
           for var k := lLeft to Pred(lLeftEnd) do
             if not lTaken[k - lLeft] and SameObject(aLeftList, aRightList, k, j) then begin
               lTaken[k - lLeft] := True;
               lKeys[j - lRight] := aLeftList[k];
+              lEqual[j - lRight] := k;
               Break;
             end;
+        end;
         lFree := lLeft;
         for var j := lRight to Pred(lRightEnd) do
           if lKeys[j - lRight] = '' then begin
@@ -4026,6 +4076,8 @@ var
             Inc(lKnownAt);
           end;
         end;
+        if Assigned(aAdded) then
+          CountOnce;
         lSlotTaken := nil;
         SetLength(lSlotTaken, Length(lSlots));
         TakeSlots(True, True);
@@ -4041,6 +4093,9 @@ var
           Result.AddObject(lKeys[j - lRight], aRightList.Objects[j]);
         lRight := lRightEnd;
       end;
+      if Assigned(aReserved) then
+        for var lKey in aReserved do
+          aKnown.AddObject(lKey, nil);
       Result.Sorted := True;
     except
       Result.Free;
@@ -4072,6 +4127,8 @@ var
     lMastersOf     : TArray<TArray<Integer>>;
     lClosures      : TArray<TArray<Boolean>>;
     lKnown         : TStringList;
+    lAdded         : TStringList;
+    lReserved      : TStringList;
     lSortable      : IwbSortableContainer;
     lEditorID      : string;
     lCountElement  : IwbElement;
@@ -4338,6 +4395,26 @@ var
       end;
     end;
 
+    procedure Apply(aBase, aAligned, aReserved, aTarget, aAdded: TStringList);
+    var
+      lApplied : TStringList;
+      lAt      : Integer;
+    begin
+      lApplied := aAligned;
+      try
+        if aReserved.Count > 0 then begin
+          lApplied := CopyOf(nil);
+          for var i := 0 to Pred(aAligned.Count) do
+            if not aReserved.Find(aAligned[i], lAt) then
+              lApplied.AddObject(aAligned[i], aAligned.Objects[i]);
+        end;
+        UpdateTargetList(aBase, lApplied, aTarget, aAdded);
+      finally
+        if lApplied <> aAligned then
+          lApplied.Free;
+      end;
+    end;
+
     function MergedBase(aVersion: Integer): TStringList;
     begin
       var lClosure := Closure(aVersion);
@@ -4371,17 +4448,21 @@ var
 
     function IsolatedMerge(aVersion: Integer): TStringList;
     var
-      lClosure : TArray<Boolean>;
-      lSpace   : TArray<TStringList>;
-      lKnownIn : TStringList;
-      lBase    : TStringList;
-      lOwned   : Boolean;
+      lClosure    : TArray<Boolean>;
+      lSpace      : TArray<TStringList>;
+      lKnownIn    : TStringList;
+      lAddedIn    : TStringList;
+      lReservedIn : TStringList;
+      lBase       : TStringList;
+      lOwned      : Boolean;
     begin
       if Assigned(lIsolated[aVersion]) then
         Exit(lIsolated[aVersion]);
       lClosure := Closure(aVersion);
       SetLength(lSpace, aVersion);
       lKnownIn := nil;
+      lAddedIn := nil;
+      lReservedIn := nil;
       Result := nil;
       try
         try
@@ -4391,6 +4472,8 @@ var
             lSpace[0] := CopyOf(nil);
           Result := CopyOf(lSpace[0]);
           lKnownIn := CopyOf(nil);
+          lAddedIn := CopyOf(nil);
+          lReservedIn := CopyOf(nil);
           Remember(lKnownIn, Result);
           for var i := 1 to Pred(aVersion) do
             if lClosure[i] and Assigned(lOwnLists[i]) then begin
@@ -4412,8 +4495,8 @@ var
                 lOwned := True;
               end;
               try
-                lSpace[i] := AlignList(lBase, lOwnLists[i], Result, lKnownIn);
-                UpdateTargetList(lBase, lSpace[i], Result);
+                lSpace[i] := AlignList(lBase, lOwnLists[i], Result, lKnownIn, lAddedIn, lReservedIn);
+                Apply(lBase, lSpace[i], lReservedIn, Result, lAddedIn);
                 Remember(lKnownIn, Result);
               finally
                 if lOwned then
@@ -4430,6 +4513,8 @@ var
       finally
         for var lList in lSpace do
           lList.Free;
+        lReservedIn.Free;
+        lAddedIn.Free;
         lKnownIn.Free;
       end;
     end;
@@ -4574,6 +4659,8 @@ var
         lIsolated := nil;
         lIsolatedSpaces := nil;
         lKnown := nil;
+        lAdded := nil;
+        lReserved := nil;
         try
           if not lIsOrderedList then begin
             if not Assigned(lVersions) then
@@ -4589,6 +4676,8 @@ var
               lKnown.UseLocale := False;
               lKnown.Sorted := True;
               Remember(lKnown, lTargetLists[l]);
+              lAdded := CopyOf(nil);
+              lReserved := CopyOf(nil);
             end;
           end;
           for j := 0 to Pred(aMaster.OverrideCount) do begin
@@ -4632,8 +4721,8 @@ var
                     lSpaces[Succ(j)] := lCurrentList;
                     lCurrentList := nil;
                   end else begin
-                    lSpaces[Succ(j)] := AlignList(lMasterSpace, lCurrentList, lTargetLists[l], lKnown);
-                    UpdateTargetList(lMasterSpace, lSpaces[Succ(j)], lTargetLists[l]);
+                    lSpaces[Succ(j)] := AlignList(lMasterSpace, lCurrentList, lTargetLists[l], lKnown, lAdded, lReserved);
+                    Apply(lMasterSpace, lSpaces[Succ(j)], lReserved, lTargetLists[l], lAdded);
                     Remember(lKnown, lTargetLists[l]);
                     lOwnLists[Succ(j)] := lCurrentList;
                     lCurrentList := nil;
@@ -4666,6 +4755,8 @@ var
             for var lList in lWalkLists do
               lList.Free;
           lIsolatedSpaces := nil;
+          lReserved.Free;
+          lAdded.Free;
           lKnown.Free;
         end;
         if lIsFaulty then
