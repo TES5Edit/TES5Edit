@@ -14145,7 +14145,14 @@ begin
     UpdateKeys;
     Stream := TMemoryStream.Create;
     try
+      var lHeaderSize := 0;
+      if IsEmbeddedReference then begin
+        lHeaderSize := GameDefObj.SizeOfMainRecordStruct;
+        Stream.WriteBuffer(mrStruct^, lHeaderSize);
+      end;
       WriteToStream(Stream, rmYes);
+      if lHeaderSize > 0 then
+        PwbMainRecordStruct(Stream.Memory).mrsDataSize := Stream.Size - lHeaderSize;
       KAR := nil;
       if Assigned(aKAR) then
         aKAR^ := nil;
