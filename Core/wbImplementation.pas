@@ -4190,28 +4190,62 @@ var
         Result := OwnMaster(Result);
     end;
 
-    function ChangedCopy(const aRecord: IwbMainRecord): IwbMainRecord;
+    function Entries(const aEntries: IwbElement): TArray<IwbElement>;
     var
-      lCopyList : TStringList;
-      lBaseList : TStringList;
+      lList : IwbContainerElementRef;
+    begin
+      Result := nil;
+      if Supports(aEntries, IwbContainerElementRef, lList) then
+        for var i := 0 to Pred(lList.ElementCount) do
+          if Supports(lList.Elements[i], IwbContainerElementRef) then
+            Result := Result + [lList.Elements[i]];
+    end;
+
+    function CopyChanged(const aCopy, aAncestor: IwbMainRecord): Boolean;
+    var
+      lCopy, lBase : TArray<IwbElement>;
+      lTaken       : TArray<Boolean>;
+      k            : Integer;
+    begin
+      if aRow.AsSet and not lIsOrderedList then begin
+        var lBaseList: TStringList := nil;
+        var lCopyList := BuildList(ListOf(aCopy));
+        try
+          if Assigned(aAncestor) then
+            lBaseList := BuildList(ListOf(aAncestor))
+          else
+            lBaseList := BuildList(nil);
+          Exit(not ListsEqual(lBaseList, lCopyList));
+        finally
+          lBaseList.Free;
+          lCopyList.Free;
+        end;
+      end;
+      lCopy := Entries(ListOf(aCopy));
+      if Assigned(aAncestor) then
+        lBase := Entries(ListOf(aAncestor));
+      if Length(lCopy) <> Length(lBase) then
+        Exit(True);
+      SetLength(lTaken, Length(lBase));
+      for var j := 0 to High(lCopy) do begin
+        k := 0;
+        if lIsOrderedList then
+          k := j
+        else
+          while (k < High(lBase)) and (lTaken[k] or not SameEntry(lBase[k], lCopy[j])) do
+            Inc(k);
+        if lTaken[k] or not SameEntry(lBase[k], lCopy[j]) then
+          Exit(True);
+        lTaken[k] := True;
+      end;
+      Result := False;
+    end;
+
+    function ChangedCopy(const aRecord: IwbMainRecord): IwbMainRecord;
     begin
       for var lRecord in aRecord.MasterRecordsFromMasterFilesAndSelf do
-        if IsCompareCopy(lRecord) then begin
-          var lAncestor := ComparedMaster(lRecord);
-          lBaseList := nil;
-          lCopyList := BuildList(ListOf(lRecord));
-          try
-            if Assigned(lAncestor) then
-              lBaseList := BuildList(ListOf(lAncestor))
-            else
-              lBaseList := BuildList(nil);
-            if not ListsEqual(lBaseList, lCopyList) then
-              Exit(lRecord);
-          finally
-            lBaseList.Free;
-            lCopyList.Free;
-          end;
-        end;
+        if IsCompareCopy(lRecord) and CopyChanged(lRecord, ComparedMaster(lRecord)) then
+          Exit(lRecord);
       Result := nil;
     end;
 
