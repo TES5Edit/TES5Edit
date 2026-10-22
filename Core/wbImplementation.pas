@@ -690,7 +690,7 @@ type
     procedure AddMainRecord(const aRecord: IwbMainRecord);
     procedure RemoveMainRecord(const aRecord: IwbMainRecord);
     procedure InjectMainRecord(const aRecord: IwbMainRecord);
-    procedure RemoveInjectedMainRecord(const aRecord: IwbMainRecord);
+    procedure RemoveInjectedMainRecord(const aRecord: IwbMainRecord; const aFormID: TwbFormID);
     function InjectionTarget(const aFormID: TwbFormID): IwbFileInternal;
     function IsOwnFormID(const aFormID: TwbFormID; aNew: Boolean): Boolean;
     function HoldsInjected(const aRecord: IwbMainRecord): Boolean;
@@ -998,7 +998,7 @@ type
     procedure AddMainRecord(const aRecord: IwbMainRecord);
     procedure RemoveMainRecord(const aRecord: IwbMainRecord);
     procedure InjectMainRecord(const aRecord: IwbMainRecord);
-    procedure RemoveInjectedMainRecord(const aRecord: IwbMainRecord);
+    procedure RemoveInjectedMainRecord(const aRecord: IwbMainRecord; const aFormID: TwbFormID);
     function InjectionTarget(const aFormID: TwbFormID): IwbFileInternal;
     function IsOwnFormID(const aFormID: TwbFormID; aNew: Boolean): Boolean;
     function HoldsInjected(const aRecord: IwbMainRecord): Boolean;
@@ -1264,7 +1264,8 @@ type
     mrsOFSTRemoved,
     mrsOFSTReserved,
     mrsIndexKeysActive,
-    mrsConflictStored
+    mrsConflictStored,
+    mrsRegisterLater
   );
 
   TwbMainRecordStates = set of TwbMainRecordState;
@@ -1404,6 +1405,9 @@ type
     function CheckChildOfCell: Boolean;
     procedure UpdateCellChildGroup;
     procedure UpdateInteriorCellGroup;
+    procedure ReRegister(const aFile: IwbFileInternal; const aFileFormID: TwbFormID; const aMoveKey: TProc);
+    procedure UpdateIdentityKey;
+    procedure RegisterWithIdentity;
 
     procedure MarkModifiedRecursive(const aElementTypes: TwbElementTypes); override; final;
 
@@ -1422,6 +1426,7 @@ type
     function ContextObj: TwbGameContext; override; final;
     function GetFormID: TwbFormID; inline;
     function GetFixedFormID: TwbFormID; inline;
+    function ComputeFixedFormID(out aCacheable: Boolean): TwbFormID;
     function DoGetFixedFormID: TwbFormID;
     function GetLoadOrderFormID: TwbFormID; inline;
     function DoGetLoadOrderFormID: TwbFormID;
@@ -8912,6 +8917,14 @@ begin
     if not Assigned(HEDR) then
       raise Exception.Create('File ' + GetFileName + ' has a file header with missing HEDR subrecord');
 
+    if not (gcFormIDInRecordHeader in lGameDef.Capabilities) then begin
+      var lLayout := flContextObj.SlotLayout;
+      for var lRecord in flRecords do
+        if Assigned(lRecord) and (lRecord.FormID.ObjectID[lLayout] <> lRecord.FixedFormID.ObjectID[lLayout]) then
+          raise Exception.Create('File ' + GetFileName + ' can not be saved: ' + lRecord.Name + ' is registered as [' +
+            lRecord.FixedFormID.ToDisplayString(lLayout) + '], not under its current identity');
+    end;
+
     if flModule.miExtension = meESM then
       SetIsESM(True);
 
@@ -9302,13 +9315,20 @@ begin
   until not RemovedAny;
 end;
 
-procedure TwbFile.RemoveInjectedMainRecord(const aRecord: IwbMainRecord);
+procedure TwbFile.RemoveInjectedMainRecord(const aRecord: IwbMainRecord; const aFormID: TwbFormID);
 var
   i: Integer;
 begin
-  if (Length(flInjectedRecords) > 0) and FindInjectedID(aRecord.FormID, i) then begin
+  if Length(flInjectedRecords) < 1 then
+    Exit;
 
-    Assert( (aRecord as IwbElement) = (flInjectedRecords[i] as IwbElement) );
+  if not FindInjectedID(aFormID, i) or ((aRecord as IwbElement) <> (flInjectedRecords[i] as IwbElement)) then begin
+    i := High(flInjectedRecords);
+    while (i >= 0) and ((aRecord as IwbElement) <> (flInjectedRecords[i] as IwbElement)) do
+      Dec(i);
+  end;
+
+  if i >= 0 then begin
 
     flInjectedRecords[i] := nil;
     if i < High(flInjectedRecords) then begin
@@ -9448,7 +9468,7 @@ begin
     else begin
       var lTarget := InjectionTarget(aFormID);
       if Assigned(lTarget) then
-        lTarget.RemoveInjectedMainRecord(aRecord);
+        lTarget.RemoveInjectedMainRecord(aRecord, aFormID);
     end;
   except
     on E: Exception do
@@ -13919,8 +13939,9 @@ begin
   end;
 end;
 
-function TwbMainRecord.DoGetFixedFormID: TwbFormID;
+function TwbMainRecord.ComputeFixedFormID(out aCacheable: Boolean): TwbFormID;
 begin
+  aCacheable := False;
   var lCapabilities := GameDefObj.Capabilities;
   if not (gcFormIDInRecordHeader in lCapabilities) then
     Result := GetFormID
@@ -13956,7 +13977,16 @@ begin
       if Result.FileID[lLayout].FullSlot >= lFile.MasterCount[GetMastersUpdated] then
         Result.FileID[lLayout] := lFile.FileFileID[GetMastersUpdated];
   end;
-  mrFixedFormID := Result;
+  aCacheable := True;
+end;
+
+function TwbMainRecord.DoGetFixedFormID: TwbFormID;
+var
+  lCacheable: Boolean;
+begin
+  Result := ComputeFixedFormID(lCacheable);
+  if lCacheable then
+    mrFixedFormID := Result;
 end;
 
 function TwbMainRecord.DoGetLoadOrderFormID: TwbFormID;
@@ -14006,6 +14036,8 @@ begin
       mrName := '';
       mrShortName := '';
       mrDisplayName := '';
+      if not (gcFormIDInRecordHeader in GameDefObj.Capabilities) then
+        UpdateIdentityKey;
     end;
   end;
   inherited;
@@ -14357,6 +14389,8 @@ begin
 
   Inner;
 
+  if not (gcFormIDInRecordHeader in aContainer.GameDefObj.Capabilities) then
+    Include(mrStates, mrsRegisterLater);
   var EndPtr: Pointer := nil;
   Create(lContainer, Pointer(BasePtr), EndPtr, nil);
   BeginUpdate;
@@ -14389,6 +14423,9 @@ begin
           if Assigned(Cell) and not Cell.IsPersistent and Cell.GetGridCell(GridCell) then
             SetPosition(GameDefObj.GridCellToCenterPosition(GridCell));
         end;
+
+      if mrsRegisterLater in mrStates then
+        RegisterWithIdentity;
     end);
 
     CollapseStorage(nil, True);
@@ -14415,7 +14452,8 @@ begin
       raise EwbSkipLoad.Create('Duplicate FormID [' + lFixedFormID.ToDisplayString(ContextObj.SlotLayout) + '] in file ' + lFileName);
     end;
     if Assigned(_File) then begin
-      _File.AddMainRecord(Self);
+      if not (mrsRegisterLater in mrStates) then
+        _File.AddMainRecord(Self);
       if fsIsDeltaPatch in _File.FileStates then
         Include(mrStates, mrsNoUpdateRefs);
     end;
@@ -19456,46 +19494,116 @@ begin
     if Assigned(Master) and ((Master._File as IwbFileInternal).Equals(_File)) then
       raise Exception.Create('FormID [' + aFormID.ToDisplayString(lLayout) + '] is already present in file ' + _File.Name);
 
-    Master := _File.RecordByFormID[FileFormID, True, True];
-    if Assigned(Master) then
-      Master := Master.MasterOrSelf;
+    ReRegister(_File, FileFormID, procedure
+    begin
+      if Assigned(mrGroup) or (GetChildGroup <> nil)  then
+        Assert(mrGroup.GroupLabel = GetFormID.ToCardinal);
+      MakeHeaderWriteable;
+      mrStruct.mrsFormID(lFormIDInHeader)^ := FileFormID;
+      if Assigned(mrGroup) or (GetChildGroup <> nil)  then
+        mrGroup.GroupLabel := FileFormID.ToCardinal;
+    end);
+  end;
+end;
 
-    _File.RemoveMainRecord(Self);
+procedure TwbMainRecord.ReRegister(const aFile: IwbFileInternal; const aFileFormID: TwbFormID; const aMoveKey: TProc);
+var
+  Master : IwbMainRecord;
+begin
+  Master := aFile.RecordByFormID[aFileFormID, True, True];
+  if Assigned(Master) then
+    Master := Master.MasterOrSelf;
+  if Assigned(Master) and Equals(Master) then
+    Master := nil;
 
-    if Assigned(mrMaster) then
-      (IwbMainRecord(mrMaster) as IwbMainRecordInternal).RemoveOverride(Self)
-    else
-      if Length(mrOverrides) > 0 then begin
-        SortOverrides;
-        (mrOverrides[0] as IwbMainRecordInternal).YouAreTheMaster(mrOverrides, mrReferencedBy, mrReferencedByCount);
-      end else
-        InvalidateReferencers;
+  aFile.RemoveMainRecord(Self);
 
-    mrMaster := nil;
-    mrOverrides := nil;
-    mrReferencedBy := nil;
-    mrReferencedByCount := 0;
-    mrReferencedBySize := 0;
-    Exclude(mrStates, mrsIsInjectedChecked);
-    Exclude(mrStates, mrsConflictStored);
+  if Assigned(mrMaster) then
+    (IwbMainRecord(mrMaster) as IwbMainRecordInternal).RemoveOverride(Self)
+  else
+    if Length(mrOverrides) > 0 then begin
+      SortOverrides;
+      (mrOverrides[0] as IwbMainRecordInternal).YouAreTheMaster(mrOverrides, mrReferencedBy, mrReferencedByCount);
+    end else
+      InvalidateReferencers;
 
-    if Assigned(mrGroup) or (GetChildGroup <> nil)  then
-      Assert(mrGroup.GroupLabel = GetFormID.ToCardinal);
-    MakeHeaderWriteable;
-    mrStruct.mrsFormID(lFormIDInHeader)^ := FileFormID;
-    mrFixedFormID := TwbFormID.Null;
-    mrLoadOrderFormID := TwbFormID.Null;
-    Exclude(mrStates, mrsIsInjectedChecked);
-    if Assigned(mrGroup) or (GetChildGroup <> nil)  then
-      mrGroup.GroupLabel := FileFormID.ToCardinal;
-    UpdateInteriorCellGroup;
+  mrMaster := nil;
+  mrOverrides := nil;
+  mrReferencedBy := nil;
+  mrReferencedByCount := 0;
+  mrReferencedBySize := 0;
+  Exclude(mrStates, mrsIsInjectedChecked);
+  Exclude(mrStates, mrsConflictStored);
 
-    _File.AddMainRecord(Self);
-  
-    if Assigned(Master) and not Assigned(mrMaster) and ((Master as IwbMainRecordInternal).ListedInjectedIn <> nil) then
-      (Master as IwbMainRecordInternal).YouGotAMaster(Self);
+  aMoveKey;
+  mrFixedFormID := TwbFormID.Null;
+  mrLoadOrderFormID := TwbFormID.Null;
+  Exclude(mrStates, mrsIsInjectedChecked);
+  UpdateInteriorCellGroup;
 
-    ResetConflict;
+  aFile.AddMainRecord(Self);
+
+  if Assigned(Master) and not Assigned(mrMaster) and ((Master as IwbMainRecordInternal).ListedInjectedIn <> nil) then
+    (Master as IwbMainRecordInternal).YouGotAMaster(Self);
+
+  ResetConflict;
+end;
+
+procedure TwbMainRecord.UpdateIdentityKey;
+var
+  lFile      : IwbFileInternal;
+  lHolder    : IwbMainRecord;
+  lCacheable : Boolean;
+begin
+  if (mrsRegisterLater in mrStates) or mrFixedFormID.IsNull then
+    Exit;
+  if not Supports(GetFile, IwbFileInternal, lFile) then
+    Exit;
+
+  var lLayout := ContextObj.SlotLayout;
+  var lOld := mrFixedFormID;
+  var lNew := ComputeFixedFormID(lCacheable);
+  if lNew.ObjectID[lLayout] = lOld.ObjectID[lLayout] then
+    Exit;
+  if not Equals(lFile.RecordByFormID[lOld, False, True]) then
+    Exit;
+
+  lHolder := lFile.RecordByFormID[lNew, False, True];
+  if Assigned(lHolder) and not Equals(lHolder) and (lHolder._File as IwbFileInternal).Equals(lFile) then begin
+    wbProgress('<Error: %s [%s] can not take the identity "%s": %s holds it in %s; it keeps its previous identity>',
+      [string(GetSignature), lOld.ToDisplayString(lLayout), mrDef.GetIdentity(Self), lHolder.Name, lFile.Name]);
+    Exit;
+  end;
+
+  ReRegister(lFile, lNew, procedure
+  begin
+    if Assigned(mrGroup) then
+      mrGroup.GroupLabel := GetFormID.ToCardinal;
+  end);
+end;
+
+procedure TwbMainRecord.RegisterWithIdentity;
+var
+  lFile   : IwbFileInternal;
+  lFormID : TwbFormID;
+begin
+  if not mrDef.GetFormID(Self, lFormID) and (mrDef.GetIdentity(Self) = '') then
+    if ContextObj.BeginInternalEdit(True) then try
+      SetEditorID(ContextObj.UnusedIdentity(mrDef.GetFormIDNameBase, 'xEdit_' + GetSignature + '_'));
+    finally
+      wbEndInternalEdit;
+    end;
+
+  Exclude(mrStates, mrsRegisterLater);
+  mrFixedFormID := TwbFormID.Null;
+  mrLoadOrderFormID := TwbFormID.Null;
+  if Supports(GetFile, IwbFileInternal, lFile) then try
+    lFile.AddMainRecord(Self);
+  except
+    var lContainer := GetContainer;
+    if Assigned(lContainer) then
+      lContainer.RemoveElement(Self);
+    raise;
   end;
 end;
 
@@ -20281,7 +20389,7 @@ begin
   Assert(not Assigned(mrMaster));
   var lInjectionMaster := ListedInjectedIn;
   if Assigned(lInjectionMaster) then
-    lInjectionMaster.RemoveInjectedMainRecord(Self);
+    lInjectionMaster.RemoveInjectedMainRecord(Self, GetFormID);
 
   (aMaster as IwbMainRecordInternal).YouAreTheMaster(Self as IwbMainRecord, mrOverrides, mrReferencedBy, mrReferencedByCount);
 

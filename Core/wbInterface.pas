@@ -4353,6 +4353,7 @@ type
     gcConflictRulesGeneration : Cardinal;
     gcIdentities           : array[Byte] of TDictionary<string, Cardinal>;
     gcNextIDs              : array[Byte] of Cardinal;
+    gcUnusedIdentityCount  : Cardinal;
     gcSaveContexts         : TArray<TwbSaveContext>;
     gcSaveContextsLock     : TObject;
 
@@ -4390,6 +4391,7 @@ type
     procedure DetachFilesFromModules; virtual;
     function SlotLayout: TwbSlotLayout;
     function FormIDFromIdentity(aFormIDBase, aFormIDNameBase: Byte; aIdentity: string): TwbFormID;
+    function UnusedIdentity(aFormIDNameBase: Byte; const aPrefix: string): string;
     function ExpandFileName(const aFileName: string): string;
     function FlagPluginsESM(const aReport: TProc<string>): Boolean;
     procedure MarkMasterOnamsForRebuild;
@@ -7712,6 +7714,15 @@ begin
   end;
 
   Result := TwbFormID.FromCardinal( (Cardinal(aFormIDBase) shl 16) + i );
+end;
+
+function TwbGameContext.UnusedIdentity(aFormIDNameBase: Byte; const aPrefix: string): string;
+begin
+  var lIdentities := gcIdentities[aFormIDNameBase];
+  repeat
+    Inc(gcUnusedIdentityCount);
+    Result := aPrefix + IntToStr(gcUnusedIdentityCount);
+  until not Assigned(lIdentities) or not lIdentities.ContainsKey(Result.ToLowerInvariant);
 end;
 
 function TwbGameContext.GetFileCount: Integer;
