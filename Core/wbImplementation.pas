@@ -4063,6 +4063,11 @@ var
     lMasterList    : TStringList;
     lMasterSpace   : TStringList;
     lSpaces        : TArray<TStringList>;
+    lBases         : TArray<TStringList>;
+    lOwnedBases    : TArray<TStringList>;
+    lVersions      : TDictionary<Pointer, Integer>;
+    lMastersOf     : TArray<TArray<Integer>>;
+    lClosures      : TArray<TArray<Boolean>>;
     lKnown         : TStringList;
     lSortable      : IwbSortableContainer;
     lEditorID      : string;
@@ -4249,6 +4254,99 @@ var
       Result := nil;
     end;
 
+    function VersionOf(const aRecord: IwbMainRecord): Integer;
+    begin
+      if not Assigned(aRecord) or not lVersions.TryGetValue(aRecord.ElementID, Result) then
+        Result := -1;
+    end;
+
+    function IsMasterOf(aMaster, aVersion: Integer): Boolean;
+    begin
+      for var m in lMastersOf[aVersion] do
+        if m = aMaster then
+          Exit(True);
+      Result := False;
+    end;
+
+    procedure FindMasters;
+    begin
+      lVersions := TDictionary<Pointer, Integer>.Create;
+      lVersions.AddOrSetValue(aMaster.ElementID, 0);
+      for var i := 0 to Pred(aMaster.OverrideCount) do
+        lVersions.AddOrSetValue(aMaster.Overrides[i].ElementID, Succ(i));
+      SetLength(lMastersOf, Succ(aMaster.OverrideCount));
+      SetLength(lClosures, Succ(aMaster.OverrideCount));
+      for var i := 0 to Pred(aMaster.OverrideCount) do begin
+        var lVersion := aMaster.Overrides[i];
+        if IsCompareCopy(lVersion) then
+          Continue;
+        for var lRecord in lVersion.MasterRecordsFromMasterFilesAndSelf do
+          if not lVersion.Equals(lRecord) then begin
+            var lAncestor := lRecord;
+            if IsCompareCopy(lAncestor) then
+              lAncestor := ComparedMaster(lAncestor);
+            var m := VersionOf(lAncestor);
+            if (m >= 0) and (m <= i) and not IsMasterOf(m, Succ(i)) then
+              lMastersOf[Succ(i)] := lMastersOf[Succ(i)] + [m];
+          end;
+      end;
+    end;
+
+    function Closure(aVersion: Integer): TArray<Boolean>;
+    begin
+      if not Assigned(lClosures[aVersion]) then begin
+        var lClosure: TArray<Boolean> := nil;
+        SetLength(lClosure, Length(lClosures));
+        for var m in lMastersOf[aVersion] do begin
+          lClosure[m] := True;
+          var lInner := Closure(m);
+          for var i := 0 to Pred(m) do
+            if lInner[i] then
+              lClosure[i] := True;
+        end;
+        lClosures[aVersion] := lClosure;
+      end;
+      Result := lClosures[aVersion];
+    end;
+
+    function NeedsMerge(aVersion, aCompared: Integer): Boolean;
+    begin
+      for var m in lMastersOf[aVersion] do
+        if (m <> aCompared) and not IsMasterOf(m, aCompared) then begin
+          var lClosure := Closure(aCompared);
+          if not lClosure[m] then
+            Exit(True);
+        end;
+      Result := False;
+    end;
+
+    function CopyOf(aList: TStringList): TStringList;
+    begin
+      Result := TStringList.Create;
+      Result.UseLocale := False;
+      Result.Sorted := True;
+      if Assigned(aList) then
+        for var i := 0 to Pred(aList.Count) do
+          Result.AddObject(aList[i], aList.Objects[i]);
+    end;
+
+    function MergedBase(aVersion: Integer): TStringList;
+    begin
+      var lClosure := Closure(aVersion);
+      if lClosure[0] then
+        Result := CopyOf(lSpaces[0])
+      else
+        Result := CopyOf(nil);
+      try
+        for var i := 1 to Pred(aVersion) do
+          if lClosure[i] and Assigned(lSpaces[i]) and Assigned(lBases[i]) then
+            UpdateTargetList(lBases[i], lSpaces[i], Result);
+      except
+        Result.Free;
+        raise;
+      end;
+    end;
+
   begin
     var lHasCopy := IsCompareCopy(aMaster);
     for j := 0 to Pred(aMaster.OverrideCount) do
@@ -4257,6 +4355,7 @@ var
 
     SetLength(lTargetLists, Length(aRow.Lists));
     SetLength(lWinningLists, Length(aRow.Lists));
+    lVersions := nil;
     try
       lIsFaulty := False;
       lWinner := nil;
@@ -4311,15 +4410,22 @@ var
 
         lTargetLists[l] := BuildList(BaseEntries);
         lSpaces := nil;
+        lBases := nil;
+        lOwnedBases := nil;
         lKnown := nil;
         try
-          if not aRow.AsSet and not lIsOrderedList then begin
+          if not lIsOrderedList then begin
+            if not Assigned(lVersions) then
+              FindMasters;
             SetLength(lSpaces, Succ(aMaster.OverrideCount));
+            SetLength(lBases, Succ(aMaster.OverrideCount));
             lSpaces[0] := BuildList(BaseEntries);
-            lKnown := TStringList.Create;
-            lKnown.UseLocale := False;
-            lKnown.Sorted := True;
-            Remember(lKnown, lTargetLists[l]);
+            if not aRow.AsSet then begin
+              lKnown := TStringList.Create;
+              lKnown.UseLocale := False;
+              lKnown.Sorted := True;
+              Remember(lKnown, lTargetLists[l]);
+            end;
           end;
           for j := 0 to Pred(aMaster.OverrideCount) do begin
             lOverride := aMaster.Overrides[j];
@@ -4336,27 +4442,33 @@ var
                     lIsFaulty := True
                   else
                     UpdateOrderedTargetList(lMasterList, lCurrentList, lTargetLists[l]);
-                end else if aRow.AsSet then begin
-                  lMasterList := BuildList(MasterEntries);
-                  UpdateTargetList(lMasterList, lCurrentList, lTargetLists[l]);
                 end else begin
                   lMasterSpace := nil;
-                  if Assigned(lCurrentMaster) then
-                    if lCurrentMaster.Equals(aMaster) then
-                      lMasterSpace := lSpaces[0]
-                    else
-                      for k := Pred(j) downto 0 do
-                        if lCurrentMaster.Equals(aMaster.Overrides[k]) then begin
-                          lMasterSpace := lSpaces[Succ(k)];
-                          Break;
-                        end;
+                  k := VersionOf(lCurrentMaster);
+                  if (k >= 0) and (k <= j) then
+                    if NeedsMerge(Succ(j), k) then begin
+                      lMasterList := MergedBase(Succ(j));
+                      lMasterSpace := lMasterList;
+                    end else
+                      lMasterSpace := lSpaces[k];
                   if not Assigned(lMasterSpace) then begin
                     lMasterList := BuildList(MasterEntries);
                     lMasterSpace := lMasterList;
                   end;
-                  lSpaces[Succ(j)] := AlignList(lMasterSpace, lCurrentList, lTargetLists[l], lKnown);
-                  UpdateTargetList(lMasterSpace, lSpaces[Succ(j)], lTargetLists[l]);
-                  Remember(lKnown, lTargetLists[l]);
+                  lBases[Succ(j)] := lMasterSpace;
+                  if Assigned(lMasterList) then begin
+                    lOwnedBases := lOwnedBases + [lMasterList];
+                    lMasterList := nil;
+                  end;
+                  if aRow.AsSet then begin
+                    UpdateTargetList(lMasterSpace, lCurrentList, lTargetLists[l]);
+                    lSpaces[Succ(j)] := lCurrentList;
+                    lCurrentList := nil;
+                  end else begin
+                    lSpaces[Succ(j)] := AlignList(lMasterSpace, lCurrentList, lTargetLists[l], lKnown);
+                    UpdateTargetList(lMasterSpace, lSpaces[Succ(j)], lTargetLists[l]);
+                    Remember(lKnown, lTargetLists[l]);
+                  end;
                 end;
               finally
                 lMasterList.Free;
@@ -4371,6 +4483,10 @@ var
           for var lSpace in lSpaces do
             lSpace.Free;
           lSpaces := nil;
+          for var lBase in lOwnedBases do
+            lBase.Free;
+          lOwnedBases := nil;
+          lBases := nil;
           lKnown.Free;
         end;
         if lIsFaulty then
@@ -4464,6 +4580,7 @@ var
         FreeAndNil(lWinningLists[l]);
         FreeAndNil(lTargetLists[l]);
       end;
+      lVersions.Free;
       lKeepAlive := nil;
     end;
   end;
