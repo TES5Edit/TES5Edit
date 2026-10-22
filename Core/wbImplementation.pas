@@ -3999,15 +3999,29 @@ var
     end;
 
     procedure CountOnce;
+    var
+      lCandidates : TArray<Integer>;
+      lLive       : TArray<Integer>;
     begin
+      lCandidates := nil;
+      lLive := nil;
+      for var i := lRight to Pred(lRightEnd) do begin
+        var k := lEqual[i - lRight];
+        if (k >= 0) and aAdded.Find(aLeftList[k], lIndex) and aTargetList.Find(aLeftList[k], lIndex) and
+           not SameObject(aLeftList, aTargetList, k, lIndex) then begin
+          lCandidates := lCandidates + [i];
+          lLive := lLive + [lIndex];
+        end;
+      end;
+      if Length(lCandidates) = 0 then
+        Exit;
       for var j := lRight to Pred(lRightEnd) do
         if lKeys[j - lRight] = '' then
-          for var i := lRight to Pred(lRightEnd) do begin
-            var k := lEqual[i - lRight];
-            if (k >= 0) and aAdded.Find(aLeftList[k], lIndex) and aTargetList.Find(aLeftList[k], lIndex) and
-               not SameObject(aLeftList, aTargetList, k, lIndex) and SameObject(aTargetList, aRightList, lIndex, j) then begin
-              lEqual[i - lRight] := -1;
-              lKeys[j - lRight] := aLeftList[k];
+          for var c := 0 to High(lCandidates) do begin
+            var i := lCandidates[c];
+            if (i >= 0) and SameObject(aTargetList, aRightList, lLive[c], j) then begin
+              lCandidates[c] := -1;
+              lKeys[j - lRight] := aLeftList[lEqual[i - lRight]];
               lKeys[i - lRight] := lBase + #0 + IntToHex64(lNext, KeyCounterDigits);
               aReserved.Add(lKeys[i - lRight]);
               Inc(lNext);
