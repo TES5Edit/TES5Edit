@@ -19584,10 +19584,13 @@ end;
 
 procedure TwbMainRecord.RegisterWithIdentity;
 var
-  lFile   : IwbFileInternal;
-  lFormID : TwbFormID;
+  lFile      : IwbFileInternal;
+  lFormID    : TwbFormID;
+  lEditorID  : IwbSubRecordDef;
 begin
-  if not mrDef.GetFormID(Self, lFormID) and (mrDef.GetIdentity(Self) = '') then
+  var lIndexed := Supports(mrDef.GetKnownSubRecordMember(ksrEditorID), IwbSubRecordDef, lEditorID) and
+    Supports(lEditorID.Value, IwbIntegerDef);
+  if not lIndexed and not mrDef.GetFormID(Self, lFormID) and (mrDef.GetIdentity(Self) = '') then
     if ContextObj.BeginInternalEdit(True) then try
       SetEditorID(ContextObj.UnusedIdentity(mrDef.GetFormIDNameBase, 'xEdit_' + GetSignature + '_'));
     finally
