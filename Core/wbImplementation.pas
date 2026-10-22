@@ -4183,7 +4183,28 @@ var
       Result := nil;
     end;
 
+    function CopyMaster(const aRecord: IwbMainRecord): IwbMainRecord;
+    begin
+      for var lRecord in aRecord.MasterRecordsFromMasterFilesAndSelf do
+        if IsCompareCopy(lRecord) then
+          Exit(lRecord);
+      Result := nil;
+    end;
+
   begin
+    for j := 0 to Pred(aMaster.OverrideCount) do begin
+      lOverride := aMaster.Overrides[j];
+      if IsCompareCopy(lOverride) then
+        Continue;
+      var lCopy := CopyMaster(lOverride);
+      if Assigned(lCopy) then begin
+        Report('Error: Can''t merge ' + aMaster.Name + ': "' + lOverride._File.FileName + '" lists the Compare To copy "' +
+          lCopy._File.FileName + '" as a master');
+        lFaulty.Add(aMaster);
+        Exit;
+      end;
+    end;
+
     SetLength(lTargetLists, Length(aRow.Lists));
     SetLength(lWinningLists, Length(aRow.Lists));
     try
@@ -4243,8 +4264,6 @@ var
             lCurrentList := BuildList(ListOf(lOverride));
             try
               lCurrentMaster := OwnMaster(lOverride);
-              while Assigned(lCurrentMaster) and IsCompareCopy(lCurrentMaster) do
-                lCurrentMaster := OwnMaster(lCurrentMaster);
               lMasterList := nil;
               try
                 if lIsOrderedList then begin
