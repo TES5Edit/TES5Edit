@@ -1329,6 +1329,7 @@ type
     function GetIsNotReachable: Boolean; override; final;
     function GetIsReachable: Boolean; override; final;
     function GetCountedRecordCount: Cardinal; override; final;
+    function IsEmbeddedReference: Boolean;
     procedure InitDataPtr; override; final;
     procedure DecompressIfNeeded;
     procedure ScanData; override; final;
@@ -8952,7 +8953,7 @@ begin
     if RecordCount < 1 then
       raise Exception.Create('File ' + GetFileName + ' has an invalid record count');
 
-    HEDR.Elements[1].EditValue := IntToStr(Pred(RecordCount));
+    HEDR.ElementEditValues['Number of Records'] := IntToStr(Pred(RecordCount));
     j := 0;
     ONAMs := nil;
     if lGameDef.IsSkyrim or lGameDef.IsFallout3 or lGameDef.IsFallout4 or lGameDef.IsFallout76 or lGameDef.IsStarfield then begin
@@ -16612,7 +16613,15 @@ end;
 
 function TwbMainRecord.GetCountedRecordCount: Cardinal;
 begin
-  Result := 1;
+  if IsEmbeddedReference then
+    Result := 0
+  else
+    Result := 1;
+end;
+
+function TwbMainRecord.IsEmbeddedReference: Boolean;
+begin
+  Result := (gcReferencesEmbeddedInCell in GameDefObj.Capabilities) and (GetSignature = 'REFR');
 end;
 
 function TwbMainRecord.GetReferencedBy(aIndex: Integer): IwbMainRecord;
@@ -18171,7 +18180,7 @@ var
 
             case GroupRecord.GroupType of
               8: begin
-                if not mrStruct.mrsFlags(gcFormIDInRecordHeader in lCapabilities).IsPersistent then
+                if not IsEmbeddedReference and not mrStruct.mrsFlags(gcFormIDInRecordHeader in lCapabilities).IsPersistent then
                   raise Exception.Create('Record "' + GetFullPath + '" needs to have it''s Persistent flag set to be contained in ' + GroupRecord.Name);
               end;
               10: begin
@@ -18201,11 +18210,13 @@ var
              (GetSignature <> 'PHZD')     {>>> Skyrim <<<}
           then
             raise Exception.Create('Record "' + GetFullPath + '" can not be contained in ' + GroupRecord.Name);
-          var lFlags := mrStruct.mrsFlags(gcFormIDInRecordHeader in lCapabilities);
-          if lFlags.IsPersistent then
-            raise Exception.Create('Record "' + GetFullPath + '" can not have it''s Persistent flag set to be contained in ' + GroupRecord.Name);
-          if lFlags.IsVisibleWhenDistant and not (gcVWDInTemporary in lCapabilities) then
-            raise Exception.Create('Record "' + GetFullPath + '" can not have it''s Visible when Distant flag set to be contained in ' + GroupRecord.Name);
+          if not IsEmbeddedReference then begin
+            var lFlags := mrStruct.mrsFlags(gcFormIDInRecordHeader in lCapabilities);
+            if lFlags.IsPersistent then
+              raise Exception.Create('Record "' + GetFullPath + '" can not have it''s Persistent flag set to be contained in ' + GroupRecord.Name);
+            if lFlags.IsVisibleWhenDistant and not (gcVWDInTemporary in lCapabilities) then
+              raise Exception.Create('Record "' + GetFullPath + '" can not have it''s Visible when Distant flag set to be contained in ' + GroupRecord.Name);
+          end;
         end;
       end;
     end;
@@ -23000,7 +23011,9 @@ end;
 
 function TwbGroupRecord.GetCountedRecordCount: Cardinal;
 begin
-  Result := Succ(inherited GetCountedRecordCount);
+  Result := inherited GetCountedRecordCount;
+  if not (gcUngroupedRecordStream in GameDefObj.Capabilities) then
+    Inc(Result);
 end;
 
 function TwbGroupRecord.GetShortName: string;
