@@ -4391,6 +4391,7 @@ type
     procedure DetachFilesFromModules; virtual;
     function SlotLayout: TwbSlotLayout;
     function FormIDFromIdentity(aFormIDBase, aFormIDNameBase: Byte; aIdentity: string): TwbFormID;
+    function IsKnownIdentity(aFormIDNameBase: Byte; const aIdentity: string): Boolean;
     function UnusedIdentity(aFormIDNameBase: Byte; const aPrefix: string): string;
     function ExpandFileName(const aFileName: string): string;
     function FlagPluginsESM(const aReport: TProc<string>): Boolean;
@@ -7716,13 +7717,18 @@ begin
   Result := TwbFormID.FromCardinal( (Cardinal(aFormIDBase) shl 16) + i );
 end;
 
-function TwbGameContext.UnusedIdentity(aFormIDNameBase: Byte; const aPrefix: string): string;
+function TwbGameContext.IsKnownIdentity(aFormIDNameBase: Byte; const aIdentity: string): Boolean;
 begin
   var lIdentities := gcIdentities[aFormIDNameBase];
+  Result := Assigned(lIdentities) and lIdentities.ContainsKey(aIdentity.ToLowerInvariant);
+end;
+
+function TwbGameContext.UnusedIdentity(aFormIDNameBase: Byte; const aPrefix: string): string;
+begin
   repeat
     Inc(gcUnusedIdentityCount);
     Result := aPrefix + IntToStr(gcUnusedIdentityCount);
-  until not Assigned(lIdentities) or not lIdentities.ContainsKey(Result.ToLowerInvariant);
+  until not IsKnownIdentity(aFormIDNameBase, Result);
 end;
 
 function TwbGameContext.GetFileCount: Integer;

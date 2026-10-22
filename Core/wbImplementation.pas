@@ -1206,6 +1206,7 @@ type
     procedure TakeDenseIDFrom(aContext: TwbLoadingGameContext; aMark: Cardinal);
     procedure BumpChainStampAtMost(aMark: Cardinal);
     procedure CheckIdentityAfterSet(const aElement: IwbElement; const aOldValue: Variant);
+    procedure RegisterWithIdentity(aFresh: Boolean);
   end;
 
   IwbMainRecordEntry = interface(IwbMainRecordInternal)
@@ -1408,7 +1409,7 @@ type
     procedure UpdateInteriorCellGroup;
     procedure ReRegister(const aFile: IwbFileInternal; const aFileFormID: TwbFormID; const aMoveKey: TProc);
     procedure UpdateIdentityKey;
-    procedure RegisterWithIdentity;
+    procedure RegisterWithIdentity(aFresh: Boolean);
     function RefreshKnownSubRecord(const aSubRecord: IwbSubRecord): Boolean;
     function IdentityTakenInFile(const aElement: IwbElement; out aIdentity: string): IwbMainRecord;
 
@@ -1595,7 +1596,8 @@ type
                        const aPrevMainRecord : IwbMainRecord); override; final;
     constructor Create(const aContainer : IwbContainer;
                        const aSignature : TwbSignature;
-                       const aFormID    : TwbFormID); overload;
+                       const aFormID    : TwbFormID;
+                             aRegister  : Boolean = True); overload;
     destructor Destroy; override; final;
 
     function GetName: string; override; final;
@@ -14295,7 +14297,8 @@ begin
     Result := MRI.IsSameData(dcBasePtr, dcEndPtr);
 end;
 
-constructor TwbMainRecord.Create(const aContainer: IwbContainer; const aSignature: TwbSignature; const aFormID: TwbFormID);
+constructor TwbMainRecord.Create(const aContainer: IwbContainer; const aSignature: TwbSignature; const aFormID: TwbFormID;
+  aRegister: Boolean);
 var
   lContainer   : IwbContainer;
   BasePtr      : PwbMainRecordStruct;
@@ -14430,8 +14433,8 @@ begin
             SetPosition(GameDefObj.GridCellToCenterPosition(GridCell));
         end;
 
-      if mrsRegisterLater in mrStates then
-        RegisterWithIdentity;
+      if aRegister then
+        RegisterWithIdentity(False);
     end);
 
     CollapseStorage(nil, True);
@@ -19596,20 +19599,26 @@ begin
   end);
 end;
 
-procedure TwbMainRecord.RegisterWithIdentity;
+procedure TwbMainRecord.RegisterWithIdentity(aFresh: Boolean);
 var
   lFile      : IwbFileInternal;
   lFormID    : TwbFormID;
   lEditorID  : IwbSubRecordDef;
 begin
+  if not (mrsRegisterLater in mrStates) then
+    Exit;
+
   var lIndexed := Supports(mrDef.GetKnownSubRecordMember(ksrEditorID), IwbSubRecordDef, lEditorID) and
     Supports(lEditorID.Value, IwbIntegerDef);
-  if not lIndexed and not mrDef.GetFormID(Self, lFormID) and (mrDef.GetIdentity(Self) = '') then
-    if ContextObj.BeginInternalEdit(True) then try
-      SetEditorID(ContextObj.UnusedIdentity(mrDef.GetFormIDNameBase, 'xEdit_' + GetSignature + '_'));
-    finally
-      wbEndInternalEdit;
-    end;
+  if not lIndexed and not mrDef.GetFormID(Self, lFormID) then begin
+    var lIdentity := mrDef.GetIdentity(Self);
+    if (lIdentity = '') or (aFresh and ContextObj.IsKnownIdentity(mrDef.GetFormIDNameBase, lIdentity)) then
+      if ContextObj.BeginInternalEdit(True) then try
+        SetEditorID(ContextObj.UnusedIdentity(mrDef.GetFormIDNameBase, 'xEdit_' + GetSignature + '_'));
+      finally
+        wbEndInternalEdit;
+      end;
+  end;
 
   Exclude(mrStates, mrsRegisterLater);
   mrFixedFormID := TwbFormID.Null;
@@ -22542,11 +22551,12 @@ var
         lFormID := _File.LoadOrderFormIDtoFileFormID(aSource.LoadOrderFormID, True);
     end;
 
+    var lByIdentity := not (gcFormIDInRecordHeader in GameDefObj.Capabilities);
     var lIsNew := False;
 
     if not Assigned(Result) then begin
 
-      Result := TwbMainRecord.Create(Self, aSource.Signature, lFormID);
+      Result := TwbMainRecord.Create(Self, aSource.Signature, lFormID, not lByIdentity);
       lIsNew := True;
 
     end else begin
@@ -22563,7 +22573,7 @@ var
             if not Equals(Result.Container) then begin
               Result.Remove;
               Result := nil;
-              Result := TwbMainRecord.Create(Self, aSource.Signature, lFormID);
+              Result := TwbMainRecord.Create(Self, aSource.Signature, lFormID, not lByIdentity);
             end;
           end;
           coDelete: begin
@@ -22578,7 +22588,7 @@ var
 
     end;
 
-    if cfDeepCopy in aFlags then begin
+    if (cfDeepCopy in aFlags) or (lIsNew and lByIdentity and not (cfAsNew in aFlags)) then begin
       var lResult := Result as IwbMainRecord;
 
       if not aSource.IsDeleted then
@@ -22594,7 +22604,7 @@ var
       if not (lResult.IsPartialForm or lResult.IsDeleted) then
         Result.Assign(wbAssignThis, aElement, False);
 
-      if not lResult.IsDeleted and (aSource.EditorID <> '') then begin
+      if not lResult.IsDeleted and (aSource.EditorID <> '') and ((cfAsNew in aFlags) or not lByIdentity) then begin
         var lEditorID := aSource.EditorID;
         lEditorID := RemovePrefix(lEditorID, aRules.PrefixRemove);
         lEditorID := RemoveSuffix(lEditorID, aRules.SuffixRemove);
@@ -22605,6 +22615,9 @@ var
         end;
       end;
     end;
+
+    if lByIdentity then
+      (Result as IwbMainRecordInternal).RegisterWithIdentity(cfAsNew in aFlags);
 
     if not (cfAsNew in aFlags) and aSource.IsMaster then
       if (Result._File.LoadOrder < aSource._File.LoadOrder) or
