@@ -1205,6 +1205,7 @@ type
     procedure ResetConflictMember;
     procedure TakeDenseIDFrom(aContext: TwbLoadingGameContext; aMark: Cardinal);
     procedure BumpChainStampAtMost(aMark: Cardinal);
+    procedure CheckIdentityAfterSet(const aElement: IwbElement; const aOldValue: Variant);
   end;
 
   IwbMainRecordEntry = interface(IwbMainRecordInternal)
@@ -1408,6 +1409,8 @@ type
     procedure ReRegister(const aFile: IwbFileInternal; const aFileFormID: TwbFormID; const aMoveKey: TProc);
     procedure UpdateIdentityKey;
     procedure RegisterWithIdentity;
+    function RefreshKnownSubRecord(const aSubRecord: IwbSubRecord): Boolean;
+    function IdentityTakenInFile(const aElement: IwbElement; out aIdentity: string): IwbMainRecord;
 
     procedure MarkModifiedRecursive(const aElementTypes: TwbElementTypes); override; final;
 
@@ -1565,6 +1568,7 @@ type
     procedure ResetConflictMember;
     procedure TakeDenseIDFrom(aContext: TwbLoadingGameContext; aMark: Cardinal);
     procedure BumpChainStampAtMost(aMark: Cardinal);
+    procedure CheckIdentityAfterSet(const aElement: IwbElement; const aOldValue: Variant);
 
     {---IwbMainRecordEntry---}
     procedure RemoveEntry;
@@ -14011,27 +14015,9 @@ end;
 procedure TwbMainRecord.ElementChanged(const aElement: IwbElement; aContainer: Pointer);
 var
   SubRecord   : IwbSubRecord;
-  NotRelevant : Boolean;
 begin
-  if Assigned(mrDef) and Supports(aElement, IwbSubRecord, SubRecord) then begin
-    NotRelevant := False;
-    if SubRecord.Signature = mrDef.KnownSubRecordSignatures[ksrEditorID] then begin
-      mrEditorID := mrDef.GetEditorID(SubRecord);
-      Exclude(mrStates, mrsEditorIDFromCache);
-    end else if SubRecord.Signature = mrDef.KnownSubRecordSignatures[ksrFullName] then begin
-      mrFullName := SubRecord.EditValue;
-      Exclude(mrStates, mrsFullNameFromCache);
-    end else if SubRecord.Signature = mrDef.KnownSubRecordSignatures[ksrBaseRecord] then
-      Exclude(mrStates, mrsBaseRecordChecked)
-    else if (SubRecord.Signature = mrDef.KnownSubRecordSignatures[ksrGridCell]) and (SubRecord.Container.Equals(Self)) then begin
-      if mrDef.GetGridCell(SubRecord, mrGridCell) then
-        Include(mrStates, mrsHasGridCell)
-      else
-        Exclude(mrStates, mrsHasGridCell);
-      Include(mrStates, mrsGridCellChecked);
-    end else
-      NotRelevant := True;
-    if not NotRelevant then begin
+  if Assigned(mrDef) and Supports(aElement, IwbSubRecord, SubRecord) then
+    if RefreshKnownSubRecord(SubRecord) then begin
       (GetFile as IwbFileInternal).IncGeneration;
       mrName := '';
       mrShortName := '';
@@ -14039,11 +14025,31 @@ begin
       if not (gcFormIDInRecordHeader in GameDefObj.Capabilities) then
         UpdateIdentityKey;
     end;
-  end;
   inherited;
   UpdateKeys;
   if not (mrsNoUpdateRefs in mrStates) then
     UpdateRefs;
+end;
+
+function TwbMainRecord.RefreshKnownSubRecord(const aSubRecord: IwbSubRecord): Boolean;
+begin
+  Result := True;
+  if aSubRecord.Signature = mrDef.KnownSubRecordSignatures[ksrEditorID] then begin
+    mrEditorID := mrDef.GetEditorID(aSubRecord);
+    Exclude(mrStates, mrsEditorIDFromCache);
+  end else if aSubRecord.Signature = mrDef.KnownSubRecordSignatures[ksrFullName] then begin
+    mrFullName := aSubRecord.EditValue;
+    Exclude(mrStates, mrsFullNameFromCache);
+  end else if aSubRecord.Signature = mrDef.KnownSubRecordSignatures[ksrBaseRecord] then
+    Exclude(mrStates, mrsBaseRecordChecked)
+  else if (aSubRecord.Signature = mrDef.KnownSubRecordSignatures[ksrGridCell]) and (aSubRecord.Container.Equals(Self)) then begin
+    if mrDef.GetGridCell(aSubRecord, mrGridCell) then
+      Include(mrStates, mrsHasGridCell)
+    else
+      Exclude(mrStates, mrsHasGridCell);
+    Include(mrStates, mrsGridCellChecked);
+  end else
+    Result := False;
 end;
 
 function TwbMainRecord.EnsureChildGroup: IwbGroupRecord;
@@ -19618,6 +19624,57 @@ begin
   end;
 end;
 
+function TwbMainRecord.IdentityTakenInFile(const aElement: IwbElement; out aIdentity: string): IwbMainRecord;
+var
+  lChild     : IwbElement;
+  lSubRecord : IwbSubRecord;
+  lFile      : IwbFileInternal;
+  lCacheable : Boolean;
+begin
+  Result := nil;
+  aIdentity := '';
+  if (mrsRegisterLater in mrStates) or mrFixedFormID.IsNull or not Assigned(mrDef) then
+    Exit;
+
+  lChild := aElement;
+  while Assigned(lChild) and Assigned(lChild.Container) and not Equals(lChild.Container) do
+    lChild := lChild.Container;
+  if not Supports(lChild, IwbSubRecord, lSubRecord) or not RefreshKnownSubRecord(lSubRecord) then
+    Exit;
+  if not Supports(GetFile, IwbFileInternal, lFile) then
+    Exit;
+
+  var lLayout := ContextObj.SlotLayout;
+  var lNew := ComputeFixedFormID(lCacheable);
+  if lNew.ObjectID[lLayout] = mrFixedFormID.ObjectID[lLayout] then
+    Exit;
+  if not Equals(lFile.RecordByFormID[mrFixedFormID, False, True]) then
+    Exit;
+
+  Result := lFile.RecordByFormID[lNew, False, True];
+  if Assigned(Result) and (Equals(Result) or not (Result._File as IwbFileInternal).Equals(lFile)) then
+    Result := nil;
+  if Assigned(Result) then
+    aIdentity := mrDef.GetIdentity(Self);
+end;
+
+procedure TwbMainRecord.CheckIdentityAfterSet(const aElement: IwbElement; const aOldValue: Variant);
+var
+  lIdentity : string;
+begin
+  var lHolder := IdentityTakenInFile(aElement, lIdentity);
+  if not Assigned(lHolder) then
+    Exit;
+
+  if ContextObj.BeginInternalEdit(True) then try
+    aElement.NativeValue := aOldValue;
+  finally
+    wbEndInternalEdit;
+  end;
+  raise Exception.Create(Format('%s can not take the identity "%s": %s holds it in %s', [GetName, lIdentity, lHolder.Name,
+    GetFile.FileName]));
+end;
+
 procedure TwbMainRecord.SetMaster(const aMaster: IwbMainRecord);
 begin
   mrMaster := Pointer(aMaster);
@@ -24845,8 +24902,9 @@ end;
 
 procedure TwbElement.DoAfterSet(const aOldValue, aNewValue: Variant);
 var
-  NamedDef1: IwbNamedDef;
-  NamedDef2: IwbNamedDef;
+  NamedDef1  : IwbNamedDef;
+  NamedDef2  : IwbNamedDef;
+  MainRecord : IwbMainRecordInternal;
 begin
   NamedDef1 := GetValueDef;
   if Assigned(NamedDef1) then
@@ -24857,6 +24915,12 @@ begin
       NamedDef2.AfterSet(Self, aOldValue, aNewValue);
 
   Exclude(eStates, esReportedErrorReading);
+
+  var lGameDef := GameDefObj;
+  if Assigned(lGameDef) and not (gcFormIDInRecordHeader in lGameDef.Capabilities) and
+    Supports(GetContainingMainRecord, IwbMainRecordInternal, MainRecord)
+  then
+    MainRecord.CheckIdentityAfterSet(Self, aOldValue);
 end;
 
 procedure TwbElement.DoReset(aForce: Boolean);
