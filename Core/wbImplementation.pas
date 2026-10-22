@@ -4366,7 +4366,7 @@ var
       Result := aBase + #0 + IntToHex64(lNext, KeyCounterDigits);
     end;
 
-    function MappedMerge(aVersion: Integer; const aSpaces: TArray<TStringList>; aKnown: TStringList): TStringList; forward;
+    function MappedMerge(aVersion: Integer; const aSpaces: TArray<TStringList>; aKnown, aTarget: TStringList): TStringList; forward;
 
     function IsolatedMerge(aVersion: Integer): TStringList;
     var
@@ -4399,7 +4399,7 @@ var
               lOwned := False;
               if (lCompared >= 0) and (lCompared < i) and Assigned(lSpace[lCompared]) then
                 if NeedsMerge(i, lCompared) then begin
-                  lBase := MappedMerge(i, lSpace, lKnownIn);
+                  lBase := MappedMerge(i, lSpace, lKnownIn, Result);
                   lOwned := True;
                 end else
                   lBase := lSpace[lCompared];
@@ -4431,25 +4431,50 @@ var
       end;
     end;
 
-    function MappedMerge(aVersion: Integer; const aSpaces: TArray<TStringList>; aKnown: TStringList): TStringList;
+    function MappedMerge(aVersion: Integer; const aSpaces: TArray<TStringList>; aKnown, aTarget: TStringList): TStringList;
     var
       lMerge : TStringList;
       lKeys  : TDictionary<Pointer, string>;
+      lFrom  : TDictionary<Pointer, Integer>;
+      lClaim : TDictionary<string, Integer>;
       lKey   : string;
-      lIndex : Integer;
+      lOwner : Integer;
+
+      function IsLive(aIndex: Integer; const aKey: string): Boolean;
+      var
+        lAt : Integer;
+      begin
+        Result := aTarget.Find(aKey, lAt) and (aTarget.Objects[lAt] = lMerge.Objects[aIndex]);
+      end;
+
+      function Takes(aIndex, aOwner: Integer; const aKey: string): Boolean;
+      begin
+        if IsLive(aOwner, aKey) then
+          Exit(False);
+        Result := IsLive(aIndex, aKey) or (lFrom[Pointer(lMerge.Objects[aIndex])] > lFrom[Pointer(lMerge.Objects[aOwner])]);
+      end;
+
     begin
       lMerge := IsolatedMerge(aVersion);
       var lClosure := Closure(aVersion);
       lKeys := TDictionary<Pointer, string>.Create;
+      lFrom := TDictionary<Pointer, Integer>.Create;
+      lClaim := TDictionary<string, Integer>.Create;
       try
         for var i := 0 to Pred(aVersion) do
           if lClosure[i] and Assigned(aSpaces[i]) then
-            for var k := 0 to Pred(aSpaces[i].Count) do
+            for var k := 0 to Pred(aSpaces[i].Count) do begin
               lKeys.AddOrSetValue(Pointer(aSpaces[i].Objects[k]), aSpaces[i][k]);
+              lFrom.AddOrSetValue(Pointer(aSpaces[i].Objects[k]), i);
+            end;
+        for var k := 0 to Pred(lMerge.Count) do
+          if lKeys.TryGetValue(Pointer(lMerge.Objects[k]), lKey) then
+            if not lClaim.TryGetValue(lKey, lOwner) or Takes(k, lOwner, lKey) then
+              lClaim.AddOrSetValue(lKey, k);
         Result := CopyOf(nil);
         try
           for var k := 0 to Pred(lMerge.Count) do begin
-            if not lKeys.TryGetValue(Pointer(lMerge.Objects[k]), lKey) or Result.Find(lKey, lIndex) then begin
+            if not lKeys.TryGetValue(Pointer(lMerge.Objects[k]), lKey) or not lClaim.TryGetValue(lKey, lOwner) or (lOwner <> k) then begin
               lKey := FreshKey(BaseKey(lMerge[k]), aKnown, Result);
               aKnown.AddObject(lKey, lMerge.Objects[k]);
             end;
@@ -4460,6 +4485,8 @@ var
           raise;
         end;
       finally
+        lClaim.Free;
+        lFrom.Free;
         lKeys.Free;
       end;
     end;
@@ -4571,7 +4598,7 @@ var
                       if aRow.AsSet then
                         lMasterList := MergedBase(Succ(j))
                       else
-                        lMasterList := MappedMerge(Succ(j), lSpaces, lKnown);
+                        lMasterList := MappedMerge(Succ(j), lSpaces, lKnown, lTargetLists[l]);
                       lMasterSpace := lMasterList;
                     end else
                       lMasterSpace := lSpaces[k];
