@@ -4482,6 +4482,17 @@ var
       Result := aBase + #0 + IntToHex64(lNext, KeyCounterDigits);
     end;
 
+    procedure ForgetAdded(aFresh: TDictionary<Pointer, string>; aAdded: TStringList);
+    var
+      lAt : Integer;
+    begin
+      if aAdded.Count = 0 then
+        Exit;
+      for var lPair in aFresh.ToArray do
+        if aAdded.Find(lPair.Value, lAt) then
+          aFresh.Remove(lPair.Key);
+    end;
+
     function MappedMerge(aVersion: Integer; const aSpaces: TArray<TStringList>; aKnown, aTarget: TStringList;
       aFresh: TDictionary<Pointer, string>): TStringList; forward;
 
@@ -4543,6 +4554,7 @@ var
                 lSpace[i] := AlignList(lBase, lOwnLists[i], Result, lKnownIn, lAddedIn, lReservedIn, lHeldIn);
                 Apply(lBase, lSpace[i], lReservedIn, Result, lAddedIn);
                 Remember(lKnownIn, Result);
+                ForgetAdded(lFreshIn, lAddedIn);
               finally
                 if lOwned then
                   lBase.Free;
@@ -4779,6 +4791,7 @@ var
                     lSpaces[Succ(j)] := AlignList(lMasterSpace, lCurrentList, lTargetLists[l], lKnown, lAdded, lReserved, lReservations);
                     Apply(lMasterSpace, lSpaces[Succ(j)], lReserved, lTargetLists[l], lAdded);
                     Remember(lKnown, lTargetLists[l]);
+                    ForgetAdded(lFresh, lAdded);
                     lOwnLists[Succ(j)] := lCurrentList;
                     lCurrentList := nil;
                   end;
