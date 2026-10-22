@@ -16219,7 +16219,11 @@ end;
 
 function TwbMainRecord.GetIsESM: Boolean;
 begin
-  Result := GetFlags.IsESM;
+  if (gcMasterFlagInHeaderData in GameDefObj.Capabilities) and (GetSignature = GameDefObj.HeaderSignature) then begin
+    var lFlags := GetElementByPath('HEDR\Record Flags');
+    Result := Assigned(lFlags) and ((Int64(lFlags.NativeValue) and 1) <> 0);
+  end else
+    Result := GetFlags.IsESM;
 end;
 
 function TwbMainRecord.GetIsLocalized: Boolean;
@@ -19000,7 +19004,17 @@ end;
 
 procedure TwbMainRecord.SetIsESM(aValue: Boolean);
 begin
-  if aValue <> GetIsESM then begin
+  if aValue = GetIsESM then
+    Exit;
+  if (gcMasterFlagInHeaderData in GameDefObj.Capabilities) and (GetSignature = GameDefObj.HeaderSignature) then begin
+    var lFlags := GetElementByPath('HEDR\Record Flags');
+    if not Assigned(lFlags) then
+      raise Exception.Create('File Header record "' + GetFullPath + '" has no HEDR record flags');
+    if aValue then
+      lFlags.NativeValue := Int64(lFlags.NativeValue) or 1
+    else
+      lFlags.NativeValue := Int64(lFlags.NativeValue) and not Int64(1);
+  end else begin
     MakeHeaderWriteable;
     GetFlagsPtr.SetESM(aValue);
   end;

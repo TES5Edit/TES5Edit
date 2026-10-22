@@ -591,7 +591,8 @@ type
     gcPrecombinedMeshPerCell, gcWorldspaceRoads, gcConditionWrapsCTDA, gcBoolGameSettings,
     gcMasterFlagFromExtension, gcResourceKeyCRC32NoExtension, gcTextureDDXAlias, gcUpdateArchiveAlwaysLoaded,
     gcWeatherExtendedColors, gcWeatherFogPower, gcWeatherFogMax, gcModelTextureFileHashList, gcCommunityShaders, gcHNVSE,
-    gcVWDInTemporary, gcVWDAsQuestChildren, gcComplexFileFileID, gcCanSortINFO, gcOffsetDataPerFile
+    gcVWDInTemporary, gcVWDAsQuestChildren, gcComplexFileFileID, gcCanSortINFO, gcOffsetDataPerFile,
+    gcMasterFlagInHeaderData
   );
   TwbGameCapabilities = set of TwbGameCapability;
 
@@ -6426,6 +6427,8 @@ begin
     Include(Result, gcGridCellInLandAndPathgrid);
   if aGameMode in [gmTES3] then
     Include(Result, gcHardcodedFileIsFirstMaster);
+  if aGameMode in [gmTES3] then
+    Include(Result, gcMasterFlagInHeaderData);
   if not (aGameMode in [gmTES3]) then
     Include(Result, gcHardcodedPlayerRef);
   if aGameMode in [gmFO4, gmSSE, gmTES5VR, gmEnderalSE, gmFO4VR, gmFO76, gmSF1] then

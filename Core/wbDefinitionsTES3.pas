@@ -406,23 +406,6 @@ begin
   end;
 end;
 
-procedure wbTES3AfterLoad(const aElement: IwbElement);
-var
-  Container  : IwbContainerElementRef;
-  MainRecord : IwbMainRecord;
-begin
-  if aElement.ContextObj.BeginInternalEdit then try
-    if not wbTryGetContainerWithValidMainRecord(aElement, Container, MainRecord) then
-      Exit;
-
-      if Assigned(MainRecord.ElementBySignature['HEDR']) then
-        if (Container.ElementNativeValues['HEDR\Record Flags'] and 1) = 1 then
-          MainRecord.SetIsESM(True);
-  finally
-    wbEndInternalEdit;
-  end;
-end;
-
 function wbAttributeEnum: IwbEnumDef;
 begin
   Result :=
@@ -930,8 +913,7 @@ begin
     .SetGetFormIDCallback(function(const aMainRecord: IwbMainRecord; out aFormID: TwbFormID): Boolean begin
        Result := True;
        aFormID := TwbFormID.Null;
-     end)
-     .SetAfterLoad(wbTES3AfterLoad);
+     end);
 
   RegisterRecordDef(ACTI, 'Activator',
     wbFlags(wbFlagsList([
