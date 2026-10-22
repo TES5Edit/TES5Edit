@@ -98,6 +98,7 @@ implementation
 
 uses
   System.Generics.Collections,
+  System.Generics.Defaults,
   System.IniFiles,
   System.IOUtils,
   System.Math,
@@ -719,6 +720,11 @@ type
 
   TwbMainRecordIndexDictionary = TDictionary<string, IwbMainRecord>;
 
+  TwbRecordStreamEntry = record
+    rseRecord : IwbMainRecord;
+    rseMarker : TBytes;
+  end;
+
   TwbFile = class(TwbContainer, IwbFile, IwbFileInternal)
   protected
     flData                   : TBytes;
@@ -761,6 +767,7 @@ type
     flIndicesActive          : Boolean;
 
     flInjectedRecords        : array of IwbMainRecord;
+    flRecordStream           : TArray<TwbRecordStreamEntry>;
 
     flModule                 : PwbModuleInfo;
     flContextObj             : TwbGameContext;
@@ -822,6 +829,7 @@ type
 
     procedure WriteToStream(aStream: TStream; aResetModified: TwbResetModified); override; final;
     procedure WriteToStreamInternal(aStream: TStream; aResetModified: TwbResetModified); override; final;
+    procedure WriteRecordStream(aStream: TStream; aResetModified: TwbResetModified);
 
     function AddIfMissingInternal(const aElement: IwbElement; aFlags: TwbCopyFlags; const aRules: TwbCopyRules): IwbElement; override;
 
@@ -7377,6 +7385,7 @@ begin
   flMasters                := nil;
   flRecords                := nil;
   flInjectedRecords        := nil;
+  flRecordStream           := nil;
   var lElements := ReleaseElements;
   lElements := nil;
   flCloseFile;
@@ -9510,6 +9519,8 @@ var
 
   IsInternal  : Boolean;
   EndPtr      : Pointer;
+  ItemPtr     : Pointer;
+  RecordStream: TList<TwbRecordStreamEntry>;
 begin
   var lGameDef := flContextObj.GameDefObj;
   SelfRef := Self as IwbContainerElementRef;
@@ -9517,6 +9528,7 @@ begin
 
   Include(flStates, fsScanning);
   TopGroups := nil;
+  RecordStream := nil;
   try
     CurrentPtr := flView;
     TwbRecord.CreateForPtr(CurrentPtr, flEndPtr, Self, nil);
@@ -9667,8 +9679,10 @@ begin
 
     var WasEditAllowed := flContextObj.Settings.EditAllowed;
     try
-      if gcUngroupedRecordStream in lGameDef.Capabilities then
+      if gcUngroupedRecordStream in lGameDef.Capabilities then begin
         flContextObj.Settings.EditAllowed := True;
+        RecordStream := TList<TwbRecordStreamEntry>.Create;
+      end;
 
       EndPtr := flEndPtr;
       GroupType := 0;
@@ -9744,6 +9758,7 @@ begin
             Container := nil;
         end;
 
+        ItemPtr := CurrentPtr;
         Rec := TwbRecord.CreateForPtr(CurrentPtr, EndPtr, Container, nil, flContextObj);
 
         if Assigned(Rec) then
@@ -9751,19 +9766,27 @@ begin
             if (CurrentPtr = EndPtr) and (EndPtr <> flEndPtr) then
               EndPtr := flEndPtr;
 
+            var lEntry := Default(TwbRecordStreamEntry);
             if Supports(Rec, IwbMainRecord, MainRecord) then begin
+              lEntry.rseRecord := MainRecord;
               if Signature = 'DIAL' then begin
                 DialRecord := MainRecord;
               end else if Signature = 'CELL' then begin
                 CellRecord := MainRecord;
                 GroupType := 8;
               end;
-            end else
+            end else begin
+              SetLength(lEntry.rseMarker, NativeUInt(CurrentPtr) - NativeUInt(ItemPtr));
+              Move(ItemPtr^, lEntry.rseMarker[0], Length(lEntry.rseMarker));
               if Rec.Signature = 'NAM0' then
                 GroupType := 9;
+            end;
+            RecordStream.Add(lEntry);
           end else
             flProgress(Rec.Name + ' processed');
       end;
+      if Assigned(RecordStream) then
+        flRecordStream := RecordStream.ToArray;
     finally
       flContextObj.Settings.EditAllowed := WasEditAllowed;
     end;
@@ -9790,6 +9813,7 @@ begin
 
   finally
     FreeAndNil(TopGroups);
+    RecordStream.Free;
     Exclude(flStates, fsScanning);
   end;
 
@@ -10285,7 +10309,10 @@ begin
   PrepareSave;
   var lUnsaved := esUnsaved in eStates;
   try
-    inherited WriteToStreamInternal(aStream, aResetModified);
+    if gcUngroupedRecordStream in flContextObj.GameDefObj.Capabilities then
+      WriteRecordStream(aStream, aResetModified)
+    else
+      inherited WriteToStreamInternal(aStream, aResetModified);
   finally
     if lUnsaved then
       Include(eStates, esUnsaved);
@@ -10300,6 +10327,206 @@ begin
       if esModified in eStates then
         Include(eStates, esInternalModified);
   end;
+end;
+
+procedure TwbFile.WriteRecordStream(aStream: TStream; aResetModified: TwbResetModified);
+type
+  TwbStreamOrder = record
+    soPosition : Integer;
+    soSequence : Integer;
+    soRecord   : IwbMainRecord;
+  end;
+var
+  lPositions : TDictionary<Pointer, Integer>;
+  lCellNAM0  : TDictionary<Pointer, TBytes>;
+  lMovedRef  : TDictionary<Pointer, TBytes>;
+  lWritten   : TList<TwbRecordStreamEntry>;
+  lCount     : Cardinal;
+
+  procedure Add(const aRecord: IwbMainRecord; var aList: TArray<TwbStreamOrder>);
+  var
+    lOrder : TwbStreamOrder;
+  begin
+    if not lPositions.TryGetValue(Pointer(aRecord), lOrder.soPosition) then
+      lOrder.soPosition := High(Integer);
+    lOrder.soSequence := Length(aList);
+    lOrder.soRecord := aRecord;
+    aList := aList + [lOrder];
+  end;
+
+  procedure Collect(const aGroup: IwbGroupRecord; aGroupType: Integer; aReferences: Boolean; var aList: TArray<TwbStreamOrder>);
+  var
+    lRecord : IwbMainRecord;
+    lGroup  : IwbGroupRecord;
+  begin
+    for var i := 0 to Pred(aGroup.ElementCount) do
+      if Supports(aGroup.Elements[i], IwbMainRecord, lRecord) then begin
+        if ((aGroupType < 0) or (aGroup.GroupType = aGroupType)) and ((lRecord.Signature = 'REFR') = aReferences) then
+          Add(lRecord, aList);
+      end else if Supports(aGroup.Elements[i], IwbGroupRecord, lGroup) then
+        Collect(lGroup, aGroupType, aReferences, aList);
+  end;
+
+  function Ordered(const aList: TArray<TwbStreamOrder>): TArray<TwbStreamOrder>;
+  begin
+    Result := Copy(aList);
+    TArray.Sort<TwbStreamOrder>(Result, TComparer<TwbStreamOrder>.Construct(
+      function(const aLeft, aRight: TwbStreamOrder): Integer
+      begin
+        if aLeft.soPosition <> aRight.soPosition then
+          Result := Ord(aLeft.soPosition > aRight.soPosition) - Ord(aLeft.soPosition < aRight.soPosition)
+        else
+          Result := Ord(aLeft.soSequence > aRight.soSequence) - Ord(aLeft.soSequence < aRight.soSequence);
+      end));
+  end;
+
+  procedure WriteMarker(const aMarker: TBytes);
+  var
+    lEntry : TwbRecordStreamEntry;
+  begin
+    aStream.WriteBuffer(aMarker[0], Length(aMarker));
+    lEntry.rseRecord := nil;
+    lEntry.rseMarker := aMarker;
+    lWritten.Add(lEntry);
+  end;
+
+  procedure WriteRecord(const aRecord: IwbMainRecord);
+  var
+    lEntry : TwbRecordStreamEntry;
+  begin
+    aRecord.WriteToStream(aStream, aResetModified);
+    lEntry.rseRecord := aRecord;
+    lEntry.rseMarker := nil;
+    lWritten.Add(lEntry);
+    if aRecord.Signature <> 'REFR' then
+      Inc(lCount);
+  end;
+
+  procedure WriteReferences(const aList: TArray<TwbStreamOrder>);
+  var
+    lMarker : TBytes;
+  begin
+    for var lOrder in Ordered(aList) do begin
+      if lMovedRef.TryGetValue(Pointer(lOrder.soRecord), lMarker) then
+        WriteMarker(lMarker);
+      WriteRecord(lOrder.soRecord);
+    end;
+  end;
+
+  procedure WriteCell(const aCell: IwbMainRecord);
+  var
+    lPersistent : TArray<TwbStreamOrder>;
+    lTemporary  : TArray<TwbStreamOrder>;
+    lMarker     : TBytes;
+    lStart      : Int64;
+    lEnd        : Int64;
+    lDataSize   : Cardinal;
+  begin
+    lStart := aStream.Position;
+    WriteRecord(aCell);
+    var lChildren := aCell.ChildGroup;
+    if Assigned(lChildren) then begin
+      Collect(lChildren, 8, True, lPersistent);
+      Collect(lChildren, 9, True, lTemporary);
+    end;
+    WriteReferences(lPersistent);
+    if lCellNAM0.TryGetValue(Pointer(aCell), lMarker) then begin
+      if (Length(lMarker) >= 12) and (PCardinal(@lMarker[8])^ < Cardinal(Length(lTemporary))) then begin
+        lMarker := Copy(lMarker);
+        PCardinal(@lMarker[8])^ := Length(lTemporary);
+      end;
+      WriteMarker(lMarker);
+    end else if Length(lTemporary) > 0 then begin
+      SetLength(lMarker, 12);
+      PwbSignature(@lMarker[0])^ := 'NAM0';
+      PCardinal(@lMarker[4])^ := SizeOf(Cardinal);
+      PCardinal(@lMarker[8])^ := Length(lTemporary);
+      WriteMarker(lMarker);
+    end;
+    WriteReferences(lTemporary);
+    lEnd := aStream.Position;
+    lDataSize := lEnd - lStart - flContextObj.GameDefObj.SizeOfMainRecordStruct;
+    aStream.Position := lStart + SizeOf(TwbSignature);
+    aStream.WriteBuffer(lDataSize, SizeOf(lDataSize));
+    aStream.Position := lEnd;
+  end;
+
+var
+  lTop      : TArray<TwbStreamOrder>;
+  lChildren : TArray<TwbStreamOrder>;
+  lRecord   : IwbMainRecord;
+  lGroup    : IwbGroupRecord;
+  lCell     : Pointer;
+  lPending  : TBytes;
+begin
+  DoInit(True);
+  lPositions := nil;
+  lCellNAM0 := nil;
+  lMovedRef := nil;
+  lWritten := nil;
+  try
+    lPositions := TDictionary<Pointer, Integer>.Create;
+    lCellNAM0 := TDictionary<Pointer, TBytes>.Create;
+    lMovedRef := TDictionary<Pointer, TBytes>.Create;
+    lWritten := TList<TwbRecordStreamEntry>.Create;
+    lCell := nil;
+    lPending := nil;
+    for var i := Low(flRecordStream) to High(flRecordStream) do
+      if Assigned(flRecordStream[i].rseRecord) then begin
+        lPositions.AddOrSetValue(Pointer(flRecordStream[i].rseRecord), i);
+        if Assigned(lPending) then begin
+          lMovedRef.AddOrSetValue(Pointer(flRecordStream[i].rseRecord), lPending);
+          lPending := nil;
+        end;
+        if flRecordStream[i].rseRecord.Signature = 'CELL' then
+          lCell := Pointer(flRecordStream[i].rseRecord)
+        else if flRecordStream[i].rseRecord.Signature <> 'REFR' then
+          lCell := nil;
+      end else if Length(flRecordStream[i].rseMarker) >= SizeOf(TwbSignature) then
+        if PwbSignature(@flRecordStream[i].rseMarker[0])^ = 'NAM0' then begin
+          if Assigned(lCell) then
+            lCellNAM0.AddOrSetValue(lCell, flRecordStream[i].rseMarker);
+        end else if PwbSignature(@flRecordStream[i].rseMarker[0])^ = 'MVRF' then
+          lPending := flRecordStream[i].rseMarker;
+
+    if Length(cntElements) < 1 then
+      Exit;
+    cntElements[0].WriteToStream(aStream, aResetModified);
+    lCount := 0;
+
+    for var i := 1 to High(cntElements) do
+      if Supports(cntElements[i], IwbGroupRecord, lGroup) then begin
+        for var j := 0 to Pred(lGroup.ElementCount) do
+          if Supports(lGroup.Elements[j], IwbMainRecord, lRecord) then
+            Add(lRecord, lTop);
+      end else if Supports(cntElements[i], IwbMainRecord, lRecord) then
+        Add(lRecord, lTop);
+
+    for var lOrder in Ordered(lTop) do begin
+      if (lOrder.soRecord.Signature = 'CELL') and (gcReferencesEmbeddedInCell in flContextObj.GameDefObj.Capabilities) then
+        WriteCell(lOrder.soRecord)
+      else
+        WriteRecord(lOrder.soRecord);
+      var lChildGroup := lOrder.soRecord.ChildGroup;
+      if Assigned(lChildGroup) then begin
+        lChildren := nil;
+        Collect(lChildGroup, -1, False, lChildren);
+        for var lChild in Ordered(lChildren) do
+          WriteRecord(lChild.soRecord);
+      end;
+    end;
+
+    if Succ(lCount) <> GetCountedRecordCount then
+      raise Exception.CreateFmt('File %s: %d records were written, the file holds %d', [GetFileName, lCount, Pred(GetCountedRecordCount)]);
+
+    flRecordStream := lWritten.ToArray;
+  finally
+    lWritten.Free;
+    lMovedRef.Free;
+    lCellNAM0.Free;
+    lPositions.Free;
+  end;
+  ResetModified(aResetModified);
 end;
 
 type
@@ -19716,6 +19943,7 @@ var
 
     var lGameDef := GameDefObj;
     var lSizeOfMainRecordStruct := lGameDef.SizeOfMainRecordStruct;
+    var lEmbedded := IsEmbeddedReference;
     RecordPosition := aStream.Position;
     Signature := GetSignature;
 
@@ -19767,7 +19995,7 @@ var
 
       CurrentPosition := aStream.Position;
 
-      if CurrentPosition = 0 then
+      if (CurrentPosition = 0) and not lEmbedded then
         Stream := aStream
       else begin
         MS := TMemoryStream.Create;
@@ -19807,10 +20035,27 @@ var
       Stream.Position := 4;
       Stream.WriteBuffer(DataSize, SizeOf(DataSize));
 
-      if Assigned(MS) then
+      if lEmbedded then
+        aStream.WriteBuffer((PByte(MS.Memory) + (MS.Size - DataSize))^, DataSize)
+      else if Assigned(MS) then
         aStream.WriteBuffer(MS.Memory^, MS.Size)
       else
         Stream.Position := Stream.Size;
+
+    end else if lEmbedded then begin
+
+      Assert(not (dcfStorageInvalid in dcFlags));
+      aStream.WriteBuffer(dcDataBasePtr^, NativeUInt(dcDataEndPtr) - NativeUInt(dcDataBasePtr));
+
+    end else if (Signature = 'CELL') and (gcReferencesEmbeddedInCell in lGameDef.Capabilities) then begin
+
+      Assert(not (dcfStorageInvalid in dcFlags));
+      var lOwnEnd := PByte(dcBasePtr) + lSizeOfMainRecordStruct;
+      var lDataEnd := lOwnEnd + mrStruct.mrsDataSize;
+      while (NativeUInt(lOwnEnd) + 8 <= NativeUInt(lDataEnd)) and (PwbSignature(lOwnEnd)^ <> 'FRMR') and
+            (PwbSignature(lOwnEnd)^ <> 'NAM0') and (PwbSignature(lOwnEnd)^ <> 'MVRF') do
+        Inc(lOwnEnd, 8 + PCardinal(lOwnEnd + 4)^);
+      aStream.WriteBuffer(dcBasePtr^, NativeUInt(lOwnEnd) - NativeUInt(dcBasePtr));
 
     end else begin
 
