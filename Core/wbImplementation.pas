@@ -4019,7 +4019,7 @@ var
           SkipTo(aKnown, lKnownAt);
           while InGroup(aKnown, lKnownAt) do begin
             Note(aKnown[lKnownAt]);
-            if not aLeftList.Find(aKnown[lKnownAt], lIndex) then begin
+            if not aLeftList.Find(aKnown[lKnownAt], lIndex) and Assigned(aKnown.Objects[lKnownAt]) then begin
               lSlots := lSlots + [lKnownAt];
               lSlotLive := lSlotLive + [aTargetList.Find(aKnown[lKnownAt], lIndex)];
             end;
@@ -4067,6 +4067,7 @@ var
     lOwnedBases    : TArray<TStringList>;
     lOwnLists      : TArray<TStringList>;
     lIsolated      : TArray<TStringList>;
+    lIsolatedSpaces: TArray<TArray<TStringList>>;
     lVersions      : TDictionary<Pointer, Integer>;
     lMastersOf     : TArray<TArray<Integer>>;
     lClosures      : TArray<TArray<Boolean>>;
@@ -4420,6 +4421,8 @@ var
               end;
             end;
           lIsolated[aVersion] := Result;
+          lIsolatedSpaces[aVersion] := lSpace;
+          lSpace := nil;
         except
           FreeAndNil(Result);
           raise;
@@ -4433,50 +4436,62 @@ var
 
     function MappedMerge(aVersion: Integer; const aSpaces: TArray<TStringList>; aKnown, aTarget: TStringList): TStringList;
     var
-      lMerge : TStringList;
-      lKeys  : TDictionary<Pointer, string>;
-      lFrom  : TDictionary<Pointer, Integer>;
-      lClaim : TDictionary<string, Integer>;
-      lKey   : string;
-      lOwner : Integer;
-
-      function IsLive(aIndex: Integer; const aKey: string): Boolean;
-      var
-        lAt : Integer;
-      begin
-        Result := aTarget.Find(aKey, lAt) and (aTarget.Objects[lAt] = lMerge.Objects[aIndex]);
-      end;
-
-      function Takes(aIndex, aOwner: Integer; const aKey: string): Boolean;
-      begin
-        if IsLive(aOwner, aKey) then
-          Exit(False);
-        Result := IsLive(aIndex, aKey) or (lFrom[Pointer(lMerge.Objects[aIndex])] > lFrom[Pointer(lMerge.Objects[aOwner])]);
-      end;
-
+      lMerge   : TStringList;
+      lWalk    : TArray<TStringList>;
+      lKeys    : TDictionary<Pointer, string>;
+      lClaim   : TDictionary<string, Integer>;
+      lClaimed : TArray<string>;
+      lFrom    : TArray<Integer>;
+      lLive    : TArray<Boolean>;
+      lKey     : string;
+      lOwner   : Integer;
+      lAt      : Integer;
+      lHeld    : Integer;
     begin
       lMerge := IsolatedMerge(aVersion);
+      lWalk := lIsolatedSpaces[aVersion];
       var lClosure := Closure(aVersion);
-      lKeys := TDictionary<Pointer, string>.Create;
-      lFrom := TDictionary<Pointer, Integer>.Create;
-      lClaim := TDictionary<string, Integer>.Create;
+      SetLength(lClaimed, lMerge.Count);
+      SetLength(lFrom, lMerge.Count);
+      SetLength(lLive, lMerge.Count);
+      lKeys := nil;
+      lClaim := nil;
       try
+        lKeys := TDictionary<Pointer, string>.Create;
+        lClaim := TDictionary<string, Integer>.Create;
         for var i := 0 to Pred(aVersion) do
           if lClosure[i] and Assigned(aSpaces[i]) then
-            for var k := 0 to Pred(aSpaces[i].Count) do begin
+            for var k := 0 to Pred(aSpaces[i].Count) do
               lKeys.AddOrSetValue(Pointer(aSpaces[i].Objects[k]), aSpaces[i][k]);
-              lFrom.AddOrSetValue(Pointer(aSpaces[i].Objects[k]), i);
+        for var k := 0 to Pred(lMerge.Count) do begin
+          lFrom[k] := -1;
+          for var i := Pred(aVersion) downto 0 do
+            if lClosure[i] and Assigned(lWalk[i]) and lWalk[i].Find(lMerge[k], lAt) and SameObject(lWalk[i], lMerge, lAt, k) and
+               lKeys.TryGetValue(Pointer(lWalk[i].Objects[lAt]), lKey) then begin
+              lClaimed[k] := lKey;
+              lFrom[k] := i;
+              Break;
             end;
-        for var k := 0 to Pred(lMerge.Count) do
-          if lKeys.TryGetValue(Pointer(lMerge.Objects[k]), lKey) then
-            if not lClaim.TryGetValue(lKey, lOwner) or Takes(k, lOwner, lKey) then
-              lClaim.AddOrSetValue(lKey, k);
+          if lFrom[k] < 0 then
+            Continue;
+          if aTarget.Find(lClaimed[k], lAt) then
+            for var i := 0 to Pred(aVersion) do
+              if lClosure[i] and Assigned(lWalk[i]) and lWalk[i].Find(lMerge[k], lHeld) and
+                 (lWalk[i].Objects[lHeld] = aTarget.Objects[lAt]) then begin
+                lLive[k] := True;
+                Break;
+              end;
+          if not lClaim.TryGetValue(lClaimed[k], lOwner) or (not lLive[lOwner] and (lLive[k] or (lFrom[k] > lFrom[lOwner]))) then
+            lClaim.AddOrSetValue(lClaimed[k], k);
+        end;
         Result := CopyOf(nil);
         try
           for var k := 0 to Pred(lMerge.Count) do begin
-            if not lKeys.TryGetValue(Pointer(lMerge.Objects[k]), lKey) or not lClaim.TryGetValue(lKey, lOwner) or (lOwner <> k) then begin
+            if (lFrom[k] >= 0) and lClaim.TryGetValue(lClaimed[k], lOwner) and (lOwner = k) then
+              lKey := lClaimed[k]
+            else begin
               lKey := FreshKey(BaseKey(lMerge[k]), aKnown, Result);
-              aKnown.AddObject(lKey, lMerge.Objects[k]);
+              aKnown.AddObject(lKey, nil);
             end;
             Result.AddObject(lKey, lMerge.Objects[k]);
           end;
@@ -4486,7 +4501,6 @@ var
         end;
       finally
         lClaim.Free;
-        lFrom.Free;
         lKeys.Free;
       end;
     end;
@@ -4558,6 +4572,7 @@ var
         lOwnedBases := nil;
         lOwnLists := nil;
         lIsolated := nil;
+        lIsolatedSpaces := nil;
         lKnown := nil;
         try
           if not lIsOrderedList then begin
@@ -4567,6 +4582,7 @@ var
             SetLength(lBases, Succ(aMaster.OverrideCount));
             SetLength(lOwnLists, Succ(aMaster.OverrideCount));
             SetLength(lIsolated, Succ(aMaster.OverrideCount));
+            SetLength(lIsolatedSpaces, Succ(aMaster.OverrideCount));
             lSpaces[0] := BuildList(BaseEntries);
             if not aRow.AsSet then begin
               lKnown := TStringList.Create;
@@ -4646,6 +4662,10 @@ var
           for var lList in lIsolated do
             lList.Free;
           lIsolated := nil;
+          for var lWalkLists in lIsolatedSpaces do
+            for var lList in lWalkLists do
+              lList.Free;
+          lIsolatedSpaces := nil;
           lKnown.Free;
         end;
         if lIsFaulty then
