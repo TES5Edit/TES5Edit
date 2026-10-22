@@ -4183,27 +4183,43 @@ var
       Result := nil;
     end;
 
-    function CopyMaster(const aRecord: IwbMainRecord): IwbMainRecord;
+    function ComparedMaster(const aRecord: IwbMainRecord): IwbMainRecord;
+    begin
+      Result := OwnMaster(aRecord);
+      while Assigned(Result) and IsCompareCopy(Result) do
+        Result := OwnMaster(Result);
+    end;
+
+    function ChangedCopy(const aRecord: IwbMainRecord): IwbMainRecord;
+    var
+      lCopyList : TStringList;
+      lBaseList : TStringList;
     begin
       for var lRecord in aRecord.MasterRecordsFromMasterFilesAndSelf do
-        if IsCompareCopy(lRecord) then
-          Exit(lRecord);
+        if IsCompareCopy(lRecord) then begin
+          var lAncestor := ComparedMaster(lRecord);
+          lBaseList := nil;
+          lCopyList := BuildList(ListOf(lRecord));
+          try
+            if Assigned(lAncestor) then
+              lBaseList := BuildList(ListOf(lAncestor))
+            else
+              lBaseList := BuildList(nil);
+            if not ListsEqual(lBaseList, lCopyList) then
+              Exit(lRecord);
+          finally
+            lBaseList.Free;
+            lCopyList.Free;
+          end;
+        end;
       Result := nil;
     end;
 
   begin
-    for j := 0 to Pred(aMaster.OverrideCount) do begin
-      lOverride := aMaster.Overrides[j];
-      if IsCompareCopy(lOverride) then
-        Continue;
-      var lCopy := CopyMaster(lOverride);
-      if Assigned(lCopy) then begin
-        Report('Error: Can''t merge ' + aMaster.Name + ': "' + lOverride._File.FileName + '" lists the Compare To copy "' +
-          lCopy._File.FileName + '" as a master');
-        lFaulty.Add(aMaster);
-        Exit;
-      end;
-    end;
+    var lHasCopy := IsCompareCopy(aMaster);
+    for j := 0 to Pred(aMaster.OverrideCount) do
+      if IsCompareCopy(aMaster.Overrides[j]) then
+        lHasCopy := True;
 
     SetLength(lTargetLists, Length(aRow.Lists));
     SetLength(lWinningLists, Length(aRow.Lists));
@@ -4245,6 +4261,20 @@ var
               Continue;
           end;
 
+        if lHasCopy then
+          for j := 0 to Pred(aMaster.OverrideCount) do begin
+            lOverride := aMaster.Overrides[j];
+            if IsCompareCopy(lOverride) then
+              Continue;
+            var lCopy := ChangedCopy(lOverride);
+            if Assigned(lCopy) then begin
+              Report('Error: Can''t merge ' + aMaster.Name + ': "' + lOverride._File.FileName + '" lists the Compare To copy "' +
+                lCopy._File.FileName + '" as a master');
+              lFaulty.Add(aMaster);
+              Exit;
+            end;
+          end;
+
         lTargetLists[l] := BuildList(BaseEntries);
         lSpaces := nil;
         lKnown := nil;
@@ -4263,7 +4293,7 @@ var
               Continue;
             lCurrentList := BuildList(ListOf(lOverride));
             try
-              lCurrentMaster := OwnMaster(lOverride);
+              lCurrentMaster := ComparedMaster(lOverride);
               lMasterList := nil;
               try
                 if lIsOrderedList then begin
