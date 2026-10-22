@@ -4065,6 +4065,8 @@ var
     lSpaces        : TArray<TStringList>;
     lBases         : TArray<TStringList>;
     lOwnedBases    : TArray<TStringList>;
+    lOwnLists      : TArray<TStringList>;
+    lIsolated      : TArray<TStringList>;
     lVersions      : TDictionary<Pointer, Integer>;
     lMastersOf     : TArray<TArray<Integer>>;
     lClosures      : TArray<TArray<Boolean>>;
@@ -4323,11 +4325,16 @@ var
     function CopyOf(aList: TStringList): TStringList;
     begin
       Result := TStringList.Create;
-      Result.UseLocale := False;
-      Result.Sorted := True;
-      if Assigned(aList) then
-        for var i := 0 to Pred(aList.Count) do
-          Result.AddObject(aList[i], aList.Objects[i]);
+      try
+        Result.UseLocale := False;
+        Result.Sorted := True;
+        if Assigned(aList) then
+          for var i := 0 to Pred(aList.Count) do
+            Result.AddObject(aList[i], aList.Objects[i]);
+      except
+        Result.Free;
+        raise;
+      end;
     end;
 
     function MergedBase(aVersion: Integer): TStringList;
@@ -4344,6 +4351,116 @@ var
       except
         Result.Free;
         raise;
+      end;
+    end;
+
+    function FreshKey(const aBase: string; aKnown, aTaken: TStringList): string;
+    var
+      lNext : Integer;
+    begin
+      lNext := 0;
+      for var lList in [aKnown, aTaken] do
+        for var i := 0 to Pred(lList.Count) do
+          if SameText(BaseKey(lList[i]), aBase) and (KeyNumber(lList[i]) >= lNext) then
+            lNext := Succ(KeyNumber(lList[i]));
+      Result := aBase + #0 + IntToHex64(lNext, KeyCounterDigits);
+    end;
+
+    function MappedMerge(aVersion: Integer; const aSpaces: TArray<TStringList>; aKnown: TStringList): TStringList; forward;
+
+    function IsolatedMerge(aVersion: Integer): TStringList;
+    var
+      lClosure : TArray<Boolean>;
+      lSpace   : TArray<TStringList>;
+      lKnownIn : TStringList;
+      lBase    : TStringList;
+      lOwned   : Boolean;
+    begin
+      if Assigned(lIsolated[aVersion]) then
+        Exit(lIsolated[aVersion]);
+      lClosure := Closure(aVersion);
+      SetLength(lSpace, aVersion);
+      lKnownIn := nil;
+      Result := nil;
+      try
+        try
+          if lClosure[0] then
+            lSpace[0] := CopyOf(lSpaces[0])
+          else
+            lSpace[0] := CopyOf(nil);
+          Result := CopyOf(lSpace[0]);
+          lKnownIn := CopyOf(nil);
+          Remember(lKnownIn, Result);
+          for var i := 1 to Pred(aVersion) do
+            if lClosure[i] and Assigned(lOwnLists[i]) then begin
+              var lMasterRecord := ComparedMaster(aMaster.Overrides[Pred(i)]);
+              var lCompared := VersionOf(lMasterRecord);
+              lBase := nil;
+              lOwned := False;
+              if (lCompared >= 0) and (lCompared < i) and Assigned(lSpace[lCompared]) then
+                if NeedsMerge(i, lCompared) then begin
+                  lBase := MappedMerge(i, lSpace, lKnownIn);
+                  lOwned := True;
+                end else
+                  lBase := lSpace[lCompared];
+              if not Assigned(lBase) then begin
+                if Assigned(lMasterRecord) then
+                  lBase := BuildList(ListOf(lMasterRecord))
+                else
+                  lBase := BuildList(nil);
+                lOwned := True;
+              end;
+              try
+                lSpace[i] := AlignList(lBase, lOwnLists[i], Result, lKnownIn);
+                UpdateTargetList(lBase, lSpace[i], Result);
+                Remember(lKnownIn, Result);
+              finally
+                if lOwned then
+                  lBase.Free;
+              end;
+            end;
+          lIsolated[aVersion] := Result;
+        except
+          FreeAndNil(Result);
+          raise;
+        end;
+      finally
+        for var lList in lSpace do
+          lList.Free;
+        lKnownIn.Free;
+      end;
+    end;
+
+    function MappedMerge(aVersion: Integer; const aSpaces: TArray<TStringList>; aKnown: TStringList): TStringList;
+    var
+      lMerge : TStringList;
+      lKeys  : TDictionary<Pointer, string>;
+      lKey   : string;
+      lIndex : Integer;
+    begin
+      lMerge := IsolatedMerge(aVersion);
+      var lClosure := Closure(aVersion);
+      lKeys := TDictionary<Pointer, string>.Create;
+      try
+        for var i := 0 to Pred(aVersion) do
+          if lClosure[i] and Assigned(aSpaces[i]) then
+            for var k := 0 to Pred(aSpaces[i].Count) do
+              lKeys.AddOrSetValue(Pointer(aSpaces[i].Objects[k]), aSpaces[i][k]);
+        Result := CopyOf(nil);
+        try
+          for var k := 0 to Pred(lMerge.Count) do begin
+            if not lKeys.TryGetValue(Pointer(lMerge.Objects[k]), lKey) or Result.Find(lKey, lIndex) then begin
+              lKey := FreshKey(BaseKey(lMerge[k]), aKnown, Result);
+              aKnown.AddObject(lKey, lMerge.Objects[k]);
+            end;
+            Result.AddObject(lKey, lMerge.Objects[k]);
+          end;
+        except
+          Result.Free;
+          raise;
+        end;
+      finally
+        lKeys.Free;
       end;
     end;
 
@@ -4412,6 +4529,8 @@ var
         lSpaces := nil;
         lBases := nil;
         lOwnedBases := nil;
+        lOwnLists := nil;
+        lIsolated := nil;
         lKnown := nil;
         try
           if not lIsOrderedList then begin
@@ -4419,6 +4538,8 @@ var
               FindMasters;
             SetLength(lSpaces, Succ(aMaster.OverrideCount));
             SetLength(lBases, Succ(aMaster.OverrideCount));
+            SetLength(lOwnLists, Succ(aMaster.OverrideCount));
+            SetLength(lIsolated, Succ(aMaster.OverrideCount));
             lSpaces[0] := BuildList(BaseEntries);
             if not aRow.AsSet then begin
               lKnown := TStringList.Create;
@@ -4447,7 +4568,10 @@ var
                   k := VersionOf(lCurrentMaster);
                   if (k >= 0) and (k <= j) then
                     if NeedsMerge(Succ(j), k) then begin
-                      lMasterList := MergedBase(Succ(j));
+                      if aRow.AsSet then
+                        lMasterList := MergedBase(Succ(j))
+                      else
+                        lMasterList := MappedMerge(Succ(j), lSpaces, lKnown);
                       lMasterSpace := lMasterList;
                     end else
                       lMasterSpace := lSpaces[k];
@@ -4468,6 +4592,8 @@ var
                     lSpaces[Succ(j)] := AlignList(lMasterSpace, lCurrentList, lTargetLists[l], lKnown);
                     UpdateTargetList(lMasterSpace, lSpaces[Succ(j)], lTargetLists[l]);
                     Remember(lKnown, lTargetLists[l]);
+                    lOwnLists[Succ(j)] := lCurrentList;
+                    lCurrentList := nil;
                   end;
                 end;
               finally
@@ -4487,6 +4613,12 @@ var
             lBase.Free;
           lOwnedBases := nil;
           lBases := nil;
+          for var lList in lOwnLists do
+            lList.Free;
+          lOwnLists := nil;
+          for var lList in lIsolated do
+            lList.Free;
+          lIsolated := nil;
           lKnown.Free;
         end;
         if lIsFaulty then
