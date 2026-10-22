@@ -3954,7 +3954,7 @@ var
   end;
 
   function AlignList(aLeftList, aRightList: TStringList; aTargetList: TStringList = nil; aKnown: TStringList = nil;
-    aAdded: TStringList = nil; aReserved: TStringList = nil): TStringList;
+    aAdded: TStringList = nil; aReserved: TStringList = nil; aReservations: TDictionary<string, string> = nil): TStringList;
   var
     lLeft, lLeftEnd   : Integer;
     lRight, lRightEnd : Integer;
@@ -4021,10 +4021,19 @@ var
             var i := lCandidates[c];
             if (i >= 0) and SameObject(aTargetList, aRightList, lLive[c], j) then begin
               lCandidates[c] := -1;
-              lKeys[j - lRight] := aLeftList[lEqual[i - lRight]];
-              lKeys[i - lRight] := lBase + #0 + IntToHex64(lNext, KeyCounterDigits);
-              aReserved.Add(lKeys[i - lRight]);
-              Inc(lNext);
+              var lKept := aLeftList[lEqual[i - lRight]];
+              var lKey: string;
+              if not aReservations.TryGetValue(lKept, lKey) then begin
+                lKey := lBase + #0 + IntToHex64(lNext, KeyCounterDigits);
+                Inc(lNext);
+                aReservations.Add(lKept, lKey);
+              end;
+              lKeys[j - lRight] := lKept;
+              lKeys[i - lRight] := lKey;
+              aReserved.Add(lKey);
+              for var s := 0 to High(lSlots) do
+                if SameText(aKnown[lSlots[s]], lKey) then
+                  lSlotTaken[s] := True;
               Break;
             end;
           end;
@@ -4080,6 +4089,8 @@ var
             Inc(lKnownAt);
           end;
         end;
+        lSlotTaken := nil;
+        SetLength(lSlotTaken, Length(lSlots));
         if Assigned(aAdded) then
           CountOnce;
         lFree := lLeft;
@@ -4092,8 +4103,6 @@ var
               lKeys[j - lRight] := aLeftList[lFree];
             end;
           end;
-        lSlotTaken := nil;
-        SetLength(lSlotTaken, Length(lSlots));
         TakeSlots(True, True);
         TakeSlots(False, True);
         TakeSlots(True, False);
@@ -4109,7 +4118,8 @@ var
       end;
       if Assigned(aReserved) then
         for var lKey in aReserved do
-          aKnown.AddObject(lKey, nil);
+          if not aKnown.Find(lKey, lIndex) then
+            aKnown.AddObject(lKey, nil);
       Result.Sorted := True;
     except
       Result.Free;
@@ -4143,6 +4153,7 @@ var
     lKnown         : TStringList;
     lAdded         : TStringList;
     lReserved      : TStringList;
+    lReservations  : TDictionary<string, string>;
     lSortable      : IwbSortableContainer;
     lEditorID      : string;
     lCountElement  : IwbElement;
@@ -4467,6 +4478,7 @@ var
       lKnownIn    : TStringList;
       lAddedIn    : TStringList;
       lReservedIn : TStringList;
+      lHeldIn     : TDictionary<string, string>;
       lBase       : TStringList;
       lOwned      : Boolean;
     begin
@@ -4477,6 +4489,7 @@ var
       lKnownIn := nil;
       lAddedIn := nil;
       lReservedIn := nil;
+      lHeldIn := nil;
       Result := nil;
       try
         try
@@ -4488,6 +4501,7 @@ var
           lKnownIn := CopyOf(nil);
           lAddedIn := CopyOf(nil);
           lReservedIn := CopyOf(nil);
+          lHeldIn := TDictionary<string, string>.Create;
           Remember(lKnownIn, Result);
           for var i := 1 to Pred(aVersion) do
             if lClosure[i] and Assigned(lOwnLists[i]) then begin
@@ -4509,7 +4523,7 @@ var
                 lOwned := True;
               end;
               try
-                lSpace[i] := AlignList(lBase, lOwnLists[i], Result, lKnownIn, lAddedIn, lReservedIn);
+                lSpace[i] := AlignList(lBase, lOwnLists[i], Result, lKnownIn, lAddedIn, lReservedIn, lHeldIn);
                 Apply(lBase, lSpace[i], lReservedIn, Result, lAddedIn);
                 Remember(lKnownIn, Result);
               finally
@@ -4527,6 +4541,7 @@ var
       finally
         for var lList in lSpace do
           lList.Free;
+        lHeldIn.Free;
         lReservedIn.Free;
         lAddedIn.Free;
         lKnownIn.Free;
@@ -4675,6 +4690,7 @@ var
         lKnown := nil;
         lAdded := nil;
         lReserved := nil;
+        lReservations := nil;
         try
           if not lIsOrderedList then begin
             if not Assigned(lVersions) then
@@ -4692,6 +4708,7 @@ var
               Remember(lKnown, lTargetLists[l]);
               lAdded := CopyOf(nil);
               lReserved := CopyOf(nil);
+              lReservations := TDictionary<string, string>.Create;
             end;
           end;
           for j := 0 to Pred(aMaster.OverrideCount) do begin
@@ -4735,7 +4752,7 @@ var
                     lSpaces[Succ(j)] := lCurrentList;
                     lCurrentList := nil;
                   end else begin
-                    lSpaces[Succ(j)] := AlignList(lMasterSpace, lCurrentList, lTargetLists[l], lKnown, lAdded, lReserved);
+                    lSpaces[Succ(j)] := AlignList(lMasterSpace, lCurrentList, lTargetLists[l], lKnown, lAdded, lReserved, lReservations);
                     Apply(lMasterSpace, lSpaces[Succ(j)], lReserved, lTargetLists[l], lAdded);
                     Remember(lKnown, lTargetLists[l]);
                     lOwnLists[Succ(j)] := lCurrentList;
@@ -4769,6 +4786,7 @@ var
             for var lList in lWalkLists do
               lList.Free;
           lIsolatedSpaces := nil;
+          lReservations.Free;
           lReserved.Free;
           lAdded.Free;
           lKnown.Free;
