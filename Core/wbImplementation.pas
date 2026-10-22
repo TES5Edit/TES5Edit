@@ -4022,11 +4022,14 @@ var
             if (i >= 0) and SameObject(aTargetList, aRightList, lLive[c], j) then begin
               lCandidates[c] := -1;
               var lKept := aLeftList[lEqual[i - lRight]];
+              var lLink := lKept;
               var lKey: string;
-              if not aReservations.TryGetValue(lKept, lKey) then begin
+              while aReservations.TryGetValue(lLink, lKey) and aLeftList.Find(lKey, lIndex) do
+                lLink := lKey + #0;
+              if not aReservations.TryGetValue(lLink, lKey) then begin
                 lKey := lBase + #0 + IntToHex64(lNext, KeyCounterDigits);
                 Inc(lNext);
-                aReservations.Add(lKept, lKey);
+                aReservations.Add(lLink, lKey);
               end;
               lKeys[j - lRight] := lKept;
               lKeys[i - lRight] := lKey;
