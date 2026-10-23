@@ -19685,11 +19685,9 @@ begin
   end;
 
   lContainer := aElement.Container;
-  while Assigned(lContainer) do begin
+  while Assigned(lContainer) and not Equals(lContainer) do begin
     if TwbElement(lContainer).eUpdateCount > 0 then
       Exit;
-    if Equals(lContainer) then
-      Break;
     lContainer := lContainer.Container;
   end;
 
