@@ -1268,7 +1268,8 @@ type
     mrsIndexKeysActive,
     mrsConflictStored,
     mrsRegisterLater,
-    mrsRestoringIdentity
+    mrsRestoringIdentity,
+    mrsAssigningWhole
   );
 
   TwbMainRecordStates = set of TwbMainRecordState;
@@ -13487,21 +13488,26 @@ begin
           _AddRef; _Release;
         end;
 
-        if Assigned(aElement) then begin
-          for i := 0 to Pred(Container.ElementCount) do begin
-            Element := Container.Elements[i];
-            if Assigned(Element.Def) and (dfNoCopyAsOverride in Element.Def.DefFlags) then
-              if GetMasterOrSelf.Equals(Element.ContainingMainRecord.MasterOrSelf) then
+        Include(mrStates, mrsAssigningWhole);
+        try
+          if Assigned(aElement) then begin
+            for i := 0 to Pred(Container.ElementCount) do begin
+              Element := Container.Elements[i];
+              if Assigned(Element.Def) and (dfNoCopyAsOverride in Element.Def.DefFlags) then
+                if GetMasterOrSelf.Equals(Element.ContainingMainRecord.MasterOrSelf) then
+                  Continue;
+              if (TObject(Element.ElementID) is TwbContainedInElement) and
+                 not GetMasterOrSelf.Equals(Element.ContainingMainRecord.MasterOrSelf) then
                 Continue;
-            if (TObject(Element.ElementID) is TwbContainedInElement) and
-               not GetMasterOrSelf.Equals(Element.ContainingMainRecord.MasterOrSelf) then
-              Continue;
-            Assign(Element.SortOrder, Element, aOnlySK);
+              Assign(Element.SortOrder, Element, aOnlySK);
+            end;
+          end else begin
+            for i := 0 to Pred(mrDef.MemberCount) do
+              if mrDef.Members[i].Required then
+                Assign(i, nil, False);
           end;
-        end else begin
-          for i := 0 to Pred(mrDef.MemberCount) do
-            if mrDef.Members[i].Required then
-              Assign(i, nil, False);
+        finally
+          Exclude(mrStates, mrsAssigningWhole);
         end;
 
         if NeedUpdate then
@@ -19676,7 +19682,7 @@ var
   lHolder    : IwbMainRecord;
   lContainer : IwbContainer;
 begin
-  if VarIsEmpty(aOldValue) or not IdentityChange(aElement, lHolder) or (mrsRestoringIdentity in mrStates) then
+  if VarIsEmpty(aOldValue) or not IdentityChange(aElement, lHolder) or ([mrsRestoringIdentity, mrsAssigningWhole] * mrStates <> []) then
     Exit;
 
   if not Assigned(lHolder) then begin
