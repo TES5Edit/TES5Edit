@@ -1206,7 +1206,7 @@ type
     procedure TakeDenseIDFrom(aContext: TwbLoadingGameContext; aMark: Cardinal);
     procedure BumpChainStampAtMost(aMark: Cardinal);
     procedure CheckIdentityAfterSet(const aElement: IwbElement; const aOldValue: Variant);
-    procedure RegisterWithIdentity(aFresh: Boolean);
+    procedure RegisterWithIdentity(aNew: Boolean);
   end;
 
   IwbMainRecordEntry = interface(IwbMainRecordInternal)
@@ -1267,7 +1267,8 @@ type
     mrsOFSTReserved,
     mrsIndexKeysActive,
     mrsConflictStored,
-    mrsRegisterLater
+    mrsRegisterLater,
+    mrsRestoringIdentity
   );
 
   TwbMainRecordStates = set of TwbMainRecordState;
@@ -1409,7 +1410,7 @@ type
     procedure UpdateInteriorCellGroup;
     procedure ReRegister(const aFile: IwbFileInternal; const aFileFormID: TwbFormID; const aMoveKey: TProc);
     procedure UpdateIdentityKey;
-    procedure RegisterWithIdentity(aFresh: Boolean);
+    procedure RegisterWithIdentity(aNew: Boolean);
     function RefreshKnownSubRecord(const aSubRecord: IwbSubRecord): Boolean;
     function IdentityChange(const aElement: IwbElement; out aHolder: IwbMainRecord): Boolean;
 
@@ -14434,7 +14435,7 @@ begin
         end;
 
       if aRegister then
-        RegisterWithIdentity(False);
+        RegisterWithIdentity(True);
     end);
 
     CollapseStorage(nil, True);
@@ -19599,7 +19600,7 @@ begin
   end);
 end;
 
-procedure TwbMainRecord.RegisterWithIdentity(aFresh: Boolean);
+procedure TwbMainRecord.RegisterWithIdentity(aNew: Boolean);
 var
   lFile      : IwbFileInternal;
   lFormID    : TwbFormID;
@@ -19610,9 +19611,9 @@ begin
 
   var lIndexed := Supports(mrDef.GetKnownSubRecordMember(ksrEditorID), IwbSubRecordDef, lEditorID) and
     Supports(lEditorID.Value, IwbIntegerDef);
-  if not lIndexed and not mrDef.GetFormID(Self, lFormID) then begin
+  if aNew and not lIndexed and not mrDef.GetFormID(Self, lFormID) then begin
     var lIdentity := mrDef.GetIdentity(Self);
-    if (lIdentity = '') or (aFresh and ContextObj.IsKnownIdentity(mrDef.GetFormIDNameBase, lIdentity)) then
+    if (lIdentity = '') or ContextObj.IsKnownIdentity(mrDef.GetFormIDNameBase, lIdentity) then
       if ContextObj.BeginInternalEdit(True) then try
         SetEditorID(ContextObj.UnusedIdentity(mrDef.GetFormIDNameBase, 'xEdit_' + GetSignature + '_'));
       finally
@@ -19672,9 +19673,10 @@ end;
 
 procedure TwbMainRecord.CheckIdentityAfterSet(const aElement: IwbElement; const aOldValue: Variant);
 var
-  lHolder : IwbMainRecord;
+  lHolder    : IwbMainRecord;
+  lContainer : IwbContainer;
 begin
-  if VarIsEmpty(aOldValue) or not IdentityChange(aElement, lHolder) then
+  if VarIsEmpty(aOldValue) or not IdentityChange(aElement, lHolder) or (mrsRestoringIdentity in mrStates) then
     Exit;
 
   if not Assigned(lHolder) then begin
@@ -19682,9 +19684,23 @@ begin
     Exit;
   end;
 
+  lContainer := aElement.Container;
+  while Assigned(lContainer) do begin
+    if TwbElement(lContainer).eUpdateCount > 0 then
+      Exit;
+    if Equals(lContainer) then
+      Break;
+    lContainer := lContainer.Container;
+  end;
+
   var lIdentity := mrDef.GetIdentity(Self);
   if ContextObj.BeginInternalEdit(True) then try
-    aElement.NativeValue := aOldValue;
+    Include(mrStates, mrsRestoringIdentity);
+    try
+      aElement.NativeValue := aOldValue;
+    finally
+      Exclude(mrStates, mrsRestoringIdentity);
+    end;
   finally
     wbEndInternalEdit;
   end;
