@@ -1411,7 +1411,7 @@ type
     procedure UpdateIdentityKey;
     procedure RegisterWithIdentity(aFresh: Boolean);
     function RefreshKnownSubRecord(const aSubRecord: IwbSubRecord): Boolean;
-    function IdentityTakenInFile(const aElement: IwbElement; out aIdentity: string): IwbMainRecord;
+    function IdentityChange(const aElement: IwbElement; out aHolder: IwbMainRecord): Boolean;
 
     procedure MarkModifiedRecursive(const aElementTypes: TwbElementTypes); override; final;
 
@@ -19633,15 +19633,15 @@ begin
   end;
 end;
 
-function TwbMainRecord.IdentityTakenInFile(const aElement: IwbElement; out aIdentity: string): IwbMainRecord;
+function TwbMainRecord.IdentityChange(const aElement: IwbElement; out aHolder: IwbMainRecord): Boolean;
 var
   lChild     : IwbElement;
   lSubRecord : IwbSubRecord;
   lFile      : IwbFileInternal;
   lCacheable : Boolean;
 begin
-  Result := nil;
-  aIdentity := '';
+  Result := False;
+  aHolder := nil;
   if (mrsRegisterLater in mrStates) or mrFixedFormID.IsNull or not Assigned(mrDef) then
     Exit;
 
@@ -19660,21 +19660,25 @@ begin
   if not Equals(lFile.RecordByFormID[mrFixedFormID, False, True]) then
     Exit;
 
-  Result := lFile.RecordByFormID[lNew, False, True];
-  if Assigned(Result) and (Equals(Result) or not (Result._File as IwbFileInternal).Equals(lFile)) then
-    Result := nil;
-  if Assigned(Result) then
-    aIdentity := mrDef.GetIdentity(Self);
+  Result := True;
+  aHolder := lFile.RecordByFormID[lNew, False, True];
+  if Assigned(aHolder) and (Equals(aHolder) or not (aHolder._File as IwbFileInternal).Equals(lFile)) then
+    aHolder := nil;
 end;
 
 procedure TwbMainRecord.CheckIdentityAfterSet(const aElement: IwbElement; const aOldValue: Variant);
 var
-  lIdentity : string;
+  lHolder : IwbMainRecord;
 begin
-  var lHolder := IdentityTakenInFile(aElement, lIdentity);
-  if not Assigned(lHolder) then
+  if VarIsEmpty(aOldValue) or not IdentityChange(aElement, lHolder) then
     Exit;
 
+  if not Assigned(lHolder) then begin
+    UpdateIdentityKey;
+    Exit;
+  end;
+
+  var lIdentity := mrDef.GetIdentity(Self);
   if ContextObj.BeginInternalEdit(True) then try
     aElement.NativeValue := aOldValue;
   finally
@@ -22553,11 +22557,13 @@ var
 
     var lByIdentity := not (gcFormIDInRecordHeader in GameDefObj.Capabilities);
     var lIsNew := False;
+    var lCreated := False;
 
     if not Assigned(Result) then begin
 
       Result := TwbMainRecord.Create(Self, aSource.Signature, lFormID, not lByIdentity);
       lIsNew := True;
+      lCreated := True;
 
     end else begin
 
@@ -22574,6 +22580,7 @@ var
               Result.Remove;
               Result := nil;
               Result := TwbMainRecord.Create(Self, aSource.Signature, lFormID, not lByIdentity);
+              lCreated := True;
             end;
           end;
           coDelete: begin
@@ -22588,36 +22595,46 @@ var
 
     end;
 
-    if (cfDeepCopy in aFlags) or (lIsNew and lByIdentity and not (cfAsNew in aFlags)) then begin
-      var lResult := Result as IwbMainRecord;
+    try
+      if (cfDeepCopy in aFlags) or (lIsNew and lByIdentity and not (cfAsNew in aFlags)) then begin
+        var lResult := Result as IwbMainRecord;
 
-      if not aSource.IsDeleted then
-        lResult.IsDeleted := False;
-      if not aSource.IsPartialForm then begin
-        if lIsNew and ContextObj.Settings.AllowMakePartial and lResult.CanBePartial then
-          lResult.IsPartialForm := True
-        else
-          lResult.IsPartialForm := False;
-      end else
-        lResult.IsPartialForm := True;
+        if not aSource.IsDeleted then
+          lResult.IsDeleted := False;
+        if not aSource.IsPartialForm then begin
+          if lIsNew and ContextObj.Settings.AllowMakePartial and lResult.CanBePartial then
+            lResult.IsPartialForm := True
+          else
+            lResult.IsPartialForm := False;
+        end else
+          lResult.IsPartialForm := True;
 
-      if not (lResult.IsPartialForm or lResult.IsDeleted) then
-        Result.Assign(wbAssignThis, aElement, False);
+        if not (lResult.IsPartialForm or lResult.IsDeleted) then
+          Result.Assign(wbAssignThis, aElement, False);
 
-      if not lResult.IsDeleted and (aSource.EditorID <> '') and ((cfAsNew in aFlags) or not lByIdentity) then begin
-        var lEditorID := aSource.EditorID;
-        lEditorID := RemovePrefix(lEditorID, aRules.PrefixRemove);
-        lEditorID := RemoveSuffix(lEditorID, aRules.SuffixRemove);
-        if ContextObj.BeginInternalEdit(True) then try
-          lResult.EditorID := aRules.Prefix + lEditorID + aRules.Suffix;
-        finally
-          wbEndInternalEdit;
+        if not lResult.IsDeleted and (aSource.EditorID <> '') and ((cfAsNew in aFlags) or not lByIdentity) then begin
+          var lEditorID := aSource.EditorID;
+          lEditorID := RemovePrefix(lEditorID, aRules.PrefixRemove);
+          lEditorID := RemoveSuffix(lEditorID, aRules.SuffixRemove);
+          if ContextObj.BeginInternalEdit(True) then try
+            lResult.EditorID := aRules.Prefix + lEditorID + aRules.Suffix;
+          finally
+            wbEndInternalEdit;
+          end;
         end;
       end;
-    end;
 
-    if lByIdentity then
-      (Result as IwbMainRecordInternal).RegisterWithIdentity(cfAsNew in aFlags);
+      if lByIdentity then
+        (Result as IwbMainRecordInternal).RegisterWithIdentity(cfAsNew in aFlags);
+    except
+      if lCreated and lByIdentity and Assigned(Result) then begin
+        var lContainer := Result.Container;
+        if Assigned(lContainer) then
+          lContainer.RemoveElement(Result);
+        Result := nil;
+      end;
+      raise;
+    end;
 
     if not (cfAsNew in aFlags) and aSource.IsMaster then
       if (Result._File.LoadOrder < aSource._File.LoadOrder) or
