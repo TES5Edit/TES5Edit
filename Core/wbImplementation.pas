@@ -19648,14 +19648,18 @@ begin
   lChild := aElement;
   while Assigned(lChild) and Assigned(lChild.Container) and not Equals(lChild.Container) do
     lChild := lChild.Container;
-  if not Supports(lChild, IwbSubRecord, lSubRecord) or not RefreshKnownSubRecord(lSubRecord) then
+  if not Supports(lChild, IwbSubRecord, lSubRecord) then
+    Exit;
+
+  var lLayout := ContextObj.SlotLayout;
+  var lBefore := ComputeFixedFormID(lCacheable);
+  if not RefreshKnownSubRecord(lSubRecord) then
     Exit;
   if not Supports(GetFile, IwbFileInternal, lFile) then
     Exit;
 
-  var lLayout := ContextObj.SlotLayout;
   var lNew := ComputeFixedFormID(lCacheable);
-  if lNew.ObjectID[lLayout] = mrFixedFormID.ObjectID[lLayout] then
+  if (lNew.ObjectID[lLayout] = lBefore.ObjectID[lLayout]) or (lNew.ObjectID[lLayout] = mrFixedFormID.ObjectID[lLayout]) then
     Exit;
   if not Equals(lFile.RecordByFormID[mrFixedFormID, False, True]) then
     Exit;
