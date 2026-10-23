@@ -590,7 +590,8 @@ type
     gcPrecombinedMeshPerCell, gcWorldspaceRoads, gcConditionWrapsCTDA, gcBoolGameSettings,
     gcMasterFlagFromExtension, gcResourceKeyCRC32NoExtension, gcTextureDDXAlias, gcUpdateArchiveAlwaysLoaded,
     gcWeatherExtendedColors, gcWeatherFogPower, gcWeatherFogMax, gcModelTextureFileHashList, gcCommunityShaders, gcHNVSE,
-    gcVWDInTemporary, gcVWDAsQuestChildren, gcComplexFileFileID, gcCanSortINFO, gcOffsetDataPerFile
+    gcVWDInTemporary, gcVWDAsQuestChildren, gcComplexFileFileID, gcCanSortINFO, gcOffsetDataPerFile,
+    gcMasterFlagInHeaderData
   );
   TwbGameCapabilities = set of TwbGameCapability;
 
@@ -3324,11 +3325,15 @@ type
     function GetMember(aIndex: Integer): IwbValueDef;
     function GetMemberByName(const aName: string): IwbValueDef;
     function GetOptionalFromElement: Integer;
+    function GetSortKey(aIndex: Integer; aExtended: Boolean): Integer;
+    function GetSortKeyCount(aExtended: Boolean): Integer;
 
     property MemberCount: Integer read GetMemberCount;
     property Members[aIndex: Integer]: IwbValueDef read GetMember;
     property MembersByName[const aName: string]: IwbValueDef read GetMemberByName;
     property OptionalFromElement: Integer read GetOptionalFromElement;
+    property SortKeys[aIndex: Integer; aExtended: Boolean]: Integer read GetSortKey;
+    property SortKeyCount[aExtended: Boolean]: Integer read GetSortKeyCount;
 
     function SetOptionalFrom(const aOptionalFrom: Integer): IwbStructDef;
     function SetSummaryKey(const aSummaryKey: array of Integer): {Self}IwbStructDef;
@@ -4347,6 +4352,7 @@ type
     gcConflictRulesGeneration : Cardinal;
     gcIdentities           : array[Byte] of TDictionary<string, Cardinal>;
     gcNextIDs              : array[Byte] of Cardinal;
+    gcUnusedIdentityCount  : Cardinal;
     gcSaveContexts         : TArray<TwbSaveContext>;
     gcSaveContextsLock     : TObject;
 
@@ -4384,6 +4390,8 @@ type
     procedure DetachFilesFromModules; virtual;
     function SlotLayout: TwbSlotLayout;
     function FormIDFromIdentity(aFormIDBase, aFormIDNameBase: Byte; aIdentity: string): TwbFormID;
+    function IsKnownIdentity(aFormIDNameBase: Byte; const aIdentity: string): Boolean;
+    function UnusedIdentity(aFormIDNameBase: Byte; const aPrefix: string): string;
     function ExpandFileName(const aFileName: string): string;
     function FlagPluginsESM(const aReport: TProc<string>): Boolean;
     procedure MarkMasterOnamsForRebuild;
@@ -6421,6 +6429,8 @@ begin
     Include(Result, gcGridCellInLandAndPathgrid);
   if aGameMode in [gmTES3] then
     Include(Result, gcHardcodedFileIsFirstMaster);
+  if aGameMode in [gmTES3] then
+    Include(Result, gcMasterFlagInHeaderData);
   if not (aGameMode in [gmTES3]) then
     Include(Result, gcHardcodedPlayerRef);
   if aGameMode in [gmFO4, gmSSE, gmTES5VR, gmEnderalSE, gmFO4VR, gmFO76, gmSF1] then
@@ -6523,13 +6533,19 @@ begin
     lItems := 'Container Items\Items';
     lPerks := 'Perks\Perks';
   end;
+  var lNpcItems := lItems;
+  if aGameMode = gmFO76 then
+    lNpcItems := 'Inventory\Items';
   Add('LVLI', ['Leveled List Entries'], ['LLCT']);
   Add('LVLC', ['Leveled List Entries'], ['LLCT']);
   Add('LVLN', ['Leveled List Entries'], ['LLCT']);
   Add('LVSP', ['Leveled List Entries'], ['LLCT']);
   Add('CONT', [lItems], ['COCT']);
   Add('FACT', ['Relations'], []);
-  Add('RACE', ['HNAM - Hairs', 'ENAM - Eyes', 'Actor Effects'], ['', '', 'SPCT']);
+  if aGameMode in [gmTES4, gmTES4R] then
+    Add('RACE', ['HNAM - Hairs', 'ENAM - Eyes', 'Spells'], [])
+  else
+    Add('RACE', ['HNAM - Hairs', 'ENAM - Eyes', 'Actor Effects'], ['', '', 'SPCT']);
   Add('FLST', ['FormIDs'], [], True);
   Add('CREA', ['Items', 'Factions'], ['COCT']);
   // FNV doesn't merge DIAL quests properly at runtime
@@ -6537,7 +6553,9 @@ begin
     Add('DIAL', ['Added Quests'], []);
   // exclude Head Parts for Skyrim, causes issues
   if aGameMode >= gmTES5 then
-    Add('NPC_', [lItems, 'Factions', 'Actor Effects', lPerks], ['COCT', '', 'SPCT', 'PRKZ'])
+    Add('NPC_', [lNpcItems, 'Factions', 'Actor Effects', lPerks], ['COCT', '', 'SPCT', 'PRKZ'])
+  else if aGameMode in [gmTES4, gmTES4R] then
+    Add('NPC_', ['Items', 'Factions', 'Spells'], [])
   else
     Add('NPC_', ['Items', 'Factions', 'Head Parts', 'Actor Effects'], []);
   Result := lLists;
@@ -7696,6 +7714,20 @@ begin
   end;
 
   Result := TwbFormID.FromCardinal( (Cardinal(aFormIDBase) shl 16) + i );
+end;
+
+function TwbGameContext.IsKnownIdentity(aFormIDNameBase: Byte; const aIdentity: string): Boolean;
+begin
+  var lIdentities := gcIdentities[aFormIDNameBase];
+  Result := Assigned(lIdentities) and lIdentities.ContainsKey(aIdentity.ToLowerInvariant);
+end;
+
+function TwbGameContext.UnusedIdentity(aFormIDNameBase: Byte; const aPrefix: string): string;
+begin
+  repeat
+    Inc(gcUnusedIdentityCount);
+    Result := aPrefix + IntToStr(gcUnusedIdentityCount);
+  until not IsKnownIdentity(aFormIDNameBase, Result);
 end;
 
 function TwbGameContext.GetFileCount: Integer;
@@ -9670,6 +9702,8 @@ type
     function GetMember(aIndex: Integer): IwbValueDef;
     function GetMemberByName(const aName: string): IwbValueDef;
     function GetOptionalFromElement: Integer;
+    function GetSortKey(aIndex: Integer; aExtended: Boolean): Integer;
+    function GetSortKeyCount(aExtended: Boolean): Integer;
 
     function SetOptionalFrom(const aOptionalFrom: Integer): IwbStructDef;
     function SetSummaryKey(const aSummaryKey: array of Integer): {Self}IwbStructDef;
@@ -16884,6 +16918,21 @@ end;
 function TwbStructDef.GetOptionalFromElement: Integer;
 begin
   Result := stOptionalFromElement;
+end;
+
+function TwbStructDef.GetSortKey(aIndex: Integer; aExtended: Boolean): Integer;
+begin
+  if aIndex <= High(stSortKey) then
+    Result := stSortKey[aIndex]
+  else
+    Result := stExSortKey[aIndex - Length(stSortKey)];
+end;
+
+function TwbStructDef.GetSortKeyCount(aExtended: Boolean): Integer;
+begin
+  Result := Length(stSortKey);
+  if aExtended then
+    Inc(Result, Length(stExSortKey));
 end;
 
 function TwbStructDef.GetSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer;

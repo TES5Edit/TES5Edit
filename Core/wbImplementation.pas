@@ -98,6 +98,7 @@ implementation
 
 uses
   System.Generics.Collections,
+  System.Generics.Defaults,
   System.IniFiles,
   System.IOUtils,
   System.Math,
@@ -689,7 +690,7 @@ type
     procedure AddMainRecord(const aRecord: IwbMainRecord);
     procedure RemoveMainRecord(const aRecord: IwbMainRecord);
     procedure InjectMainRecord(const aRecord: IwbMainRecord);
-    procedure RemoveInjectedMainRecord(const aRecord: IwbMainRecord);
+    procedure RemoveInjectedMainRecord(const aRecord: IwbMainRecord; const aFormID: TwbFormID);
     function InjectionTarget(const aFormID: TwbFormID): IwbFileInternal;
     function IsOwnFormID(const aFormID: TwbFormID; aNew: Boolean): Boolean;
     function HoldsInjected(const aRecord: IwbMainRecord): Boolean;
@@ -718,6 +719,11 @@ type
   TwbCachedEditInfos = TArray<TwbCachedEditInfo>;
 
   TwbMainRecordIndexDictionary = TDictionary<string, IwbMainRecord>;
+
+  TwbRecordStreamEntry = record
+    rseRecord : IwbMainRecord;
+    rseMarker : TBytes;
+  end;
 
   TwbFile = class(TwbContainer, IwbFile, IwbFileInternal)
   protected
@@ -761,6 +767,7 @@ type
     flIndicesActive          : Boolean;
 
     flInjectedRecords        : array of IwbMainRecord;
+    flRecordStream           : TArray<TwbRecordStreamEntry>;
 
     flModule                 : PwbModuleInfo;
     flContextObj             : TwbGameContext;
@@ -822,6 +829,7 @@ type
 
     procedure WriteToStream(aStream: TStream; aResetModified: TwbResetModified); override; final;
     procedure WriteToStreamInternal(aStream: TStream; aResetModified: TwbResetModified); override; final;
+    procedure WriteRecordStream(aStream: TStream; aResetModified: TwbResetModified);
 
     function AddIfMissingInternal(const aElement: IwbElement; aFlags: TwbCopyFlags; const aRules: TwbCopyRules): IwbElement; override;
 
@@ -990,7 +998,7 @@ type
     procedure AddMainRecord(const aRecord: IwbMainRecord);
     procedure RemoveMainRecord(const aRecord: IwbMainRecord);
     procedure InjectMainRecord(const aRecord: IwbMainRecord);
-    procedure RemoveInjectedMainRecord(const aRecord: IwbMainRecord);
+    procedure RemoveInjectedMainRecord(const aRecord: IwbMainRecord; const aFormID: TwbFormID);
     function InjectionTarget(const aFormID: TwbFormID): IwbFileInternal;
     function IsOwnFormID(const aFormID: TwbFormID; aNew: Boolean): Boolean;
     function HoldsInjected(const aRecord: IwbMainRecord): Boolean;
@@ -1197,6 +1205,8 @@ type
     procedure ResetConflictMember;
     procedure TakeDenseIDFrom(aContext: TwbLoadingGameContext; aMark: Cardinal);
     procedure BumpChainStampAtMost(aMark: Cardinal);
+    procedure CheckIdentityAfterSet(const aElement: IwbElement; const aOldValue: Variant);
+    procedure RegisterWithIdentity(aFresh: Boolean);
   end;
 
   IwbMainRecordEntry = interface(IwbMainRecordInternal)
@@ -1256,7 +1266,8 @@ type
     mrsOFSTRemoved,
     mrsOFSTReserved,
     mrsIndexKeysActive,
-    mrsConflictStored
+    mrsConflictStored,
+    mrsRegisterLater
   );
 
   TwbMainRecordStates = set of TwbMainRecordState;
@@ -1329,6 +1340,7 @@ type
     function GetIsNotReachable: Boolean; override; final;
     function GetIsReachable: Boolean; override; final;
     function GetCountedRecordCount: Cardinal; override; final;
+    function IsEmbeddedReference: Boolean;
     procedure InitDataPtr; override; final;
     procedure DecompressIfNeeded;
     procedure ScanData; override; final;
@@ -1395,6 +1407,11 @@ type
     function CheckChildOfCell: Boolean;
     procedure UpdateCellChildGroup;
     procedure UpdateInteriorCellGroup;
+    procedure ReRegister(const aFile: IwbFileInternal; const aFileFormID: TwbFormID; const aMoveKey: TProc);
+    procedure UpdateIdentityKey;
+    procedure RegisterWithIdentity(aFresh: Boolean);
+    function RefreshKnownSubRecord(const aSubRecord: IwbSubRecord): Boolean;
+    function IdentityChange(const aElement: IwbElement; out aHolder: IwbMainRecord): Boolean;
 
     procedure MarkModifiedRecursive(const aElementTypes: TwbElementTypes); override; final;
 
@@ -1413,6 +1430,7 @@ type
     function ContextObj: TwbGameContext; override; final;
     function GetFormID: TwbFormID; inline;
     function GetFixedFormID: TwbFormID; inline;
+    function ComputeFixedFormID(out aCacheable: Boolean): TwbFormID;
     function DoGetFixedFormID: TwbFormID;
     function GetLoadOrderFormID: TwbFormID; inline;
     function DoGetLoadOrderFormID: TwbFormID;
@@ -1551,6 +1569,7 @@ type
     procedure ResetConflictMember;
     procedure TakeDenseIDFrom(aContext: TwbLoadingGameContext; aMark: Cardinal);
     procedure BumpChainStampAtMost(aMark: Cardinal);
+    procedure CheckIdentityAfterSet(const aElement: IwbElement; const aOldValue: Variant);
 
     {---IwbMainRecordEntry---}
     procedure RemoveEntry;
@@ -1577,7 +1596,8 @@ type
                        const aPrevMainRecord : IwbMainRecord); override; final;
     constructor Create(const aContainer : IwbContainer;
                        const aSignature : TwbSignature;
-                       const aFormID    : TwbFormID); overload;
+                       const aFormID    : TwbFormID;
+                             aRegister  : Boolean = True); overload;
     destructor Destroy; override; final;
 
     function GetName: string; override; final;
@@ -3684,7 +3704,8 @@ end;
 
 function TwbFile.BuildMergedPatch(const aFiles: TwbFiles; const aReport: TProc<string>): TwbMergedPatchResult;
 const
-  OrderedList = 'OrderedList';
+  OrderedList      = 'OrderedList';
+  KeyCounterDigits = 8;
 var
   lMet    : THashSet<IwbMainRecord>;
   lMerged : TDynMainRecords;
@@ -3702,16 +3723,130 @@ var
       aReport(aMessage);
   end;
 
-  procedure UpdateOrderedTargetList(aLeftList, aRightList, aTargetList: TStringList);
+  function IsCompareCopy(const aRecord: IwbMainRecord): Boolean;
   begin
-    for var i := aLeftList.Count to Pred(aRightList.Count) do
-      aTargetList.AddObject(aRightList[i], aRightList.Objects[i]);
+    Result := [fsIsCompareLoad, fsIsDeltaPatch] * aRecord._File.FileStates = [fsIsCompareLoad];
   end;
 
-  procedure UpdateTargetList(aLeftList, aRightList, aTargetList: TStringList);
+  procedure UpdateOrderedTargetList(aLeftList, aRightList, aTargetList: TStringList);
+  var
+    lAdded : TDictionary<string, Integer>;
+    lCount : Integer;
+
+    function Content(aList: TStringList; aIndex: Integer): string;
+    begin
+      Result := IwbElement(Pointer(aList.Objects[aIndex])).DisplaySortKey[True];
+    end;
+
+    procedure Tally(aList: TStringList; aDelta: Integer);
+    begin
+      for var i := 0 to Pred(aList.Count) do begin
+        var lKey := Content(aList, i);
+        if not lAdded.TryGetValue(lKey, lCount) then
+          lCount := 0;
+        lAdded.AddOrSetValue(lKey, lCount + aDelta);
+      end;
+    end;
+
+  begin
+    lAdded := TDictionary<string, Integer>.Create;
+    try
+      Tally(aTargetList, 1);
+      Tally(aLeftList, -1);
+      for var i := aLeftList.Count to Pred(aRightList.Count) do begin
+        var lKey := Content(aRightList, i);
+        if lAdded.TryGetValue(lKey, lCount) and (lCount > 0) then
+          lAdded[lKey] := Pred(lCount)
+        else
+          aTargetList.AddObject(aRightList[i], aRightList.Objects[i]);
+      end;
+    finally
+      lAdded.Free;
+    end;
+  end;
+
+  function IsEmptyEntry(const aElement: IwbElement): Boolean;
+  var
+    lContainer : IwbContainerElementRef;
+  begin
+    if aElement.ConflictPriority = cpIgnore then
+      Exit(True);
+    if Supports(aElement, IwbContainerElementRef, lContainer) and (lContainer.ElementCount > 0) then begin
+      for var i := 0 to Pred(lContainer.ElementCount) do
+        if not IsEmptyEntry(lContainer.Elements[i]) then
+          Exit(False);
+      Result := True;
+    end else
+      Result := aElement.DisplaySortKey[True] = '';
+  end;
+
+  function SameEntry(const aLeft, aRight: IwbElement): Boolean;
+  var
+    lLeft, lRight : IwbContainerElementRef;
+    lMember       : IwbElement;
+  begin
+    if not Assigned(aRight) then
+      Exit(IsEmptyEntry(aLeft));
+    if (aLeft.ConflictPriority = cpIgnore) or (aRight.ConflictPriority = cpIgnore) then
+      Exit(True);
+    if Supports(aLeft, IwbContainerElementRef, lLeft) and Supports(aRight, IwbContainerElementRef, lRight) and
+       ((lLeft.ElementCount > 0) or (lRight.ElementCount > 0)) then begin
+      if lLeft.ElementType = etSubRecordStruct then begin
+        for var i := 0 to Pred(lLeft.ElementCount) do begin
+          lMember := lLeft.Elements[i];
+          if not SameEntry(lMember, lRight.ElementBySortOrder[lMember.SortOrder]) then
+            Exit(False);
+        end;
+        for var i := 0 to Pred(lRight.ElementCount) do begin
+          lMember := lRight.Elements[i];
+          if not Assigned(lLeft.ElementBySortOrder[lMember.SortOrder]) and not IsEmptyEntry(lMember) then
+            Exit(False);
+        end;
+        Result := True;
+      end else begin
+        Result := lLeft.ElementCount = lRight.ElementCount;
+        for var i := 0 to Pred(lLeft.ElementCount) do
+          if Result then
+            Result := SameEntry(lLeft.Elements[i], lRight.Elements[i]);
+      end;
+    end else
+      Result := SameStr(aLeft.DisplaySortKey[True], aRight.DisplaySortKey[True]);
+  end;
+
+  function SameObject(aLeftList, aRightList: TStringList; aLeft, aRight: Integer): Boolean;
+  begin
+    Result := SameEntry(IwbElement(Pointer(aLeftList.Objects[aLeft])), IwbElement(Pointer(aRightList.Objects[aRight])));
+  end;
+
+  procedure UpdateTargetList(aLeftList, aRightList, aTargetList: TStringList; aAdded: TStringList = nil);
   var
     lLeft, lRight : Integer;
     lIndex        : Integer;
+
+    procedure Track(aAddition: Boolean);
+    var
+      lAt : Integer;
+    begin
+      if not Assigned(aAdded) then
+        Exit;
+      if aAdded.Find(aRightList[lRight], lAt) then begin
+        if not aAddition then
+          aAdded.Delete(lAt);
+      end else if aAddition then
+        aAdded.Add(aRightList[lRight]);
+    end;
+
+    procedure TakeAddition;
+    begin
+      if not aTargetList.Find(aRightList[lRight], lIndex) then begin
+        aTargetList.AddObject(aRightList[lRight], aRightList.Objects[lRight]);
+        Track(True);
+      end else if not SameObject(aTargetList, aRightList, lIndex, lRight) then begin
+        aTargetList.Objects[lIndex] := aRightList.Objects[lRight];
+        Track(True);
+      end;
+    end;
+
   begin
     lLeft := 0;
     lRight := 0;
@@ -3724,14 +3859,20 @@ var
           Inc(lLeft);
         end;
         0: begin
-          if aTargetList.Find(aLeftList[lLeft], lIndex) then
-            aTargetList.Objects[lIndex] := aRightList.Objects[lRight];
+          if not SameObject(aLeftList, aRightList, lLeft, lRight) then
+            if aTargetList.Find(aLeftList[lLeft], lIndex) then begin
+              if not SameObject(aTargetList, aRightList, lIndex, lRight) then
+                Track(False);
+              aTargetList.Objects[lIndex] := aRightList.Objects[lRight];
+            end else begin
+              aTargetList.AddObject(aRightList[lRight], aRightList.Objects[lRight]);
+              Track(False);
+            end;
           Inc(lLeft);
           Inc(lRight);
         end;
         1..High(Integer): begin
-          if not aTargetList.Find(aRightList[lRight], lIndex) then
-            aTargetList.AddObject(aRightList[lRight], aRightList.Objects[lRight]);
+          TakeAddition;
           Inc(lRight);
         end;
       end;
@@ -3743,8 +3884,7 @@ var
     end;
 
     while (lRight < aRightList.Count) do begin
-      if not aTargetList.Find(aRightList[lRight], lIndex) then
-        aTargetList.AddObject(aRightList[lRight], aRightList.Objects[lRight]);
+      TakeAddition;
       Inc(lRight);
     end;
   end;
@@ -3758,8 +3898,256 @@ var
 
     if Result then
       for var i := 0 to Pred(aLeft.Count) do
-        if not SameText(aLeft[i], aRight[i]) then
+        if not SameText(aLeft[i], aRight[i]) or not SameObject(aLeft, aRight, i, i) then
           Exit(False);
+  end;
+
+  function BaseKey(const aKey: string): string;
+  begin
+    Result := Copy(aKey, 1, Length(aKey) - Succ(KeyCounterDigits));
+  end;
+
+  function ContentKey(const aElement: IwbElement): string;
+  var
+    lContainer : IwbContainerElementRef;
+    lStructDef : IwbStructDef;
+    lMember    : IwbElement;
+  begin
+    if aElement.ConflictPriority = cpIgnore then
+      Exit('');
+    if not Supports(aElement.ValueDef, IwbStructDef, lStructDef) or not Supports(aElement, IwbContainerElementRef, lContainer) or
+       (lContainer.ElementCount = 0) then
+      Exit(aElement.DisplaySortKey[True]);
+    Result := '';
+    if lStructDef.SortKeyCount[True] = 0 then
+      for var i := 0 to Pred(lContainer.ElementCount) do begin
+        if i > 0 then
+          Result := Result + '|';
+        Result := Result + ContentKey(lContainer.Elements[i]);
+      end
+    else
+      for var i := 0 to Pred(lStructDef.SortKeyCount[True]) do begin
+        lMember := lContainer.ElementBySortOrder[lStructDef.SortKeys[i, True]];
+        if Assigned(lMember) then
+          Result := Result + ContentKey(lMember);
+        if i < Pred(lStructDef.SortKeyCount[True]) then
+          Result := Result + '|';
+      end;
+  end;
+
+  function EntryKey(const aEntry: IwbElement): string;
+  var
+    lStruct  : IwbContainerElementRef;
+    lSortKey : IwbHasSortKeyDef;
+    lMember  : IwbElement;
+  begin
+    if (aEntry.ElementType <> etSubRecordStruct) or not Supports(aEntry.Def, IwbHasSortKeyDef, lSortKey) or
+       (lSortKey.SortKeyCount[False] = 0) or not Supports(aEntry, IwbContainerElementRef, lStruct) then
+      Exit(aEntry.DisplaySortKey[False]);
+    Result := '';
+    for var i := 0 to Pred(lSortKey.SortKeyCount[True]) do begin
+      lMember := lStruct.ElementBySortOrder[lSortKey.SortKeys[i, True]];
+      if Assigned(lMember) then
+        if i < lSortKey.SortKeyCount[False] then
+          Result := Result + EntryKey(lMember)
+        else
+          Result := Result + ContentKey(lMember);
+      if i < Pred(lSortKey.SortKeyCount[True]) then
+        Result := Result + '|';
+    end;
+  end;
+
+  function KeyNumber(const aKey: string): Integer;
+  begin
+    Result := StrToInt('$' + Copy(aKey, Length(aKey) - Pred(KeyCounterDigits), KeyCounterDigits));
+  end;
+
+  procedure Remember(aKnown, aList: TStringList);
+  var
+    lIndex : Integer;
+  begin
+    for var i := 0 to Pred(aList.Count) do
+      if aKnown.Find(aList[i], lIndex) then
+        aKnown.Objects[lIndex] := aList.Objects[i]
+      else
+        aKnown.AddObject(aList[i], aList.Objects[i]);
+  end;
+
+  function AlignList(aLeftList, aRightList: TStringList; aTargetList: TStringList = nil; aKnown: TStringList = nil;
+    aAdded: TStringList = nil; aReserved: TStringList = nil; aReservations: TDictionary<string, string> = nil): TStringList;
+  var
+    lLeft, lLeftEnd   : Integer;
+    lRight, lRightEnd : Integer;
+    lKnownAt          : Integer;
+    lFree, lNext      : Integer;
+    lIndex            : Integer;
+    lBase             : string;
+    lKeys             : TArray<string>;
+    lEqual            : TArray<Integer>;
+    lTaken            : TArray<Boolean>;
+    lSlots            : TArray<Integer>;
+    lSlotLive         : TArray<Boolean>;
+    lSlotTaken        : TArray<Boolean>;
+
+    procedure SkipTo(aList: TStringList; var aIndex: Integer);
+    begin
+      while (aIndex < aList.Count) and (CompareText(BaseKey(aList[aIndex]), lBase) < 0) do
+        Inc(aIndex);
+    end;
+
+    function InGroup(aList: TStringList; aIndex: Integer): Boolean;
+    begin
+      Result := (aIndex < aList.Count) and SameText(BaseKey(aList[aIndex]), lBase);
+    end;
+
+    procedure Note(const aKey: string);
+    begin
+      if KeyNumber(aKey) >= lNext then
+        lNext := Succ(KeyNumber(aKey));
+    end;
+
+    procedure TakeSlots(aLive, aEqual: Boolean);
+    begin
+      for var j := lRight to Pred(lRightEnd) do
+        if lKeys[j - lRight] = '' then
+          for var k := 0 to High(lSlots) do
+            if not lSlotTaken[k] and (lSlotLive[k] = aLive) and (not aEqual or SameObject(aKnown, aRightList, lSlots[k], j)) then begin
+              lSlotTaken[k] := True;
+              lKeys[j - lRight] := aKnown[lSlots[k]];
+              Break;
+            end;
+    end;
+
+    procedure CountOnce;
+    var
+      lCandidates : TArray<Integer>;
+      lLive       : TArray<Integer>;
+    begin
+      lCandidates := nil;
+      lLive := nil;
+      for var i := lRight to Pred(lRightEnd) do begin
+        var k := lEqual[i - lRight];
+        if (k >= 0) and aAdded.Find(aLeftList[k], lIndex) and aTargetList.Find(aLeftList[k], lIndex) and
+           not SameObject(aLeftList, aTargetList, k, lIndex) then begin
+          lCandidates := lCandidates + [i];
+          lLive := lLive + [lIndex];
+        end;
+      end;
+      if Length(lCandidates) = 0 then
+        Exit;
+      for var j := lRight to Pred(lRightEnd) do
+        if lKeys[j - lRight] = '' then
+          for var c := 0 to High(lCandidates) do begin
+            var i := lCandidates[c];
+            if (i >= 0) and SameObject(aTargetList, aRightList, lLive[c], j) then begin
+              lCandidates[c] := -1;
+              var lKept := aLeftList[lEqual[i - lRight]];
+              var lLink := lKept;
+              var lKey: string;
+              while aReservations.TryGetValue(lLink, lKey) and aLeftList.Find(lKey, lIndex) do
+                lLink := lKey + #0;
+              if not aReservations.TryGetValue(lLink, lKey) then begin
+                lKey := lBase + #0 + IntToHex64(lNext, KeyCounterDigits);
+                Inc(lNext);
+                aReservations.Add(lLink, lKey);
+              end;
+              lKeys[j - lRight] := lKept;
+              lKeys[i - lRight] := lKey;
+              aReserved.Add(lKey);
+              for var s := 0 to High(lSlots) do
+                if SameText(aKnown[lSlots[s]], lKey) then
+                  lSlotTaken[s] := True;
+              Break;
+            end;
+          end;
+    end;
+
+  begin
+    if Assigned(aReserved) then
+      aReserved.Clear;
+    Result := TStringList.Create;
+    try
+      Result.UseLocale := False;
+      lLeft := 0;
+      lRight := 0;
+      lKnownAt := 0;
+      while lRight < aRightList.Count do begin
+        lBase := BaseKey(aRightList[lRight]);
+        lRightEnd := lRight;
+        while InGroup(aRightList, lRightEnd) do
+          Inc(lRightEnd);
+        SkipTo(aLeftList, lLeft);
+        lLeftEnd := lLeft;
+        lNext := 0;
+        while InGroup(aLeftList, lLeftEnd) do begin
+          Note(aLeftList[lLeftEnd]);
+          Inc(lLeftEnd);
+        end;
+        lKeys := nil;
+        SetLength(lKeys, lRightEnd - lRight);
+        lEqual := nil;
+        SetLength(lEqual, lRightEnd - lRight);
+        lTaken := nil;
+        SetLength(lTaken, lLeftEnd - lLeft);
+        for var j := lRight to Pred(lRightEnd) do begin
+          lEqual[j - lRight] := -1;
+          for var k := lLeft to Pred(lLeftEnd) do
+            if not lTaken[k - lLeft] and SameObject(aLeftList, aRightList, k, j) then begin
+              lTaken[k - lLeft] := True;
+              lKeys[j - lRight] := aLeftList[k];
+              lEqual[j - lRight] := k;
+              Break;
+            end;
+        end;
+        lSlots := nil;
+        lSlotLive := nil;
+        if Assigned(aKnown) and Assigned(aTargetList) then begin
+          SkipTo(aKnown, lKnownAt);
+          while InGroup(aKnown, lKnownAt) do begin
+            Note(aKnown[lKnownAt]);
+            if not aLeftList.Find(aKnown[lKnownAt], lIndex) and Assigned(aKnown.Objects[lKnownAt]) then begin
+              lSlots := lSlots + [lKnownAt];
+              lSlotLive := lSlotLive + [aTargetList.Find(aKnown[lKnownAt], lIndex)];
+            end;
+            Inc(lKnownAt);
+          end;
+        end;
+        lSlotTaken := nil;
+        SetLength(lSlotTaken, Length(lSlots));
+        if Assigned(aAdded) then
+          CountOnce;
+        lFree := lLeft;
+        for var j := lRight to Pred(lRightEnd) do
+          if lKeys[j - lRight] = '' then begin
+            while (lFree < lLeftEnd) and lTaken[lFree - lLeft] do
+              Inc(lFree);
+            if lFree < lLeftEnd then begin
+              lTaken[lFree - lLeft] := True;
+              lKeys[j - lRight] := aLeftList[lFree];
+            end;
+          end;
+        TakeSlots(True, True);
+        TakeSlots(False, True);
+        TakeSlots(True, False);
+        TakeSlots(False, False);
+        for var j := lRight to Pred(lRightEnd) do
+          if lKeys[j - lRight] = '' then begin
+            lKeys[j - lRight] := lBase + #0 + IntToHex64(lNext, KeyCounterDigits);
+            Inc(lNext);
+          end;
+        for var j := lRight to Pred(lRightEnd) do
+          Result.AddObject(lKeys[j - lRight], aRightList.Objects[j]);
+        lRight := lRightEnd;
+      end;
+      if Assigned(aReserved) then
+        for var lKey in aReserved do
+          if not aKnown.Find(lKey, lIndex) then
+            aKnown.AddObject(lKey, nil);
+      Result.Sorted := True;
+    except
+      Result.Free;
+      raise;
+    end;
   end;
 
   procedure MergeMaster(const aMaster: IwbMainRecord; const aRow: TwbMergedPatchList);
@@ -3775,7 +4163,21 @@ var
     lCurrentMaster : IwbMainRecord;
     lCurrentList   : TStringList;
     lMasterList    : TStringList;
-    lMasters       : TDynMainRecords;
+    lMasterSpace   : TStringList;
+    lSpaces        : TArray<TStringList>;
+    lBases         : TArray<TStringList>;
+    lOwnedBases    : TArray<TStringList>;
+    lOwnLists      : TArray<TStringList>;
+    lIsolated      : TArray<TStringList>;
+    lIsolatedSpaces: TArray<TArray<TStringList>>;
+    lVersions      : TDictionary<Pointer, Integer>;
+    lMastersOf     : TArray<TArray<Integer>>;
+    lClosures      : TArray<TArray<Boolean>>;
+    lKnown         : TStringList;
+    lAdded         : TStringList;
+    lReserved      : TStringList;
+    lReservations  : TDictionary<string, string>;
+    lFresh         : TDictionary<Pointer, string>;
     lSortable      : IwbSortableContainer;
     lEditorID      : string;
     lCountElement  : IwbElement;
@@ -3787,35 +4189,43 @@ var
     var
       lList  : IwbContainerElementRef;
       lEntry : IwbContainerElementRef;
+      lKey   : string;
       lLast  : string;
       lCount : Integer;
     begin
       Result := TStringList.Create;
       try
         if aRow.AsSet and not lIsOrderedList then begin
+          Result.UseLocale := False;
           Result.Sorted := True;
           Result.Duplicates := dupIgnore;
         end;
-        if not Supports(aEntries, IwbContainerElementRef, lList) then
-          Exit;
-        for var i := 0 to Pred(lList.ElementCount) do
-          if Supports(lList.Elements[i], IwbContainerElementRef, lEntry) then begin
-            SetLength(lKeepAlive, Succ(Length(lKeepAlive)));
-            lKeepAlive[High(lKeepAlive)] := lEntry;
-            Result.AddObject(lEntry.DisplaySortKey[True], Pointer(lEntry));
-          end;
+        if Supports(aEntries, IwbContainerElementRef, lList) then
+          for var i := 0 to Pred(lList.ElementCount) do
+            if Supports(lList.Elements[i], IwbContainerElementRef, lEntry) then begin
+              SetLength(lKeepAlive, Succ(Length(lKeepAlive)));
+              lKeepAlive[High(lKeepAlive)] := lEntry;
+              if aRow.AsSet then
+                Result.AddObject(lEntry.DisplaySortKey[True], Pointer(lEntry))
+              else if lIsOrderedList then
+                Result.AddObject(lEntry.DisplaySortKey[True] + #0 + lEntry.DisplaySortKey[True], Pointer(lEntry))
+              else
+                Result.AddObject(EntryKey(lEntry) + #0 + lEntry.DisplaySortKey[True], Pointer(lEntry));
+            end;
         if not aRow.AsSet then begin
+          Result.UseLocale := False;
           Result.Sort;
           lLast := '';
           lCount := 0;
           for var i := 0 to Pred(Result.Count) do begin
-            if Result[i] = lLast then
+            lKey := Copy(Result[i], 1, Pred(Pos(#0, Result[i])));
+            if SameText(lKey, lLast) then
               Inc(lCount)
             else begin
               lCount := 0;
-              lLast := Result[i];
+              lLast := lKey;
             end;
-            Result[i] := Result[i] + '#' + IntToHex64(lCount, 4);
+            Result[i] := lKey + #0 + IntToHex64(lCount, KeyCounterDigits);
           end;
           Result.Sorted := True;
         end;
@@ -3852,9 +4262,417 @@ var
         Result := nil;
     end;
 
+    function Winner: IwbMainRecord;
+    begin
+      for var i := Pred(aMaster.OverrideCount) downto 0 do begin
+        Result := aMaster.Overrides[i];
+        if not IsCompareCopy(Result) and not Result.IsPartialForm then
+          Exit;
+      end;
+      Result := aMaster;
+    end;
+
+    function MasterEntries: IwbElement;
+    begin
+      if Assigned(lCurrentMaster) then
+        Result := ListOf(lCurrentMaster)
+      else
+        Result := nil;
+    end;
+
+    function BaseEntries: IwbElement;
+    begin
+      if IsCompareCopy(aMaster) then
+        Result := nil
+      else
+        Result := ListOf(aMaster);
+    end;
+
+    function OwnMaster(const aRecord: IwbMainRecord): IwbMainRecord;
+    begin
+      var lRecords := aRecord.MasterRecordsFromMasterFilesAndSelf;
+      for var i := High(lRecords) downto Low(lRecords) do
+        if not aRecord.Equals(lRecords[i]) then
+          Exit(lRecords[i]);
+      Result := nil;
+    end;
+
+    function ComparedMaster(const aRecord: IwbMainRecord): IwbMainRecord;
+    begin
+      Result := OwnMaster(aRecord);
+      while Assigned(Result) and IsCompareCopy(Result) do
+        Result := OwnMaster(Result);
+    end;
+
+    function Entries(const aEntries: IwbElement): TArray<IwbElement>;
+    var
+      lList : IwbContainerElementRef;
+    begin
+      Result := nil;
+      if Supports(aEntries, IwbContainerElementRef, lList) then
+        for var i := 0 to Pred(lList.ElementCount) do
+          if Supports(lList.Elements[i], IwbContainerElementRef) then
+            Result := Result + [lList.Elements[i]];
+    end;
+
+    function CopyChanged(const aCopy, aAncestor: IwbMainRecord): Boolean;
+    var
+      lCopy, lBase : TArray<IwbElement>;
+      lTaken       : TArray<Boolean>;
+      k            : Integer;
+    begin
+      if aRow.AsSet and not lIsOrderedList then begin
+        var lBaseList: TStringList := nil;
+        var lCopyList := BuildList(ListOf(aCopy));
+        try
+          if Assigned(aAncestor) then
+            lBaseList := BuildList(ListOf(aAncestor))
+          else
+            lBaseList := BuildList(nil);
+          Exit(not ListsEqual(lBaseList, lCopyList));
+        finally
+          lBaseList.Free;
+          lCopyList.Free;
+        end;
+      end;
+      lCopy := Entries(ListOf(aCopy));
+      if Assigned(aAncestor) then
+        lBase := Entries(ListOf(aAncestor));
+      if Length(lCopy) <> Length(lBase) then
+        Exit(True);
+      SetLength(lTaken, Length(lBase));
+      for var j := 0 to High(lCopy) do begin
+        k := 0;
+        if lIsOrderedList then
+          k := j
+        else
+          while (k < High(lBase)) and (lTaken[k] or not SameEntry(lBase[k], lCopy[j])) do
+            Inc(k);
+        if lTaken[k] or not SameEntry(lBase[k], lCopy[j]) then
+          Exit(True);
+        lTaken[k] := True;
+      end;
+      Result := False;
+    end;
+
+    function ChangedCopy(const aRecord: IwbMainRecord): IwbMainRecord;
+    begin
+      for var lRecord in aRecord.MasterRecordsFromMasterFilesAndSelf do
+        if IsCompareCopy(lRecord) and CopyChanged(lRecord, ComparedMaster(lRecord)) then
+          Exit(lRecord);
+      Result := nil;
+    end;
+
+    function VersionOf(const aRecord: IwbMainRecord): Integer;
+    begin
+      if not Assigned(aRecord) or not lVersions.TryGetValue(aRecord.ElementID, Result) then
+        Result := -1;
+    end;
+
+    function IsMasterOf(aMaster, aVersion: Integer): Boolean;
+    begin
+      for var m in lMastersOf[aVersion] do
+        if m = aMaster then
+          Exit(True);
+      Result := False;
+    end;
+
+    procedure FindMasters;
+    begin
+      lVersions := TDictionary<Pointer, Integer>.Create;
+      lVersions.AddOrSetValue(aMaster.ElementID, 0);
+      for var i := 0 to Pred(aMaster.OverrideCount) do
+        lVersions.AddOrSetValue(aMaster.Overrides[i].ElementID, Succ(i));
+      SetLength(lMastersOf, Succ(aMaster.OverrideCount));
+      SetLength(lClosures, Succ(aMaster.OverrideCount));
+      for var i := 0 to Pred(aMaster.OverrideCount) do begin
+        var lVersion := aMaster.Overrides[i];
+        if IsCompareCopy(lVersion) then
+          Continue;
+        for var lRecord in lVersion.MasterRecordsFromMasterFilesAndSelf do
+          if not lVersion.Equals(lRecord) then begin
+            var lAncestor := lRecord;
+            if IsCompareCopy(lAncestor) then
+              lAncestor := ComparedMaster(lAncestor);
+            var m := VersionOf(lAncestor);
+            if (m >= 0) and (m <= i) and not IsMasterOf(m, Succ(i)) then
+              lMastersOf[Succ(i)] := lMastersOf[Succ(i)] + [m];
+          end;
+      end;
+    end;
+
+    function Closure(aVersion: Integer): TArray<Boolean>;
+    begin
+      if not Assigned(lClosures[aVersion]) then begin
+        var lClosure: TArray<Boolean> := nil;
+        SetLength(lClosure, Length(lClosures));
+        for var m in lMastersOf[aVersion] do begin
+          lClosure[m] := True;
+          var lInner := Closure(m);
+          for var i := 0 to Pred(m) do
+            if lInner[i] then
+              lClosure[i] := True;
+        end;
+        lClosures[aVersion] := lClosure;
+      end;
+      Result := lClosures[aVersion];
+    end;
+
+    function NeedsMerge(aVersion, aCompared: Integer): Boolean;
+    begin
+      for var m in lMastersOf[aVersion] do
+        if (m <> aCompared) and not IsMasterOf(m, aCompared) then begin
+          var lClosure := Closure(aCompared);
+          if not lClosure[m] then
+            Exit(True);
+        end;
+      Result := False;
+    end;
+
+    function CopyOf(aList: TStringList): TStringList;
+    begin
+      Result := TStringList.Create;
+      try
+        Result.UseLocale := False;
+        Result.Sorted := True;
+        if Assigned(aList) then
+          for var i := 0 to Pred(aList.Count) do
+            Result.AddObject(aList[i], aList.Objects[i]);
+      except
+        Result.Free;
+        raise;
+      end;
+    end;
+
+    procedure Apply(aBase, aAligned, aReserved, aTarget, aAdded: TStringList);
+    var
+      lApplied : TStringList;
+      lAt      : Integer;
+    begin
+      lApplied := aAligned;
+      try
+        if aReserved.Count > 0 then begin
+          lApplied := CopyOf(nil);
+          for var i := 0 to Pred(aAligned.Count) do
+            if not aReserved.Find(aAligned[i], lAt) then
+              lApplied.AddObject(aAligned[i], aAligned.Objects[i]);
+        end;
+        UpdateTargetList(aBase, lApplied, aTarget, aAdded);
+      finally
+        if lApplied <> aAligned then
+          lApplied.Free;
+      end;
+    end;
+
+    function MergedBase(aVersion: Integer): TStringList;
+    begin
+      var lClosure := Closure(aVersion);
+      if lClosure[0] then
+        Result := CopyOf(lSpaces[0])
+      else
+        Result := CopyOf(nil);
+      try
+        for var i := 1 to Pred(aVersion) do
+          if lClosure[i] and Assigned(lSpaces[i]) and Assigned(lBases[i]) then
+            UpdateTargetList(lBases[i], lSpaces[i], Result);
+      except
+        Result.Free;
+        raise;
+      end;
+    end;
+
+    function FreshKey(const aBase: string; aKnown, aTaken: TStringList): string;
+    var
+      lNext : Integer;
+    begin
+      lNext := 0;
+      for var lList in [aKnown, aTaken] do
+        for var i := 0 to Pred(lList.Count) do
+          if SameText(BaseKey(lList[i]), aBase) and (KeyNumber(lList[i]) >= lNext) then
+            lNext := Succ(KeyNumber(lList[i]));
+      Result := aBase + #0 + IntToHex64(lNext, KeyCounterDigits);
+    end;
+
+    procedure ForgetAdded(aFresh: TDictionary<Pointer, string>; aAdded: TStringList);
+    var
+      lAt : Integer;
+    begin
+      if aAdded.Count = 0 then
+        Exit;
+      for var lPair in aFresh.ToArray do
+        if aAdded.Find(lPair.Value, lAt) then
+          aFresh.Remove(lPair.Key);
+    end;
+
+    function MappedMerge(aVersion: Integer; const aSpaces: TArray<TStringList>; aKnown, aTarget: TStringList;
+      aFresh: TDictionary<Pointer, string>): TStringList; forward;
+
+    function IsolatedMerge(aVersion: Integer): TStringList;
+    var
+      lClosure    : TArray<Boolean>;
+      lSpace      : TArray<TStringList>;
+      lKnownIn    : TStringList;
+      lAddedIn    : TStringList;
+      lReservedIn : TStringList;
+      lHeldIn     : TDictionary<string, string>;
+      lFreshIn    : TDictionary<Pointer, string>;
+      lBase       : TStringList;
+      lOwned      : Boolean;
+    begin
+      if Assigned(lIsolated[aVersion]) then
+        Exit(lIsolated[aVersion]);
+      lClosure := Closure(aVersion);
+      SetLength(lSpace, aVersion);
+      lKnownIn := nil;
+      lAddedIn := nil;
+      lReservedIn := nil;
+      lHeldIn := nil;
+      lFreshIn := nil;
+      Result := nil;
+      try
+        try
+          if lClosure[0] then
+            lSpace[0] := CopyOf(lSpaces[0])
+          else
+            lSpace[0] := CopyOf(nil);
+          Result := CopyOf(lSpace[0]);
+          lKnownIn := CopyOf(nil);
+          lAddedIn := CopyOf(nil);
+          lReservedIn := CopyOf(nil);
+          lHeldIn := TDictionary<string, string>.Create;
+          lFreshIn := TDictionary<Pointer, string>.Create;
+          Remember(lKnownIn, Result);
+          for var i := 1 to Pred(aVersion) do
+            if lClosure[i] and Assigned(lOwnLists[i]) then begin
+              var lMasterRecord := ComparedMaster(aMaster.Overrides[Pred(i)]);
+              var lCompared := VersionOf(lMasterRecord);
+              lBase := nil;
+              lOwned := False;
+              if (lCompared >= 0) and (lCompared < i) and Assigned(lSpace[lCompared]) then
+                if NeedsMerge(i, lCompared) then begin
+                  lBase := MappedMerge(i, lSpace, lKnownIn, Result, lFreshIn);
+                  lOwned := True;
+                end else
+                  lBase := lSpace[lCompared];
+              if not Assigned(lBase) then begin
+                if Assigned(lMasterRecord) then
+                  lBase := BuildList(ListOf(lMasterRecord))
+                else
+                  lBase := BuildList(nil);
+                lOwned := True;
+              end;
+              try
+                lSpace[i] := AlignList(lBase, lOwnLists[i], Result, lKnownIn, lAddedIn, lReservedIn, lHeldIn);
+                Apply(lBase, lSpace[i], lReservedIn, Result, lAddedIn);
+                Remember(lKnownIn, Result);
+                ForgetAdded(lFreshIn, lAddedIn);
+              finally
+                if lOwned then
+                  lBase.Free;
+              end;
+            end;
+          lIsolated[aVersion] := Result;
+          lIsolatedSpaces[aVersion] := lSpace;
+          lSpace := nil;
+        except
+          FreeAndNil(Result);
+          raise;
+        end;
+      finally
+        for var lList in lSpace do
+          lList.Free;
+        lFreshIn.Free;
+        lHeldIn.Free;
+        lReservedIn.Free;
+        lAddedIn.Free;
+        lKnownIn.Free;
+      end;
+    end;
+
+    function MappedMerge(aVersion: Integer; const aSpaces: TArray<TStringList>; aKnown, aTarget: TStringList;
+      aFresh: TDictionary<Pointer, string>): TStringList;
+    var
+      lMerge   : TStringList;
+      lWalk    : TArray<TStringList>;
+      lKeys    : TDictionary<Pointer, string>;
+      lClaim   : TDictionary<string, Integer>;
+      lClaimed : TArray<string>;
+      lFrom    : TArray<Integer>;
+      lLive    : TArray<Boolean>;
+      lKey     : string;
+      lOwner   : Integer;
+      lAt      : Integer;
+      lHeld    : Integer;
+    begin
+      lMerge := IsolatedMerge(aVersion);
+      lWalk := lIsolatedSpaces[aVersion];
+      var lClosure := Closure(aVersion);
+      SetLength(lClaimed, lMerge.Count);
+      SetLength(lFrom, lMerge.Count);
+      SetLength(lLive, lMerge.Count);
+      lKeys := nil;
+      lClaim := nil;
+      try
+        lKeys := TDictionary<Pointer, string>.Create;
+        lClaim := TDictionary<string, Integer>.Create;
+        for var i := 0 to Pred(aVersion) do
+          if lClosure[i] and Assigned(aSpaces[i]) then
+            for var k := 0 to Pred(aSpaces[i].Count) do
+              lKeys.AddOrSetValue(Pointer(aSpaces[i].Objects[k]), aSpaces[i][k]);
+        for var k := 0 to Pred(lMerge.Count) do begin
+          lFrom[k] := -1;
+          for var i := Pred(aVersion) downto 0 do
+            if lClosure[i] and Assigned(lWalk[i]) and lWalk[i].Find(lMerge[k], lAt) and SameObject(lWalk[i], lMerge, lAt, k) and
+               lKeys.TryGetValue(Pointer(lWalk[i].Objects[lAt]), lKey) then begin
+              lClaimed[k] := lKey;
+              lFrom[k] := i;
+              Break;
+            end;
+          if lFrom[k] < 0 then
+            Continue;
+          if aTarget.Find(lClaimed[k], lAt) then
+            for var i := 0 to Pred(aVersion) do
+              if lClosure[i] and Assigned(lWalk[i]) and lWalk[i].Find(lMerge[k], lHeld) and
+                 (lWalk[i].Objects[lHeld] = aTarget.Objects[lAt]) then begin
+                lLive[k] := True;
+                Break;
+              end;
+          if not lClaim.TryGetValue(lClaimed[k], lOwner) or (not lLive[lOwner] and (lLive[k] or (lFrom[k] > lFrom[lOwner]))) then
+            lClaim.AddOrSetValue(lClaimed[k], k);
+        end;
+        Result := CopyOf(nil);
+        try
+          for var k := 0 to Pred(lMerge.Count) do begin
+            if (lFrom[k] >= 0) and lClaim.TryGetValue(lClaimed[k], lOwner) and (lOwner = k) then
+              lKey := lClaimed[k]
+            else if not Assigned(lMerge.Objects[k]) or not aFresh.TryGetValue(Pointer(lMerge.Objects[k]), lKey) or
+                    lClaim.ContainsKey(lKey) then begin
+              lKey := FreshKey(BaseKey(lMerge[k]), aKnown, Result);
+              aKnown.AddObject(lKey, nil);
+              if Assigned(lMerge.Objects[k]) then
+                aFresh.AddOrSetValue(Pointer(lMerge.Objects[k]), lKey);
+            end;
+            Result.AddObject(lKey, lMerge.Objects[k]);
+          end;
+        except
+          Result.Free;
+          raise;
+        end;
+      finally
+        lClaim.Free;
+        lKeys.Free;
+      end;
+    end;
+
   begin
+    var lHasCopy := IsCompareCopy(aMaster);
+    for j := 0 to Pred(aMaster.OverrideCount) do
+      if IsCompareCopy(aMaster.Overrides[j]) then
+        lHasCopy := True;
+
     SetLength(lTargetLists, Length(aRow.Lists));
     SetLength(lWinningLists, Length(aRow.Lists));
+    lVersions := nil;
     try
       lIsFaulty := False;
       lWinner := nil;
@@ -3893,42 +4711,144 @@ var
               Continue;
           end;
 
-        lTargetLists[l] := BuildList(ListOf(aMaster));
-        for j := 0 to Pred(aMaster.OverrideCount) do begin
-          lOverride := aMaster.Overrides[j];
-          lCurrentList := BuildList(ListOf(lOverride));
-          try
-            lMasters := lOverride.MasterRecordsFromMasterFilesAndSelf;
-            lCurrentMaster := nil;
-            for k := High(lMasters) downto Low(lMasters) do
-              if not lOverride.Equals(lMasters[k]) then begin
-                lCurrentMaster := lMasters[k];
-                Break;
-              end;
-            if not Assigned(lCurrentMaster) then
+        if lHasCopy then
+          for j := 0 to Pred(aMaster.OverrideCount) do begin
+            lOverride := aMaster.Overrides[j];
+            if IsCompareCopy(lOverride) then
               Continue;
-            lMasterList := BuildList(ListOf(lCurrentMaster));
-            try
-              if lIsOrderedList then begin
-                if not ListsEqual(lMasterList, lCurrentList, True) then
-                  lIsFaulty := True
-                else
-                  UpdateOrderedTargetList(lMasterList, lCurrentList, lTargetLists[l]);
-              end else
-                UpdateTargetList(lMasterList, lCurrentList, lTargetLists[l]);
-            finally
-              lMasterList.Free;
+            var lCopy := ChangedCopy(lOverride);
+            if Assigned(lCopy) then begin
+              Report('Error: Can''t merge ' + aMaster.Name + ': "' + lOverride._File.FileName + '" lists the Compare To copy "' +
+                lCopy._File.FileName + '" as a master');
+              lFaulty.Add(aMaster);
+              Exit;
             end;
-          finally
-            lCurrentList.Free;
           end;
-          if lIsFaulty then
-            Break;
+
+        lTargetLists[l] := BuildList(BaseEntries);
+        lSpaces := nil;
+        lBases := nil;
+        lOwnedBases := nil;
+        lOwnLists := nil;
+        lIsolated := nil;
+        lIsolatedSpaces := nil;
+        lKnown := nil;
+        lAdded := nil;
+        lReserved := nil;
+        lReservations := nil;
+        lFresh := nil;
+        try
+          if not lIsOrderedList then begin
+            if not Assigned(lVersions) then
+              FindMasters;
+            SetLength(lSpaces, Succ(aMaster.OverrideCount));
+            SetLength(lBases, Succ(aMaster.OverrideCount));
+            SetLength(lOwnLists, Succ(aMaster.OverrideCount));
+            SetLength(lIsolated, Succ(aMaster.OverrideCount));
+            SetLength(lIsolatedSpaces, Succ(aMaster.OverrideCount));
+            lSpaces[0] := BuildList(BaseEntries);
+            if not aRow.AsSet then begin
+              lKnown := TStringList.Create;
+              lKnown.UseLocale := False;
+              lKnown.Sorted := True;
+              Remember(lKnown, lTargetLists[l]);
+              lAdded := CopyOf(nil);
+              lReserved := CopyOf(nil);
+              lReservations := TDictionary<string, string>.Create;
+              lFresh := TDictionary<Pointer, string>.Create;
+            end;
+          end;
+          for j := 0 to Pred(aMaster.OverrideCount) do begin
+            lOverride := aMaster.Overrides[j];
+            if IsCompareCopy(lOverride) then
+              Continue;
+            lCurrentList := BuildList(ListOf(lOverride));
+            try
+              lCurrentMaster := ComparedMaster(lOverride);
+              lMasterList := nil;
+              try
+                if lIsOrderedList then begin
+                  lMasterList := BuildList(MasterEntries);
+                  if not ListsEqual(lMasterList, lCurrentList, True) then
+                    lIsFaulty := True
+                  else
+                    UpdateOrderedTargetList(lMasterList, lCurrentList, lTargetLists[l]);
+                end else begin
+                  lMasterSpace := nil;
+                  k := VersionOf(lCurrentMaster);
+                  if (k >= 0) and (k <= j) then
+                    if NeedsMerge(Succ(j), k) then begin
+                      if aRow.AsSet then
+                        lMasterList := MergedBase(Succ(j))
+                      else
+                        lMasterList := MappedMerge(Succ(j), lSpaces, lKnown, lTargetLists[l], lFresh);
+                      lMasterSpace := lMasterList;
+                    end else
+                      lMasterSpace := lSpaces[k];
+                  if not Assigned(lMasterSpace) then begin
+                    lMasterList := BuildList(MasterEntries);
+                    lMasterSpace := lMasterList;
+                  end;
+                  lBases[Succ(j)] := lMasterSpace;
+                  if Assigned(lMasterList) then begin
+                    lOwnedBases := lOwnedBases + [lMasterList];
+                    lMasterList := nil;
+                  end;
+                  if aRow.AsSet then begin
+                    UpdateTargetList(lMasterSpace, lCurrentList, lTargetLists[l]);
+                    lSpaces[Succ(j)] := lCurrentList;
+                    lCurrentList := nil;
+                  end else begin
+                    lSpaces[Succ(j)] := AlignList(lMasterSpace, lCurrentList, lTargetLists[l], lKnown, lAdded, lReserved, lReservations);
+                    Apply(lMasterSpace, lSpaces[Succ(j)], lReserved, lTargetLists[l], lAdded);
+                    Remember(lKnown, lTargetLists[l]);
+                    ForgetAdded(lFresh, lAdded);
+                    lOwnLists[Succ(j)] := lCurrentList;
+                    lCurrentList := nil;
+                  end;
+                end;
+              finally
+                lMasterList.Free;
+              end;
+            finally
+              lCurrentList.Free;
+            end;
+            if lIsFaulty then
+              Break;
+          end;
+        finally
+          for var lSpace in lSpaces do
+            lSpace.Free;
+          lSpaces := nil;
+          for var lBase in lOwnedBases do
+            lBase.Free;
+          lOwnedBases := nil;
+          lBases := nil;
+          for var lList in lOwnLists do
+            lList.Free;
+          lOwnLists := nil;
+          for var lList in lIsolated do
+            lList.Free;
+          lIsolated := nil;
+          for var lWalkLists in lIsolatedSpaces do
+            for var lList in lWalkLists do
+              lList.Free;
+          lIsolatedSpaces := nil;
+          lFresh.Free;
+          lReservations.Free;
+          lReserved.Free;
+          lAdded.Free;
+          lKnown.Free;
         end;
         if lIsFaulty then
           Break;
-        lWinner := aMaster.WinningOverride;
+        lWinner := Winner;
         lWinningLists[l] := BuildList(ListOf(lWinner));
+        if not aRow.AsSet and not lIsOrderedList then begin
+          var lAligned := AlignList(lTargetLists[l], lWinningLists[l]);
+          lWinningLists[l].Free;
+          lWinningLists[l] := lAligned;
+        end;
       end;
 
       if lIsFaulty then begin
@@ -3942,6 +4862,9 @@ var
           var lList := ListOf(lWinner);
           if not Assigned(lList) then
             lList := ListOf(aMaster);
+          for j := 0 to Pred(aMaster.OverrideCount) do
+            if not Assigned(lList) then
+              lList := ListOf(aMaster.Overrides[j]);
           var lListDef: IwbSubRecordArrayDef;
           if Assigned(lList) and Supports(lList.Def, IwbSubRecordArrayDef, lListDef) and (lListDef.MaxCount > 0) and
              (UInt64(lTargetLists[l].Count) > lListDef.MaxCount) then begin
@@ -4008,6 +4931,7 @@ var
         FreeAndNil(lWinningLists[l]);
         FreeAndNil(lTargetLists[l]);
       end;
+      lVersions.Free;
       lKeepAlive := nil;
     end;
   end;
@@ -4016,6 +4940,15 @@ var
   var
     lMainRecord : IwbMainRecord;
     lMaster     : IwbMainRecord;
+
+    function MergedOverrideCount: Integer;
+    begin
+      Result := 0;
+      for var k := 0 to Pred(lMaster.OverrideCount) do
+        if not IsCompareCopy(lMaster.Overrides[k]) then
+          Inc(Result);
+    end;
+
   begin
     if not Assigned(aGroup) then
       Exit;
@@ -4026,7 +4959,7 @@ var
         if lMet.Contains(lMaster) then
           Continue;
         lMet.Add(lMaster);
-        if lMaster.OverrideCount < 2 then
+        if MergedOverrideCount < 2 then
           Continue;
         MergeMaster(lMaster, aRow);
       except
@@ -6491,6 +7424,7 @@ begin
   flMasters                := nil;
   flRecords                := nil;
   flInjectedRecords        := nil;
+  flRecordStream           := nil;
   var lElements := ReleaseElements;
   lElements := nil;
   flCloseFile;
@@ -7991,6 +8925,14 @@ begin
     if not Assigned(HEDR) then
       raise Exception.Create('File ' + GetFileName + ' has a file header with missing HEDR subrecord');
 
+    if not (gcFormIDInRecordHeader in lGameDef.Capabilities) then begin
+      var lLayout := flContextObj.SlotLayout;
+      for var lRecord in flRecords do
+        if Assigned(lRecord) and (lRecord.FormID.ObjectID[lLayout] <> lRecord.FixedFormID.ObjectID[lLayout]) then
+          raise Exception.Create('File ' + GetFileName + ' can not be saved: ' + lRecord.Name + ' is registered as [' +
+            lRecord.FixedFormID.ToDisplayString(lLayout) + '], not under its current identity');
+    end;
+
     if flModule.miExtension = meESM then
       SetIsESM(True);
 
@@ -8067,7 +9009,7 @@ begin
     if RecordCount < 1 then
       raise Exception.Create('File ' + GetFileName + ' has an invalid record count');
 
-    HEDR.Elements[1].EditValue := IntToStr(Pred(RecordCount));
+    HEDR.ElementEditValues['Number of Records'] := IntToStr(Pred(RecordCount));
     j := 0;
     ONAMs := nil;
     if lGameDef.IsSkyrim or lGameDef.IsFallout3 or lGameDef.IsFallout4 or lGameDef.IsFallout76 or lGameDef.IsStarfield then begin
@@ -8381,13 +9323,20 @@ begin
   until not RemovedAny;
 end;
 
-procedure TwbFile.RemoveInjectedMainRecord(const aRecord: IwbMainRecord);
+procedure TwbFile.RemoveInjectedMainRecord(const aRecord: IwbMainRecord; const aFormID: TwbFormID);
 var
   i: Integer;
 begin
-  if (Length(flInjectedRecords) > 0) and FindInjectedID(aRecord.FormID, i) then begin
+  if Length(flInjectedRecords) < 1 then
+    Exit;
 
-    Assert( (aRecord as IwbElement) = (flInjectedRecords[i] as IwbElement) );
+  if not FindInjectedID(aFormID, i) or ((aRecord as IwbElement) <> (flInjectedRecords[i] as IwbElement)) then begin
+    i := High(flInjectedRecords);
+    while (i >= 0) and ((aRecord as IwbElement) <> (flInjectedRecords[i] as IwbElement)) do
+      Dec(i);
+  end;
+
+  if i >= 0 then begin
 
     flInjectedRecords[i] := nil;
     if i < High(flInjectedRecords) then begin
@@ -8527,7 +9476,7 @@ begin
     else begin
       var lTarget := InjectionTarget(aFormID);
       if Assigned(lTarget) then
-        lTarget.RemoveInjectedMainRecord(aRecord);
+        lTarget.RemoveInjectedMainRecord(aRecord, aFormID);
     end;
   except
     on E: Exception do
@@ -8624,6 +9573,8 @@ var
 
   IsInternal  : Boolean;
   EndPtr      : Pointer;
+  ItemPtr     : Pointer;
+  RecordStream: TList<TwbRecordStreamEntry>;
 begin
   var lGameDef := flContextObj.GameDefObj;
   SelfRef := Self as IwbContainerElementRef;
@@ -8631,6 +9582,7 @@ begin
 
   Include(flStates, fsScanning);
   TopGroups := nil;
+  RecordStream := nil;
   try
     CurrentPtr := flView;
     TwbRecord.CreateForPtr(CurrentPtr, flEndPtr, Self, nil);
@@ -8781,8 +9733,10 @@ begin
 
     var WasEditAllowed := flContextObj.Settings.EditAllowed;
     try
-      if gcUngroupedRecordStream in lGameDef.Capabilities then
+      if gcUngroupedRecordStream in lGameDef.Capabilities then begin
         flContextObj.Settings.EditAllowed := True;
+        RecordStream := TList<TwbRecordStreamEntry>.Create;
+      end;
 
       EndPtr := flEndPtr;
       GroupType := 0;
@@ -8858,6 +9812,7 @@ begin
             Container := nil;
         end;
 
+        ItemPtr := CurrentPtr;
         Rec := TwbRecord.CreateForPtr(CurrentPtr, EndPtr, Container, nil, flContextObj);
 
         if Assigned(Rec) then
@@ -8865,19 +9820,27 @@ begin
             if (CurrentPtr = EndPtr) and (EndPtr <> flEndPtr) then
               EndPtr := flEndPtr;
 
+            var lEntry := Default(TwbRecordStreamEntry);
             if Supports(Rec, IwbMainRecord, MainRecord) then begin
+              lEntry.rseRecord := MainRecord;
               if Signature = 'DIAL' then begin
                 DialRecord := MainRecord;
               end else if Signature = 'CELL' then begin
                 CellRecord := MainRecord;
                 GroupType := 8;
               end;
-            end else
+            end else begin
+              SetLength(lEntry.rseMarker, NativeUInt(CurrentPtr) - NativeUInt(ItemPtr));
+              Move(ItemPtr^, lEntry.rseMarker[0], Length(lEntry.rseMarker));
               if Rec.Signature = 'NAM0' then
                 GroupType := 9;
+            end;
+            RecordStream.Add(lEntry);
           end else
             flProgress(Rec.Name + ' processed');
       end;
+      if Assigned(RecordStream) then
+        flRecordStream := RecordStream.ToArray;
     finally
       flContextObj.Settings.EditAllowed := WasEditAllowed;
     end;
@@ -8904,6 +9867,7 @@ begin
 
   finally
     FreeAndNil(TopGroups);
+    RecordStream.Free;
     Exclude(flStates, fsScanning);
   end;
 
@@ -9399,7 +10363,10 @@ begin
   PrepareSave;
   var lUnsaved := esUnsaved in eStates;
   try
-    inherited WriteToStreamInternal(aStream, aResetModified);
+    if gcUngroupedRecordStream in flContextObj.GameDefObj.Capabilities then
+      WriteRecordStream(aStream, aResetModified)
+    else
+      inherited WriteToStreamInternal(aStream, aResetModified);
   finally
     if lUnsaved then
       Include(eStates, esUnsaved);
@@ -9414,6 +10381,206 @@ begin
       if esModified in eStates then
         Include(eStates, esInternalModified);
   end;
+end;
+
+procedure TwbFile.WriteRecordStream(aStream: TStream; aResetModified: TwbResetModified);
+type
+  TwbStreamOrder = record
+    soPosition : Integer;
+    soSequence : Integer;
+    soRecord   : IwbMainRecord;
+  end;
+var
+  lPositions : TDictionary<Pointer, Integer>;
+  lCellNAM0  : TDictionary<Pointer, TBytes>;
+  lMovedRef  : TDictionary<Pointer, TBytes>;
+  lWritten   : TList<TwbRecordStreamEntry>;
+  lCount     : Cardinal;
+
+  procedure Add(const aRecord: IwbMainRecord; var aList: TArray<TwbStreamOrder>);
+  var
+    lOrder : TwbStreamOrder;
+  begin
+    if not lPositions.TryGetValue(Pointer(aRecord), lOrder.soPosition) then
+      lOrder.soPosition := High(Integer);
+    lOrder.soSequence := Length(aList);
+    lOrder.soRecord := aRecord;
+    aList := aList + [lOrder];
+  end;
+
+  procedure Collect(const aGroup: IwbGroupRecord; aGroupType: Integer; aReferences: Boolean; var aList: TArray<TwbStreamOrder>);
+  var
+    lRecord : IwbMainRecord;
+    lGroup  : IwbGroupRecord;
+  begin
+    for var i := 0 to Pred(aGroup.ElementCount) do
+      if Supports(aGroup.Elements[i], IwbMainRecord, lRecord) then begin
+        if ((aGroupType < 0) or (aGroup.GroupType = aGroupType)) and ((lRecord.Signature = 'REFR') = aReferences) then
+          Add(lRecord, aList);
+      end else if Supports(aGroup.Elements[i], IwbGroupRecord, lGroup) then
+        Collect(lGroup, aGroupType, aReferences, aList);
+  end;
+
+  function Ordered(const aList: TArray<TwbStreamOrder>): TArray<TwbStreamOrder>;
+  begin
+    Result := Copy(aList);
+    TArray.Sort<TwbStreamOrder>(Result, TComparer<TwbStreamOrder>.Construct(
+      function(const aLeft, aRight: TwbStreamOrder): Integer
+      begin
+        if aLeft.soPosition <> aRight.soPosition then
+          Result := Ord(aLeft.soPosition > aRight.soPosition) - Ord(aLeft.soPosition < aRight.soPosition)
+        else
+          Result := Ord(aLeft.soSequence > aRight.soSequence) - Ord(aLeft.soSequence < aRight.soSequence);
+      end));
+  end;
+
+  procedure WriteMarker(const aMarker: TBytes);
+  var
+    lEntry : TwbRecordStreamEntry;
+  begin
+    aStream.WriteBuffer(aMarker[0], Length(aMarker));
+    lEntry.rseRecord := nil;
+    lEntry.rseMarker := aMarker;
+    lWritten.Add(lEntry);
+  end;
+
+  procedure WriteRecord(const aRecord: IwbMainRecord);
+  var
+    lEntry : TwbRecordStreamEntry;
+  begin
+    aRecord.WriteToStream(aStream, aResetModified);
+    lEntry.rseRecord := aRecord;
+    lEntry.rseMarker := nil;
+    lWritten.Add(lEntry);
+    if aRecord.Signature <> 'REFR' then
+      Inc(lCount);
+  end;
+
+  procedure WriteReferences(const aList: TArray<TwbStreamOrder>);
+  var
+    lMarker : TBytes;
+  begin
+    for var lOrder in Ordered(aList) do begin
+      if lMovedRef.TryGetValue(Pointer(lOrder.soRecord), lMarker) then
+        WriteMarker(lMarker);
+      WriteRecord(lOrder.soRecord);
+    end;
+  end;
+
+  procedure WriteCell(const aCell: IwbMainRecord);
+  var
+    lPersistent : TArray<TwbStreamOrder>;
+    lTemporary  : TArray<TwbStreamOrder>;
+    lMarker     : TBytes;
+    lStart      : Int64;
+    lEnd        : Int64;
+    lDataSize   : Cardinal;
+  begin
+    lStart := aStream.Position;
+    WriteRecord(aCell);
+    var lChildren := aCell.ChildGroup;
+    if Assigned(lChildren) then begin
+      Collect(lChildren, 8, True, lPersistent);
+      Collect(lChildren, 9, True, lTemporary);
+    end;
+    WriteReferences(lPersistent);
+    if lCellNAM0.TryGetValue(Pointer(aCell), lMarker) then begin
+      if (Length(lMarker) >= 12) and (PCardinal(@lMarker[8])^ < Cardinal(Length(lTemporary))) then begin
+        lMarker := Copy(lMarker);
+        PCardinal(@lMarker[8])^ := Length(lTemporary);
+      end;
+      WriteMarker(lMarker);
+    end else if Length(lTemporary) > 0 then begin
+      SetLength(lMarker, 12);
+      PwbSignature(@lMarker[0])^ := 'NAM0';
+      PCardinal(@lMarker[4])^ := SizeOf(Cardinal);
+      PCardinal(@lMarker[8])^ := Length(lTemporary);
+      WriteMarker(lMarker);
+    end;
+    WriteReferences(lTemporary);
+    lEnd := aStream.Position;
+    lDataSize := lEnd - lStart - flContextObj.GameDefObj.SizeOfMainRecordStruct;
+    aStream.Position := lStart + SizeOf(TwbSignature);
+    aStream.WriteBuffer(lDataSize, SizeOf(lDataSize));
+    aStream.Position := lEnd;
+  end;
+
+var
+  lTop      : TArray<TwbStreamOrder>;
+  lChildren : TArray<TwbStreamOrder>;
+  lRecord   : IwbMainRecord;
+  lGroup    : IwbGroupRecord;
+  lCell     : Pointer;
+  lPending  : TBytes;
+begin
+  DoInit(True);
+  lPositions := nil;
+  lCellNAM0 := nil;
+  lMovedRef := nil;
+  lWritten := nil;
+  try
+    lPositions := TDictionary<Pointer, Integer>.Create;
+    lCellNAM0 := TDictionary<Pointer, TBytes>.Create;
+    lMovedRef := TDictionary<Pointer, TBytes>.Create;
+    lWritten := TList<TwbRecordStreamEntry>.Create;
+    lCell := nil;
+    lPending := nil;
+    for var i := Low(flRecordStream) to High(flRecordStream) do
+      if Assigned(flRecordStream[i].rseRecord) then begin
+        lPositions.AddOrSetValue(Pointer(flRecordStream[i].rseRecord), i);
+        if Assigned(lPending) then begin
+          lMovedRef.AddOrSetValue(Pointer(flRecordStream[i].rseRecord), lPending);
+          lPending := nil;
+        end;
+        if flRecordStream[i].rseRecord.Signature = 'CELL' then
+          lCell := Pointer(flRecordStream[i].rseRecord)
+        else if flRecordStream[i].rseRecord.Signature <> 'REFR' then
+          lCell := nil;
+      end else if Length(flRecordStream[i].rseMarker) >= SizeOf(TwbSignature) then
+        if PwbSignature(@flRecordStream[i].rseMarker[0])^ = 'NAM0' then begin
+          if Assigned(lCell) then
+            lCellNAM0.AddOrSetValue(lCell, flRecordStream[i].rseMarker);
+        end else if PwbSignature(@flRecordStream[i].rseMarker[0])^ = 'MVRF' then
+          lPending := flRecordStream[i].rseMarker;
+
+    if Length(cntElements) < 1 then
+      Exit;
+    cntElements[0].WriteToStream(aStream, aResetModified);
+    lCount := 0;
+
+    for var i := 1 to High(cntElements) do
+      if Supports(cntElements[i], IwbGroupRecord, lGroup) then begin
+        for var j := 0 to Pred(lGroup.ElementCount) do
+          if Supports(lGroup.Elements[j], IwbMainRecord, lRecord) then
+            Add(lRecord, lTop);
+      end else if Supports(cntElements[i], IwbMainRecord, lRecord) then
+        Add(lRecord, lTop);
+
+    for var lOrder in Ordered(lTop) do begin
+      if (lOrder.soRecord.Signature = 'CELL') and (gcReferencesEmbeddedInCell in flContextObj.GameDefObj.Capabilities) then
+        WriteCell(lOrder.soRecord)
+      else
+        WriteRecord(lOrder.soRecord);
+      var lChildGroup := lOrder.soRecord.ChildGroup;
+      if Assigned(lChildGroup) then begin
+        lChildren := nil;
+        Collect(lChildGroup, -1, False, lChildren);
+        for var lChild in Ordered(lChildren) do
+          WriteRecord(lChild.soRecord);
+      end;
+    end;
+
+    if Succ(lCount) <> GetCountedRecordCount then
+      raise Exception.CreateFmt('File %s: %d records were written, the file holds %d', [GetFileName, lCount, Pred(GetCountedRecordCount)]);
+
+    flRecordStream := lWritten.ToArray;
+  finally
+    lWritten.Free;
+    lMovedRef.Free;
+    lCellNAM0.Free;
+    lPositions.Free;
+  end;
+  ResetModified(aResetModified);
 end;
 
 type
@@ -12780,8 +13947,9 @@ begin
   end;
 end;
 
-function TwbMainRecord.DoGetFixedFormID: TwbFormID;
+function TwbMainRecord.ComputeFixedFormID(out aCacheable: Boolean): TwbFormID;
 begin
+  aCacheable := False;
   var lCapabilities := GameDefObj.Capabilities;
   if not (gcFormIDInRecordHeader in lCapabilities) then
     Result := GetFormID
@@ -12817,7 +13985,16 @@ begin
       if Result.FileID[lLayout].FullSlot >= lFile.MasterCount[GetMastersUpdated] then
         Result.FileID[lLayout] := lFile.FileFileID[GetMastersUpdated];
   end;
-  mrFixedFormID := Result;
+  aCacheable := True;
+end;
+
+function TwbMainRecord.DoGetFixedFormID: TwbFormID;
+var
+  lCacheable: Boolean;
+begin
+  Result := ComputeFixedFormID(lCacheable);
+  if lCacheable then
+    mrFixedFormID := Result;
 end;
 
 function TwbMainRecord.DoGetLoadOrderFormID: TwbFormID;
@@ -12842,37 +14019,41 @@ end;
 procedure TwbMainRecord.ElementChanged(const aElement: IwbElement; aContainer: Pointer);
 var
   SubRecord   : IwbSubRecord;
-  NotRelevant : Boolean;
 begin
-  if Assigned(mrDef) and Supports(aElement, IwbSubRecord, SubRecord) then begin
-    NotRelevant := False;
-    if SubRecord.Signature = mrDef.KnownSubRecordSignatures[ksrEditorID] then begin
-      mrEditorID := mrDef.GetEditorID(SubRecord);
-      Exclude(mrStates, mrsEditorIDFromCache);
-    end else if SubRecord.Signature = mrDef.KnownSubRecordSignatures[ksrFullName] then begin
-      mrFullName := SubRecord.EditValue;
-      Exclude(mrStates, mrsFullNameFromCache);
-    end else if SubRecord.Signature = mrDef.KnownSubRecordSignatures[ksrBaseRecord] then
-      Exclude(mrStates, mrsBaseRecordChecked)
-    else if (SubRecord.Signature = mrDef.KnownSubRecordSignatures[ksrGridCell]) and (SubRecord.Container.Equals(Self)) then begin
-      if mrDef.GetGridCell(SubRecord, mrGridCell) then
-        Include(mrStates, mrsHasGridCell)
-      else
-        Exclude(mrStates, mrsHasGridCell);
-      Include(mrStates, mrsGridCellChecked);
-    end else
-      NotRelevant := True;
-    if not NotRelevant then begin
+  if Assigned(mrDef) and Supports(aElement, IwbSubRecord, SubRecord) then
+    if RefreshKnownSubRecord(SubRecord) then begin
       (GetFile as IwbFileInternal).IncGeneration;
       mrName := '';
       mrShortName := '';
       mrDisplayName := '';
+      if not (gcFormIDInRecordHeader in GameDefObj.Capabilities) then
+        UpdateIdentityKey;
     end;
-  end;
   inherited;
   UpdateKeys;
   if not (mrsNoUpdateRefs in mrStates) then
     UpdateRefs;
+end;
+
+function TwbMainRecord.RefreshKnownSubRecord(const aSubRecord: IwbSubRecord): Boolean;
+begin
+  Result := True;
+  if aSubRecord.Signature = mrDef.KnownSubRecordSignatures[ksrEditorID] then begin
+    mrEditorID := mrDef.GetEditorID(aSubRecord);
+    Exclude(mrStates, mrsEditorIDFromCache);
+  end else if aSubRecord.Signature = mrDef.KnownSubRecordSignatures[ksrFullName] then begin
+    mrFullName := aSubRecord.EditValue;
+    Exclude(mrStates, mrsFullNameFromCache);
+  end else if aSubRecord.Signature = mrDef.KnownSubRecordSignatures[ksrBaseRecord] then
+    Exclude(mrStates, mrsBaseRecordChecked)
+  else if (aSubRecord.Signature = mrDef.KnownSubRecordSignatures[ksrGridCell]) and (aSubRecord.Container.Equals(Self)) then begin
+    if mrDef.GetGridCell(aSubRecord, mrGridCell) then
+      Include(mrStates, mrsHasGridCell)
+    else
+      Exclude(mrStates, mrsHasGridCell);
+    Include(mrStates, mrsGridCellChecked);
+  end else
+    Result := False;
 end;
 
 function TwbMainRecord.EnsureChildGroup: IwbGroupRecord;
@@ -13032,7 +14213,14 @@ begin
     UpdateKeys;
     Stream := TMemoryStream.Create;
     try
+      var lHeaderSize := 0;
+      if IsEmbeddedReference then begin
+        lHeaderSize := GameDefObj.SizeOfMainRecordStruct;
+        Stream.WriteBuffer(mrStruct^, lHeaderSize);
+      end;
       WriteToStream(Stream, rmYes);
+      if lHeaderSize > 0 then
+        PwbMainRecordStruct(Stream.Memory).mrsDataSize := Stream.Size - lHeaderSize;
       KAR := nil;
       if Assigned(aKAR) then
         aKAR^ := nil;
@@ -13111,7 +14299,8 @@ begin
     Result := MRI.IsSameData(dcBasePtr, dcEndPtr);
 end;
 
-constructor TwbMainRecord.Create(const aContainer: IwbContainer; const aSignature: TwbSignature; const aFormID: TwbFormID);
+constructor TwbMainRecord.Create(const aContainer: IwbContainer; const aSignature: TwbSignature; const aFormID: TwbFormID;
+  aRegister: Boolean);
 var
   lContainer   : IwbContainer;
   BasePtr      : PwbMainRecordStruct;
@@ -13211,6 +14400,8 @@ begin
 
   Inner;
 
+  if not (gcFormIDInRecordHeader in aContainer.GameDefObj.Capabilities) then
+    Include(mrStates, mrsRegisterLater);
   var EndPtr: Pointer := nil;
   Create(lContainer, Pointer(BasePtr), EndPtr, nil);
   BeginUpdate;
@@ -13243,6 +14434,9 @@ begin
           if Assigned(Cell) and not Cell.IsPersistent and Cell.GetGridCell(GridCell) then
             SetPosition(GameDefObj.GridCellToCenterPosition(GridCell));
         end;
+
+      if aRegister then
+        RegisterWithIdentity(False);
     end);
 
     CollapseStorage(nil, True);
@@ -13269,7 +14463,8 @@ begin
       raise EwbSkipLoad.Create('Duplicate FormID [' + lFixedFormID.ToDisplayString(ContextObj.SlotLayout) + '] in file ' + lFileName);
     end;
     if Assigned(_File) then begin
-      _File.AddMainRecord(Self);
+      if not (mrsRegisterLater in mrStates) then
+        _File.AddMainRecord(Self);
       if fsIsDeltaPatch in _File.FileStates then
         Include(mrStates, mrsNoUpdateRefs);
     end;
@@ -15333,7 +16528,11 @@ end;
 
 function TwbMainRecord.GetIsESM: Boolean;
 begin
-  Result := GetFlags.IsESM;
+  if (gcMasterFlagInHeaderData in GameDefObj.Capabilities) and (GetSignature = GameDefObj.HeaderSignature) then begin
+    var lFlags := GetElementByPath('HEDR\Record Flags');
+    Result := Assigned(lFlags) and ((Int64(lFlags.NativeValue) and 1) <> 0);
+  end else
+    Result := GetFlags.IsESM;
 end;
 
 function TwbMainRecord.GetIsLocalized: Boolean;
@@ -15727,7 +16926,15 @@ end;
 
 function TwbMainRecord.GetCountedRecordCount: Cardinal;
 begin
-  Result := 1;
+  if IsEmbeddedReference then
+    Result := 0
+  else
+    Result := 1;
+end;
+
+function TwbMainRecord.IsEmbeddedReference: Boolean;
+begin
+  Result := (gcReferencesEmbeddedInCell in GameDefObj.Capabilities) and (GetSignature = 'REFR');
 end;
 
 function TwbMainRecord.GetReferencedBy(aIndex: Integer): IwbMainRecord;
@@ -17286,7 +18493,7 @@ var
 
             case GroupRecord.GroupType of
               8: begin
-                if not mrStruct.mrsFlags(gcFormIDInRecordHeader in lCapabilities).IsPersistent then
+                if not IsEmbeddedReference and not mrStruct.mrsFlags(gcFormIDInRecordHeader in lCapabilities).IsPersistent then
                   raise Exception.Create('Record "' + GetFullPath + '" needs to have it''s Persistent flag set to be contained in ' + GroupRecord.Name);
               end;
               10: begin
@@ -17316,11 +18523,13 @@ var
              (GetSignature <> 'PHZD')     {>>> Skyrim <<<}
           then
             raise Exception.Create('Record "' + GetFullPath + '" can not be contained in ' + GroupRecord.Name);
-          var lFlags := mrStruct.mrsFlags(gcFormIDInRecordHeader in lCapabilities);
-          if lFlags.IsPersistent then
-            raise Exception.Create('Record "' + GetFullPath + '" can not have it''s Persistent flag set to be contained in ' + GroupRecord.Name);
-          if lFlags.IsVisibleWhenDistant and not (gcVWDInTemporary in lCapabilities) then
-            raise Exception.Create('Record "' + GetFullPath + '" can not have it''s Visible when Distant flag set to be contained in ' + GroupRecord.Name);
+          if not IsEmbeddedReference then begin
+            var lFlags := mrStruct.mrsFlags(gcFormIDInRecordHeader in lCapabilities);
+            if lFlags.IsPersistent then
+              raise Exception.Create('Record "' + GetFullPath + '" can not have it''s Persistent flag set to be contained in ' + GroupRecord.Name);
+            if lFlags.IsVisibleWhenDistant and not (gcVWDInTemporary in lCapabilities) then
+              raise Exception.Create('Record "' + GetFullPath + '" can not have it''s Visible when Distant flag set to be contained in ' + GroupRecord.Name);
+          end;
         end;
       end;
     end;
@@ -17568,6 +18777,8 @@ begin
           mrName := '';
           mrShortName := '';
           mrDisplayName := '';
+          if not (gcFormIDInRecordHeader in GameDefObj.Capabilities) then
+            UpdateIdentityKey;
         end;
       end;
     end;
@@ -18104,7 +19315,17 @@ end;
 
 procedure TwbMainRecord.SetIsESM(aValue: Boolean);
 begin
-  if aValue <> GetIsESM then begin
+  if aValue = GetIsESM then
+    Exit;
+  if (gcMasterFlagInHeaderData in GameDefObj.Capabilities) and (GetSignature = GameDefObj.HeaderSignature) then begin
+    var lFlags := GetElementByPath('HEDR\Record Flags');
+    if not Assigned(lFlags) then
+      raise Exception.Create('File Header record "' + GetFullPath + '" has no HEDR record flags');
+    if aValue then
+      lFlags.NativeValue := Int64(lFlags.NativeValue) or 1
+    else
+      lFlags.NativeValue := Int64(lFlags.NativeValue) and not Int64(1);
+  end else begin
     MakeHeaderWriteable;
     GetFlagsPtr.SetESM(aValue);
   end;
@@ -18286,47 +19507,191 @@ begin
     if Assigned(Master) and ((Master._File as IwbFileInternal).Equals(_File)) then
       raise Exception.Create('FormID [' + aFormID.ToDisplayString(lLayout) + '] is already present in file ' + _File.Name);
 
-    Master := _File.RecordByFormID[FileFormID, True, True];
-    if Assigned(Master) then
-      Master := Master.MasterOrSelf;
-
-    _File.RemoveMainRecord(Self);
-
-    if Assigned(mrMaster) then
-      (IwbMainRecord(mrMaster) as IwbMainRecordInternal).RemoveOverride(Self)
-    else
-      if Length(mrOverrides) > 0 then begin
-        SortOverrides;
-        (mrOverrides[0] as IwbMainRecordInternal).YouAreTheMaster(mrOverrides, mrReferencedBy, mrReferencedByCount);
-      end else
-        InvalidateReferencers;
-
-    mrMaster := nil;
-    mrOverrides := nil;
-    mrReferencedBy := nil;
-    mrReferencedByCount := 0;
-    mrReferencedBySize := 0;
-    Exclude(mrStates, mrsIsInjectedChecked);
-    Exclude(mrStates, mrsConflictStored);
-
-    if Assigned(mrGroup) or (GetChildGroup <> nil)  then
-      Assert(mrGroup.GroupLabel = GetFormID.ToCardinal);
-    MakeHeaderWriteable;
-    mrStruct.mrsFormID(lFormIDInHeader)^ := FileFormID;
-    mrFixedFormID := TwbFormID.Null;
-    mrLoadOrderFormID := TwbFormID.Null;
-    Exclude(mrStates, mrsIsInjectedChecked);
-    if Assigned(mrGroup) or (GetChildGroup <> nil)  then
-      mrGroup.GroupLabel := FileFormID.ToCardinal;
-    UpdateInteriorCellGroup;
-
-    _File.AddMainRecord(Self);
-  
-    if Assigned(Master) and not Assigned(mrMaster) and ((Master as IwbMainRecordInternal).ListedInjectedIn <> nil) then
-      (Master as IwbMainRecordInternal).YouGotAMaster(Self);
-
-    ResetConflict;
+    ReRegister(_File, FileFormID, procedure
+    begin
+      if Assigned(mrGroup) or (GetChildGroup <> nil)  then
+        Assert(mrGroup.GroupLabel = GetFormID.ToCardinal);
+      MakeHeaderWriteable;
+      mrStruct.mrsFormID(lFormIDInHeader)^ := FileFormID;
+      if Assigned(mrGroup) or (GetChildGroup <> nil)  then
+        mrGroup.GroupLabel := FileFormID.ToCardinal;
+    end);
   end;
+end;
+
+procedure TwbMainRecord.ReRegister(const aFile: IwbFileInternal; const aFileFormID: TwbFormID; const aMoveKey: TProc);
+var
+  Master : IwbMainRecord;
+begin
+  Master := aFile.RecordByFormID[aFileFormID, True, True];
+  if Assigned(Master) then
+    Master := Master.MasterOrSelf;
+  if Assigned(Master) and Equals(Master) then
+    Master := nil;
+
+  aFile.RemoveMainRecord(Self);
+
+  if Assigned(mrMaster) then
+    (IwbMainRecord(mrMaster) as IwbMainRecordInternal).RemoveOverride(Self)
+  else
+    if Length(mrOverrides) > 0 then begin
+      SortOverrides;
+      (mrOverrides[0] as IwbMainRecordInternal).YouAreTheMaster(mrOverrides, mrReferencedBy, mrReferencedByCount);
+    end else
+      InvalidateReferencers;
+
+  mrMaster := nil;
+  mrOverrides := nil;
+  mrReferencedBy := nil;
+  mrReferencedByCount := 0;
+  mrReferencedBySize := 0;
+  Exclude(mrStates, mrsIsInjectedChecked);
+  Exclude(mrStates, mrsConflictStored);
+
+  aMoveKey;
+  mrFixedFormID := TwbFormID.Null;
+  mrLoadOrderFormID := TwbFormID.Null;
+  Exclude(mrStates, mrsIsInjectedChecked);
+  UpdateInteriorCellGroup;
+
+  aFile.AddMainRecord(Self);
+
+  var lMaster := IwbMainRecord(mrMaster);
+  if Assigned(lMaster) then begin
+    if (lMaster._File.LoadOrder > aFile.LoadOrder) or
+      ((lMaster._File.LoadOrder = aFile.LoadOrder) and not (fsIsCompareLoad in aFile.FileStates))
+    then
+      (lMaster as IwbMainRecordInternal).YouGotAMaster(Self);
+  end else if Assigned(Master) and ((Master as IwbMainRecordInternal).ListedInjectedIn <> nil) then
+    (Master as IwbMainRecordInternal).YouGotAMaster(Self);
+
+  ResetConflict;
+end;
+
+procedure TwbMainRecord.UpdateIdentityKey;
+var
+  lFile      : IwbFileInternal;
+  lHolder    : IwbMainRecord;
+  lCacheable : Boolean;
+begin
+  if (mrsRegisterLater in mrStates) or mrFixedFormID.IsNull then
+    Exit;
+  if not Supports(GetFile, IwbFileInternal, lFile) then
+    Exit;
+
+  var lLayout := ContextObj.SlotLayout;
+  var lOld := mrFixedFormID;
+  var lNew := ComputeFixedFormID(lCacheable);
+  if lNew.ObjectID[lLayout] = lOld.ObjectID[lLayout] then
+    Exit;
+  if not Equals(lFile.RecordByFormID[lOld, False, True]) then
+    Exit;
+
+  lHolder := lFile.RecordByFormID[lNew, False, True];
+  if Assigned(lHolder) and not Equals(lHolder) and (lHolder._File as IwbFileInternal).Equals(lFile) then begin
+    wbProgress('<Error: %s [%s] can not take the identity "%s": %s holds it in %s; it keeps its previous identity>',
+      [string(GetSignature), lOld.ToDisplayString(lLayout), mrDef.GetIdentity(Self), lHolder.Name, lFile.Name]);
+    Exit;
+  end;
+
+  ReRegister(lFile, lNew, procedure
+  begin
+    if Assigned(mrGroup) then
+      mrGroup.GroupLabel := GetFormID.ToCardinal;
+  end);
+end;
+
+procedure TwbMainRecord.RegisterWithIdentity(aFresh: Boolean);
+var
+  lFile      : IwbFileInternal;
+  lFormID    : TwbFormID;
+  lEditorID  : IwbSubRecordDef;
+begin
+  if not (mrsRegisterLater in mrStates) then
+    Exit;
+
+  var lIndexed := Supports(mrDef.GetKnownSubRecordMember(ksrEditorID), IwbSubRecordDef, lEditorID) and
+    Supports(lEditorID.Value, IwbIntegerDef);
+  if not lIndexed and not mrDef.GetFormID(Self, lFormID) then begin
+    var lIdentity := mrDef.GetIdentity(Self);
+    if (lIdentity = '') or (aFresh and ContextObj.IsKnownIdentity(mrDef.GetFormIDNameBase, lIdentity)) then
+      if ContextObj.BeginInternalEdit(True) then try
+        SetEditorID(ContextObj.UnusedIdentity(mrDef.GetFormIDNameBase, 'xEdit_' + GetSignature + '_'));
+      finally
+        wbEndInternalEdit;
+      end;
+  end;
+
+  Exclude(mrStates, mrsRegisterLater);
+  mrFixedFormID := TwbFormID.Null;
+  mrLoadOrderFormID := TwbFormID.Null;
+  if Supports(GetFile, IwbFileInternal, lFile) then try
+    lFile.AddMainRecord(Self);
+  except
+    var lContainer := GetContainer;
+    if Assigned(lContainer) then
+      lContainer.RemoveElement(Self);
+    raise;
+  end;
+end;
+
+function TwbMainRecord.IdentityChange(const aElement: IwbElement; out aHolder: IwbMainRecord): Boolean;
+var
+  lChild     : IwbElement;
+  lSubRecord : IwbSubRecord;
+  lFile      : IwbFileInternal;
+  lCacheable : Boolean;
+begin
+  Result := False;
+  aHolder := nil;
+  if (mrsRegisterLater in mrStates) or mrFixedFormID.IsNull or not Assigned(mrDef) then
+    Exit;
+
+  lChild := aElement;
+  while Assigned(lChild) and Assigned(lChild.Container) and not Equals(lChild.Container) do
+    lChild := lChild.Container;
+  if not Supports(lChild, IwbSubRecord, lSubRecord) then
+    Exit;
+
+  var lLayout := ContextObj.SlotLayout;
+  var lBefore := ComputeFixedFormID(lCacheable);
+  if not RefreshKnownSubRecord(lSubRecord) then
+    Exit;
+  if not Supports(GetFile, IwbFileInternal, lFile) then
+    Exit;
+
+  var lNew := ComputeFixedFormID(lCacheable);
+  if (lNew.ObjectID[lLayout] = lBefore.ObjectID[lLayout]) or (lNew.ObjectID[lLayout] = mrFixedFormID.ObjectID[lLayout]) then
+    Exit;
+  if not Equals(lFile.RecordByFormID[mrFixedFormID, False, True]) then
+    Exit;
+
+  Result := True;
+  aHolder := lFile.RecordByFormID[lNew, False, True];
+  if Assigned(aHolder) and (Equals(aHolder) or not (aHolder._File as IwbFileInternal).Equals(lFile)) then
+    aHolder := nil;
+end;
+
+procedure TwbMainRecord.CheckIdentityAfterSet(const aElement: IwbElement; const aOldValue: Variant);
+var
+  lHolder : IwbMainRecord;
+begin
+  if VarIsEmpty(aOldValue) or not IdentityChange(aElement, lHolder) then
+    Exit;
+
+  if not Assigned(lHolder) then begin
+    UpdateIdentityKey;
+    Exit;
+  end;
+
+  var lIdentity := mrDef.GetIdentity(Self);
+  if ContextObj.BeginInternalEdit(True) then try
+    aElement.NativeValue := aOldValue;
+  finally
+    wbEndInternalEdit;
+  end;
+  raise Exception.Create(Format('%s can not take the identity "%s": %s holds it in %s', [GetName, lIdentity, lHolder.Name,
+    GetFile.FileName]));
 end;
 
 procedure TwbMainRecord.SetMaster(const aMaster: IwbMainRecord);
@@ -18806,6 +20171,7 @@ var
 
     var lGameDef := GameDefObj;
     var lSizeOfMainRecordStruct := lGameDef.SizeOfMainRecordStruct;
+    var lEmbedded := IsEmbeddedReference;
     RecordPosition := aStream.Position;
     Signature := GetSignature;
 
@@ -18857,7 +20223,7 @@ var
 
       CurrentPosition := aStream.Position;
 
-      if CurrentPosition = 0 then
+      if (CurrentPosition = 0) and not lEmbedded then
         Stream := aStream
       else begin
         MS := TMemoryStream.Create;
@@ -18897,10 +20263,27 @@ var
       Stream.Position := 4;
       Stream.WriteBuffer(DataSize, SizeOf(DataSize));
 
-      if Assigned(MS) then
+      if lEmbedded then
+        aStream.WriteBuffer((PByte(MS.Memory) + (MS.Size - DataSize))^, DataSize)
+      else if Assigned(MS) then
         aStream.WriteBuffer(MS.Memory^, MS.Size)
       else
         Stream.Position := Stream.Size;
+
+    end else if lEmbedded then begin
+
+      Assert(not (dcfStorageInvalid in dcFlags));
+      aStream.WriteBuffer(dcDataBasePtr^, NativeUInt(dcDataEndPtr) - NativeUInt(dcDataBasePtr));
+
+    end else if (Signature = 'CELL') and (gcReferencesEmbeddedInCell in lGameDef.Capabilities) then begin
+
+      Assert(not (dcfStorageInvalid in dcFlags));
+      var lOwnEnd := PByte(dcBasePtr) + lSizeOfMainRecordStruct;
+      var lDataEnd := lOwnEnd + mrStruct.mrsDataSize;
+      while (NativeUInt(lOwnEnd) + 8 <= NativeUInt(lDataEnd)) and (PwbSignature(lOwnEnd)^ <> 'FRMR') and
+            (PwbSignature(lOwnEnd)^ <> 'NAM0') and (PwbSignature(lOwnEnd)^ <> 'MVRF') do
+        Inc(lOwnEnd, 8 + PCardinal(lOwnEnd + 4)^);
+      aStream.WriteBuffer(dcBasePtr^, NativeUInt(lOwnEnd) - NativeUInt(dcBasePtr));
 
     end else begin
 
@@ -19093,7 +20476,7 @@ begin
   Assert(not Assigned(mrMaster));
   var lInjectionMaster := ListedInjectedIn;
   if Assigned(lInjectionMaster) then
-    lInjectionMaster.RemoveInjectedMainRecord(Self);
+    lInjectionMaster.RemoveInjectedMainRecord(Self, GetFormID);
 
   (aMaster as IwbMainRecordInternal).YouAreTheMaster(Self as IwbMainRecord, mrOverrides, mrReferencedBy, mrReferencedByCount);
 
@@ -21178,12 +22561,15 @@ var
         lFormID := _File.LoadOrderFormIDtoFileFormID(aSource.LoadOrderFormID, True);
     end;
 
+    var lByIdentity := not (gcFormIDInRecordHeader in GameDefObj.Capabilities);
     var lIsNew := False;
+    var lCreated := False;
 
     if not Assigned(Result) then begin
 
-      Result := TwbMainRecord.Create(Self, aSource.Signature, lFormID);
+      Result := TwbMainRecord.Create(Self, aSource.Signature, lFormID, not lByIdentity);
       lIsNew := True;
+      lCreated := True;
 
     end else begin
 
@@ -21199,7 +22585,8 @@ var
             if not Equals(Result.Container) then begin
               Result.Remove;
               Result := nil;
-              Result := TwbMainRecord.Create(Self, aSource.Signature, lFormID);
+              Result := TwbMainRecord.Create(Self, aSource.Signature, lFormID, not lByIdentity);
+              lCreated := True;
             end;
           end;
           coDelete: begin
@@ -21214,32 +22601,45 @@ var
 
     end;
 
-    if cfDeepCopy in aFlags then begin
-      var lResult := Result as IwbMainRecord;
+    try
+      if (cfDeepCopy in aFlags) or (lIsNew and lByIdentity and not (cfAsNew in aFlags)) then begin
+        var lResult := Result as IwbMainRecord;
 
-      if not aSource.IsDeleted then
-        lResult.IsDeleted := False;
-      if not aSource.IsPartialForm then begin
-        if lIsNew and ContextObj.Settings.AllowMakePartial and lResult.CanBePartial then
-          lResult.IsPartialForm := True
-        else
-          lResult.IsPartialForm := False;
-      end else
-        lResult.IsPartialForm := True;
+        if not aSource.IsDeleted then
+          lResult.IsDeleted := False;
+        if not aSource.IsPartialForm then begin
+          if lIsNew and ContextObj.Settings.AllowMakePartial and lResult.CanBePartial then
+            lResult.IsPartialForm := True
+          else
+            lResult.IsPartialForm := False;
+        end else
+          lResult.IsPartialForm := True;
 
-      if not (lResult.IsPartialForm or lResult.IsDeleted) then
-        Result.Assign(wbAssignThis, aElement, False);
+        if not (lResult.IsPartialForm or lResult.IsDeleted) then
+          Result.Assign(wbAssignThis, aElement, False);
 
-      if not lResult.IsDeleted and (aSource.EditorID <> '') then begin
-        var lEditorID := aSource.EditorID;
-        lEditorID := RemovePrefix(lEditorID, aRules.PrefixRemove);
-        lEditorID := RemoveSuffix(lEditorID, aRules.SuffixRemove);
-        if ContextObj.BeginInternalEdit(True) then try
-          lResult.EditorID := aRules.Prefix + lEditorID + aRules.Suffix;
-        finally
-          wbEndInternalEdit;
+        if not lResult.IsDeleted and (aSource.EditorID <> '') and ((cfAsNew in aFlags) or not lByIdentity) then begin
+          var lEditorID := aSource.EditorID;
+          lEditorID := RemovePrefix(lEditorID, aRules.PrefixRemove);
+          lEditorID := RemoveSuffix(lEditorID, aRules.SuffixRemove);
+          if ContextObj.BeginInternalEdit(True) then try
+            lResult.EditorID := aRules.Prefix + lEditorID + aRules.Suffix;
+          finally
+            wbEndInternalEdit;
+          end;
         end;
       end;
+
+      if lByIdentity then
+        (Result as IwbMainRecordInternal).RegisterWithIdentity(cfAsNew in aFlags);
+    except
+      if lCreated and lByIdentity and Assigned(Result) then begin
+        var lContainer := Result.Container;
+        if Assigned(lContainer) then
+          lContainer.RemoveElement(Result);
+        Result := nil;
+      end;
+      raise;
     end;
 
     if not (cfAsNew in aFlags) and aSource.IsMaster then
@@ -22115,7 +23515,9 @@ end;
 
 function TwbGroupRecord.GetCountedRecordCount: Cardinal;
 begin
-  Result := Succ(inherited GetCountedRecordCount);
+  Result := inherited GetCountedRecordCount;
+  if not (gcUngroupedRecordStream in GameDefObj.Capabilities) then
+    Inc(Result);
 end;
 
 function TwbGroupRecord.GetShortName: string;
@@ -23536,8 +24938,9 @@ end;
 
 procedure TwbElement.DoAfterSet(const aOldValue, aNewValue: Variant);
 var
-  NamedDef1: IwbNamedDef;
-  NamedDef2: IwbNamedDef;
+  NamedDef1  : IwbNamedDef;
+  NamedDef2  : IwbNamedDef;
+  MainRecord : IwbMainRecordInternal;
 begin
   NamedDef1 := GetValueDef;
   if Assigned(NamedDef1) then
@@ -23548,6 +24951,12 @@ begin
       NamedDef2.AfterSet(Self, aOldValue, aNewValue);
 
   Exclude(eStates, esReportedErrorReading);
+
+  var lGameDef := GameDefObj;
+  if Assigned(lGameDef) and not (gcFormIDInRecordHeader in lGameDef.Capabilities) and
+    Supports(GetContainingMainRecord, IwbMainRecordInternal, MainRecord)
+  then
+    MainRecord.CheckIdentityAfterSet(Self, aOldValue);
 end;
 
 procedure TwbElement.DoReset(aForce: Boolean);
