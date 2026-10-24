@@ -1007,7 +1007,7 @@ type
     procedure ReKeyIdentities;
     procedure IdentityKeyChanged(aClash: Boolean);
     function HoldsBlockedIdentities: Boolean;
-    procedure RenumberOwnSlot(aOldSlot, aNewSlot: Integer);
+    procedure RenumberOwnSlot(aOldSlot: Integer);
     function InjectionTarget(const aFormID: TwbFormID): IwbFileInternal;
     function IsOwnFormID(const aFormID: TwbFormID; aNew: Boolean): Boolean;
     function HoldsInjected(const aRecord: IwbMainRecord): Boolean;
@@ -1199,7 +1199,7 @@ type
     procedure SetChildGroup(const aGroup: IwbGroupRecord);
     procedure RemoveChildGroup(const aGroup: IwbGroupRecord);
     procedure InvalidateReferencesInjected;
-    procedure RenumberOwnSlot(aOldSlot, aNewSlot: Integer);
+    procedure RenumberOwnSlot(aOldSlot: Integer);
     procedure ClearForRelease;
     function DoBuildRef(aRemove: Boolean): Boolean;
 
@@ -1582,7 +1582,7 @@ type
     procedure SetChildGroup(const aGroup: IwbGroupRecord);
     procedure RemoveChildGroup(const aGroup: IwbGroupRecord);
     procedure InvalidateReferencesInjected;
-    procedure RenumberOwnSlot(aOldSlot, aNewSlot: Integer);
+    procedure RenumberOwnSlot(aOldSlot: Integer);
     procedure ClearForRelease;
     procedure SaveRefsToStream(aStream: TStream; aSaveNames: Boolean);
     procedure LoadRefsFromStream(aStream: TStream; aLoadNames: Boolean);
@@ -5182,7 +5182,7 @@ begin;
       raise Exception.Create('Only ' + (Length(flMasters) - Length(flOldMasters)).ToString + ' of ' + lMasters.Count.ToString + ' masters could be added. Master list now contains ' + Length(flMasters).ToString + ' entries and is full.');
   finally
     if not (gcMasterSlotsInFormID in flContextObj.GameDefObj.Capabilities) and (Length(flOldMasters) <> Length(flMasters)) then
-      RenumberOwnSlot(Length(flOldMasters), Length(flMasters));
+      RenumberOwnSlot(Length(flOldMasters));
     lMasters.Free;
     flOldMasters := nil;
     flInvalidateReferencesInjected;
@@ -9449,11 +9449,11 @@ begin
   Result := flIdentityClash;
 end;
 
-procedure TwbFile.RenumberOwnSlot(aOldSlot, aNewSlot: Integer);
+procedure TwbFile.RenumberOwnSlot(aOldSlot: Integer);
 begin
   for var lRecord in flRecords do
     if Assigned(lRecord) then
-      (lRecord as IwbMainRecordInternal).RenumberOwnSlot(aOldSlot, aNewSlot);
+      (lRecord as IwbMainRecordInternal).RenumberOwnSlot(aOldSlot);
   SortRecords;
 end;
 
@@ -19814,6 +19814,9 @@ begin
 
   if lFile.HoldsBlockedIdentities then begin
     lFile.IdentityKeyChanged(False);
+    if not Equals(lFile.RecordByFormID[lNew, False, True]) then
+      wbProgress('<Error: %s [%s] can not take the identity "%s": another record of %s wants it too; it keeps its previous identity>',
+        [string(GetSignature), lOld.ToDisplayString(lLayout), mrDef.GetIdentity(Self), lFile.Name]);
     Exit;
   end;
 
@@ -19966,13 +19969,15 @@ begin
   Exclude(mrStates, mrsReferencesInjected);
 end;
 
-procedure TwbMainRecord.RenumberOwnSlot(aOldSlot, aNewSlot: Integer);
+procedure TwbMainRecord.RenumberOwnSlot(aOldSlot: Integer);
+var
+  lCacheable : Boolean;
 begin
   if mrFixedFormID.IsNull then
     Exit;
   var lLayout := ContextObj.SlotLayout;
   if mrFixedFormID.FileID[lLayout].FullSlot = aOldSlot then
-    mrFixedFormID.FileID[lLayout] := TwbFileID.CreateFull(aNewSlot);
+    mrFixedFormID.FileID[lLayout] := ComputeFixedFormID(lCacheable).FileID[lLayout];
 end;
 
 function CompareReferencedByFile(Item1, Item2: Pointer): Integer;
