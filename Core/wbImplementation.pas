@@ -1207,7 +1207,6 @@ type
     procedure ResetConflictMember;
     procedure TakeDenseIDFrom(aContext: TwbLoadingGameContext; aMark: Cardinal);
     procedure BumpChainStampAtMost(aMark: Cardinal);
-    procedure CheckIdentityAfterSet(const aElement: IwbElement; const aOldValue: Variant);
     procedure RegisterWithIdentity(aNew: Boolean);
   end;
 
@@ -1269,9 +1268,7 @@ type
     mrsOFSTReserved,
     mrsIndexKeysActive,
     mrsConflictStored,
-    mrsRegisterLater,
-    mrsRestoringIdentity,
-    mrsAssigningWhole
+    mrsRegisterLater
   );
 
   TwbMainRecordStates = set of TwbMainRecordState;
@@ -1415,7 +1412,6 @@ type
     procedure UpdateIdentityKey;
     procedure RegisterWithIdentity(aNew: Boolean);
     function RefreshKnownSubRecord(const aSubRecord: IwbSubRecord): Boolean;
-    function IdentityChange(const aElement: IwbElement; out aHolder: IwbMainRecord): Boolean;
 
     procedure MarkModifiedRecursive(const aElementTypes: TwbElementTypes); override; final;
 
@@ -1573,7 +1569,6 @@ type
     procedure ResetConflictMember;
     procedure TakeDenseIDFrom(aContext: TwbLoadingGameContext; aMark: Cardinal);
     procedure BumpChainStampAtMost(aMark: Cardinal);
-    procedure CheckIdentityAfterSet(const aElement: IwbElement; const aOldValue: Variant);
 
     {---IwbMainRecordEntry---}
     procedure RemoveEntry;
@@ -13515,26 +13510,21 @@ begin
           _AddRef; _Release;
         end;
 
-        Include(mrStates, mrsAssigningWhole);
-        try
-          if Assigned(aElement) then begin
-            for i := 0 to Pred(Container.ElementCount) do begin
-              Element := Container.Elements[i];
-              if Assigned(Element.Def) and (dfNoCopyAsOverride in Element.Def.DefFlags) then
-                if GetMasterOrSelf.Equals(Element.ContainingMainRecord.MasterOrSelf) then
-                  Continue;
-              if (TObject(Element.ElementID) is TwbContainedInElement) and
-                 not GetMasterOrSelf.Equals(Element.ContainingMainRecord.MasterOrSelf) then
+        if Assigned(aElement) then begin
+          for i := 0 to Pred(Container.ElementCount) do begin
+            Element := Container.Elements[i];
+            if Assigned(Element.Def) and (dfNoCopyAsOverride in Element.Def.DefFlags) then
+              if GetMasterOrSelf.Equals(Element.ContainingMainRecord.MasterOrSelf) then
                 Continue;
-              Assign(Element.SortOrder, Element, aOnlySK);
-            end;
-          end else begin
-            for i := 0 to Pred(mrDef.MemberCount) do
-              if mrDef.Members[i].Required then
-                Assign(i, nil, False);
+            if (TObject(Element.ElementID) is TwbContainedInElement) and
+               not GetMasterOrSelf.Equals(Element.ContainingMainRecord.MasterOrSelf) then
+              Continue;
+            Assign(Element.SortOrder, Element, aOnlySK);
           end;
-        finally
-          Exclude(mrStates, mrsAssigningWhole);
+        end else begin
+          for i := 0 to Pred(mrDef.MemberCount) do
+            if mrDef.Members[i].Required then
+              Assign(i, nil, False);
         end;
 
         if NeedUpdate then
@@ -19679,78 +19669,6 @@ begin
   end;
 end;
 
-function TwbMainRecord.IdentityChange(const aElement: IwbElement; out aHolder: IwbMainRecord): Boolean;
-var
-  lChild     : IwbElement;
-  lSubRecord : IwbSubRecord;
-  lFile      : IwbFileInternal;
-  lCacheable : Boolean;
-begin
-  Result := False;
-  aHolder := nil;
-  if (mrsRegisterLater in mrStates) or mrFixedFormID.IsNull or not Assigned(mrDef) then
-    Exit;
-
-  lChild := aElement;
-  while Assigned(lChild) and Assigned(lChild.Container) and not Equals(lChild.Container) do
-    lChild := lChild.Container;
-  if not Supports(lChild, IwbSubRecord, lSubRecord) then
-    Exit;
-
-  var lLayout := ContextObj.SlotLayout;
-  var lBefore := ComputeFixedFormID(lCacheable);
-  if not RefreshKnownSubRecord(lSubRecord) then
-    Exit;
-  if not Supports(GetFile, IwbFileInternal, lFile) then
-    Exit;
-
-  var lNew := ComputeFixedFormID(lCacheable);
-  if (lNew.ObjectID[lLayout] = lBefore.ObjectID[lLayout]) or (lNew.ObjectID[lLayout] = mrFixedFormID.ObjectID[lLayout]) then
-    Exit;
-  if not Equals(lFile.RecordByFormID[mrFixedFormID, False, True]) then
-    Exit;
-
-  Result := True;
-  aHolder := lFile.RecordByFormID[lNew, False, True];
-  if Assigned(aHolder) and (Equals(aHolder) or not (aHolder._File as IwbFileInternal).Equals(lFile)) then
-    aHolder := nil;
-end;
-
-procedure TwbMainRecord.CheckIdentityAfterSet(const aElement: IwbElement; const aOldValue: Variant);
-var
-  lHolder    : IwbMainRecord;
-  lContainer : IwbContainer;
-begin
-  if VarIsEmpty(aOldValue) or not IdentityChange(aElement, lHolder) or ([mrsRestoringIdentity, mrsAssigningWhole] * mrStates <> []) then
-    Exit;
-
-  if not Assigned(lHolder) then begin
-    UpdateIdentityKey;
-    Exit;
-  end;
-
-  lContainer := aElement.Container;
-  while Assigned(lContainer) and not Equals(lContainer) do begin
-    if TwbElement(lContainer).eUpdateCount > 0 then
-      Exit;
-    lContainer := lContainer.Container;
-  end;
-
-  var lIdentity := mrDef.GetIdentity(Self);
-  if ContextObj.BeginInternalEdit(True) then try
-    Include(mrStates, mrsRestoringIdentity);
-    try
-      aElement.NativeValue := aOldValue;
-    finally
-      Exclude(mrStates, mrsRestoringIdentity);
-    end;
-  finally
-    wbEndInternalEdit;
-  end;
-  raise Exception.Create(Format('%s can not take the identity "%s": %s holds it in %s', [GetName, lIdentity, lHolder.Name,
-    GetFile.FileName]));
-end;
-
 procedure TwbMainRecord.SetMaster(const aMaster: IwbMainRecord);
 begin
   mrMaster := Pointer(aMaster);
@@ -24995,9 +24913,8 @@ end;
 
 procedure TwbElement.DoAfterSet(const aOldValue, aNewValue: Variant);
 var
-  NamedDef1  : IwbNamedDef;
-  NamedDef2  : IwbNamedDef;
-  MainRecord : IwbMainRecordInternal;
+  NamedDef1: IwbNamedDef;
+  NamedDef2: IwbNamedDef;
 begin
   NamedDef1 := GetValueDef;
   if Assigned(NamedDef1) then
@@ -25008,12 +24925,6 @@ begin
       NamedDef2.AfterSet(Self, aOldValue, aNewValue);
 
   Exclude(eStates, esReportedErrorReading);
-
-  var lGameDef := GameDefObj;
-  if Assigned(lGameDef) and not (gcFormIDInRecordHeader in lGameDef.Capabilities) and
-    Supports(GetContainingMainRecord, IwbMainRecordInternal, MainRecord)
-  then
-    MainRecord.CheckIdentityAfterSet(Self, aOldValue);
 end;
 
 procedure TwbElement.DoReset(aForce: Boolean);
