@@ -5142,6 +5142,20 @@ var
       Assert(False, '[AddMasters] not flContextObj.BeginInternalEdit');
   end;
 
+  procedure MoveOwnSlot;
+  begin
+    if Length(flOldMasters) = Length(flMasters) then
+      Exit;
+    if gcMasterSlotsInFormID in flContextObj.GameDefObj.Capabilities then begin
+      var lOldCount := TwbSlotCounts.Create(flOldMasters, flComplexFileFileID);
+      var lNewCount := TwbSlotCounts.Create(flMasters, flComplexFileFileID);
+
+      MastersUpdated([], [], lOldCount, lNewCount);
+      SortRecords;
+    end else
+      RenumberOwnSlot(Length(flOldMasters));
+  end;
+
 var
   i    : Integer;
   s, t : string;
@@ -5164,25 +5178,24 @@ begin;
     if lMasters.Count < 1 then
       Exit;
 
-    Inner;
-
-    if gcMasterSlotsInFormID in flContextObj.GameDefObj.Capabilities then
+    try
+      Inner;
+    except
       if Length(flOldMasters) <> Length(flMasters) then begin
-        var lOldCount := TwbSlotCounts.Create(flOldMasters, flComplexFileFileID);
-        var lNewCount := TwbSlotCounts.Create(flMasters, flComplexFileFileID);
-
-        MastersUpdated([], [], lOldCount, lNewCount);
-        SortRecords;
+        MoveOwnSlot;
+        SetModified(True);
+        IncGeneration;
       end;
+      raise;
+    end;
 
+    MoveOwnSlot;
     SetModified(True);
     IncGeneration;
 
     if NotAllAdded then
       raise Exception.Create('Only ' + (Length(flMasters) - Length(flOldMasters)).ToString + ' of ' + lMasters.Count.ToString + ' masters could be added. Master list now contains ' + Length(flMasters).ToString + ' entries and is full.');
   finally
-    if not (gcMasterSlotsInFormID in flContextObj.GameDefObj.Capabilities) and (Length(flOldMasters) <> Length(flMasters)) then
-      RenumberOwnSlot(Length(flOldMasters));
     lMasters.Free;
     flOldMasters := nil;
     flInvalidateReferencesInjected;
