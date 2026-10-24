@@ -7112,7 +7112,7 @@ begin
   H := High(flInjectedRecords);
   while L <= H do begin
     I := (L + H) shr 1;
-    C := TwbFormID.Compare(flInjectedRecords[I].FormID.ChangeFileID(lLayout, TwbFileID.CreateFull(0)), aFormID);
+    C := TwbFormID.Compare(flInjectedRecords[I].FixedFormID.ChangeFileID(lLayout, TwbFileID.CreateFull(0)), aFormID);
     if C < 0 then
       L := I + 1
     else begin
