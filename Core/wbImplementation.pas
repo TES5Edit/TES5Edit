@@ -1428,6 +1428,7 @@ type
     procedure UpdateIdentityKey;
     procedure RegisterWithIdentity(aNew: Boolean);
     function RefreshKnownSubRecord(const aSubRecord: IwbSubRecord): Boolean;
+    procedure RefreshKnownSubRecords;
 
     procedure MarkModifiedRecursive(const aElementTypes: TwbElementTypes); override; final;
 
@@ -13644,6 +13645,7 @@ begin
         if NeedUpdate then
           UpdateCellChildGroup;
 
+        RefreshKnownSubRecords;
         CollapseStorage(nil, True);
 
       end else begin
@@ -14190,6 +14192,30 @@ begin
     Include(mrStates, mrsGridCellChecked);
   end else
     Result := False;
+end;
+
+procedure TwbMainRecord.RefreshKnownSubRecords;
+var
+  lSubRecord : IwbSubRecord;
+  lFile      : IwbFileInternal;
+begin
+  mrEditorID := '';
+  Exclude(mrStates, mrsEditorIDFromCache);
+  mrFullName := '';
+  Exclude(mrStates, mrsFullNameFromCache);
+  Exclude(mrStates, mrsBaseRecordChecked);
+  Exclude(mrStates, mrsHasGridCell);
+  Include(mrStates, mrsGridCellChecked);
+  for var lKnown := Low(TwbKnownSubRecord) to High(TwbKnownSubRecord) do
+    if Supports(GetRecordBySignature(mrDef.KnownSubRecordSignatures[lKnown]), IwbSubRecord, lSubRecord) then
+      RefreshKnownSubRecord(lSubRecord);
+  if Supports(GetFile, IwbFileInternal, lFile) then
+    lFile.IncGeneration;
+  mrName := '';
+  mrShortName := '';
+  mrDisplayName := '';
+  if not (gcFormIDInRecordHeader in GameDefObj.Capabilities) then
+    UpdateIdentityKey;
 end;
 
 function TwbMainRecord.EnsureChildGroup: IwbGroupRecord;
