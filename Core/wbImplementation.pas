@@ -10290,7 +10290,8 @@ var
     for var lRecord in flRecords do
       if Assigned(lRecord) then begin
         var lSlot := lRecord.FixedFormID.FileID[lLayout].FullSlot;
-        if (lSlot > 0) and (lSlot < Length(flMasters)) then
+        var lIdentitySlot := (lRecord as IwbMainRecordInternal).IdentityKey.FileID[lLayout].FullSlot;
+        if ((lSlot > 0) and (lSlot < Length(flMasters))) or ((lIdentitySlot > 0) and (lIdentitySlot < Length(flMasters))) then
           Exit(True);
       end;
     Result := False;
@@ -19759,16 +19760,20 @@ begin
   var lLayout := ContextObj.SlotLayout;
   var lOld := mrFixedFormID;
   var lNew := ComputeFixedFormID(lCacheable);
-  if lNew.ObjectID[lLayout] = lOld.ObjectID[lLayout] then
+  if lNew.ObjectID[lLayout] = lOld.ObjectID[lLayout] then begin
+    lFile.IdentityKeyChanged(False);
     Exit;
+  end;
   if not Equals(lFile.RecordByFormID[lOld, False, True]) then
     Exit;
 
   lHolder := lFile.RecordByFormID[lNew, False, True];
   if Assigned(lHolder) and not Equals(lHolder) and (lHolder._File as IwbFileInternal).Equals(lFile) then begin
-    wbProgress('<Error: %s [%s] can not take the identity "%s": %s holds it in %s; it keeps its previous identity>',
-      [string(GetSignature), lOld.ToDisplayString(lLayout), mrDef.GetIdentity(Self), lHolder.Name, lFile.Name]);
+    var lHolderName := lHolder.Name;
     lFile.IdentityKeyChanged(True);
+    if not Equals(lFile.RecordByFormID[lNew, False, True]) then
+      wbProgress('<Error: %s [%s] can not take the identity "%s": %s holds it in %s; it keeps its previous identity>',
+        [string(GetSignature), lOld.ToDisplayString(lLayout), mrDef.GetIdentity(Self), lHolderName, lFile.Name]);
     Exit;
   end;
 
