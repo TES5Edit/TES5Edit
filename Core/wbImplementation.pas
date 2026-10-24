@@ -6480,22 +6480,23 @@ begin
     raise Exception.Create('File "' + GetFileName + '" is not editable');
   if GetIsNotPlugin then
     Exit;
+  if not (gcMasterSlotsInFormID in flContextObj.GameDefObj.Capabilities) then
+    Exit;
   if (GetElementCount < 1) or not Supports(GetElement(0), IwbContainerElementRef, Header) then
     raise Exception.CreateFmt('Unexpected error reading file "%s"', [flFileName]);
 
-  var lUnwritten := UnwrittenMasterCount;
-  if Length(flMasters) > lUnwritten then begin
+  if Length(flMasters) >= 1 then begin
     flOldMasters := Copy(flMasters);
     try
       MasterFiles := Header.ElementByName['Master Files'] as IwbContainerElementRef;
       Assert(Assigned(MasterFiles), '[TwbFile.CleanMasters] not Assigned(MasterFiles)');
-      Assert(MasterFiles.ElementCount + lUnwritten = Length(flMasters), '[TwbFile.CleanMasters] MasterFiles.ElementCount <> Length(flMasters)');
+      Assert(MasterFiles.ElementCount = Length(flMasters), '[TwbFile.CleanMasters] MasterFiles.ElementCount <> Length(flMasters)');
 
-      for i := lUnwritten to High(flMasters) do begin
-        Rec := (MasterFiles[i - lUnwritten] as IwbContainer).RecordBySignature['MAST'];
+      for i := Low(flMasters) to High(flMasters) do begin
+        Rec := (MasterFiles[i] as IwbContainer).RecordBySignature['MAST'];
         Assert(Assigned(Rec), '[TwbFile.CleanMasters] not Assigned(Rec)');
         Assert(SameText(Rec.EditValue, flMasters[i].FileName), '[TwbFile.CleanMasters] not SameText(Rec.EditValue, flMasters[i].FileName)');
-        MasterFiles[i - lUnwritten].SortOrder := i - lUnwritten;
+        MasterFiles[i].SortOrder := i;
       end;
 
       FillChar(UsedMasters, SizeOf(UsedMasters), 0);
@@ -6532,8 +6533,7 @@ begin
         j := 0;
         for i := Low(flMasters) to High(flMasters) do
         begin
-          if (i < lUnwritten) or
-             UsedMasters[i] or
+          if UsedMasters[i] or
              SameText(flMasters[i].FileName, flContextObj.GameDefObj.GameMasterEsm) or
              KeepMasters.Find(flMasters[i].FileName, k)
           then begin
@@ -6541,7 +6541,7 @@ begin
             if i <> j then begin
               flMasters[j] := flMasters[i];
 
-              MasterFiles[i - lUnwritten].SortOrder := j - lUnwritten;
+              MasterFiles[i].SortOrder := j;
               SetLength(Old, Succ(Length(Old)));
               SetLength(New, Succ(Length(New)));
 
@@ -6580,7 +6580,7 @@ begin
             Inc(j);
           end else begin
             flProgress('Removing unused master: ' + flMasters[i].FileName);
-            MasterFiles[i - lUnwritten].SortOrder := $1200;
+            MasterFiles[i].SortOrder := $1200;
           end;
 
           case flMasters[i].GetModuleType of
@@ -6618,12 +6618,12 @@ begin
 
         SetModified(True);
         IncGeneration;
-        lRemovedCount := Length(flOldMasters) - Length(flMasters);
+        lRemovedCount := Length(flOldMasters) - MasterFiles.ElementCount;
 
-        Assert(Length(flMasters) = MasterFiles.ElementCount + lUnwritten, '[TwbFile.CleanMasters] Length(flMasters) <> MasterFiles.ElementCount');
+        Assert(Length(flMasters) = MasterFiles.ElementCount, '[TwbFile.CleanMasters] Length(flMasters) <> MasterFiles.ElementCount');
 
-        for i := lUnwritten to High(flMasters) do begin
-          Rec := (MasterFiles[i - lUnwritten] as IwbContainer).RecordBySignature['MAST'];
+        for i := Low(flMasters) to High(flMasters) do begin
+          Rec := (MasterFiles[i] as IwbContainer).RecordBySignature['MAST'];
           Assert(Assigned(Rec), '[TwbFile.CleanMasters] not Assigned(Rec)');
           Assert(SameText(Rec.EditValue, flMasters[i].FileName), '[TwbFile.CleanMasters] not SameText(Rec.EditValue, flMasters[i].FileName)');
         end;
@@ -6927,11 +6927,12 @@ begin
   end;
 
   AddHardcodedFirstMaster;
+  var lUnwritten := UnwrittenMasterCount;
   with aTemplate^ do
     for i := Low(miMasters) to High(miMasters) do
       if Assigned(miMasters[i]) then
         with miMasters[i]^ do
-          if Assigned(miFile) then
+          if Assigned(miFile) and ((lUnwritten = 0) or not _File.Equals(flMasters[0])) then
             AddMaster(_File);
 
   if Length(lGameDef.NewFileMasters) > 0 then
@@ -10146,7 +10147,9 @@ end;
 
 function TwbFile.UnwrittenMasterCount: Integer;
 begin
-  if (Length(flMasters) > 0) and (fsIsHardcoded in flMasters[0].FileStates) then
+  if (gcHardcodedFileIsFirstMaster in flContextObj.GameDefObj.Capabilities) and (Length(flMasters) > 0) and
+    (fsIsHardcoded in flMasters[0].FileStates)
+  then
     Result := 1
   else
     Result := 0;
@@ -15231,20 +15234,13 @@ begin
   SelfRef := Self as IwbContainerElementRef;
   DoInit(False);
 
-  if gcMasterSlotsInFormID in GameDefObj.Capabilities then
-    MarkMaster(GetFixedFormID)
-  else begin
-    lFile := GetFile;
-    var lReferenceFile := GetReferenceFile;
-    for var lMasterIdx := 0 to Pred(lFile.MasterCount[True]) do
-      if lFile.Masters[lMasterIdx, True].Equals(lReferenceFile) then
-        aMasters[lMasterIdx] := True;
-  end;
+  var lFormID := GetFixedFormID;
+  MarkMaster(lFormID);
 
   if (csRefsBuild in cntStates) and (cntRefsBuildAt >= eGeneration) then begin
 
     for var lReferenceIdx := High(mrReferences) downto Low(mrReferences) do begin
-      var lFormID := mrReferences[lReferenceIdx];
+      lFormID := mrReferences[lReferenceIdx];
       MarkMaster(lFormID);
     end;
 
