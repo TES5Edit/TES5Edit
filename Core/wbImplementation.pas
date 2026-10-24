@@ -1190,6 +1190,7 @@ type
     procedure SetChildGroup(const aGroup: IwbGroupRecord);
     procedure RemoveChildGroup(const aGroup: IwbGroupRecord);
     procedure InvalidateReferencesInjected;
+    procedure InvalidateFixedFormID;
     procedure ClearForRelease;
     function DoBuildRef(aRemove: Boolean): Boolean;
 
@@ -1562,6 +1563,7 @@ type
     procedure SetChildGroup(const aGroup: IwbGroupRecord);
     procedure RemoveChildGroup(const aGroup: IwbGroupRecord);
     procedure InvalidateReferencesInjected;
+    procedure InvalidateFixedFormID;
     procedure ClearForRelease;
     procedure SaveRefsToStream(aStream: TStream; aSaveNames: Boolean);
     procedure LoadRefsFromStream(aStream: TStream; aLoadNames: Boolean);
@@ -5145,12 +5147,17 @@ begin;
 
     Inner;
 
-    if gcMasterSlotsInFormID in flContextObj.GameDefObj.Capabilities then
-      if Length(flOldMasters) <> Length(flMasters) then begin
+    if Length(flOldMasters) <> Length(flMasters) then
+      if gcMasterSlotsInFormID in flContextObj.GameDefObj.Capabilities then begin
         var lOldCount := TwbSlotCounts.Create(flOldMasters, flComplexFileFileID);
         var lNewCount := TwbSlotCounts.Create(flMasters, flComplexFileFileID);
 
         MastersUpdated([], [], lOldCount, lNewCount);
+        SortRecords;
+      end else begin
+        for var lRecord in flRecords do
+          if Assigned(lRecord) then
+            (lRecord as IwbMainRecordInternal).InvalidateFixedFormID;
         SortRecords;
       end;
 
@@ -19794,6 +19801,11 @@ procedure TwbMainRecord.InvalidateReferencesInjected;
 begin
   Exclude(mrStates, mrsReferencesInjectedChecked);
   Exclude(mrStates, mrsReferencesInjected);
+end;
+
+procedure TwbMainRecord.InvalidateFixedFormID;
+begin
+  mrFixedFormID := TwbFormID.Null;
 end;
 
 function CompareReferencedByFile(Item1, Item2: Pointer): Integer;
