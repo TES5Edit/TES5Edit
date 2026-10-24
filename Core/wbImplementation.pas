@@ -692,6 +692,7 @@ type
     procedure InjectMainRecord(const aRecord: IwbMainRecord);
     procedure RemoveInjectedMainRecord(const aRecord: IwbMainRecord; const aFormID: TwbFormID);
     procedure IdentityKeyChanged(aClash: Boolean);
+    function HoldsBlockedIdentities: Boolean;
     function InjectionTarget(const aFormID: TwbFormID): IwbFileInternal;
     function IsOwnFormID(const aFormID: TwbFormID; aNew: Boolean): Boolean;
     function HoldsInjected(const aRecord: IwbMainRecord): Boolean;
@@ -1005,6 +1006,7 @@ type
     procedure RemoveInjectedMainRecord(const aRecord: IwbMainRecord; const aFormID: TwbFormID);
     procedure ReKeyIdentities;
     procedure IdentityKeyChanged(aClash: Boolean);
+    function HoldsBlockedIdentities: Boolean;
     procedure RenumberOwnSlot(aOldSlot, aNewSlot: Integer);
     function InjectionTarget(const aFormID: TwbFormID): IwbFileInternal;
     function IsOwnFormID(const aFormID: TwbFormID; aNew: Boolean): Boolean;
@@ -9440,6 +9442,11 @@ begin
     flIdentityClash := True;
   if flIdentityClash then
     ReKeyIdentities;
+end;
+
+function TwbFile.HoldsBlockedIdentities: Boolean;
+begin
+  Result := flIdentityClash;
 end;
 
 procedure TwbFile.RenumberOwnSlot(aOldSlot, aNewSlot: Integer);
@@ -19802,6 +19809,11 @@ begin
     if not Equals(lFile.RecordByFormID[lNew, False, True]) then
       wbProgress('<Error: %s [%s] can not take the identity "%s": %s holds it in %s; it keeps its previous identity>',
         [string(GetSignature), lOld.ToDisplayString(lLayout), mrDef.GetIdentity(Self), lHolderName, lFile.Name]);
+    Exit;
+  end;
+
+  if lFile.HoldsBlockedIdentities then begin
+    lFile.IdentityKeyChanged(False);
     Exit;
   end;
 
