@@ -1100,6 +1100,8 @@ type
     procedure InformStorage(var aBasePtr: Pointer; aEndPtr: Pointer); override;
     function DoCheckSizeAfterWrite: Boolean; virtual;
     procedure SetToDefaultInternal; override;
+    function GetDataBytes: TBytes;
+    procedure NotifyIfDataChanged(const aOldData: TBytes);
     function IsFlags: Boolean; virtual;
 
     function GetEditType: TwbEditType; override; final;
@@ -22235,6 +22237,7 @@ var
   i: Integer;
 begin
   SelfRef := Self as IwbContainerElementRef;
+  var lOldData := GetDataBytes;
 
   if csInit in cntStates then
     DoReset(True);
@@ -22255,6 +22258,7 @@ begin
     end;
     UpdateCountViaPath;
   end;
+  NotifyIfDataChanged(lOldData);
 end;
 
 function TwbSubRecord.srStruct: PwbSubRecordHeaderStruct;
@@ -30919,6 +30923,28 @@ begin
   inherited;
 end;
 
+function TwbDataContainer.GetDataBytes: TBytes;
+begin
+  Result := nil;
+  var lBasePtr := GetDataBasePtr;
+  var lEndPtr := GetDataEndPtr;
+  if Assigned(lBasePtr) and (NativeUInt(lEndPtr) > NativeUInt(lBasePtr)) then begin
+    SetLength(Result, NativeUInt(lEndPtr) - NativeUInt(lBasePtr));
+    Move(lBasePtr^, Result[0], Length(Result));
+  end;
+end;
+
+procedure TwbDataContainer.NotifyIfDataChanged(const aOldData: TBytes);
+begin
+  if Length(aOldData) < 1 then
+    Exit;
+  var lNewData := GetDataBytes;
+  if (Length(lNewData) = Length(aOldData)) and CompareMem(@lNewData[0], @aOldData[0], Length(aOldData)) then
+    Exit;
+  SetModified(True);
+  NotifyChanged(eContainer);
+end;
+
 procedure TwbDataContainer.UpdateStorageFromElements;
 var
   PrefixSize            : Integer;
@@ -31420,6 +31446,7 @@ var
   BasePtr, EndPtr: Pointer;
 begin
   SelfRef := Self as IwbContainerElementRef;
+  var lOldData := GetDataBytes;
 
   if csInit in cntStates then
     DoReset(True);
@@ -31431,6 +31458,7 @@ begin
   DoInit(True);
   RequestStorageChange(BasePtr, EndPtr, vbValueDef.DefaultSize[nil, nil, Self]{ + GetDataPrefixSize});
   inherited;
+  NotifyIfDataChanged(lOldData);
 end;
 
 { TwbRecordHeaderStruct }
