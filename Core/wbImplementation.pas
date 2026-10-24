@@ -1409,6 +1409,7 @@ type
     procedure UpdateCellChildGroup;
     procedure UpdateInteriorCellGroup;
     procedure ReRegister(const aFile: IwbFileInternal; const aFileFormID: TwbFormID; const aMoveKey: TProc);
+    procedure TakeChainFromLaterRoot(const aFile: IwbFileInternal);
     procedure UpdateIdentityKey;
     procedure RegisterWithIdentity(aNew: Boolean);
     function RefreshKnownSubRecord(const aSubRecord: IwbSubRecord): Boolean;
@@ -10188,10 +10189,24 @@ var
     Inc(lNextFull);
   end;
 
+  function HoldsMasterSlotRecord: Boolean;
+  begin
+    var lLayout := flContextObj.SlotLayout;
+    for var lRecord in flRecords do
+      if Assigned(lRecord) then begin
+        var lSlot := lRecord.FixedFormID.FileID[lLayout].FullSlot;
+        if (lSlot > 0) and (lSlot < Length(flMasters)) then
+          Exit(True);
+      end;
+    Result := False;
+  end;
+
 begin
   if not IsElementEditable(nil) then
     raise Exception.Create('File "' + GetFileName + '" is not editable');
   if GetIsNotPlugin then
+    Exit;
+  if not (gcMasterSlotsInFormID in flContextObj.GameDefObj.Capabilities) and HoldsMasterSlotRecord then
     Exit;
 
   if (GetElementCount < 1) or not Supports(GetElement(0), IwbContainerElementRef, Header) then
@@ -19586,16 +19601,21 @@ begin
 
   aFile.AddMainRecord(Self);
 
-  var lMaster := IwbMainRecord(mrMaster);
-  if Assigned(lMaster) then begin
-    if (lMaster._File.LoadOrder > aFile.LoadOrder) or
-      ((lMaster._File.LoadOrder = aFile.LoadOrder) and not (fsIsCompareLoad in aFile.FileStates))
-    then
-      (lMaster as IwbMainRecordInternal).YouGotAMaster(Self);
-  end else if Assigned(Master) and ((Master as IwbMainRecordInternal).ListedInjectedIn <> nil) then
+  if Assigned(mrMaster) then
+    TakeChainFromLaterRoot(aFile)
+  else if Assigned(Master) and ((Master as IwbMainRecordInternal).ListedInjectedIn <> nil) then
     (Master as IwbMainRecordInternal).YouGotAMaster(Self);
 
   ResetConflict;
+end;
+
+procedure TwbMainRecord.TakeChainFromLaterRoot(const aFile: IwbFileInternal);
+begin
+  var lMaster := IwbMainRecord(mrMaster);
+  if Assigned(lMaster) and ((lMaster._File.LoadOrder > aFile.LoadOrder) or
+    ((lMaster._File.LoadOrder = aFile.LoadOrder) and not (fsIsCompareLoad in aFile.FileStates)))
+  then
+    (lMaster as IwbMainRecordInternal).YouGotAMaster(Self);
 end;
 
 procedure TwbMainRecord.UpdateIdentityKey;
@@ -19655,13 +19675,16 @@ begin
   Exclude(mrStates, mrsRegisterLater);
   mrFixedFormID := TwbFormID.Null;
   mrLoadOrderFormID := TwbFormID.Null;
-  if Supports(GetFile, IwbFileInternal, lFile) then try
-    lFile.AddMainRecord(Self);
-  except
-    var lContainer := GetContainer;
-    if Assigned(lContainer) then
-      lContainer.RemoveElement(Self);
-    raise;
+  if Supports(GetFile, IwbFileInternal, lFile) then begin
+    try
+      lFile.AddMainRecord(Self);
+    except
+      var lContainer := GetContainer;
+      if Assigned(lContainer) then
+        lContainer.RemoveElement(Self);
+      raise;
+    end;
+    TakeChainFromLaterRoot(lFile);
   end;
 end;
 
