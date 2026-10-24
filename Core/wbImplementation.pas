@@ -1005,6 +1005,7 @@ type
     procedure RemoveInjectedMainRecord(const aRecord: IwbMainRecord; const aFormID: TwbFormID);
     procedure ReKeyIdentities;
     procedure IdentityKeyChanged(aClash: Boolean);
+    procedure RenumberOwnSlot(aOldSlot, aNewSlot: Integer);
     function InjectionTarget(const aFormID: TwbFormID): IwbFileInternal;
     function IsOwnFormID(const aFormID: TwbFormID; aNew: Boolean): Boolean;
     function HoldsInjected(const aRecord: IwbMainRecord): Boolean;
@@ -1194,7 +1195,7 @@ type
     procedure SetChildGroup(const aGroup: IwbGroupRecord);
     procedure RemoveChildGroup(const aGroup: IwbGroupRecord);
     procedure InvalidateReferencesInjected;
-    procedure InvalidateFixedFormID;
+    procedure RenumberOwnSlot(aOldSlot, aNewSlot: Integer);
     procedure ClearForRelease;
     function DoBuildRef(aRemove: Boolean): Boolean;
 
@@ -1576,7 +1577,7 @@ type
     procedure SetChildGroup(const aGroup: IwbGroupRecord);
     procedure RemoveChildGroup(const aGroup: IwbGroupRecord);
     procedure InvalidateReferencesInjected;
-    procedure InvalidateFixedFormID;
+    procedure RenumberOwnSlot(aOldSlot, aNewSlot: Integer);
     procedure ClearForRelease;
     procedure SaveRefsToStream(aStream: TStream; aSaveNames: Boolean);
     procedure LoadRefsFromStream(aStream: TStream; aLoadNames: Boolean);
@@ -5160,17 +5161,12 @@ begin;
 
     Inner;
 
-    if Length(flOldMasters) <> Length(flMasters) then
-      if gcMasterSlotsInFormID in flContextObj.GameDefObj.Capabilities then begin
+    if gcMasterSlotsInFormID in flContextObj.GameDefObj.Capabilities then
+      if Length(flOldMasters) <> Length(flMasters) then begin
         var lOldCount := TwbSlotCounts.Create(flOldMasters, flComplexFileFileID);
         var lNewCount := TwbSlotCounts.Create(flMasters, flComplexFileFileID);
 
         MastersUpdated([], [], lOldCount, lNewCount);
-        SortRecords;
-      end else begin
-        for var lRecord in flRecords do
-          if Assigned(lRecord) then
-            (lRecord as IwbMainRecordInternal).InvalidateFixedFormID;
         SortRecords;
       end;
 
@@ -5180,6 +5176,8 @@ begin;
     if NotAllAdded then
       raise Exception.Create('Only ' + (Length(flMasters) - Length(flOldMasters)).ToString + ' of ' + lMasters.Count.ToString + ' masters could be added. Master list now contains ' + Length(flMasters).ToString + ' entries and is full.');
   finally
+    if not (gcMasterSlotsInFormID in flContextObj.GameDefObj.Capabilities) and (Length(flOldMasters) <> Length(flMasters)) then
+      RenumberOwnSlot(Length(flOldMasters), Length(flMasters));
     lMasters.Free;
     flOldMasters := nil;
     flInvalidateReferencesInjected;
@@ -9439,6 +9437,14 @@ begin
     flIdentityClash := True;
   if flIdentityClash then
     ReKeyIdentities;
+end;
+
+procedure TwbFile.RenumberOwnSlot(aOldSlot, aNewSlot: Integer);
+begin
+  for var lRecord in flRecords do
+    if Assigned(lRecord) then
+      (lRecord as IwbMainRecordInternal).RenumberOwnSlot(aOldSlot, aNewSlot);
+  SortRecords;
 end;
 
 procedure TwbFile.RemoveMainRecord(const aRecord: IwbMainRecord);
@@ -19915,9 +19921,13 @@ begin
   Exclude(mrStates, mrsReferencesInjected);
 end;
 
-procedure TwbMainRecord.InvalidateFixedFormID;
+procedure TwbMainRecord.RenumberOwnSlot(aOldSlot, aNewSlot: Integer);
 begin
-  mrFixedFormID := TwbFormID.Null;
+  if mrFixedFormID.IsNull then
+    Exit;
+  var lLayout := ContextObj.SlotLayout;
+  if mrFixedFormID.FileID[lLayout].FullSlot = aOldSlot then
+    mrFixedFormID.FileID[lLayout] := TwbFileID.CreateFull(aNewSlot);
 end;
 
 function CompareReferencedByFile(Item1, Item2: Pointer): Integer;
