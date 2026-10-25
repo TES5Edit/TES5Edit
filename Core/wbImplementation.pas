@@ -694,6 +694,7 @@ type
     procedure IdentityKeyChanged(aClash: Boolean);
     function HoldsBlockedIdentities: Boolean;
     function HoldsRecordAt(const aRecord: IwbMainRecord; const aFormID: TwbFormID): Boolean;
+    function RecordCountAt(const aFormID: TwbFormID): Integer;
     function InjectionTarget(const aFormID: TwbFormID): IwbFileInternal;
     function IsOwnFormID(const aFormID: TwbFormID; aNew: Boolean): Boolean;
     function HoldsInjected(const aRecord: IwbMainRecord): Boolean;
@@ -1011,6 +1012,7 @@ type
     procedure IdentityKeyChanged(aClash: Boolean);
     function HoldsBlockedIdentities: Boolean;
     function HoldsRecordAt(const aRecord: IwbMainRecord; const aFormID: TwbFormID): Boolean;
+    function RecordCountAt(const aFormID: TwbFormID): Integer;
     procedure RenumberOwnSlot(aOldSlot, aNewSlot: Integer);
     function InjectionTarget(const aFormID: TwbFormID): IwbFileInternal;
     function IsOwnFormID(const aFormID: TwbFormID; aNew: Boolean): Boolean;
@@ -9524,6 +9526,11 @@ end;
 function TwbFile.HoldsRecordAt(const aRecord: IwbMainRecord; const aFormID: TwbFormID): Boolean;
 begin
   Result := IndexOfRecordAt(aRecord, aFormID) >= 0;
+end;
+
+function TwbFile.RecordCountAt(const aFormID: TwbFormID): Integer;
+begin
+  RecordRunAt(aFormID, Result);
 end;
 
 procedure TwbFile.RenumberOwnSlot(aOldSlot, aNewSlot: Integer);
@@ -22841,9 +22848,16 @@ var
       lFormID := _File.NewFormID
     else begin
       Result := _File.ContainedRecordByLoadOrderFormID[aSource.LoadOrderFormID, False];
-      if Assigned(Result) then
-        lFormID := (Result as IwbMainRecord).FixedFormID
-      else
+      if Assigned(Result) then begin
+        lFormID := (Result as IwbMainRecord).FixedFormID;
+        var lHolders := (_File as IwbFileInternal).RecordCountAt(lFormID);
+        if lHolders > 1 then begin
+          wbProgress('Error adding [%s] to [%s]: %d records of %s share its key [%s]',
+            [aElement.FullPath, GetFullPath, lHolders, _File.Name, lFormID.ToDisplayString(ContextObj.SlotLayout)]);
+          Result := nil;
+          Exit;
+        end;
+      end else
         lFormID := _File.LoadOrderFormIDtoFileFormID(aSource.LoadOrderFormID, True);
     end;
 
