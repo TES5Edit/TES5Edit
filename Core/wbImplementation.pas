@@ -6533,7 +6533,7 @@ begin
   var lSummary := 'Has no masters.';
   if Length(flMasters) >= 1 then begin
     flOldMasters := Copy(flMasters);
-    var lCancelLocked := False;
+    wbCancelLock;
     try
       MasterFiles := Header.ElementByName['Master Files'] as IwbContainerElementRef;
       Assert(Assigned(MasterFiles), '[TwbFile.CleanMasters] not Assigned(MasterFiles)');
@@ -6569,8 +6569,6 @@ begin
               KeepMasters.Add(lFileMasters[j].FileName);
           end;
 
-        wbCancelLock;
-        lCancelLocked := True;
         Old := nil;
         New := nil;
         var nextFullID := 0;
@@ -6689,8 +6687,7 @@ begin
       end;
       lSummary := Format('Removed %d unused masters.', [lRemovedCount]);
     finally
-      if lCancelLocked then
-        wbCancelUnlock;
+      wbCancelUnlock;
       flOldMasters := nil;
       flInvalidateReferencesInjected;
     end;
