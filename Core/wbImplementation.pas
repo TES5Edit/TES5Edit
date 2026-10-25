@@ -20705,19 +20705,24 @@ begin
 
   Assert(Assigned(aMaster));
   Assert(not Assigned(mrMaster));
-  var lInjectionMaster := ListedInjectedIn;
-  if Assigned(lInjectionMaster) then
-    lInjectionMaster.RemoveInjectedMainRecord(Self, GetFormID);
+  wbCancelLock;
+  try
+    var lInjectionMaster := ListedInjectedIn;
+    if Assigned(lInjectionMaster) then
+      lInjectionMaster.RemoveInjectedMainRecord(Self, GetFormID);
 
-  (aMaster as IwbMainRecordInternal).YouAreTheMaster(Self as IwbMainRecord, mrOverrides, mrReferencedBy, mrReferencedByCount);
+    (aMaster as IwbMainRecordInternal).YouAreTheMaster(Self as IwbMainRecord, mrOverrides, mrReferencedBy, mrReferencedByCount);
 
-  Assert(aMaster.Equals(IwbElement(mrMaster)));
-  mrOverrides := nil;
-  mrReferencedBy := nil;
-  mrReferencedBySize := 0;
-  mrReferencedByCount := 0;
+    Assert(aMaster.Equals(IwbElement(mrMaster)));
+    mrOverrides := nil;
+    mrReferencedBy := nil;
+    mrReferencedBySize := 0;
+    mrReferencedByCount := 0;
 
-  Exclude(mrStates, mrsIsInjectedChecked);
+    Exclude(mrStates, mrsIsInjectedChecked);
+  finally
+    wbCancelUnlock;
+  end;
 end;
 
 { TwbSubRecord }
