@@ -693,6 +693,7 @@ type
     procedure RemoveInjectedMainRecord(const aRecord: IwbMainRecord; const aFormID: TwbFormID);
     procedure IdentityKeyChanged(aClash: Boolean);
     function HoldsBlockedIdentities: Boolean;
+    function HoldsRecordAt(const aRecord: IwbMainRecord; const aFormID: TwbFormID): Boolean;
     function InjectionTarget(const aFormID: TwbFormID): IwbFileInternal;
     function IsOwnFormID(const aFormID: TwbFormID; aNew: Boolean): Boolean;
     function HoldsInjected(const aRecord: IwbMainRecord): Boolean;
@@ -817,6 +818,7 @@ type
     function BuildOrLoadRef(aOnlyLoad: Boolean): TwbBuildOrLoadRefResult;
 
     function FindFormID(aFormID: TwbFormID; var Index: Integer; aNewMasters: Boolean): Boolean;
+    function IndexOfRecordAt(const aRecord: IwbMainRecord; const aFormID: TwbFormID): Integer;
     function FindInjectedID(const aFormID: TwbFormID; var Index: Integer): Boolean;
     function GetMasterRecordByFormID(aFormID: TwbFormID; aAllowInjected, aNewMasters: Boolean): IwbMainRecord;
 
@@ -1007,6 +1009,7 @@ type
     procedure ReKeyIdentities;
     procedure IdentityKeyChanged(aClash: Boolean);
     function HoldsBlockedIdentities: Boolean;
+    function HoldsRecordAt(const aRecord: IwbMainRecord; const aFormID: TwbFormID): Boolean;
     procedure RenumberOwnSlot(aOldSlot, aNewSlot: Integer);
     function InjectionTarget(const aFormID: TwbFormID): IwbFileInternal;
     function IsOwnFormID(const aFormID: TwbFormID; aNew: Boolean): Boolean;
@@ -7144,6 +7147,22 @@ begin
  Index := L;
 end;
 
+function TwbFile.IndexOfRecordAt(const aRecord: IwbMainRecord; const aFormID: TwbFormID): Integer;
+begin
+  Result := -1;
+  var lIdx: Integer;
+  if (Length(flRecords) < 1) or not FindFormID(aFormID, lIdx, True) then
+    Exit;
+  var lKey := flRecords[lIdx].FixedFormID;
+  while (lIdx > 0) and (flRecords[Pred(lIdx)].FixedFormID = lKey) do
+    Dec(lIdx);
+  while (lIdx <= High(flRecords)) and (flRecords[lIdx].FixedFormID = lKey) do begin
+    if aRecord.Equals(flRecords[lIdx]) then
+      Exit(lIdx);
+    Inc(lIdx);
+  end;
+end;
+
 function TwbFile.FindInjectedID(const aFormID: TwbFormID; var Index: Integer): Boolean;
 var
   L, H, I, C: Integer;
@@ -9478,6 +9497,11 @@ begin
   Result := flIdentityClash;
 end;
 
+function TwbFile.HoldsRecordAt(const aRecord: IwbMainRecord; const aFormID: TwbFormID): Boolean;
+begin
+  Result := IndexOfRecordAt(aRecord, aFormID) >= 0;
+end;
+
 procedure TwbFile.RenumberOwnSlot(aOldSlot, aNewSlot: Integer);
 begin
   for var lRecord in flRecords do
@@ -9503,9 +9527,10 @@ begin
       lFormID := aRecord.FixedFormID;
 
 
-      var lFoundIdx: Integer;
-      if (Length(flRecords) < 1) or not FindFormID(lFormID, lFoundIdx, True) then
-        raise Exception.Create('Can''t remove FormID [' + lFormID.ToDisplayString(flContextObj.SlotLayout) + '] from file ' + GetName + ': FormID not registered');
+      var lFoundIdx := IndexOfRecordAt(aRecord, lFormID);
+      if lFoundIdx < 0 then
+        if (Length(flRecords) < 1) or not FindFormID(lFormID, lFoundIdx, True) then
+          raise Exception.Create('Can''t remove FormID [' + lFormID.ToDisplayString(flContextObj.SlotLayout) + '] from file ' + GetName + ': FormID not registered');
 
       flRecords[lFoundIdx] := nil;
       if lFoundIdx < High(flRecords) then begin
@@ -19845,7 +19870,7 @@ begin
     lFile.IdentityKeyChanged(False);
     Exit;
   end;
-  if not Equals(lFile.RecordByFormID[lOld, False, True]) then
+  if not lFile.HoldsRecordAt(Self, lOld) then
     Exit;
 
   lHolder := lFile.RecordByFormID[lNew, False, True];
