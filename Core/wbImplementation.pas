@@ -9544,8 +9544,7 @@ begin
 
       var lFoundIdx := IndexOfRecordAt(aRecord, lFormID);
       if lFoundIdx < 0 then
-        if (Length(flRecords) < 1) or not FindFormID(lFormID, lFoundIdx, True) then
-          raise Exception.Create('Can''t remove FormID [' + lFormID.ToDisplayString(flContextObj.SlotLayout) + '] from file ' + GetName + ': FormID not registered');
+        raise Exception.Create('Can''t remove FormID [' + lFormID.ToDisplayString(flContextObj.SlotLayout) + '] from file ' + GetName + ': FormID not registered');
 
       flRecords[lFoundIdx] := nil;
       if lFoundIdx < High(flRecords) then begin
