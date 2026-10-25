@@ -12813,6 +12813,8 @@ begin
     Self.recSummaryKey := Copy(recSummaryKey);
     Self.recSummaryPrefix := Copy(recSummaryPrefix);
     Self.recSummarySuffix := Copy(recSummarySuffix);
+    Self.recSummaryMaxDepth := Copy(recSummaryMaxDepth);
+    Self.recIgnoreList := Copy(recIgnoreList);
   end;
 end;
 
@@ -13550,6 +13552,7 @@ begin
   with aSource as TwbSubRecordDef do
   begin
     Self.srSizeMatch := srSizeMatch;
+    Self.srHasUnusedData := srHasUnusedData;
   end;
 end;
 
@@ -18645,7 +18648,7 @@ end;
 constructor TwbStringDef.Clone(const aSource: TwbDef);
 begin
   with aSource as TwbStringDef do
-    Self.Create(defPriority, defRequired, ndName, sdSize, ndTerminator).AfterClone(aSource);
+    Self.Create(defPriority, defRequired, ndName, sdSize, ndTerminator, sdForward).AfterClone(aSource);
 end;
 
 constructor TwbStringDef.Create(aPriority   : TwbConflictPriority;
