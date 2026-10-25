@@ -3101,20 +3101,25 @@ begin
       for l := 0 to Pred(lRecord.OverrideCount) do
         lOverrides[l] := lRecord.Overrides[l];
 
-      lRecord.LoadOrderFormID := lNew;
-      if Length(lOverrides) > 0 then begin
-        wbProgress('Record has '+Length(lOverrides).ToString+' override(s)');
-        for l := Low(lOverrides) to High(lOverrides) do
-          lOverrides[l].LoadOrderFormID := lNew;
-      end;
+      wbCancelLock;
+      try
+        lRecord.LoadOrderFormID := lNew;
+        if Length(lOverrides) > 0 then begin
+          wbProgress('Record has '+Length(lOverrides).ToString+' override(s)');
+          for l := Low(lOverrides) to High(lOverrides) do
+            lOverrides[l].LoadOrderFormID := lNew;
+        end;
 
-      lOverrides := nil;
+        lOverrides := nil;
 
-      wbTick;
+        wbTick;
 
-      if Length(lUpdate.Items) > 0 then begin
-        wbProgress('Record is referenced by '+Length(lUpdate.Items).ToString+' other record(s)');
-        lUpdate.Apply(lOld, lNew);
+        if Length(lUpdate.Items) > 0 then begin
+          wbProgress('Record is referenced by '+Length(lUpdate.Items).ToString+' other record(s)');
+          lUpdate.Apply(lOld, lNew);
+        end;
+      finally
+        wbCancelUnlock;
       end;
     except
       on E: Exception do begin
@@ -19735,8 +19740,13 @@ end;
 procedure TwbMainRecord.ReRegister(const aFile: IwbFileInternal; const aFileFormID: TwbFormID; const aMoveKey: TProc);
 begin
   var lMaster := RegistrationMaster(aFile, aFileFormID);
-  LeaveFileIndex(aFile);
-  JoinFileIndex(aFile, lMaster, aMoveKey);
+  wbCancelLock;
+  try
+    LeaveFileIndex(aFile);
+    JoinFileIndex(aFile, lMaster, aMoveKey);
+  finally
+    wbCancelUnlock;
+  end;
 end;
 
 function TwbMainRecord.RegistrationMaster(const aFile: IwbFileInternal; const aFileFormID: TwbFormID): IwbMainRecord;
@@ -19854,12 +19864,7 @@ begin
     Exit;
   end;
 
-  wbCancelLock;
-  try
-    ReRegister(lFile, lNew, MoveGroupLabel);
-  finally
-    wbCancelUnlock;
-  end;
+  ReRegister(lFile, lNew, MoveGroupLabel);
   lFile.IdentityKeyChanged(False);
 end;
 
