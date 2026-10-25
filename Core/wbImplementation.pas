@@ -10343,6 +10343,7 @@ begin
   var lUnwritten := UnwrittenMasterCount;
   if Length(flMasters) > Succ(lUnwritten) then begin
     flOldMasters := Copy(flMasters);
+    wbCancelLock;
     try
       MasterFiles := Header.ElementByName['Master Files'] as IwbContainerElementRef;
       Assert(Assigned(MasterFiles));
@@ -10405,6 +10406,7 @@ begin
       end;
       SortRecords;
     finally
+      wbCancelUnlock;
       flOldMasters := nil;
     end;
   end;
