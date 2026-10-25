@@ -5165,6 +5165,7 @@ begin;
 
   lMasters := TStringList.Create;
   flOldMasters := Copy(flMasters);
+  wbCancelLock;
   try
     if Assigned(aMasters) then
       for i := 0 to Pred(aMasters.Count) do begin
@@ -5197,6 +5198,7 @@ begin;
     if NotAllAdded then
       raise Exception.Create('Only ' + (Length(flMasters) - Length(flOldMasters)).ToString + ' of ' + lMasters.Count.ToString + ' masters could be added. Master list now contains ' + Length(flMasters).ToString + ' entries and is full.');
   finally
+    wbCancelUnlock;
     lMasters.Free;
     flOldMasters := nil;
     flInvalidateReferencesInjected;
