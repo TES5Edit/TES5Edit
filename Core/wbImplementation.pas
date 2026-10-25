@@ -18918,44 +18918,49 @@ procedure TwbMainRecord.Remove;
 var
   _File: IwbFileInternal;
 begin
-  DoBuildRef(True);
+  wbCancelLock;
+  try
+    DoBuildRef(True);
 
-  var lGroup := GetChildGroup;
-  if Assigned(lGroup) then
-    lGroup.Remove;
+    var lGroup := GetChildGroup;
+    if Assigned(lGroup) then
+      lGroup.Remove;
 
-  _File := GetFile as IwbFileInternal;
-  if Assigned(_File) then
-    _File.RemoveMainRecord(Self);
+    _File := GetFile as IwbFileInternal;
+    if Assigned(_File) then
+      _File.RemoveMainRecord(Self);
 
-  var lMaster := IwbMainRecord(mrMaster);
-  if Assigned(lMaster) then
-    (lMaster as IwbMainRecordInternal).RemoveOverride(Self)
-  else
-    if Length(mrOverrides) > 0 then begin
-      SortOverrides;
-      lMaster := mrOverrides[0];
-      (lMaster as IwbMainRecordInternal).YouAreTheMaster(mrOverrides, mrReferencedBy, mrReferencedByCount);
-    end else
-      InvalidateReferencers;
+    var lMaster := IwbMainRecord(mrMaster);
+    if Assigned(lMaster) then
+      (lMaster as IwbMainRecordInternal).RemoveOverride(Self)
+    else
+      if Length(mrOverrides) > 0 then begin
+        SortOverrides;
+        lMaster := mrOverrides[0];
+        (lMaster as IwbMainRecordInternal).YouAreTheMaster(mrOverrides, mrReferencedBy, mrReferencedByCount);
+      end else
+        InvalidateReferencers;
 
-  mrMaster := nil;
-  mrOverrides := nil;
-  mrReferencedBy := nil;
-  mrReferencedByCount := 0;
-  mrReferencedBySize := 0;
-  mrFixedFormID := TwbFormID.Null;
-  mrLoadOrderFormID := TwbFormID.Null;
-  Exclude(mrStates, mrsIsInjectedChecked);
-  Exclude(mrStates, mrsConflictStored);
+    mrMaster := nil;
+    mrOverrides := nil;
+    mrReferencedBy := nil;
+    mrReferencedByCount := 0;
+    mrReferencedBySize := 0;
+    mrFixedFormID := TwbFormID.Null;
+    mrLoadOrderFormID := TwbFormID.Null;
+    Exclude(mrStates, mrsIsInjectedChecked);
+    Exclude(mrStates, mrsConflictStored);
 
-  if Assigned(lMaster) then
-    lMaster.ResetConflict;
+    if Assigned(lMaster) then
+      lMaster.ResetConflict;
 
-  inherited;
+    inherited;
 
-  if Assigned(_File) then
-    _File.IdentityKeyChanged(False);
+    if Assigned(_File) then
+      _File.IdentityKeyChanged(False);
+  finally
+    wbCancelUnlock;
+  end;
 end;
 
 procedure TwbMainRecord.RemoveChildGroup(const aGroup: IwbGroupRecord);
