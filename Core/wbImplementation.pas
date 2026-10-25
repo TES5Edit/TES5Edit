@@ -818,6 +818,7 @@ type
     function BuildOrLoadRef(aOnlyLoad: Boolean): TwbBuildOrLoadRefResult;
 
     function FindFormID(aFormID: TwbFormID; var Index: Integer; aNewMasters: Boolean): Boolean;
+    function RecordRunAt(const aFormID: TwbFormID; out aCount: Integer): Integer;
     function IndexOfRecordAt(const aRecord: IwbMainRecord; const aFormID: TwbFormID): Integer;
     function FindInjectedID(const aFormID: TwbFormID; var Index: Integer): Boolean;
     function GetMasterRecordByFormID(aFormID: TwbFormID; aAllowInjected, aNewMasters: Boolean): IwbMainRecord;
@@ -7162,20 +7163,27 @@ begin
  Index := L;
 end;
 
-function TwbFile.IndexOfRecordAt(const aRecord: IwbMainRecord; const aFormID: TwbFormID): Integer;
+function TwbFile.RecordRunAt(const aFormID: TwbFormID; out aCount: Integer): Integer;
 begin
-  Result := -1;
-  var lIdx: Integer;
-  if (Length(flRecords) < 1) or not FindFormID(aFormID, lIdx, True) then
-    Exit;
-  var lKey := flRecords[lIdx].FixedFormID;
-  while (lIdx > 0) and (flRecords[Pred(lIdx)].FixedFormID = lKey) do
-    Dec(lIdx);
-  while (lIdx <= High(flRecords)) and (flRecords[lIdx].FixedFormID = lKey) do begin
+  aCount := 0;
+  if (Length(flRecords) < 1) or not FindFormID(aFormID, Result, True) then
+    Exit(-1);
+  var lKey := flRecords[Result].FixedFormID;
+  while (Result > 0) and (flRecords[Pred(Result)].FixedFormID = lKey) do
+    Dec(Result);
+  while (Result + aCount <= High(flRecords)) and (flRecords[Result + aCount].FixedFormID = lKey) do
+    Inc(aCount);
+end;
+
+function TwbFile.IndexOfRecordAt(const aRecord: IwbMainRecord; const aFormID: TwbFormID): Integer;
+var
+  lCount : Integer;
+begin
+  var lFirst := RecordRunAt(aFormID, lCount);
+  for var lIdx := lFirst to lFirst + Pred(lCount) do
     if aRecord.Equals(flRecords[lIdx]) then
       Exit(lIdx);
-    Inc(lIdx);
-  end;
+  Result := -1;
 end;
 
 function TwbFile.FindInjectedID(const aFormID: TwbFormID; var Index: Integer): Boolean;
@@ -9437,7 +9445,7 @@ var
   lOldKeys : array of TwbFormID;
   lNewKeys : array of TwbFormID;
   lMoves   : array of Boolean;
-  lIndex   : Integer;
+  lHolders : Integer;
   lChanged : Boolean;
 begin
   flIdentityClash := False;
@@ -9463,11 +9471,12 @@ begin
     for var j := Low(lRecords) to High(lRecords) do
       if (j <> i) and (lNewKeys[j] = lNewKeys[i]) then
         lMoves[i] := False;
-    if lMoves[i] and FindFormID(lNewKeys[i], lIndex, True) then begin
-      lMoves[i] := False;
+    if lMoves[i] then begin
+      RecordRunAt(lNewKeys[i], lHolders);
       for var j := Low(lRecords) to High(lRecords) do
         if lOldKeys[j] = lNewKeys[i] then
-          lMoves[i] := True;
+          Dec(lHolders);
+      lMoves[i] := lHolders = 0;
     end;
   end;
 
