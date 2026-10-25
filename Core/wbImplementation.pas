@@ -6525,9 +6525,10 @@ begin
   if (GetElementCount < 1) or not Supports(GetElement(0), IwbContainerElementRef, Header) then
     raise Exception.CreateFmt('Unexpected error reading file "%s"', [flFileName]);
 
+  var lSummary := 'Has no masters.';
   if Length(flMasters) >= 1 then begin
     flOldMasters := Copy(flMasters);
-    wbCancelLock;
+    var lCancelLocked := False;
     try
       MasterFiles := Header.ElementByName['Master Files'] as IwbContainerElementRef;
       Assert(Assigned(MasterFiles), '[TwbFile.CleanMasters] not Assigned(MasterFiles)');
@@ -6563,6 +6564,8 @@ begin
               KeepMasters.Add(lFileMasters[j].FileName);
           end;
 
+        wbCancelLock;
+        lCancelLocked := True;
         Old := nil;
         New := nil;
         var nextFullID := 0;
@@ -6679,16 +6682,17 @@ begin
         SortRecords;
         flInvalidateReferencesInjected;
       end;
-      flProgress(Format('Removed %d unused masters.', [lRemovedCount]));
+      lSummary := Format('Removed %d unused masters.', [lRemovedCount]);
     finally
-      wbCancelUnlock;
+      if lCancelLocked then
+        wbCancelUnlock;
       flOldMasters := nil;
       flInvalidateReferencesInjected;
     end;
-  end
-  else flProgress('Has no masters.');
+  end;
 
   UpdateModuleMasters;
+  flProgress(lSummary);
 end;
 
 constructor TwbFile.Create(const aContext: TwbGameContext; const aFileName: string; aLoadOrder: Integer; const aCompareTo: string; aStates: TwbFileStates; const aData: TBytes);
