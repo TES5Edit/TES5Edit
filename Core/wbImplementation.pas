@@ -6527,6 +6527,7 @@ begin
 
   if Length(flMasters) >= 1 then begin
     flOldMasters := Copy(flMasters);
+    wbCancelLock;
     try
       MasterFiles := Header.ElementByName['Master Files'] as IwbContainerElementRef;
       Assert(Assigned(MasterFiles), '[TwbFile.CleanMasters] not Assigned(MasterFiles)');
@@ -6680,6 +6681,7 @@ begin
       end;
       flProgress(Format('Removed %d unused masters.', [lRemovedCount]));
     finally
+      wbCancelUnlock;
       flOldMasters := nil;
       flInvalidateReferencesInjected;
     end;
