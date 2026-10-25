@@ -6138,7 +6138,12 @@ begin
       end;
       _RefBuilder := True;
       try
-        inherited BuildRef;
+        try
+          inherited BuildRef;
+        except
+          Exclude(cntStates, csRefsBuild);
+          raise;
+        end;
       finally
         _RefBuilder := False;
       end;
@@ -6161,11 +6166,16 @@ begin
           try
             if wbParallelRefBuilds <> 0 then
               _RefDeferred := lDeferred;
-            inherited BuildRef;
-            _RefDeferred := nil;
-            _RefDraining := True;
-            for var lLater in lDeferred do
-              lLater.BuildRef;
+            try
+              inherited BuildRef;
+              _RefDeferred := nil;
+              _RefDraining := True;
+              for var lLater in lDeferred do
+                lLater.BuildRef;
+            except
+              Exclude(cntStates, csRefsBuild);
+              raise;
+            end;
           finally
             _RefDraining := False;
             _RefDeferred := nil;
@@ -6228,11 +6238,16 @@ begin
       try
         if wbParallelRefBuilds <> 0 then
           _RefDeferred := lDeferred;
-        inherited BuildRef;
-        _RefDeferred := nil;
-        _RefDraining := True;
-        for var lLater in lDeferred do
-          lLater.BuildRef;
+        try
+          inherited BuildRef;
+          _RefDeferred := nil;
+          _RefDraining := True;
+          for var lLater in lDeferred do
+            lLater.BuildRef;
+        except
+          Exclude(cntStates, csRefsBuild);
+          raise;
+        end;
       finally
         _RefDraining := False;
         _RefDeferred := nil;
