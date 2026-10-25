@@ -25230,9 +25230,10 @@ begin
       UpdateEnded;
     finally
       Exclude(eStates, esEndingUpdate);
+      eUpdateCount := Result;
     end;
-  end;
-  eUpdateCount := Result;
+  end else
+    eUpdateCount := Result;
 end;
 
 function TwbElement.Equals(const aElement: IwbElement): Boolean;
