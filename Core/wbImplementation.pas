@@ -9440,14 +9440,19 @@ begin
   until not lChanged;
 
   var lSelf: IwbFileInternal := Self;
-  for var i := Low(lRecords) to High(lRecords) do
-    if lMoves[i] then
-      lRecords[i].LeaveFileIndex(lSelf);
-  for var i := Low(lRecords) to High(lRecords) do
-    if lMoves[i] then
-      lRecords[i].TakeIdentityKey(lSelf)
-    else
-      flIdentityClash := True;
+  wbProgressLock;
+  try
+    for var i := Low(lRecords) to High(lRecords) do
+      if lMoves[i] then
+        lRecords[i].LeaveFileIndex(lSelf);
+    for var i := Low(lRecords) to High(lRecords) do
+      if lMoves[i] then
+        lRecords[i].TakeIdentityKey(lSelf)
+      else
+        flIdentityClash := True;
+  finally
+    wbProgressUnlock;
+  end;
 end;
 
 procedure TwbFile.IdentityKeyChanged(aClash: Boolean);
@@ -19839,7 +19844,12 @@ begin
     Exit;
   end;
 
-  ReRegister(lFile, lNew, MoveGroupLabel);
+  wbProgressLock;
+  try
+    ReRegister(lFile, lNew, MoveGroupLabel);
+  finally
+    wbProgressUnlock;
+  end;
   lFile.IdentityKeyChanged(False);
 end;
 
@@ -19868,15 +19878,20 @@ begin
   mrFixedFormID := TwbFormID.Null;
   mrLoadOrderFormID := TwbFormID.Null;
   if Supports(GetFile, IwbFileInternal, lFile) then begin
+    wbProgressLock;
     try
-      lFile.AddMainRecord(Self);
-    except
-      var lContainer := GetContainer;
-      if Assigned(lContainer) then
-        lContainer.RemoveElement(Self);
-      raise;
+      try
+        lFile.AddMainRecord(Self);
+      except
+        var lContainer := GetContainer;
+        if Assigned(lContainer) then
+          lContainer.RemoveElement(Self);
+        raise;
+      end;
+      TakeChainFromLaterRoot(lFile);
+    finally
+      wbProgressUnlock;
     end;
-    TakeChainFromLaterRoot(lFile);
   end;
 end;
 
