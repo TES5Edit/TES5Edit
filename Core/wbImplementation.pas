@@ -15368,6 +15368,8 @@ begin
   end;
 end;
 
+function CompareReferencedBy(Item1, Item2: Pointer): Integer; forward;
+
 function TwbMainRecord.FindReferencedBy(const aMainRecord: IwbMainRecord; var Index: Integer): Boolean;
 var
   L, H, I, C: Integer;
@@ -15385,9 +15387,7 @@ begin
   while L <= H do begin
     I := (L + H) shr 1;
 
-    C := TwbFormID.Compare(mrReferencedBy[I].LoadOrderFormID , aMainRecord.LoadOrderFormID);
-    if C = 0 then
-      C := CmpI32(mrReferencedBy[I]._File.LoadOrder, aMainRecord._File.LoadOrder);
+    C := CompareReferencedBy(Pointer(mrReferencedBy[I]), Pointer(aMainRecord));
 
     if C < 0 then
       L := I + 1
@@ -20090,7 +20090,11 @@ end;
 
 function CompareReferencedByFile(Item1, Item2: Pointer): Integer;
 begin
-  Result := CmpW32(IwbMainRecord(Item1)._File.LoadOrder, IwbMainRecord(Item2)._File.LoadOrder);
+  var lFile1 := IwbMainRecord(Item1)._File;
+  var lFile2 := IwbMainRecord(Item2)._File;
+  Result := CmpW32(lFile1.LoadOrder, lFile2.LoadOrder);
+  if (Result = 0) and (lFile1 <> lFile2) then
+    Result := CmpW32((lFile1 as TObject as TwbFile).flSerial, (lFile2 as TObject as TwbFile).flSerial);
 end;
 
 function CompareReferencedBy(Item1, Item2: Pointer): Integer;
