@@ -17353,6 +17353,9 @@ begin
   inherited;
   with aSource as TwbFlagsDef do begin
     Self.flgGetCPs := Copy(flgGetCPs);
+    Self.flgHasGetCPs := flgHasGetCPs;
+    Self.flgDontShows := Copy(flgDontShows);
+    Self.flgHasDontShows := flgHasDontShows;
     Self.flgSummaries := Copy(flgSummaries);
     Self.flgDontShowPath := flgDontShowPath;
     Self.flgDontShowInvert := flgDontShowInvert;
