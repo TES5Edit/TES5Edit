@@ -208,7 +208,8 @@ begin
   vstCollapse.SetBounds(16, 39, 420, 296);
   vstCollapse.TabOrder := 0;
   vstCollapse.NodeDataSize := SizeOf(TCollapseNodeData);
-  vstCollapse.TreeOptions.MiscOptions := vstCollapse.TreeOptions.MiscOptions + [toCheckSupport];
+  vstCollapse.DefaultNodeHeight := 40;
+  vstCollapse.TreeOptions.MiscOptions := vstCollapse.TreeOptions.MiscOptions + [toCheckSupport, toVariableNodeHeight];
   vstCollapse.TreeOptions.AutoOptions := vstCollapse.TreeOptions.AutoOptions + [toAutoTristateTracking];
   vstCollapse.TreeOptions.SelectionOptions := vstCollapse.TreeOptions.SelectionOptions + [toFullRowSelect];
   vstCollapse.OnGetText := vstCollapseGetText;
