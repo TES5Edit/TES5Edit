@@ -553,6 +553,7 @@ procedure wbCrowdPropertyToStr               (var aValue: string; aBasePtr, aEnd
 procedure wbDIALQuestToStr                   (var aValue: string; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 procedure wbFactionRelationToStr             (var aValue: string; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 procedure wbItemToStr                        (var aValue: string; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
+procedure wbLCTNUniqueNPCToStr               (var aValue: string; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 procedure wbNPCPackageToStr                  (var aValue: string; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 procedure wbNPCTemplateToStr                 (var aValue: string; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 procedure wbPERKRankToStr                    (var aValue: string; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
@@ -4923,6 +4924,26 @@ begin
   case aType of
     ctToStr, ctToSummary : aValue := lDefaultTexture + ' [LTEX:00000000]';
   end;
+end;
+
+procedure wbLCTNUniqueNPCToStr(var aValue: string; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
+begin
+  if not (Assigned(aElement) and (aType in [ctCheck, ctToStr])) then
+    Exit;
+
+  var lLinksTo := aElement.LinksTo as IwbMainRecord;
+  if not Assigned(lLinksTo) then
+    Exit;
+
+  var lACBS := lLinksTo.ElementBySignature[ACBS] as IwbContainerElementRef;
+  if not Assigned(lACBS) then
+    Exit;
+
+  if (lACBS.ElementNativeValues['Flags'] and $20) = 0 then
+    case aType of
+      ctCheck: aValue := ' <Warning: NPC [' + lLinksTo.EditorID + '] is not flagged as Unique>';
+      ctToStr: aValue := aValue + ' <Warning: NPC is not flagged as Unique>';
+    end;
 end;
 
 procedure wbNPCPackageToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);

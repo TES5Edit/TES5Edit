@@ -6316,14 +6316,14 @@ begin
     0, cpBenign),
     wbArrayS(ACUN, 'Added Unique NPCs',
       wbStructSK([1], 'Actor', [
-        wbFormIDCk('NPC', [NPC_], False, cpBenign),
+        wbFormIDCk('NPC', [NPC_], False, cpBenign).SetToStr(wbLCTNUniqueNPCToStr),
         wbFormIDCk('Actor Ref', [ACHR], False, cpBenign),
         wbFormIDCk('Location', [LCTN, NULL], False, cpBenign)
       ], cpBenign),
     0, cpBenign),
     wbArrayS(LCUN, 'Master Unique NPCs',
       wbStructSK([1], 'Actor', [
-        wbFormIDCk('NPC', [NPC_], False, cpBenign),
+        wbFormIDCk('NPC', [NPC_], False, cpBenign).SetToStr(wbLCTNUniqueNPCToStr),
         wbFormIDCk('Actor Ref', [ACHR], False, cpBenign),
         wbFormIDCk('Location', [LCTN, NULL], False, cpBenign)
       ], cpBenign),
