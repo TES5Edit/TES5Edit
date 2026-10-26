@@ -31,12 +31,12 @@ type
     class constructor Create;
     class destructor Destroy;
   protected
-    procedure SetButtonStyle(ADefault: Boolean); override;
-    procedure CreateParams(var Params: TCreateParams); override;
-    procedure CreateWnd; override;
+    procedure SetButtonStyle(ADefault: Boolean); override; final;
+    procedure CreateParams(var Params: TCreateParams); override; final;
+    procedure CreateWnd; override; final;
 
-    function GetChecked: Boolean; override;
-    procedure SetChecked(Value: Boolean); override;
+    function GetChecked: Boolean; override; final;
+    procedure SetChecked(Value: Boolean); override; final;
   published
     property Checked;
     property PushLike: Boolean read FPushLike write SetPushLike;
@@ -44,7 +44,7 @@ type
 
   TPushLikeButtonStyleHook = class(TButtonStyleHook)
   strict protected
-    procedure DrawButton(ACanvas: TCanvas; AMouseInControl: Boolean); override;
+    procedure DrawButton(ACanvas: TCanvas; AMouseInControl: Boolean); override; final;
   end;
 
 implementation

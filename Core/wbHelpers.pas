@@ -43,7 +43,6 @@ function wbStringToSignatures(const aSignatures: string): TwbSignatures;
 function wbGetSiblingREFRsWithin(const aMainRecord: IwbMainRecord; aDistance: Single): TDynMainRecords;
 function wbGetSiblingRecords(const aElement: IwbElement; aSignatures: TwbSignatures; aOverrides: Boolean): TDynMainRecords;
 function FindMatchText(Strings: TStrings; const Str: string): Integer;
-function IsFileCC(const aFileName: string): Boolean;
 procedure DeleteDirectory(const DirName: string);
 function FullPathToFilename(const aString: string): string;
 procedure wbFlipBitmap(aBitmap: Vcl.Graphics.TBitmap; MirrorType: Integer); // MirrorType: 1 - horizontal, 2 - vertical, 0 - both
@@ -57,8 +56,7 @@ function wbCRC32App: TwbCRC32;
 function wbIsAssociatedWithExtension(const aExt: string): Boolean;
 function wbAssociateWithExtension(aExt: string; const aName, aDescr: string): Boolean;
 function ExecuteCaptureConsoleOutput(const aCommandLine: string): Cardinal;
-function wbExpandFileName(const aFileName: string): string;
-
+procedure wbDoProcessMessages;
 procedure SerializeArray(const aElement: IwbElement; const aJsonArray: TJsonArray);
 procedure SerializeElement(const aElement: IwbElement; const aJsonObj: TJsonObject);
 function  SerializeElementToJson(const aElement: IwbElement): TJsonObject;
@@ -79,9 +77,6 @@ function wbExtractNameFromPath(const aPathName: String): String;
 
 function MakeDataFileName(const FileName, DataPath: String): String;
 function CheckAddFilesToString(var mIni: TIniFile; var cIni: TIniFile; const Section, Ident: String): String;
-function FindBSAs(const IniName, DataPath: String; var bsaNames: TStringList; var bsaMissing: TStringList): Integer; overload;
-function FindBSAs(const IniName, CustomIniName, DataPath: String; var bsaNames: TStringList; var bsaMissing: TStringList): Integer; overload;
-function HasBSAs(ModName : string; const DataPath: String; Exact, modini: Boolean; var bsaNames: TStringList; var bsaMissing: TStringList): Integer;
 
 function wbStripDotGhost(const aFileName: string): string;
 
@@ -115,9 +110,18 @@ type
     class function Iff(aCond: Boolean; const aTrue, aFalse: T): T; static;
   end;
 
+  TwbFlagEnumValues = record
+    class function Name(const aElement: IwbElement; const aName: string): string; static;
+    class function Value(const aElement: IwbElement; const aValue: string): string; static;
+    class function EditInfo(const aElement: IwbElement; const aEditInfo: TwbStringArray): TwbStringArray; static;
+    class function Strip(const aElement: IwbElement; const aEditValue: string): string; static;
+  end;
+
 procedure wbCodeBlock(const aProc: TProc);
 
 function wbVarArray(const aElements: array of Variant): Variant;
+
+function wbFormatElapsedTime(aElapsed: Double): string;
 
 implementation
 
@@ -415,7 +419,7 @@ begin
   if Sig = 'LVSC' then s1 := 'Space Cell';
   if Sig = 'LVSP' then s1 := 'Spell';
 
-  if wbIsOblivion then
+  if aMainRecord.GameDefObj.IsOblivion then
     RefPath := s1
   else
     RefPath := 'LVLO\' + s1;
@@ -629,23 +633,6 @@ begin
   Result := -1;
 end;
 
-function IsFileCC(const aFileName: string): Boolean;
-const
-  ccFileMask = 'cc([a-z]{3})(sse|fo4)(\d{3})\-(\S+)\.(esp|esm|esl)';
-begin
-  if Length(wbCreationClubContent) <> 0 then
-    Result := MatchText(aFileName, wbCreationClubContent)
-  else
-  with TPerlRegEx.Create do try
-    Subject := aFileName;
-    RegEx := ccFileMask;
-    Options := [preCaseLess, preSingleLine];
-    Result := MatchAgain;
-  finally
-    Free;
-  end;
-end;
-
 procedure DeleteDirectory(const DirName: string);
 var
   FileOp: TSHFileOpStruct;
@@ -756,14 +743,6 @@ begin
   aFont.Style   := TFontStyles(Byte(aIni.ReadInteger(aSection, aName + 'Style', Byte(aFont.Style))));
 end;
 
-function wbExpandFileName(const aFileName: string): string;
-begin
-  if (ExtractFilePath(aFileName) = '') and not SameText(aFileName, wbGameExeName) then
-    Result := wbDataPath + ExtractFileName(aFileName)
-  else
-    Result := aFileName;
-end;
-
 var
   _CRC32AppLock : TRTLCriticalSection;
   _CRC32App     : Cardinal;
@@ -815,181 +794,6 @@ begin
     Result := StringReplace(cIni.ReadString(Section, Ident, ''), ',' ,#10, [rfReplaceAll])
   else
     Result := StringReplace(mIni.ReadString(Section, Ident, ''), ',' ,#10, [rfReplaceAll]);
-end;
-
-function FindBSAs(const IniName, DataPath: String; var bsaNames: TStringList; var bsaMissing: TStringList): Integer;
-var
-  i: Integer;
-  j: Integer;
-  s: String;
-  t: String;
-begin
-  Result := 0;
-  j := 0;
-  if Assigned(bsaNames) then
-    j := bsaNames.Count;
-  if Assigned(bsaMissing) then
-    j := j + bsaMissing.Count;
-
-  if Assigned(bsaNames) then
-    // TIniFile uses GetPrivateProfileString() to read data, it is virtualized by MO
-    // TMemIniFile reads from string list directly, not supported by MO
-    with TIniFile.Create(iniName) do try
-      with TStringList.Create do try
-        if wbIsOblivion or wbIsFallout3 then begin
-          s := StringReplace(ReadString('Archive', 'sArchiveList', ''), ',' ,#10, [rfReplaceAll]);
-          // Update.bsa is hardcoded to load in FNV
-          if wbGameMode = gmFNV then begin
-            if s <> '' then s := s + #10;
-            s := s + 'Update.bsa';
-          end;
-          Text := s;
-        end else if wbIsSkyrim then
-          Text := StringReplace(
-            ReadString('Archive', 'sResourceArchiveList', '') + ',' +
-            ReadString('Archive', 'sResourceArchiveList2', ''),
-            ',', #10, [rfReplaceAll]
-          )
-        else if wbIsFallout4 or wbIsFallout76 or wbIsStarfield then
-          Text := StringReplace(
-            ReadString('Archive', 'sResourceIndexFileList', '') + ',' +
-            ReadString('Archive', 'sResourceStartUpArchiveList', '') + ',' +
-            ReadString('Archive', 'sResourceArchiveList', '') + ',' +
-            ReadString('Archive', 'sResourceArchiveList2', ''),
-            ',', #10, [rfReplaceAll]
-          );
-        for i := 0 to Pred(Count) do begin
-          s := Trim(Strings[i]);
-          t := MakeDataFileName(s, DataPath);
-          if (Length(t)>0) then
-            if FileExists(t) then begin
-              if wbContainerHandler.ContainerExists(t) then
-                Continue;
-              bsaNames.Add(s);
-            end else
-              if Assigned(bsaMissing) then
-                bsaMissing.Add(s);
-        end;
-        Result := bsaNames.Count  + bsaMissing.Count - j; // How many were added
-      finally
-        Free;
-      end;
-    finally
-      Free;
-    end;
-end;
-
-function FindBSAs(const IniName, CustomIniName, DataPath: String; var bsaNames: TStringList; var bsaMissing: TStringList): Integer;
-var
-  i: Integer;
-  j: Integer;
-  s: String;
-  t: String;
-  cIni, mIni: TIniFile;
-begin
-  j := 0;
-  if Assigned(bsaNames) then
-    j := bsaNames.Count;
-  if Assigned(bsaMissing) then
-    j := j + bsaMissing.Count;
-
-  if Assigned(bsaNames) then
-    // TIniFile uses GetPrivateProfileString() to read data, it is virtualized by MO
-    // TMemIniFile reads from string list directly, not supported by MO
-    cIni := TIniFile.Create(CustomIniName);
-    try
-      if not cIni.SectionExists('Archive') then
-        Result := FindBSAs(IniName, DataPath, bsaNames, bsaMissing)
-      else begin
-        mIni := TIniFile.Create(IniName);
-        try
-          with TStringList.Create do try
-            if wbIsOblivion or wbIsFallout3 then begin
-              s := CheckAddFilesToString(mIni, cIni, 'Archive', 'sArchiveList');
-              // Update.bsa is hardcoded to load in FNV
-              if wbGameMode = gmFNV then begin
-                if s <> '' then s := s + #10;
-                s := s + 'Update.bsa';
-              end;
-              Text := s;
-            end else if wbIsSkyrim then begin
-              s := CheckAddFilesToString(mIni, cIni, 'Archive', 'sResourceArchiveList');
-              if s <> '' then s := s + #10;
-              s := s + CheckAddFilesToString(mIni, cIni, 'Archive', 'sResourceArchiveList2');
-              Text := s;
-            end else if wbIsFallout4 or wbIsFallout76 or wbIsStarfield then begin
-              s := CheckAddFilesToString(mIni, cIni, 'Archive', 'sResourceIndexFileList');
-              if s <> '' then s := s + #10;
-              s := s + CheckAddFilesToString(mIni, cIni, 'Archive', 'sResourceStartUpArchiveList');
-              if s <> '' then s := s + #10;
-              s := s + CheckAddFilesToString(mIni, cIni, 'Archive', 'sResourceArchiveList');
-              if s <> '' then s := s + #10;
-              s := s + CheckAddFilesToString(mIni, cIni, 'Archive', 'sResourceArchiveList2');
-              Text := s;
-            end;
-
-            for i := 0 to Pred(Count) do begin
-              s := Trim(Strings[i]);
-              t := MakeDataFileName(s, DataPath);
-              if (Length(t)>0) then
-                if FileExists(t) then begin
-                  if wbContainerHandler.ContainerExists(t) then
-                    Continue;
-                  bsaNames.Add(s);
-                end else
-                  if Assigned(bsaMissing) then
-                    bsaMissing.Add(s);
-            end;
-            Result := bsaNames.Count  + bsaMissing.Count - j; // How many were added
-          finally
-            Free;
-          end;
-        finally
-          FreeAndNil(mIni);
-        end;
-      end;
-    finally
-      FreeAndNil(cIni);
-    end;
-end;
-
-function HasBSAs(ModName: string; const DataPath: String; Exact, modini: Boolean; var bsaNames: TStringList; var bsaMissing: TStringList): Integer;
-var
-  j: Integer;
-  t: String;
-  F: TSearchRec;
-begin
-  Result := 0;
-
-  if modIni then
-    Result := Result + FindBSAs(DataPath+ChangeFileExt(ModName, '.ini'), DataPath, bsaNames, bsaMissing);
-
-  j := 0;
-  if Assigned(bsaNames) then
-    j := bsaNames.Count;
-  if Assigned(bsaMissing) then
-    j := j + bsaMissing.Count;
-  // All games prior to Skyrim load BSA files with partial matching, Skyrim requires exact name match and
-  //   can use a private ini to specify the bsa to use.
-  if not exact then
-    ModName := ModName + '*';
-  if FindFirst(DataPath + ModName + wbArchiveExtension, faAnyFile, F) = 0 then try
-    repeat
-      if wbContainerHandler.ContainerExists(DataPath + F.Name) then
-        Continue;
-      t := MakeDataFileName(F.Name, DataPath);
-      if (Length(t)>0) and FileExists(t) then begin
-        if not wbContainerHandler.ContainerExists(t) then
-          if Assigned(bsaNames) then
-            bsaNames.Add(F.Name);
-      end else
-        if Assigned(bsaMissing) then
-          bsaMissing.Add(F.Name);
-    until FindNext(F) <> 0;
-    Result := bsaNames.Count  + bsaMissing.Count - j;
-  finally
-    System.SysUtils.FindClose(F);
-  end;
 end;
 
 function wbDDSDataToBitmap(const aData: TBytes; Bitmap: Vcl.Graphics.TBitmap): Boolean;
@@ -1089,6 +893,14 @@ begin
   SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_IDLIST, nil, nil);
 end;
 
+procedure wbDoProcessMessages;
+begin
+  if Assigned(wbProcessMessages) then
+    wbProcessMessages
+  else
+    Application.ProcessMessages;
+end;
+
 function ExecuteCaptureConsoleOutput(const aCommandLine: string): Cardinal;
 type
   OemString = type AnsiString(CP_OEMCP);
@@ -1125,7 +937,7 @@ begin
         try
           repeat
             dRunning := WaitForSingleObject(piProcess.hProcess, 100);
-            Application.ProcessMessages;
+            wbDoProcessMessages;
 
             if wbForceTerminate or (GetKeyState(VK_ESCAPE) and 128 = 128) then begin
               dw := Integer(TerminateProcess(piProcess.hProcess, 1));
@@ -1221,6 +1033,95 @@ begin
     Result := aFalse;
 end;
 
+function FlagMask(aIndex: Integer): string;
+begin
+  Result := ' (0x' + IntToHex(Int64(1) shl aIndex, 8) + ')';
+end;
+
+function TryGetFormater(const aElement: IwbElement; out aFormater: IwbIntegerDefFormater): Boolean;
+var
+  lIntegerDef: IwbIntegerDef;
+begin
+  Result := Assigned(aElement) and Supports(aElement.ResolvedValueDef, IwbIntegerDef, lIntegerDef);
+  if Result then begin
+    aFormater := lIntegerDef.Formater[aElement];
+    Result := Assigned(aFormater);
+  end;
+end;
+
+class function TwbFlagEnumValues.Name(const aElement: IwbElement; const aName: string): string;
+var
+  lFlagDef: IwbFlagDef;
+begin
+  Result := aName;
+  if (aName <> '') and Assigned(aElement) and Supports(aElement.Def, IwbFlagDef, lFlagDef) then
+    Result := aName + FlagMask(lFlagDef.FlagIndex);
+end;
+
+class function TwbFlagEnumValues.Value(const aElement: IwbElement; const aValue: string): string;
+var
+  lFormater : IwbIntegerDefFormater;
+  lNative   : Variant;
+begin
+  Result := aValue;
+  if (aValue <> '') and TryGetFormater(aElement, lFormater) and Supports(lFormater, IwbEnumDef) then begin
+    lNative := aElement.NativeValue;
+    if VarIsOrdinal(lNative) then
+      Result := aValue + ' (' + IntToStr(Int64(lNative)) + ')';
+  end;
+end;
+
+class function TwbFlagEnumValues.EditInfo(const aElement: IwbElement; const aEditInfo: TwbStringArray): TwbStringArray;
+var
+  lFormater : IwbIntegerDefFormater;
+  lEnumDef  : IwbEnumDef;
+begin
+  Result := aEditInfo;
+  if not TryGetFormater(aElement, lFormater) then
+    Exit;
+  if Supports(lFormater, IwbFlagsDef) then begin
+    SetLength(Result, Length(aEditInfo));
+    for var i := Low(aEditInfo) to High(aEditInfo) do
+      Result[i] := aEditInfo[i] + FlagMask(i);
+  end else if Supports(lFormater, IwbEnumDef, lEnumDef) then begin
+    SetLength(Result, Length(aEditInfo));
+    for var i := Low(aEditInfo) to High(aEditInfo) do
+      try
+        Result[i] := aEditInfo[i] + ' (' + IntToStr(lEnumDef.FromEditValue(aEditInfo[i], aElement)) + ')';
+      except
+        on Exception do
+          Result[i] := aEditInfo[i];
+      end;
+  end;
+end;
+
+class function TwbFlagEnumValues.Strip(const aElement: IwbElement; const aEditValue: string): string;
+var
+  lFormater : IwbIntegerDefFormater;
+  lEnumDef  : IwbEnumDef;
+  lOpen     : Integer;
+  lValue    : Int64;
+begin
+  Result := aEditValue;
+  if (aEditValue = '') or (aEditValue[Length(aEditValue)] <> ')') then
+    Exit;
+  if not (TryGetFormater(aElement, lFormater) and Supports(lFormater, IwbEnumDef, lEnumDef)) then
+    Exit;
+  lOpen := LastDelimiter('(', aEditValue);
+  if (lOpen < 3) or (aEditValue[Pred(lOpen)] <> ' ') then
+    Exit;
+  if not TryStrToInt64(Copy(aEditValue, Succ(lOpen), Length(aEditValue) - Succ(lOpen)), lValue) then
+    Exit;
+  var lName := Copy(aEditValue, 1, lOpen - 2);
+  try
+    if lEnumDef.FromEditValue(lName, aElement) = lValue then
+      Result := lName;
+  except
+    on Exception do
+      ;
+  end;
+end;
+
 procedure wbCodeBlock(const aProc: TProc);
 begin
   aProc;
@@ -1235,6 +1136,16 @@ begin
   for i := Low(aElements) to High(aElements) do
     Elements[i] := aElements[i];
   Result := Elements;
+end;
+
+function wbFormatElapsedTime(aElapsed: Double): string;
+var
+  Hours: Integer;
+begin
+  Result := FormatDateTime('nn:ss', aElapsed);
+  Hours := Trunc(aElapsed / (1/24));
+  if Hours > 0 then
+    Result := IntToStr(Hours) + ':' + Result;
 end;
 
 // **************** PERK Challenge JSON serialization support

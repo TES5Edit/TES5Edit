@@ -16,8 +16,6 @@ uses
   System.IniFiles,
   System.SysUtils,
 
-  JsonDataObjects,
-
   Vcl.Controls,
   Vcl.Dialogs,
   Vcl.ExtCtrls,
@@ -26,16 +24,15 @@ uses
   Vcl.Menus,
   Vcl.StdCtrls,
 
+  WinApi.Messages,
+  WinApi.Windows,
+
+  JsonDataObjects,
+
   VirtualTrees,
-  {
   VirtualTrees.AncestorVCL,
   VirtualTrees.BaseAncestorVCL,
   VirtualTrees.BaseTree,
-  VirtualTrees.Types,
-  }
-
-  WinApi.Messages,
-  WinApi.Windows,
 
   wbBSArchive;
 
@@ -233,6 +230,8 @@ uses
   Vcl.Themes,
 
   WinApi.ShellApi,
+
+  VirtualTrees.Types,
 
   frmArchiveInfo,
   frmPack,
@@ -1920,11 +1919,6 @@ begin
     finally
       Free;
     end;
-
-  // DDS archives must be compressed or CTD
-  if TwbBSArchive.IsDDSArchive(ArchiveType) then
-    for var i := Low(Assets) to High(Assets) do
-      lstComp[i] := True;
 
   bsa := TAssetsPacker.Create;
   try

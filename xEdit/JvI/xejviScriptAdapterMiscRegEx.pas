@@ -23,7 +23,9 @@ uses
   System.Classes,
   System.SysUtils,
   System.RegularExpressionsConsts,
-  System.RegularExpressionsCore;
+  System.RegularExpressionsCore,
+
+  xejviScriptArguments;
 
 { TPerlRegEx }
 
@@ -163,12 +165,12 @@ end;
 
 procedure TPerlRegEx_Split(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  TPerlRegEx(Args.Obj).Split(TStrings(V2O(Args.Values[0])), Args.Values[1]);
+  TPerlRegEx(Args.Obj).Split(TStrings(ObjectArgument(Args.Values[0], TStrings, 0)), Args.Values[1]);
 end;
 
 procedure TPerlRegEx_SplitCapture(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  TPerlRegEx(Args.Obj).SplitCapture(TStrings(V2O(Args.Values[0])), Args.Values[1]);
+  TPerlRegEx(Args.Obj).SplitCapture(TStrings(ObjectArgument(Args.Values[0], TStrings, 0)), Args.Values[1]);
 end;
 
 procedure TPerlRegEx_Read_Start(var Value: Variant; Args: TJvInterpreterArgs);

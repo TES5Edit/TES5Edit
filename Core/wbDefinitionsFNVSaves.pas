@@ -10,37 +10,62 @@ unit wbDefinitionsFNVSaves;
 
 interface
 
-procedure DefineFNVSaves;
-procedure SwitchToFNVCoSave;
-
 implementation
 
 uses
   System.SysUtils,
 
   wbDefinitionsCommon,
-  wbDefinitionsFNV,
   wbImplementation,
   wbInterface,
   wbSaveInterface;
 
-var
-  wbActorValueLabels : array of string;
+type
+  TwbSaveDefFNVBase = class(TwbSaveDef)
+  protected
+    sdActorValueLabels : array of string;
+    sdChangeTypes      : IwbEnumDef;
+    sdSaveChapters     : IwbStructDef;
+    sdCoSaveChapters   : IwbStructDef;
+    sdSaveHeader       : IwbStructDef;
+    sdCoSaveHeader     : IwbStructDef;
+    sdExtractInfo      : TByteSet;
 
- // forward type directives
-  wbChangeTypes    : IwbEnumDef;
-  wbSaveChapters   : IwbStructDef;
-  wbCoSaveChapters : IwbStructDef;
-  wbSaveHeader     : IwbStructDef;
-  wbCoSaveHeader   : IwbStructDef;
+    function ChangedFormGetChapterTypeName(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): string;
 
-procedure DefineFNVSavesA;
+    procedure DefineFNVSavesA;
+    procedure DefineFNVSavesS;
+  public
+    procedure Define; override;
+  end;
+
+  TwbSaveDefFNV = class(TwbSaveDefFNVBase)
+  public
+    procedure Define; override; final;
+  end;
+
+  TwbCoSaveDefFNV = class(TwbSaveDefFNVBase)
+  public
+    procedure Define; override; final;
+  end;
+
+  TwbSaveContextFNV = class(TwbLoadingSaveContext)
+  protected
+    scChangedFormFlags : Integer;
+  public
+    property ChangedFormFlags: Integer
+      read scChangedFormFlags
+      write scChangedFormFlags;
+  end;
+
+procedure TwbSaveDefFNVBase.DefineFNVSavesA;
 var
   i: Integer;
 begin
-  SetLength(wbActorValueLabels, wbActorValueEnum.NameCount);
-  for i := 0 to wbActorValueEnum.NameCount - 1 do
-    wbActorValueLabels[i] := wbActorValueEnum.Names[i];
+  var lActorValueEnum := sdGameDef.ActorValueEnum;
+  SetLength(sdActorValueLabels, lActorValueEnum.NameCount);
+  for i := 0 to lActorValueEnum.NameCount - 1 do
+    sdActorValueLabels[i] := lActorValueEnum.Names[i];
 end;
 
 { FNVsaves }
@@ -206,31 +231,20 @@ begin
         Result := aType - 1000 + 12 + 1;
     end;
     if (Result > 12) then Result := 0; //Others are not decoded yet
-    if Assigned(ChaptersToSkip) and ChaptersToSkip.Find(IntToStr(aType), aType)  then // "Required" time optimisation (can save "hours" if used on 1001)
+    var lSaveContext := Container.SaveContextObj;
+    if Assigned(lSaveContext) and lSaveContext.ChaptersToSkip.Find(IntToStr(aType), aType)  then // "Required" time optimisation (can save "hours" if used on 1001)
       Result := 0;
   end;
 end;
 
-var
-  WorldspaceTableCount : Integer = -1;
-
 procedure WorldspaceTableAfterLoad(const aElement: IwbElement);
 begin
-  if WorldspaceTableCount < 0 then begin
-    WorldspaceTableCount := (aElement as IwbContainer).ElementCount;
-    InitializeSaveWorldspaceArray(aElement as IwbContainer);
-  end;
+  wbSaveTablesOf(aElement).InitializeSaveWorldspaceArray(aElement as IwbContainer);
 end;
-
-var
-  RefIDTableCount : Integer = -1;
 
 procedure RefIDTableAfterLoad(const aElement: IwbElement);
 begin
-  if RefIDTableCount < 0 then begin
-    RefIDTableCount := (aElement as IwbContainer).ElementCount;
-    InitializeSaveRefIDArray(aElement as IwbContainer);
-  end;
+  wbSaveTablesOf(aElement).InitializeSaveRefIDArray(aElement as IwbContainer);
 end;
 
 function Unknown1000_00001Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
@@ -293,6 +307,9 @@ begin
   Result := CompressedSize;
 end;
 
+var
+  GetRelativeDeciderHint: Integer = -1;
+
 function GetRelativeDeciderInteger(anOffset: UInt32; aSize: Integer; const aContainerName, anIntegerName: string;
   aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
@@ -314,8 +331,21 @@ begin
     if Assigned(Element) and Supports(Element, IwbContainer, Container) then begin
       if Pos('\', anIntegerName)<>0 then
         Element := Container.GetElementByPath(anIntegerName)
-      else
-        Element := Container.GetElementByName(anIntegerName);
+      else begin
+        Element := nil;
+        if (GetRelativeDeciderHint >= 0) and (GetRelativeDeciderHint < Container.ElementCount) then begin
+          var lCandidate := Container.Elements[GetRelativeDeciderHint];
+          if SameText(lCandidate.BaseName, anIntegerName) then
+            Element := lCandidate;
+        end;
+        if not Assigned(Element) then
+          for var lIdx := 0 to Pred(Container.ElementCount) do
+            if SameText(Container.Elements[lIdx].BaseName, anIntegerName) then begin
+              Element := Container.Elements[lIdx];
+              GetRelativeDeciderHint := lIdx;
+              Break;
+            end;
+      end;
       if Assigned(Element) then begin
         Result := Element.NativeValue;
       end;
@@ -485,13 +515,13 @@ begin
     Result := wbChangedFormOffset + Result;
 end;
 
-function ChangedFormGetChapterTypeName(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): string;
+function TwbSaveDefFNVBase.ChangedFormGetChapterTypeName(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): string;
 var
   aType : Integer;
 begin
   aType := ChangedFormGetChapterType(aBasePtr, aEndPtr, aElement);
-  if (aType>=wbChangedFormOffset) and (aType < wbChangedFormOffset+wbChangeTypes.NameCount) then
-    Result := wbChangeTypes.Names[aType-wbChangedFormOffset];
+  if (aType>=wbChangedFormOffset) and (aType < wbChangedFormOffset+sdChangeTypes.NameCount) then
+    Result := sdChangeTypes.Names[aType-wbChangedFormOffset];
   {
   if (Pos(' ', Result)>0) and (Length(Result)>1) then
     Result := Copy(Result, Pos(' ', Result)+1, Length(Result));
@@ -546,7 +576,8 @@ begin
     Result := 1 + Result;
     if (Result > 55) then
       Result := 0;
-    if Assigned(ChaptersToSkip) and ChaptersToSkip.Find(IntToStr(wbChangedFormOffset+Result), aType)  then // "Required" time optimisation (can save "hours" if used on 1001)
+    var lSaveContext := Container.SaveContextObj;
+    if Assigned(lSaveContext) and lSaveContext.ChaptersToSkip.Find(IntToStr(wbChangedFormOffset+Result), aType)  then // "Required" time optimisation (can save "hours" if used on 1001)
       Result := 0;
   end else
     Result := 0;
@@ -568,9 +599,6 @@ begin
     Result := 0;
 end;
 
-var
-  TempChangedFormFlags : Integer;
-
 function ChangedFlagXXDecider(aMask: Cardinal; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
   Element   : IwbElement;
@@ -583,7 +611,8 @@ begin
   if Pos('\ Leveled Creature \', aElement.Path)>0 then
     Element := wbFindSaveElement('Leveled Creature', aElement);
   if Assigned(Element) then begin
-    if (TempChangedFormFlags and aMask)<>0 then
+    var lSaveContext := aElement.SaveContextObj;
+    if (lSaveContext is TwbSaveContextFNV) and ((TwbSaveContextFNV(lSaveContext).ChangedFormFlags and aMask)<>0) then
       Result := 1;
   end else begin
     Element := wbFindSaveElement('Changed Form', aElement);
@@ -808,14 +837,12 @@ begin
   Result := ChangedFlagBitXXDecider($80000000, aBasePtr, aEndPtr, aElement);
 end;
 
-var
-  PlayerRefIndex : Cardinal = 0;
-
 function IsActorPlayerDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
   anID      : Integer;
   Element   : IwbElement;
   Container : IwbDataContainer;
+  lTables   : IwbSaveTables;
 begin
   Result := 0;
   if not Assigned(aElement) then Exit;
@@ -827,11 +854,12 @@ begin
     if Assigned(Element) then begin
       anID := Element.NativeValue;
       if anID > 0 then begin
-        if PlayerRefIndex = 0 then
+        lTables := wbSaveTablesOf(aElement);
+        if lTables.PlayerRefIndex = 0 then
           if (anID shr 22) = 0 then
-            if GetSaveRefID(anID) = wbPlayerRefID then
-                PlayerRefIndex := anID;
-        if anID = PlayerRefIndex then
+            if lTables.SaveRefID(anID) = wbPlayerRefID then
+                lTables.PlayerRefIndex := anID;
+        if Cardinal(anID) = lTables.PlayerRefIndex then
           Result := 1;
       end;
     end;
@@ -1031,19 +1059,11 @@ begin
   end;
 end;
 
-var // Remembers the offset of the first decider in the group
-  ChangedFormPackageCreatedContentFlagsBit0DeciderBasePtr: Pointer = nil;
-
 function ChangedFormPackageCreatedContentFlagsBit0Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 const
   Offset = 2;
 begin
-  if Assigned(aBasePtr) then
-    ChangedFormPackageCreatedContentFlagsBit0DeciderBasePtr := aBasePtr
-  else
-    ChangedFormPackageCreatedContentFlagsBit0DeciderBasePtr := nil;
-
-  Result := GetRelativeDeciderInteger(Offset, 1, 'Data', 'Content Flags', ChangedFormPackageCreatedContentFlagsBit0DeciderBasePtr, aEndPtr, aElement);
+  Result := GetRelativeDeciderInteger(Offset, 1, 'Data', 'Content Flags', nil, aEndPtr, aElement);
   if (Result = MaxInt) or ((Result and 1) = 0) then
     Result := 0
   else
@@ -1054,7 +1074,7 @@ function ChangedFormPackageCreatedContentFlagsBit1Decider(aBasePtr: Pointer; aEn
 const
   Offset = 2;
 begin
-  Result := GetRelativeDeciderInteger(Offset, 1, 'Data', 'Content Flags', ChangedFormPackageCreatedContentFlagsBit0DeciderBasePtr, aEndPtr, aElement);
+  Result := GetRelativeDeciderInteger(Offset, 1, 'Data', 'Content Flags', nil, aEndPtr, aElement);
   if (Result = MaxInt) or ((Result and 2) = 0) then
     Result := 0
   else
@@ -1065,26 +1085,18 @@ function ChangedFormPackageCreatedContentFlagsBit2Decider(aBasePtr: Pointer; aEn
 const
   Offset = 2;
 begin
-  Result := GetRelativeDeciderInteger(Offset, 1, 'Data', 'Content Flags', ChangedFormPackageCreatedContentFlagsBit0DeciderBasePtr, aEndPtr, aElement);
+  Result := GetRelativeDeciderInteger(Offset, 1, 'Data', 'Content Flags', nil, aEndPtr, aElement);
   if (Result = MaxInt) or ((Result and 4) = 0) then
     Result := 0
   else
     Result := 1;
 end;
 
-var // Remembers the offset of the first decider in the group
-  ChangedFormPackageActorMoverContentFlagsBit0DeciderBasePtr: Pointer = nil;
-
 function ChangedFormPackageActorMoverContentFlagsBit0Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 const
   Offset = 2;
 begin
-  if Assigned(aBasePtr) then
-    ChangedFormPackageActorMoverContentFlagsBit0DeciderBasePtr := aBasePtr
-  else
-    ChangedFormPackageActorMoverContentFlagsBit0DeciderBasePtr := nil;
-
-  Result := GetRelativeDeciderInteger(Offset, 1, 'Actor Mover', 'Content Flags', ChangedFormPackageActorMoverContentFlagsBit0DeciderBasePtr, aEndPtr, aElement);
+  Result := GetRelativeDeciderInteger(Offset, 1, 'Actor Mover', 'Content Flags', nil, aEndPtr, aElement);
   if (Result = MaxInt) or ((Result and 1) = 0) then
     Result := 0
   else
@@ -1095,7 +1107,7 @@ function ChangedFormPackageActorMoverContentFlagsBit1Decider(aBasePtr: Pointer; 
 const
   Offset = 2;
 begin
-  Result := GetRelativeDeciderInteger(Offset, 1, 'Actor Mover', 'Content Flags', ChangedFormPackageActorMoverContentFlagsBit0DeciderBasePtr, aEndPtr, aElement);
+  Result := GetRelativeDeciderInteger(Offset, 1, 'Actor Mover', 'Content Flags', nil, aEndPtr, aElement);
   if (Result = MaxInt) or ((Result and 2) = 0) then
     Result := 0
   else
@@ -1106,7 +1118,7 @@ function ChangedFormPackageActorMoverContentFlagsBit2Decider(aBasePtr: Pointer; 
 const
   Offset = 2;
 begin
-  Result := GetRelativeDeciderInteger(Offset, 1, 'Actor Mover', 'Content Flags', ChangedFormPackageActorMoverContentFlagsBit0DeciderBasePtr, aEndPtr, aElement);
+  Result := GetRelativeDeciderInteger(Offset, 1, 'Actor Mover', 'Content Flags', nil, aEndPtr, aElement);
   if (Result = MaxInt) or ((Result and 4) = 0) then
     Result := 0
   else
@@ -1117,7 +1129,7 @@ function ChangedFormPackageActorMoverContentFlagsBit3Decider(aBasePtr: Pointer; 
 const
   Offset = 2;
 begin
-  Result := GetRelativeDeciderInteger(Offset, 1, 'Actor Mover', 'Content Flags', ChangedFormPackageActorMoverContentFlagsBit0DeciderBasePtr, aEndPtr, aElement);
+  Result := GetRelativeDeciderInteger(Offset, 1, 'Actor Mover', 'Content Flags', nil, aEndPtr, aElement);
   if (Result = MaxInt) or ((Result and 8) = 0) then
     Result := 0
   else
@@ -1163,7 +1175,7 @@ function ChangedFormPackageCreatedPackageDataTypeDecider(aBasePtr: Pointer; aEnd
 const
   Offset = (13 - 4) + 2;
 begin
-  Result := GetRelativeDeciderInteger(Offset, 1, 'Data', 'General\Type', ChangedFormPackageCreatedContentFlagsBit0DeciderBasePtr, aEndPtr, aElement);
+  Result := GetRelativeDeciderInteger(Offset, 1, 'Data', 'General\Type', nil, aEndPtr, aElement);
   case Result of
     0, 4, 5, 6, 7, 10, 11, 12, 14: Result := 0;
     1, 2: Result := 1;
@@ -1251,7 +1263,9 @@ begin
     if Assigned(Element) and Supports(Element, IwbContainer, Container) then begin
       Element := Container.GetElementByName('Actor Base Changed Flags');
       if Assigned(Element) then begin
-        TempChangedFormFlags := Element.NativeValue;
+        var lSaveContext := aElement.SaveContextObj;
+        if lSaveContext is TwbSaveContextFNV then
+          TwbSaveContextFNV(lSaveContext).ChangedFormFlags := Element.NativeValue;
       end else
         Result := 0;
     end;
@@ -1473,19 +1487,11 @@ begin
     Result := 1;
 end;
 
-var // Remembers the offset of the first decider in the group
-  ChangeFormCreatedPackageHasContentFlagBit0DeciderBasePtr: Pointer = nil;
-
 function ChangeFormCreatedPackageHasContentFlagBit0Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 const
   Offset = 2;
 begin
-  if Assigned(aBasePtr) then
-    ChangeFormCreatedPackageHasContentFlagBit0DeciderBasePtr := aBasePtr
-  else
-    ChangeFormCreatedPackageHasContentFlagBit0DeciderBasePtr := nil;
-
-  Result := GetRelativeDeciderInteger(Offset, 1, 'Unk09C', 'Content Flags', ChangeFormCreatedPackageHasContentFlagBit0DeciderBasePtr,
+  Result := GetRelativeDeciderInteger(Offset, 1, 'Unk09C', 'Content Flags', nil,
     aEndPtr, aElement);
   if (Result = MaxInt) or ((Result and 1) = 0) then
     Result := 0
@@ -1497,7 +1503,7 @@ function ChangeFormCreatedPackageHasContentFlagBit1Decider(aBasePtr: Pointer; aE
 const
   Offset = 2;
 begin
-  Result := GetRelativeDeciderInteger(Offset, 1, 'Unk09C', 'Content Flags', ChangeFormCreatedPackageHasContentFlagBit0DeciderBasePtr,
+  Result := GetRelativeDeciderInteger(Offset, 1, 'Unk09C', 'Content Flags', nil,
     aEndPtr, aElement);
   if (Result = MaxInt) or ((Result and 2) = 0) then
     Result := 0
@@ -1509,7 +1515,7 @@ function ChangeFormCreatedPackageHasContentFlagBit2Decider(aBasePtr: Pointer; aE
 const
   Offset = 2;
 begin
-  Result := GetRelativeDeciderInteger(Offset, 1, 'Unk09C', 'Content Flags', ChangeFormCreatedPackageHasContentFlagBit0DeciderBasePtr,
+  Result := GetRelativeDeciderInteger(Offset, 1, 'Unk09C', 'Content Flags', nil,
     aEndPtr, aElement);
   if (Result = MaxInt) or ((Result and 4) = 0) then
     Result := 0
@@ -1521,7 +1527,7 @@ function ChangeFormCreatedPackageHasContentFlagBit3Decider(aBasePtr: Pointer; aE
 const
   Offset = 2;
 begin
-  Result := GetRelativeDeciderInteger(Offset, 1, 'Unk09C', 'Content Flags', ChangeFormCreatedPackageHasContentFlagBit0DeciderBasePtr,
+  Result := GetRelativeDeciderInteger(Offset, 1, 'Unk09C', 'Content Flags', nil,
     aEndPtr, aElement);
   if (Result = MaxInt) or ((Result and 8) = 0) then
     Result := 0
@@ -1533,7 +1539,7 @@ function ChangeFormCreatedPackageHasContentFlagBit4Decider(aBasePtr: Pointer; aE
 const
   Offset = 2;
 begin
-  Result := GetRelativeDeciderInteger(Offset, 1, 'Unk09C', 'Content Flags', ChangeFormCreatedPackageHasContentFlagBit0DeciderBasePtr,
+  Result := GetRelativeDeciderInteger(Offset, 1, 'Unk09C', 'Content Flags', nil,
     aEndPtr, aElement);
   if (Result = MaxInt) or ((Result and 16) = 0) then
     Result := 0
@@ -1545,7 +1551,7 @@ function ChangeFormCreatedPackageHasContentFlagBit5Decider(aBasePtr: Pointer; aE
 const
   Offset = 2;
 begin
-  Result := GetRelativeDeciderInteger(Offset, 1, 'Unk09C', 'Content Flags', ChangeFormCreatedPackageHasContentFlagBit0DeciderBasePtr,
+  Result := GetRelativeDeciderInteger(Offset, 1, 'Unk09C', 'Content Flags', nil,
     aEndPtr, aElement);
   if (Result = MaxInt) or ((Result and 32) = 0) then
     Result := 0
@@ -1553,19 +1559,11 @@ begin
     Result := 1;
 end;
 
-var // Remembers the offset of the first decider in the group
-  ChangeFormCreatedPackageHasPresentFlagBit0DeciderBasePtr: Pointer = nil;
-
 function ChangeFormCreatedPackageHasPresentFlagBit0Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 const
   Offset = 2;
 begin
-  if Assigned(aBasePtr) then
-    ChangeFormCreatedPackageHasPresentFlagBit0DeciderBasePtr := aBasePtr
-  else
-    ChangeFormCreatedPackageHasPresentFlagBit0DeciderBasePtr := nil;
-
-  Result := GetRelativeDeciderInteger(Offset, 1, 'Unk09C', 'Present Flags', ChangeFormCreatedPackageHasPresentFlagBit0DeciderBasePtr,
+  Result := GetRelativeDeciderInteger(Offset, 1, 'Unk09C', 'Present Flags', nil,
     aEndPtr, aElement);
   if (Result = MaxInt) or ((Result and 1) = 0) then
     Result := 0
@@ -1577,7 +1575,7 @@ function ChangeFormCreatedPackageHasPresentFlagBit1Decider(aBasePtr: Pointer; aE
 const
   Offset = 2;
 begin
-  Result := GetRelativeDeciderInteger(Offset, 1, 'Unk09C', 'Present Flags', ChangeFormCreatedPackageHasPresentFlagBit0DeciderBasePtr,
+  Result := GetRelativeDeciderInteger(Offset, 1, 'Unk09C', 'Present Flags', nil,
     aEndPtr, aElement);
   if (Result = MaxInt) or ((Result and 2) = 0) then
     Result := 0
@@ -1589,7 +1587,7 @@ function ChangeFormCreatedPackageHasPresentFlagBit2Decider(aBasePtr: Pointer; aE
 const
   Offset = 2;
 begin
-  Result := GetRelativeDeciderInteger(Offset, 1, 'Unk09C', 'Present Flags', ChangeFormCreatedPackageHasPresentFlagBit0DeciderBasePtr,
+  Result := GetRelativeDeciderInteger(Offset, 1, 'Unk09C', 'Present Flags', nil,
     aEndPtr, aElement);
   if (Result = MaxInt) or ((Result and 4) = 0) then
     Result := 0
@@ -1601,7 +1599,7 @@ function ChangeFormCreatedPackageHasPresentFlagBit3Decider(aBasePtr: Pointer; aE
 const
   Offset = 2;
 begin
-  Result := GetRelativeDeciderInteger(Offset, 1, 'Unk09C', 'Present Flags', ChangeFormCreatedPackageHasPresentFlagBit0DeciderBasePtr,
+  Result := GetRelativeDeciderInteger(Offset, 1, 'Unk09C', 'Present Flags', nil,
     aEndPtr, aElement);
   if (Result = MaxInt) or ((Result and 8) = 0) then
     Result := 0
@@ -1613,7 +1611,7 @@ function ChangeFormCreatedPackageHasPresentFlagBit4Decider(aBasePtr: Pointer; aE
 const
   Offset = 2;
 begin
-  Result := GetRelativeDeciderInteger(Offset, 1, 'Unk09C', 'Present Flags', ChangeFormCreatedPackageHasPresentFlagBit0DeciderBasePtr,
+  Result := GetRelativeDeciderInteger(Offset, 1, 'Unk09C', 'Present Flags', nil,
     aEndPtr, aElement);
   if (Result = MaxInt) or ((Result and 16) = 0) then
     Result := 0
@@ -1827,7 +1825,7 @@ begin
   Result := wbArrayT(aName, wbFloat('Coord'), 3, ['X', 'Y', 'Z']);
 end;
 
-procedure DefineFNVSavesS;  // This is all based on the Runtime
+procedure TwbSaveDefFNVBase.DefineFNVSavesS;  // This is all based on the Runtime
 var
   wbHeader                   : IwbStructDef;
   wbFileLocationTable        : IwbStructDef;
@@ -2359,7 +2357,7 @@ begin
     {0x1000} 'Unknown 13'
   ]));
 
-  wbChangeTypes := wbKey2Data6Enum([
+  sdChangeTypes := wbKey2Data6Enum([
     '00 (03A : REFR)',
     '01 (03B : ACHR)',
     '02 (03C : ACRE)',
@@ -4673,9 +4671,9 @@ begin
     {01} wbInteger('Confidence', itU8, wbConfidenceEnum),
     {02} wbInteger('Energy Level', itU8),
     {03} wbInteger('Responsibility', itU8),
-    {04} wbInteger('Mood', itU8, wbMoodEnum),
+    {04} wbInteger('Mood', itU8, (sdGameDef as TwbGameDefCommon).wbMoodEnum),
          wbByteArray('Unused', 3),
-    {08} wbInteger('Buys/Sells and Services', itU32, wbServiceFlags),
+    {08} wbInteger('Buys/Sells and Services', itU32, (sdGameDef as TwbGameDefCommon).wbServiceFlags),
     {0C} wbInteger('Teaches', itS8),
     {0D} wbInteger('Maximum training level', itU8),
     {0E} wbInteger('Assistance', itS8, wbAssistanceEnum),
@@ -4745,7 +4743,7 @@ begin
     ])
   ]);
 
-  wbUnionCHANGE_NPC_GENDER := wbUnion('Gender', ChangedFlag24Decider, [wbNull, wbIntegerT('Gender', itU8, wbSexEnum)]);
+  wbUnionCHANGE_NPC_GENDER := wbUnion('Gender', ChangedFlag24Decider, [wbNull, wbIntegerT('Gender', itU8, (sdGameDef as TwbGameDefCommon).wbSexEnum)]);
 
   wbUnionCHANGE_NPC_RACE := wbUnion('Race', ChangedFlag25Decider, [wbNull, wbStruct('Races', [
     wbRefIDT('Race'),
@@ -4858,7 +4856,7 @@ begin
   wbChangePackageStruct := wbStruct('Data', [
       wbStruct('General', [
         wbInteger('Flags', itU32),
-        wbInteger('Type', itU8, wbPackageTypeEnum),
+        wbInteger('Type', itU8, (sdGameDef as TwbGameDefCommon).wbPackageTypeEnum),
         wbByteArray('Unused', 1),
         wbInteger('Fallout Behavior Flags', itU16),
         wbIntegerT('Specific Type Flags', itU32)
@@ -4992,7 +4990,7 @@ begin
 
   wbNonActorMagicTarget := wbArrayPT('Magic Item List', wbStruct('Magic Item', [
     wbRefIDT('Magic Form'),
-    wbIntegerT('ArchType', itU8, wbArchtypeEnum),
+    wbIntegerT('ArchType', itU8, (sdGameDef as TwbGameDefCommon).wbArchtypeEnum),
     wbIntegerT('Unk098', itU6to30),
     wbArrayPT('Effect Items', wbInteger('Effect Item', itU8), -254)
   ]), -254);
@@ -5195,7 +5193,7 @@ begin
       wbIntegerT('Count?', itS32)
     ]),
     wbStruct('Package Data', [
-      wbIntegerT('Package Data Type', itU8, wbPackageTypeEnum),
+      wbIntegerT('Package Data Type', itU8, (sdGameDef as TwbGameDefCommon).wbPackageTypeEnum),
       wbActorPackageData
     ]),
     wbArrayPT('Say TopicInfo once a day', wbStruct('Data', [       // 032
@@ -5512,7 +5510,7 @@ begin
       wbStruct('Package Data', [
         wbUnion('Created Package', ChangeFormBaseProcessCreatedPackageDecider, [ wbNull,
           wbStruct('Created Package Struct', [
-            wbIntegerT('Type', itS8, wbPackageTypeEnum),
+            wbIntegerT('Type', itS8, (sdGameDef as TwbGameDefCommon).wbPackageTypeEnum),
             wbUnion('Created Package', ChangeFormCreatedPackageDecider, [
               wbChangePackageStruct,
               wbNull,
@@ -6313,9 +6311,9 @@ begin
 
   wbChangedACHR := wbStruct('Change ACHR Data', [ {03B}
      wbUnion('Player specific', IsActorPlayerDecider, [wbNull, wbStruct('Player data', [
-       wbArray('ActorValues244', wbFloatT('Actor Value'), wbActorValueLabels),
-       wbArray('ActorValues378', wbFloatT('Actor Value'), wbActorValueLabels),
-       wbArray('ActorValues4B0', wbFloatT('Actor Value'), wbActorValueLabels),
+       wbArray('ActorValues244', wbFloatT('Actor Value'), sdActorValueLabels),
+       wbArray('ActorValues378', wbFloatT('Actor Value'), sdActorValueLabels),
+       wbArray('ActorValues4B0', wbFloatT('Actor Value'), sdActorValueLabels),
        wbIntegerT('Unk4AC', itU32)
      ])])
     ,wbChangedCharacter
@@ -6766,7 +6764,7 @@ begin
     [
       wbRefID('RefID'),
       wbChangeFlags,
-      wbInteger('Type', itU8, wbChangeTypes),
+      wbInteger('Type', itU8, sdChangeTypes),
       wbInteger('Version', itU8),
       wbUnion('Datas', ChangedFormDataLengthDecider, [
         wbStruct('CForm Data', [
@@ -6814,18 +6812,18 @@ begin
     wbByteArray('Unused', $6e - 9*4)
   ]);
 
-  wbSaveHeader := wbStruct('Save File Header', [
+  sdSaveHeader := wbStruct('Save File Header', [
      wbString('Magic', 11)
     ,wbInteger('Header Size', itU32)
     ,wbHeader
     ,wbByteArray('Hidden: Screenshot Data', ScreenShotDataCounter)
     ,wbInteger('Form Version', itU8)
     ,wbInteger('PluginInfo Size', itU32)
-    ,wbArrayPT(wbFilePlugins, wbLenStringT('PluginName', -3), -4)
+    ,wbArrayPT(FilePlugins, wbLenStringT('PluginName', -3), -4)
     ,wbFileLocationTable
   ]);
 
-  wbSaveChapters := wbStruct('Save File Chapters', [
+  sdSaveChapters := wbStruct('Save File Chapters', [
      wbArray('Global Data 1', wbGlobalData, [], GlobalData1Counter),
      wbArray('Changed Forms', wbChangedForm, [], ChangedFormsCounter),
      wbArray('Global Data 2', wbGlobalData, [], GlobalData2Counter),
@@ -6836,7 +6834,7 @@ begin
 //    ,wbArray('Remaining',  WbByteArray('Unknown', wbBytesToGroup), DumpCounter) // Lets you dump an arbitrary number of quartet, Setable from CommandLine -btd:n
   ]);
 
-  wbCoSaveHeader := wbStruct('CoSave File Header', [
+  sdCoSaveHeader := wbStruct('CoSave File Header', [
      wbString('Magic', 4)
     ,wbInteger('Version', itU32)
     ,wbInteger('NVSE Version', itU16)
@@ -6899,41 +6897,47 @@ begin
   wbCoSaveChunks.TreeBranch := True;
   wbCoSavePlugins := wbArray('Plugins', wbCoSavePlugin, wbCoSavePluginCounter);
 
-  wbCoSaveChapters := wbStruct('CoSave File Chapters', [
+  sdCoSaveChapters := wbStruct('CoSave File Chapters', [
     wbCoSavePlugins
   ]);
 
-  wbFileChapters := wbSaveChapters;
-  wbFileHeader := wbSaveHeader;
-  wbSaveHeader.TreeHead := True;
-  wbCoSaveHeader.TreeHead := True;
-//  wbSaveHeader.TreeLeaf := True;
-//  wbCoSaveHeader.TreeLeaf := True;
+  sdSaveHeader.TreeHead := True;
+  sdCoSaveHeader.TreeHead := True;
+//  sdSaveHeader.TreeLeaf := True;
+//  sdCoSaveHeader.TreeLeaf := True;
 end;
 
-var
-  ExtractInfoSave:   TByteSet = [3, 4]; // SaveFileChapters that should be initialized before dumping to get more information
-  ExtractInfoCoSave: TByteSet = [];     // CoSaveFileChapters that should be initialized before dumping to get more information
-
-procedure DefineFNVSaves;
+procedure TwbSaveDefFNVBase.Define;
 begin
-  wbFileMagic := 'FO3SAVEGAME';
-  wbExtractInfo := @ExtractInfoSave;
-  wbFilePlugins := 'Plugins';
-  DefineFNV;
+  FilePlugins := 'Plugins';
   DefineFNVSavesA;
   DefineFNVSavesS;
 end;
 
-procedure SwitchToFNVCoSave;
+procedure TwbSaveDefFNV.Define;
 begin
-  wbFileMagic := 'NVSE';
-  wbExtractInfo := @ExtractInfoCoSave;
-  wbFilePlugins := 'Absolute:44';
-  wbFileChapters := wbCoSaveChapters;
-  wbFileHeader := wbCoSaveHeader;
+  inherited;
+  FileExtension := '.fos';
+  FileMagic := 'FO3SAVEGAME';
+  sdExtractInfo := [3, 4]; // SaveFileChapters that should be initialized before dumping to get more information
+  ExtractInfo := @sdExtractInfo;
+  FileChapters := sdSaveChapters;
+  FileHeader := sdSaveHeader;
+end;
+
+procedure TwbCoSaveDefFNV.Define;
+begin
+  inherited;
+  FileExtension := '.nvse';
+  FileMagic := 'NVSE';
+  sdExtractInfo := [];
+  ExtractInfo := @sdExtractInfo;
+  FilePlugins := 'Absolute:44';
+  FileChapters := sdCoSaveChapters;
+  FileHeader := sdCoSaveHeader;
 end;
 
 initialization
+  wbRegisterSaveDefs([gmFNV], TwbSaveDefFNV, TwbCoSaveDefFNV, TwbSaveContextFNV);
 end.
 

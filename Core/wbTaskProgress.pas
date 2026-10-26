@@ -89,7 +89,7 @@ type
   private
     fObjectProc: TwbWorkerObjectProc;
   protected
-    procedure Execute; override;
+    procedure Execute; override; final;
   public
     constructor Create(aObjectProc: TwbWorkerObjectProc);
   end;

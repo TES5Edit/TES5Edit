@@ -8,7 +8,7 @@
         <Platform Condition="'$(Platform)'==''">Win64</Platform>
         <ProjectGuid>{BB5B51E2-CC9A-4404-A582-958449C5049E}</ProjectGuid>
         <ProjectName Condition="'$(ProjectName)'==''">xEdit</ProjectName>
-        <ProjectVersion>20.3</ProjectVersion>
+        <ProjectVersion>20.5</ProjectVersion>
         <TargetedPlatforms>3</TargetedPlatforms>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Config)'=='Base' or '$(Base)'!=''">
@@ -83,7 +83,7 @@
         <DCC_ImageBase>00400000</DCC_ImageBase>
         <DCC_LargeAddressAware>true</DCC_LargeAddressAware>
         <DCC_Namespace>System;System.Win;Xml;Data;Datasnap;Web;Soap;Winapi;Vcl;Vcl.Imaging;Vcl.Touch;Vcl.Samples;Vcl.Shell;$(DCC_Namespace)</DCC_Namespace>
-        <DCC_UnitSearchPath>.\External\delphi-detours-library\Source;.\External\Diff;.\External\DWScript\Source;.\External\FileContainer;.\External\ImagingLib\Source\;.\External\ImagingLib\Source\zlib;.\External\jcl\jcl\source\include\jedi;.\External\jcl\jcl\source\include;.\External\jcl\jcl\source\common;.\External\jcl\jcl\source\vcl;.\External\jcl\jcl\source\windows;.\External\JsonDataObjects\Source;.\External\jvcl\jvcl\common;.\External\jvcl\jvcl\resources;.\External\jvcl\jvcl\run;.\External\libdeflate-pas;.\External\lz4-delphi;.\External\SynEdit\Source;.\External\TOM2;.\External\vcl-styles-utils\Common;.\External\VirtualTrees\Source;.\Core;.\xEdit;.\xEdit\JvI;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+        <DCC_UnitSearchPath>.\External\delphi-detours-library\Source;.\External\Diff;.\External\FileContainer;.\External\ImagingLib\Source\;.\External\ImagingLib\Source\zlib;.\External\jcl\jcl\source\include\jedi;.\External\jcl\jcl\source\include;.\External\jcl-inc;.\External\jcl\jcl\source\common;.\External\jcl\jcl\source\vcl;.\External\jcl\jcl\source\windows;.\External\JsonDataObjects\Source;.\External\jvcl\jvcl\common;.\External\jvcl\jvcl\resources;.\External\jvcl\jvcl\run;.\External\libdeflate-pas;.\External\lz4-delphi;.\External\SynEdit\Source;.\External\TOM2;.\External\vcl-styles-utils\Common;.\External\VirtualTrees\Source;.\Core;.\xEdit;.\xEdit\JvI;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
         <DCC_UseMSBuildExternally>true</DCC_UseMSBuildExternally>
         <DCC_WIDECHAR_REDUCED>false</DCC_WIDECHAR_REDUCED>
         <Icon_MainIcon>.\xEdit\xEdit_TES_Icon.ico</Icon_MainIcon>
@@ -189,7 +189,6 @@
         <DCCReference Include="Core\wbImplementation.pas"/>
         <DCCReference Include="Core\wbInterface.pas"/>
         <DCCReference Include="Core\wbLoadOrder.pas"/>
-        <DCCReference Include="Core\wbLocalization.pas"/>
         <DCCReference Include="Core\wbLOD.pas"/>
         <DCCReference Include="Core\wbModGroups.pas"/>
         <DCCReference Include="Core\wbNifMath.pas"/>
@@ -197,7 +196,6 @@
         <DCCReference Include="Core\wbSaveInterface.pas"/>
         <DCCReference Include="Core\wbSort.pas"/>
         <DCCReference Include="Core\wbStreams.pas"/>
-        <DCCReference Include="xEdit\xeInit.pas"/>
         <DCCReference Include="xEdit\xeDeveloperMessageForm.pas">
             <Form>frmDeveloperMessage</Form>
             <FormType>dfm</FormType>
@@ -214,6 +212,11 @@
             <Form>frmFilterOptions</Form>
             <FormType>dfm</FormType>
         </DCCReference>
+        <DCCReference Include="xEdit\xeGameSelectForm.pas">
+            <Form>frmGameSelect</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
+        <DCCReference Include="xEdit\xeInit.pas"/>
         <DCCReference Include="xEdit\JvI\xejviScriptAdapter.pas"/>
         <DCCReference Include="xEdit\JvI\xejviScriptAdapterContainer.pas"/>
         <DCCReference Include="xEdit\JvI\xejviScriptAdapterDF.pas"/>
@@ -226,6 +229,7 @@
         <DCCReference Include="xEdit\JvI\xejviScriptAdapterMiscVcl.pas"/>
         <DCCReference Include="xEdit\JvI\xejviScriptAdapterRecord.pas"/>
         <DCCReference Include="xEdit\JvI\xejviScriptAdapterResource.pas"/>
+        <DCCReference Include="xEdit\JvI\xejviScriptArguments.pas"/>
         <DCCReference Include="xEdit\JvI\xejviScriptHost.pas"/>
         <DCCReference Include="xEdit\xeLegendForm.pas">
             <Form>frmLegend</Form>
@@ -274,10 +278,6 @@
         </DCCReference>
         <DCCReference Include="xEdit\xeWorldspaceCellDetailsForm.pas">
             <Form>frmWorldspaceCellDetails</Form>
-            <FormType>dfm</FormType>
-        </DCCReference>
-        <DCCReference Include="xEdit\xeGameSelectForm.pas">
-            <Form>frmGameSelect</Form>
             <FormType>dfm</FormType>
         </DCCReference>
         <BuildConfiguration Include="Base">

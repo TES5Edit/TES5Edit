@@ -111,8 +111,8 @@ type
   public
     AllowModify: Boolean;
 
-    constructor Create(aOwner: TComponent); override;
-    destructor Destroy; override;
+    constructor Create(aOwner: TComponent); override; final;
+    destructor Destroy; override; final;
 
     //compare either and array of characters or an array of integers ...
     function Execute(pints1, pints2: PInteger; len1, len2: integer): boolean; overload;

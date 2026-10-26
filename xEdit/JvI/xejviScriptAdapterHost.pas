@@ -13,6 +13,8 @@ unit xejviScriptAdapterHost;
 interface
 
 uses
+  VirtualTrees.BaseTree,
+  VirtualTrees.Types,
   JvInterpreter;
 
 procedure RegisterJvInterpreterAdapter(JvInterpreterAdapter: TJvInterpreterAdapter);
@@ -21,11 +23,13 @@ implementation
 
 uses
   System.Classes,
+  System.Generics.Collections,
   System.SysUtils,
   System.Variants,
 
   VirtualTrees,
 
+  wbConflict,
   wbDataFormat,
   wbHelpers,
   wbInterface,
@@ -33,7 +37,8 @@ uses
 
   xeFileSelectForm,
   xeInit,
-  xeMainForm;
+  xeMainForm,
+  xejviScriptArguments;
 
 const
   cUnit = 'Dummy';
@@ -42,52 +47,52 @@ const
 
 procedure _wbGameMode(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  Value := wbGameMode;
+  Value := xeContext.GameDefObj.GameMode;
 end;
 
 procedure _wbGameName(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  Value := wbGameName;
+  Value := xeContext.GameDefObj.GameName;
 end;
 
 procedure _wbGameMasterEsm(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  Value := wbGameMasterEsm;
+  Value := xeContext.GameDefObj.GameMasterEsm;
 end;
 
 procedure _wbGameName2(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  Value := wbGameName2;
+  Value := xeContext.GameDefObj.Identity.GameName2;
 end;
 
 procedure _wbAppName(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  Value := wbAppName;
+  Value := xeContext.GameDefObj.AppName;
 end;
 
 procedure _wbLoadBSAs(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  Value := wbLoadBSAs;
+  Value := xeContext.Settings.LoadBSAs;
 end;
 
 procedure _wbSimpleRecords(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  Value := wbSimpleRecords;
+  Value := xeContext.GameDefObj.DefinedOptions.SimpleRecords;
 end;
 
 procedure _wbDecodeTextureHashes(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  Value := wbDecodeTextureHashes;
+  Value := xeContext.GameDefObj.DefinedOptions.DecodeTextureHashes;
 end;
 
 procedure _wbTrackAllEditorID(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  Value := wbTrackAllEditorID;
+  Value := xeContext.Settings.TrackAllEditorID;
 end;
 
 procedure _wbRecordDefMap(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  Value := O2V(wbInterface._wbRecordDefMap);
+  Value := O2V(xeContext.GameDefObj.RecordDefMap);
 end;
 
 procedure _wbProgramPath(var Value: Variant; Args: TJvInterpreterArgs);
@@ -102,29 +107,29 @@ begin
   if frmMain.ScriptPath <> '' then
     Value := frmMain.ScriptPath
   else
-    Value := wbScriptsPath;
+    Value := xeContext.Settings.ScriptsPath;
 end;
 
 // mirrors the global, which stays the scripts root even while a script in a
 // subdirectory is running
 procedure _wbScriptsPath(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  Value := wbScriptsPath;
+  Value := xeContext.Settings.ScriptsPath;
 end;
 
 procedure _wbDataPath(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  Value := wbDataPath;
+  Value := xeContext.Settings.DataPath;
 end;
 
 procedure _wbTempPath(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  Value := wbTempPath;
+  Value := xeContext.Settings.TempPath;
 end;
 
 procedure _wbOutputPath(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  Value := wbOutputPath;
+  Value := xeContext.Settings.OutputPath;
 end;
 
 procedure _wbSettingsFileName(var Value: Variant; Args: TJvInterpreterArgs);
@@ -192,7 +197,7 @@ var
 begin
   if VarIsStr(Args.Values[0]) then begin
     for i := Low(frmMain.Files) to High(frmMain.Files) do
-      if frmMain.Files[i].LoadOrderFileID.ToString = Args.Values[0] then begin
+      if frmMain.Files[i].HasLoadOrderFileID and SameText(frmMain.Files[i].LoadOrderFileID.ToString, Args.Values[0]) then begin
         Value := frmMain.Files[i];
         Break;
       end;
@@ -261,14 +266,18 @@ begin
       else
         JvInterpreterError(ieTypeMistmatch, -1);
 
+      var lLayout := lFile.ContextObj.SlotLayout;
       if lFile.IsLight then
-        lFormID.ObjectID := lFormID.ObjectID and $FFF
+        lFormID.ObjectID[lLayout] := lFormID.ObjectID[lLayout] and $FFF
       else if lFile.IsMedium then
-        lFormID.ObjectID := lFormID.ObjectID and $FFFF
+        lFormID.ObjectID[lLayout] := lFormID.ObjectID[lLayout] and $FFFF
       else
-        lFormID.ObjectID := lFormID.ObjectID and $FFFFFF;
+        lFormID.ObjectID[lLayout] := lFormID.ObjectID[lLayout] and $FFFFFF;
 
-      lFormID.FileID := lFile.LoadOrderFileID;
+      if lFile.HasLoadOrderFileID then
+        lFormID := lFile.LoadOrderFormIDtoFileFormID(lFormID.ChangeFileID(lLayout, lFile.LoadOrderFileID), True)
+      else
+        lFormID.FileID[lLayout] := lFile.FileFileID[True];
 
       Value := lFile.RecordByFormID[lFormID, True, True];
     end
@@ -286,8 +295,8 @@ begin
     Value := Null;
     aFormID := TwbFormID.FromStr(string(Args.Values[0]));
     for i := Low(frmMain.Files) to High(frmMain.Files) do
-      if frmMain.Files[i].LoadOrderFileID = aFormID.FileID then begin
-        Value := frmMain.Files[i].RecordByFormID[aFormID, True, True];
+      if frmMain.Files[i].HasLoadOrderFileID and (frmMain.Files[i].LoadOrderFileID = aFormID.FileID[xeContext.SlotLayout]) then begin
+        Value := frmMain.Files[i].RecordByFormID[frmMain.Files[i].LoadOrderFormIDtoFileFormID(aFormID, True), True, True];
         Break;
       end;
   end else
@@ -299,7 +308,7 @@ var
   MainRecord: IwbMainRecord;
 begin
   if Supports(IInterface(Args.Values[0]), IwbMainRecord, MainRecord) then
-    Value := IsPositionChanged(MainRecord)
+    Value := frmMain.IsPositionChanged(MainRecord)
   else
     JvInterpreterError(ieDirectInvalidArgument, 0);
 end;
@@ -440,7 +449,7 @@ var
 begin
   if Args.Count = 3 then begin
     Value := caUnknown;
-    List := TList(V2O(Args.Values[0]));
+    List := TList(ObjectArgument(Args.Values[0], TList, 0));
     if Assigned(List) then
     for i := 0 to Pred(List.Count) do begin
       if not Supports(IInterface(Pointer(List[i])), IwbElement, Element) then
@@ -467,10 +476,104 @@ begin
   Value := caUnknown;
   if Length(NodeDatas) > 0 then
     if Assigned(NodeDatas[0].Container) then
-      Value := frmMain.ConflictLevelForChildNodeDatas(NodeDatas, Args.Values[i+1], Args.Values[i+2], TwbConflictConfig.Current,
+      Value := frmMain.ConflictLevelForChildNodeDatas(NodeDatas, Args.Values[i+1], Args.Values[i+2], frmMain.ConflictView,
         procedure(const aMessage: string) begin frmMain.PostAddMessage(aMessage); end)
     else
       Value := frmMain.ConflictLevelForNodeDatas(@NodeDatas[0], Length(NodeDatas), Args.Values[i+1], Args.Values[i+2]);
+end;
+
+function AlignedConflictTree(const aElement: IwbElement; out aNode: TwbConflictTreeNode; out aColumn: Integer): TwbConflictTree;
+var
+  MainRecord: IwbMainRecord;
+begin
+  Result := nil;
+  aNode := nil;
+  aColumn := -1;
+  MainRecord := aElement.ContainingMainRecord;
+  if not Assigned(MainRecord) or not Assigned(frmMain) or not Assigned(frmMain.ConflictView) then
+    Exit;
+  Result := TwbConflictTree.CreateForMainRecord(frmMain.ConflictView, MainRecord, frmMain.Files,
+    procedure(const aMessage: string) begin frmMain.PostAddMessage(aMessage); end);
+  try
+    aNode := Result.NodeFor(aElement, aColumn);
+  except
+    FreeAndNil(Result);
+    raise;
+  end;
+end;
+
+procedure _AlignedElementIndices(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  Element: IwbElement;
+  List: TStrings;
+  Tree: TwbConflictTree;
+  Node: TwbConflictTreeNode;
+  Column: Integer;
+  Container: IwbContainerElementRef;
+  Indices: TDictionary<Pointer, Integer>;
+  Entry: IwbElement;
+  Index: Integer;
+  MemoryIndex: Integer;
+  i: Integer;
+begin
+  if not Supports(IInterface(Args.Values[0]), IwbElement, Element) then
+    JvInterpreterError(ieDirectInvalidArgument, 0);
+  List := TStrings(ObjectArgument(Args.Values[1], TStrings, 1, True));
+  Value := -1;
+  Tree := AlignedConflictTree(Element, Node, Column);
+  try
+    if not Assigned(Node) then
+      Exit;
+    Indices := TDictionary<Pointer, Integer>.Create;
+    try
+      Container := Node.Datas[Column].Container;
+      if Assigned(Container) then
+        for i := 0 to Pred(Container.ElementCount) do
+          Indices.AddOrSetValue(Container.Elements[i].ElementID, i);
+      List.Clear;
+      for i := 0 to Pred(Node.ChildCount) do begin
+        Entry := Node.RowElement(Column, i);
+        if Assigned(Entry) and Indices.TryGetValue(Entry.ElementID, Index) then
+          List.Add(IntToStr(Index))
+        else if Node.IsAlignedGap(Column, i, MemoryIndex) then
+          List.Add('-1')
+        else
+          List.Add('-2');
+      end;
+      Value := Node.ChildCount;
+    finally
+      Indices.Free;
+    end;
+  finally
+    Tree.Free;
+  end;
+end;
+
+procedure _AlignedElementAssign(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  Element: IwbElement;
+  Source: IwbElement;
+  NewElement: IwbElement;
+  Tree: TwbConflictTree;
+  Node: TwbConflictTreeNode;
+  Column: Integer;
+  Row: Integer;
+begin
+  if not Supports(IInterface(Args.Values[0]), IwbElement, Element) then
+    JvInterpreterError(ieDirectInvalidArgument, 0);
+  NewElement := nil;
+  Source := nil;
+  if (V2O(Args.Values[2]) = nil) or Supports(IInterface(Args.Values[2]), IwbElement, Source) then begin
+    Row := Args.Values[1];
+    Tree := AlignedConflictTree(Element, Node, Column);
+    try
+      if Assigned(Node) and Node.CanAssignAligned(Column, Row, Source, False) then
+        NewElement := Node.AssignAligned(Column, Row, Source, Args.Values[3]);
+    finally
+      Tree.Free;
+    end;
+  end;
+  Value := NewElement;
 end;
 
 procedure _JumpTo(var Value: Variant; Args: TJvInterpreterArgs);
@@ -511,7 +614,7 @@ var
   MainRecord: IwbMainRecord;
 begin
   if Supports(IInterface(Args.Values[0]), IwbMainRecord, MainRecord) then begin
-    if wbGameMode = gmTES4 then
+    if xeContext.GameDefObj.GameMode = gmTES4 then
       wbGenerateLODTES4(MainRecord, frmMain.Settings);
   end else
     JvInterpreterError(ieDirectInvalidArgument, 0);
@@ -522,7 +625,7 @@ var
   MainRecord: IwbMainRecord;
 begin
   if Supports(IInterface(Args.Values[0]), IwbMainRecord, MainRecord) then begin
-    if wbIsSkyrim then
+    if xeContext.GameDefObj.IsSkyrim then
       wbGenerateLODTES5(MainRecord, [lodTrees], frmMain.Files, frmMain.Settings);
   end else
     JvInterpreterError(ieDirectInvalidArgument, 0);
@@ -533,7 +636,7 @@ var
   MainRecord: IwbMainRecord;
 begin
   if Supports(IInterface(Args.Values[0]), IwbMainRecord, MainRecord) then begin
-    if wbIsSkyrim then
+    if xeContext.GameDefObj.IsSkyrim then
       wbGenerateLODTES5(MainRecord, [lodObjects], frmMain.Files, frmMain.Settings);
   end else
     JvInterpreterError(ieDirectInvalidArgument, 0);
@@ -541,17 +644,17 @@ end;
 
 procedure _wbGetUVRangeTexturesList(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  wbGetUVRangeTexturesList(
-    TStrings(V2O(Args.Values[0])),  // TStrings list of meshes
-    TStrings(V2O(Args.Values[1])),  // TStrings list of textures, output
+  wbGetUVRangeTexturesList(xeContext,
+    TStrings(ObjectArgument(Args.Values[0], TStrings, 0)),  // TStrings list of meshes
+    TStrings(ObjectArgument(Args.Values[1], TStrings, 1)),  // TStrings list of textures, output
     Single(Args.Values[2])          // UVRange
   );
 end;
 
 procedure _wbBuildAtlasFromTexturesList(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  wbBuildAtlasFromTexturesList(
-    TStrings(V2O(Args.Values[0])),  // TStrings list of textures
+  wbBuildAtlasFromTexturesList(xeContext,
+    TStrings(ObjectArgument(Args.Values[0], TStrings, 0)),  // TStrings list of textures
     Args.Values[1], // max texture size
     Args.Values[2], // max tile size
     Args.Values[3], // atlas width
@@ -564,8 +667,8 @@ end;
 
 procedure _wbBuildAtlasFromAtlasMap(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  wbBuildAtlasFromAtlasMap(
-    TStrings(V2O(Args.Values[0])),  // TStrings atlas map
+  wbBuildAtlasFromAtlasMap(xeContext,
+    TStrings(ObjectArgument(Args.Values[0], TStrings, 0)),  // TStrings atlas map
     Args.Values[1],                // brightness
     Args.Values[2],                // GammaR
     Args.Values[3],                // GammaG
@@ -585,7 +688,7 @@ var
   i, j: Integer;
   Found: Boolean;
 begin
-  List := TList(V2O(Args.Values[0]));
+  List := TList(ObjectArgument(Args.Values[0], TList, 0));
   if not Assigned(List) then
     Exit;
 
@@ -634,10 +737,8 @@ var
   Nodes: TNodeArray;
   i: Integer;
 begin
-  if not (V2O(Args.Values[0]) is TStrings) then begin
-    JvInterpreterErrorN(ieDirectInvalidArgument, 0, 'Expected a TStrings or TStringsList'); // or ieNotEnoughParams, ieIncompatibleTypes or others.
-  end;
-  
+  var lList := TStrings(ObjectArgument(Args.Values[0], TStrings, 0, True, 'Expected a TStrings or TStringList'));
+
   Nodes := frmMain.vstNav.GetSortedSelection(True);
 
   for i := Low(Nodes) to High(Nodes) do begin
@@ -646,16 +747,16 @@ begin
       Continue;
     Element := NodeData.Element;
     if Supports(Element, IwbFile, _File) then begin
-      if TStrings(V2O(Args.Values[0])).IndexOf(_File.FileName) = -1 then
-        TStrings(V2O(Args.Values[0])).AddObject(_File.FileName, TObject(Pointer(Element)));
+      if lList.IndexOf(_File.FileName) = -1 then
+        lList.AddObject(_File.FileName, TObject(Pointer(Element)));
     end
     else if Supports(Element, IwbMainRecord, MainRecord) then begin
-      if TStrings(V2O(Args.Values[0])).IndexOf(MainRecord._File.FileName) = -1 then
-        TStrings(V2O(Args.Values[0])).AddObject(MainRecord._File.FileName, TObject(Pointer(MainRecord._File)));
+      if lList.IndexOf(MainRecord._File.FileName) = -1 then
+        lList.AddObject(MainRecord._File.FileName, TObject(Pointer(MainRecord._File)));
     end
 	else if Supports(Element, IwbGroupRecord, Container) then begin
-	  if TStrings(V2O(Args.Values[0])).IndexOf(Container._File.FileName) = -1 then
-	    TStrings(V2O(Args.Values[0])).AddObject(Container._File.FileName, TObject(Pointer(Container._File)));
+	  if lList.IndexOf(Container._File.FileName) = -1 then
+	    lList.AddObject(Container._File.FileName, TObject(Pointer(Container._File)));
 	end;
   end;
 end;
@@ -711,6 +812,8 @@ begin
     AddFunction(cUnit, 'ConflictThisForNode', _ConflictThisForNode, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'ConflictAllForNode', _ConflictAllForNode, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'ConflictAllForElements', _ConflictAllForElements, -1, [], varEmpty);
+    AddFunction(cUnit, 'AlignedElementIndices', _AlignedElementIndices, 2, [varEmpty, varEmpty], varEmpty);
+    AddFunction(cUnit, 'AlignedElementAssign', _AlignedElementAssign, 4, [varEmpty, varEmpty, varEmpty, varBoolean], varEmpty);
     AddFunction(cUnit, 'JumpTo', _JumpTo, 2, [varEmpty, varEmpty], varEmpty);
     AddFunction(cUnit, 'ApplyFilter', _ApplyFilter, 0, [], varEmpty);
     AddFunction(cUnit, 'RemoveFilter', _RemoveFilter, 0, [], varEmpty);

@@ -22,6 +22,7 @@ uses
   JvInterpreter,
 
   wbDataFormat,
+  xeInit,
   wbInterface,
 
   xeMainForm,
@@ -46,15 +47,15 @@ type
     function FunctionIsEmpty(const aName: string): Boolean;
     function GetLastErrorLocation: string;
   public
-    destructor Destroy; override;
+    destructor Destroy; override; final;
   end;
 
   TxejviScriptHost = class(TxeScriptHost)
   protected
-    class function GetName: string; override;
-    function CreateScriptInternal(const aScriptFile, aScript: string): IxeScript; override;
+    class function GetName: string; override; final;
+    function CreateScriptInternal(const aScriptFile, aScript: string): IxeScript; override; final;
   public
-    constructor Create; override;
+    constructor Create; override; final;
   end;
 
 procedure TxejviScript.JvInterpreterProgramSetValue(Sender: TObject;
@@ -91,7 +92,7 @@ begin
     Done := True;
   end else
   if SameText(Identifier, 'wbOutputPath') then begin
-    wbOutputPath := Value;
+    xeContext.Settings.OutputPath := Value;
     Done := True;
   end else
   if SameText(Identifier, 'FilterScripted') then begin
@@ -363,7 +364,7 @@ begin
 
   FScriptPath := ExtractFilePath(aScriptFile);
   if FScriptPath = '' then
-    FScriptPath := wbScriptsPath;
+    FScriptPath := xeContext.Settings.ScriptsPath;
   FScript := aScript;
 
   FProgram := TJvInterpreterProgram.Create(nil);
@@ -452,9 +453,9 @@ begin
   // look next to the script first so scripts in subdirectories can ship their own units
   UnitFile := FScriptPath + UnitName + '.pas';
   if not FileExists(UnitFile) then begin
-    UnitFile := wbScriptsPath + UnitName + '.pas';
+    UnitFile := xeContext.Settings.ScriptsPath + UnitName + '.pas';
     if not FileExists(UnitFile) then
-      raise Exception.CreateFmt('Cannot find unit "%s" in "%s" or "%s"', [UnitName, FScriptPath, wbScriptsPath]);
+      raise Exception.CreateFmt('Cannot find unit "%s" in "%s" or "%s"', [UnitName, FScriptPath, xeContext.Settings.ScriptsPath]);
   end;
 
   with TStringList.Create do try

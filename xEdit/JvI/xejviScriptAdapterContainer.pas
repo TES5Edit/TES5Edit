@@ -219,6 +219,21 @@ begin
     Container.ReverseElements;
 end;
 
+function MemberTarget(const aContainer: IwbContainerElementRef; const aPath: string; out aParent: IwbContainerElementRef; out aName: string): Boolean;
+begin
+  aParent := aContainer;
+  aName := aPath;
+  var i := LastDelimiter('\', aPath);
+  if i > 0 then begin
+    aName := Copy(aPath, Succ(i), High(Integer));
+    if not Supports(aContainer.ElementByPath[Copy(aPath, 1, Pred(i))], IwbContainerElementRef, aParent) then
+      Exit(False);
+  end;
+  if not (wbAllowUnsafeScripts or aParent.IsEditable) then
+    raise Exception.Create(aParent.Path + ': Does not support editing');
+  Result := True;
+end;
+
 procedure IwbContainer_SetElementEditValues(var Value: Variant; Args: TJvInterpreterArgs);
 begin
   case Args.Count of
@@ -228,11 +243,17 @@ begin
       if Supports(IInterface(Args.Values[0]), IwbContainerElementRef, lContainer) then
       begin
         var lElement: IwbElement;
-        if Supports(lContainer.ElementByPath[Args.Values[1]], IwbElement, lElement) then
+        if Supports(lContainer.ElementByPath[Args.Values[1]], IwbElement, lElement) then begin
           if not (wbAllowUnsafeScripts or lElement.IsEditable) then
             raise Exception.Create(lElement.Path + ': Does not support editing')
           else
             lElement.EditValue := String(Args.Values[2]);
+        end else begin
+          var lParent: IwbContainerElementRef;
+          var lName: string;
+          if MemberTarget(lContainer, Args.Values[1], lParent, lName) then
+            lParent.ElementEditValues[lName] := String(Args.Values[2]);
+        end;
       end;
     end;
   else
@@ -249,11 +270,17 @@ begin
       if Supports(IInterface(Args.Values[0]), IwbContainerElementRef, lContainer) then
       begin
         var lElement: IwbElement;
-        if Supports(lContainer.ElementByPath[Args.Values[1]], IwbElement, lElement) then
+        if Supports(lContainer.ElementByPath[Args.Values[1]], IwbElement, lElement) then begin
           if not (wbAllowUnsafeScripts or lElement.IsEditable) then
             raise Exception.Create(lElement.Path + ': Does not support editing')
           else
             lElement.NativeValue := Args.Values[2];
+        end else begin
+          var lParent: IwbContainerElementRef;
+          var lName: string;
+          if MemberTarget(lContainer, Args.Values[1], lParent, lName) then
+            lParent.ElementNativeValues[lName] := Args.Values[2];
+        end;
       end;
     end;
   else

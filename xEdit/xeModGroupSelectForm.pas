@@ -13,6 +13,8 @@ unit xeModGroupSelectForm;
 interface
 
 uses
+  VirtualTrees.BaseTree,
+  VirtualTrees.Types,
   System.Actions,
   System.Classes,
 
@@ -111,7 +113,7 @@ type
     MaxSelect       : Integer;
 
     procedure AllowCancel;
-    function ShowModal: Integer; override;
+    function ShowModal: Integer; override; final;
   end;
 
   PModGroupNodeData = ^TModGroupNodeData;
@@ -138,6 +140,7 @@ uses
 
   wbInterface,
 
+  xeInit,
   xeMainForm;
 
 procedure TfrmModGroupSelect.mniInvertSelectionClick(Sender: TObject);
@@ -638,7 +641,7 @@ function TfrmModGroupSelect.ShowModal: Integer;
 begin
   vstModGroups.Clear;
   if Length(AllModGroups) < 1 then
-    AllModGroups := wbModGroupsByName.FilteredByFlag(FilterFlag);
+    AllModGroups := xeContext.ModGroupList.ByName(True).FilteredByFlag(FilterFlag);
   vstModGroups.ChildCount[nil] := Length(AllModGroups);
   vstModGroups.InitRecursive(nil, 100, False);
 

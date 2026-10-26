@@ -135,8 +135,8 @@ begin
   case ArchiveType of
     baFO4dds, baSFdds: lblTip.Caption :=
       'A special type of archive optimized for textures which can''t contain anything else.'#13#13 +
-      'Due to the game engine bug it must be compressed (the game might crash otherwise). ' +
-      'All textures will be compressed no matter their compression status in the list.'#13#13 +
+      'Due to the game engine bug it should be compressed (the game might crash otherwise) ' +
+      'unless you use an appropriate engine fixes mod.'#13#13 +
       'When target platfrom is XBox textures must already be in XBox format. ' +
       'Otherwise put xtexconv.exe and xg.dll in the same folder with BSArchPro ' +
       '(they are bundled with Creation Kit) for automatic convertion.';

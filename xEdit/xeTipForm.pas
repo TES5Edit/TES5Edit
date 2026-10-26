@@ -57,7 +57,8 @@ implementation
 uses
   System.SysUtils,
 
-  wbInterface;
+  wbInterface,
+  xeInit;
 
 procedure ShowTip;
 begin
@@ -102,9 +103,9 @@ var
 begin
   slTips := TStringList.Create;
   try
-    FileContainer := FindComponent('fc'+wbToolName+'Tips') as TFileContainer;
+    FileContainer := FindComponent('fc'+xeToolName+'Tips') as TFileContainer;
 
-    TipsFile := ExtractFilePath(Application.ExeName) + wbToolName + 'Tips.Override.txt';
+    TipsFile := ExtractFilePath(Application.ExeName) + xeToolName + 'Tips.Override.txt';
     if FileExists(TipsFile) then try
       slTips.LoadFromFile(TipsFile, TEncoding.UTF8);
     except end;
@@ -119,7 +120,7 @@ begin
     except end;
 
     if slTips.Count < 1 then try
-      TipsFile := ExtractFilePath(Application.ExeName) + wbToolName + 'Tips.txt';
+      TipsFile := ExtractFilePath(Application.ExeName) + xeToolName + 'Tips.txt';
       if FileExists(TipsFile) then
         slTips.LoadFromFile(TipsFile, TEncoding.UTF8);
     except end;

@@ -14,9 +14,18 @@ unit xeInit;
 interface
 
 uses
-  System.Classes;
+  System.Classes,
+  wbInterface;
 
 var
+  xeGameMode               : TwbGameMode;
+  xeToolMode               : TwbToolMode;
+  xeSubMode                : string;
+  xeApplicationTitle       : string;
+  xeToolName               : string;
+  xeContextRef             : IwbGameContext;
+  xeContext                : TwbGameContext;
+  xeSaveContexts           : TArray<IwbSaveContext>;
   xeScriptToRun            : string;
   xeSettingsFileName       : string;
   xePluginToUse            : string;          // Passed a specific plugin as parameter
@@ -26,10 +35,10 @@ var
   xeIconResource           : string;
 
   xeMasterUpdateDone       : Boolean;
-  xeDontBackup             : Boolean = False;
   xeRemoveTempPath         : Boolean = True;
   xeQuickShowConflicts     : Boolean;
   xeVeryQuickShowConflicts : Boolean;
+  xeSavesMode              : Boolean;
   xeQuickClean             : Boolean;
   xeQuickEdit              : Boolean;
   xeQuickCleanAutoSave     : Boolean;
@@ -37,11 +46,6 @@ var
   xeAutoLoad               : Boolean;
   xeAutoExit               : Boolean;
   xeAutoGameLink           : Boolean;
-  xeTestConflicts          : Boolean;
-  xeTestConflictsFile      : string;
-  xeTestConflictsCompareTo : string;
-  xeTestConflictsFieldsFile: string;
-  xeTestConflictsModGroups : Boolean;
 
   xeParamIndex             : Integer = 1;     // First unused parameter
   xeModulesToUse           : TStringList;
@@ -57,19 +61,23 @@ function xeFindNextValidCmdLineModule(var aStartIndex  : Integer;
                                                        : Boolean;
 
 function xeLoadMOHookFile: Boolean;
-procedure xeSwitchToCoSave;
 
 function xeDoInit: Boolean;
 procedure xeInitStyles;
+function xeNexusModsUrl: string;
+function xeUnattended: Boolean;
+function xeFailureExitCode: Integer;
+procedure xeSaveLogs(const aText: string; aAllowReplace: Boolean);
 
 implementation
 
 uses
   System.IniFiles,
   System.IOUtils,
+  System.Rtti,
   System.SysUtils,
+  System.TypInfo,
   System.UITypes,
-  System.Win.Registry,
 
   Vcl.Dialogs,
   Vcl.Themes,
@@ -92,15 +100,17 @@ uses
   wbDefinitionsTES5,
   wbDefinitionsTES5Saves,
   wbHelpers,
-  wbInterface,
-  wbSteamVDFParser,
+  wbImplementation,
 
   xeGameSelectForm,
+{$IFDEF XE_TEST_CONTROL_POINTS}
+  xeTestHost,
+{$ENDIF}
   xeScriptHost;
 
 function xeCheckForValidExtension(const aFilePath : string): Boolean;
 begin
-  Result := wbIsModule(aFilePath) or wbIsSave(aFilePath);
+  Result := wbIsModule(aFilePath, wbGameIdentities[xeGameMode].GameExeName) or wbIsSave(aFilePath);
 end;
 
 function xeFindNextValidCmdLineFileName(var aStartIndex  : Integer;
@@ -109,13 +119,10 @@ function xeFindNextValidCmdLineFileName(var aStartIndex  : Integer;
                                                          : Boolean;
 begin
   Result := wbFindCmdLineParam(aStartIndex, SwitchChars, aValue);
-  if Result and not FileExists(aValue) then
-    if (aDefaultPath<>'') then
-      if FileExists(aDefaultPath+'\'+aValue) then
-        aValue := ExpandFileName(aDefaultPath+'\'+aValue)
-      else
-        Result := False
-    else
+  if Result then
+    if (aDefaultPath <> '') and (FileExists(aDefaultPath+'\'+aValue) or FileExists(aDefaultPath+'\'+aValue+csDotGhost)) then
+      aValue := ExpandFileName(aDefaultPath+'\'+aValue)
+    else if not FileExists(aValue) then
       Result := False;
 end;
 
@@ -126,15 +133,32 @@ function xeFindNextValidCmdLineModule(var aStartIndex  : Integer;
 begin
   repeat
     Result := xeFindNextValidCmdLineFileName(aStartIndex, aValue, aDefaultPath);
-  until not Result or wbIsModule(aValue);
+  until not Result or wbIsModule(aValue, wbGameIdentities[xeGameMode].GameExeName);
+  if not Result and (aValue <> '') and FileExists(aValue+csDotGhost) then
+    Result := wbIsModule(aValue, wbGameIdentities[xeGameMode].GameExeName);
   if Result  then
     if (AnsiCompareText(ExtractFilePath(ExpandFileName(aValue)), ExpandFileName(aDefaultPath)) = 0) then begin
-      aValue := ExtractFileName(aValue);
+      aValue := wbStripDotGhost(ExtractFileName(ExpandFileName(aValue)));
       if not Assigned(xeModulesToUse) then
         xeModulesToUse := TStringList.Create;
       xeModulesToUse.Add(aValue);
     end else
       Result := False;
+end;
+
+procedure xeInitNotice(const aMessage: string);
+begin
+  if xeUnattended then
+    xeSaveLogs(aMessage, True)
+  else
+    ShowMessage(aMessage);
+end;
+
+procedure xeInitRefusal(const aMessage: string);
+begin
+  xeInitNotice(aMessage);
+  if xeUnattended then
+    ExitCode := xeFailureExitCode;
 end;
 
 // several ini settings should be read before record definitions
@@ -166,95 +190,33 @@ begin
       s := xeSettingsFileName + '.backup.' + FormatDateTime('yyyy_mm_dd_hh_nn_ss', Now);
 
       if not RenameFile(PChar(xeSettingsFileName), PChar(s)) then begin
-        ShowMessage(Format('Could not rename existing settings file to "%s".', [s]));
+        xeInitRefusal(Format('Could not rename existing settings file to "%s".', [s]));
         Exit(False);
       end else
-        ShowMessage(Format('ALL settings have been reset. Existing settings file has been renamed to "%s".', [s]));
+        xeInitNotice(Format('ALL settings have been reset. Existing settings file has been renamed to "%s".', [s]));
     end;
   end;
 
   if FileExists(xeSettingsFileName) then try
     Settings := TMemIniFile.Create(xeSettingsFileName);
     try
-      wbLoadBSAs := Settings.ReadBool('Options', 'LoadBSAs', wbLoadBSAs);
-      wbSimpleRecords := Settings.ReadBool('Options', 'SimpleRecords', wbSimpleRecords);
-      wbDecodeTextureHashes := Settings.ReadBool('Options', 'DecodeTextureHashes2', wbDecodeTextureHashes); {changed name to enforce new default value}
-      wbShowFlagEnumValue := Settings.ReadBool('Options', 'ShowFlagEnumValue', wbShowFlagEnumValue);
-      wbTrackAllEditorID := Settings.ReadBool('Options', 'TrackAllEditorID', wbTrackAllEditorID);
-      wbAllowDirectSave := Settings.ReadBool('Options', 'AllowDirectSave', wbAllowDirectSave);
-      wbSortINFO := Settings.ReadBool('Options', 'SortINFO', wbSortINFO);
-      wbFillPNAM := Settings.ReadBool('Options', 'FillPNAM', wbFillPNAM);
-      wbWriteOffsetData := Settings.ReadBool('Options', 'WriteOffsetData2', wbWriteOffsetData); {changed name to enforce new default value}
-      wbCollapseRecordHeader := Settings.ReadBool('Options', 'CollapseRecordHeader', wbCollapseRecordHeader);
-      wbCollapseObjectBounds := Settings.ReadBool('Options', 'CollapseObjectBounds', wbCollapseObjectBounds);
-      wbCollapseModels := Settings.ReadBool('Options', 'CollapseModels', wbCollapseModels);
-      wbCollapseFactions := Settings.ReadBool('Options', 'CollapseFactions', wbCollapseFactions);
-      wbCollapseFactionRelations := Settings.ReadBool('Options', 'CollapseFactionRelations', wbCollapseFactionRelations);
-      wbCollapseFragments := Settings.ReadBool('Options', 'CollapseFragments', wbCollapseFragments);
-      wbCollapseItems := Settings.ReadBool('Options', 'CollapseItems', wbCollapseItems);
-      wbCollapseLeveledItems := Settings.ReadBool('Options', 'CollapseLeveledItems', wbCollapseLeveledItems);
-      wbCollapseEquipSlots := Settings.ReadBool('Options', 'CollapseEquipSlots', wbCollapseEquipSlots);
-      wbCollapseObjectProperties := Settings.ReadBool('Options', 'CollapseObjectProperties', wbCollapseObjectProperties);
-      wbCollapseScriptProperties := Settings.ReadBool('Options', 'CollapseScriptProperties', wbCollapseScriptProperties);
-      wbCollapseConditions := Settings.ReadBool('Options', 'CollapseConditions', wbCollapseConditions);
+      xeContext.Settings.LoadBSAs := Settings.ReadBool('Options', 'LoadBSAs', xeContext.Settings.LoadBSAs);
+      xeContext.GameDefObj.DefineOptions.SimpleRecords := Settings.ReadBool('Options', 'SimpleRecords', xeContext.GameDefObj.DefineOptions.SimpleRecords);
+      xeContext.GameDefObj.DefineOptions.DecodeTextureHashes := Settings.ReadBool('Options', 'DecodeTextureHashes2', xeContext.GameDefObj.DefineOptions.DecodeTextureHashes); {changed name to enforce new default value}
+      xeContext.Settings.TrackAllEditorID := Settings.ReadBool('Options', 'TrackAllEditorID', xeContext.Settings.TrackAllEditorID);
+      xeContext.Settings.AllowDirectSave := Settings.ReadBool('Options', 'AllowDirectSave', xeContext.Settings.AllowDirectSave);
+      xeContext.Settings.SortINFO := Settings.ReadBool('Options', 'SortINFO', xeContext.Settings.SortINFO);
+      xeContext.Settings.FillPNAM := Settings.ReadBool('Options', 'FillPNAM', xeContext.Settings.FillPNAM);
+      xeContext.Settings.WriteOffsetData := Settings.ReadBool('Options', 'WriteOffsetData2', xeContext.Settings.WriteOffsetData); {changed name to enforce new default value}
+      for var lCollapse in TwbGameDefineOptions.CheckableCollapse do
+        xeContext.GameDefObj.DefineOptions.SetCollapse(lCollapse, Settings.ReadBool('Options', TwbGameDefineOptions.CollapseSettingsKey(lCollapse), lCollapse in xeContext.GameDefObj.DefineOptions.Collapse));
       wbCollapseBenignArray := Settings.ReadBool('Options', 'CollapseBenignArray', wbCollapseBenignArray);
-      wbCollapseRGBA := Settings.ReadBool('Options', 'CollapseRGBA', wbCollapseRGBA);
-      wbCollapseVec3 := Settings.ReadBool('Options', 'CollapseVec3', wbCollapseVec3);
-      wbCollapseHeadParts := Settings.ReadBool('Options', 'CollapseHeadParts', wbCollapseHeadParts);
-      wbCollapseBodyParts := Settings.ReadBool('Options', 'CollapseBodyParts', wbCollapseBodyParts);
-      wbCollapsePosRot := Settings.ReadBool('Options', 'CollapsePosRot', wbCollapsePosRot);
-      wbCollapseRange := Settings.ReadBool('Options', 'CollapseRange', wbCollapseRange);
-      wbCollapseARMABoneData := Settings.ReadBool('Options', 'CollapseARMABoneData', wbCollapseARMABoneData);
-      wbCollapseRACEBoneData := Settings.ReadBool('Options', 'CollapseRACEBoneData', wbCollapseRACEBoneData);
-      wbCollapseScriptData := Settings.ReadBool('Options', 'CollapseScriptData', wbCollapseScriptData);
-      wbCollapseModelInfoTexture := Settings.ReadBool('Options', 'CollapseModelInfoTexture', wbCollapseModelInfoTexture);
-      wbCollapseModelInfoTextures := Settings.ReadBool('Options', 'CollapseModelInfoTextures', wbCollapseModelInfoTextures);
-      wbCollapseModelInfoAddons := Settings.ReadBool('Options', 'CollapseModelInfoAddons', wbCollapseModelInfoAddons);
-      wbCollapseModelInfoMaterial := Settings.ReadBool('Options', 'CollapseModelInfoMaterial', wbCollapseModelInfoMaterial);
-      wbCollapseModelInfoMaterials := Settings.ReadBool('Options', 'CollapseModelInfoMaterials', wbCollapseModelInfoMaterials);
-      wbCollapseModelInfo := Settings.ReadBool('Options', 'CollapseModelInfo', wbCollapseModelInfo);
-      wbCollapseModelInfoHeader := Settings.ReadBool('Options', 'CollapseModelInfoHeader', wbCollapseModelInfoHeader);
-      wbCollapseTimeInterpolator := Settings.ReadBool('Options', 'CollapseTimeInterpolator', wbCollapseTimeInterpolator);
-      wbCollapseTimeInterpolators := Settings.ReadBool('Options', 'CollapseTimeInterpolators', wbCollapseTimeInterpolators);
-      wbCollapseTimeInterpolatorsMultAdd := Settings.ReadBool('Options', 'CollapseTimeInterpolatorsMultAdd', wbCollapseTimeInterpolatorsMultAdd);
-      wbCollapseBluePrintItem := Settings.ReadBool('Options', 'CollapseBluePrintItem', wbCollapseBluePrintItem);
-      wbCollapsePlacement := Settings.ReadBool('Options', 'CollapsePlacement', wbCollapsePlacement);
-      wbCollapseVertices := Settings.ReadBool('Options', 'CollapseVertices', wbCollapseVertices);
-      wbCollapseRDSA := Settings.ReadBool('Options', 'CollapseRDSA', wbCollapseRDSA);
-      wbCollapseFlags := Settings.ReadBool('Options', 'CollapseFlags', wbCollapseFlags);
-      wbCollapseTransforms := Settings.ReadBool('Options', 'CollapseTransforms', wbCollapseTransforms);
-      wbCollapseSounds := Settings.ReadBool('Options', 'CollapseSounds', wbCollapseSounds);
-      wbCollapseDestruction := Settings.ReadBool('Options', 'CollapseDestruction', wbCollapseDestruction);
-      wbCollapseLocations := Settings.ReadBool('Options', 'CollapseLocations', wbCollapseLocations);
-      wbCollapseNavmesh := Settings.ReadBool('Options', 'CollapseNavmesh', wbCollapseNavmesh);
-      wbCollapseOther := Settings.ReadBool('Options', 'CollapseOther', wbCollapseOther);
-      wbCollapsePerk := Settings.ReadBool('Options', 'CollapsePerk', wbCollapsePerk);
-      wbCollapseKeywords := Settings.ReadBool('Options', 'CollapseKeywords', wbCollapseKeywords);
-      wbCollapseFactionRanks := Settings.ReadBool('Options', 'CollapseFactionRanks', wbCollapseFactionRanks);
-      wbCollapseOwnership := Settings.ReadBool('Options', 'CollapseOwnership', wbCollapseOwnership);
-      wbCollapseObjectPaletteDefaults := Settings.ReadBool('Options', 'CollapseObjectPaletteDefaults', wbCollapseObjectPaletteDefaults);
-      wbCollapseTraversal := Settings.ReadBool('Options', 'CollapseTraversal', wbCollapseTraversal);
-      wbCollapseBaseFormComponent := Settings.ReadBool('Options', 'CollapseBaseFormComponent', wbCollapseBaseFormComponent);
-      wbCollapseVehicleConfig := Settings.ReadBool('Options', 'CollapseVehicleConfig', wbCollapseVehicleConfig);
-      wbCollapseWeatherTimeOfDay := Settings.ReadBool('Options', 'CollapseWeatherTimeOfDay', wbCollapseWeatherTimeOfDay);
-      wbCollapseWeatherCloudTextures := Settings.ReadBool('Options', 'CollapseWeatherCloudTextures', wbCollapseWeatherCloudTextures);
-      wbCollapseWeatherCloudSpeed := Settings.ReadBool('Options', 'CollapseWeatherCloudSpeed', wbCollapseWeatherCloudSpeed);
-      wbCollapseWeatherCloudAlphas := Settings.ReadBool('Options', 'CollapseWeatherCloudAlphas', wbCollapseWeatherCloudAlphas);
-      wbCollapseRagdoll := Settings.ReadBool('Options', 'CollapseRagdoll', wbCollapseRagdoll);
-      wbCollapseDirectionRotation := Settings.ReadBool('Options', 'CollapseDirectionRotation', wbCollapseDirectionRotation);
-      wbCollapseMaxHeightData := Settings.ReadBool('Options', 'CollapseMaxHeightData', wbCollapseMaxHeightData);
-      wbCollapseAliases := Settings.ReadBool('Options', 'CollapseAliases', wbCollapseAliases);
-      wbCollapseQuestStage := Settings.ReadBool('Options', 'CollapseQuestStage', wbCollapseQuestStage);
-      wbCollapseQuestLog := Settings.ReadBool('Options', 'CollapseQuestLog', wbCollapseQuestLog);
-      wbCollapseQuestObjective := Settings.ReadBool('Options', 'CollapseQuestObjective', wbCollapseQuestObjective);
-      wbCollapseQuestObjectiveTarget := Settings.ReadBool('Options', 'CollapseQuestObjectiveTarget', wbCollapseQuestObjectiveTarget);
-      wbCollapseScriptEntry := Settings.ReadBool('Options', 'CollapseScriptEntry', wbCollapseScriptEntry);
       sl := TStringList.Create;
       try
         Settings.ReadSection('cpoverride', sl);
         for i := 0 to Pred(sl.Count) do try
           s := sl[i];
-          wbAddLEncodingIfMissing(s, Settings.ReadString('cpoverride', s, ''), False);
+          xeContext.AddLEncodingIfMissing(s, Settings.ReadString('cpoverride', s, ''), False);
         except
           on E:Exception do
             ShowMessage('Could not add code page override "'+sl[i]+'" from wbSettingsFileName: ['+E.ClassName+'] ' + E.Message);
@@ -284,41 +246,6 @@ begin
   SetLength(Result, StrLen(PChar(Result)));
   if (Result <> '') then
     Result := IncludeTrailingBackslash(Result);
-end;
-
-const
-  DataName : array[Boolean] of string = (
-    'Data',
-    'Data Files'   // gmTES3
-  );
-
-function CheckAppPath: string;
-
-  function CheckPath(const aStartFrom: string): string;
-  var
-    s: string;
-  begin
-    Result := '';
-    s := aStartFrom;
-    while Length(s) > 3 do begin
-      if FileExists(s + wbGameExeName) and DirectoryExists(s + DataName[wbGameMode = gmTES3]) then begin
-        Result := s;
-        Exit;
-      end;
-      s := ExtractFilePath(ExcludeTrailingPathDelimiter(s));
-    end;
-  end;
-
-var
-  CurrentDir, ExeDir: string;
-begin
-  CurrentDir := IncludeTrailingPathDelimiter(GetCurrentDir);
-  Result := CheckPath(CurrentDir);
-  if (Result = '') then begin
-    ExeDir := ExtractFilePath(ParamStr(0));
-    if not SameText(CurrentDir, ExeDir) then
-      Result := CheckPath(ExeDir);
-  end;
 end;
 
 function PathRelativeToFull(const BasePath: string; const AddPath: string) : string;
@@ -377,169 +304,99 @@ var
   HookDll : HMODULE;
   Init    : function(logLevel: Integer; profileName: LPCWSTR): BOOL; cdecl;
 begin
-  if not wbShouldLoadMOHookFile then
+  if not xeContext.Settings.ShouldLoadMOHookFile then
     Exit(True);
   Result := False;
-  if not FileExists(wbMOHookFile) then
+  if not FileExists(xeContext.Settings.MOHookFile) then
     Exit;
 
-  HookDll := SafeLoadLibrary(wbMOHookFile, SEM_NOOPENFILEERRORBOX);
+  HookDll := SafeLoadLibrary(xeContext.Settings.MOHookFile, SEM_NOOPENFILEERRORBOX);
   if HookDll <> 0 then begin
     Pointer(@Init) := GetProcAddress(HookDll, 'Init');
     if Assigned(Pointer(@Init)) then
-      Result := Init(0, PWideChar(UnicodeString(wbMOProfile)));
+      Result := Init(0, PWideChar(UnicodeString(xeContext.Settings.MOProfile)));
   end;
 end;
 
-procedure DoInitPath(const ParamIndex: Integer);
-const
-  sBethRegKey             = '\SOFTWARE\Bethesda Softworks\';
-  sUninstallRegKey        = '\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\';
-  sSureAIRegKey           = '\Software\SureAI\';
-
+procedure DoInitPath(const ParamIndex: Integer; var aSettings: TwbGameContextSettings);
 var
-  s, regPath, regKey, client: string;
+  s, lRegistryName: string;
   isEpicNV : Boolean;
   IniFile : TMemIniFile;
+  lDataPath, lOutputPath, lMyGamesTheGamePath, lTheGameIniFileName, lCustomIniFileName, lSavePath, lBackupPath, lCachePath: string;
 begin
-  wbModGroupFileName := wbProgramPath + wbAppName + wbToolName + '.modgroups';
+  var lLocation := wbGameLocations[xeGameMode];
+  var lIdentity := wbGameIdentities[xeGameMode];
+  aSettings.ModGroupFileName := wbProgramPath + lIdentity.AppName + xeToolName + '.modgroups';
   isEpicNV := false;
 
-  if not wbFindCmdLineParam('S', wbScriptsPath) then
-    wbScriptsPath := wbProgramPath + 'Edit Scripts\';
+  if not wbFindCmdLineParam('S', s) then
+    s := wbProgramPath + 'Edit Scripts\';
+  aSettings.ScriptsPath := s;
 
-  if not wbFindCmdLineParam('T', wbTempPath) then
-    wbTempPath := IncludeTrailingPathDelimiter(TPath.GetTempPath + wbAppName + 'Edit')
+  if not wbFindCmdLineParam('T', s) then
+    s := IncludeTrailingPathDelimiter(TPath.GetTempPath + lIdentity.AppName + 'Edit')
   else
-    xeRemoveTempPath := not DirectoryExists(wbTempPath);
+    xeRemoveTempPath := not DirectoryExists(s);
+  aSettings.TempPath := s;
 
-  if not wbFindCmdLineParam('D', wbDataPath) then begin
-    wbDataPath := CheckAppPath;
-
-    if (wbDataPath = '') then
-      for var lID in wbGameSteamID.Split([',']) do
-        begin
-          wbDataPath := GetInstallPathBySteamID(lID);
-          if wbDataPath <> '' then
-            break;
-        end;
-
-    if (wbDataPath = '') then with TRegistry.Create do try
-      Access  := KEY_READ or KEY_WOW64_32KEY;
-      RootKey := HKEY_LOCAL_MACHINE;
-      client  := 'Steam';
-
-      case wbGameMode of
-        gmTES3, gmTES4, gmFO3, gmFNV, gmTES5, gmFO4, gmSSE, gmTES5VR, gmFO4VR: begin
-          regPath := sBethRegKey + wbGameNameReg + '\';
-        end;
-        gmEnderal, gmEnderalSE: begin
-          RootKey := HKEY_CURRENT_USER;
-          regPath := sSureAIRegKey + wbGameNameReg + '\';
-        end;
-        gmFO76, gmSF1, gmTES4R: begin
-          regPath := sUninstallRegKey + wbGameNameReg + '\';
-        end;
+  if not wbFindCmdLineParam('D', lDataPath) then begin
+    case aSettings.FindDataPath(xeGameMode, lRegistryName) of
+      dpsNoRegistryKey: begin
+        s := 'Fatal: Could not open registry key: ' + lRegistryName;
+        xeInitNotice(Format('%s'#13#10'This can happen after %s updates, run the game''s launcher to restore registry settings', [s, 'Steam']));
+        aSettings.DontSave := True;
+        Exit;
       end;
-
-      if not OpenKey(regPath, False) then begin
-        Access := KEY_READ or KEY_WOW64_64KEY;
-        if not OpenKey(regPath, False) then begin
-          s := 'Fatal: Could not open registry key: ' + regPath;
-          ShowMessage(Format('%s'#13#10'This can happen after %s updates, run the game''s launcher to restore registry settings', [s, client]));
-          wbDontSave := True;
-          Exit;
-        end;
+      dpsNoRegistryValue: begin
+        s := Format('Fatal: Could not determine %s installation path, no "%s" registry key', [lIdentity.GameName2, lRegistryName]);
+        xeInitNotice(Format('%s'#13#10'This can happen after %s updates, run the game''s launcher to restore registry settings', [s, 'Steam']));
+        aSettings.DontSave := True;
       end;
-
-      case wbGameMode of
-      gmTES3, gmTES4, gmFO3, gmFNV, gmTES5, gmFO4, gmSSE, gmTES5VR, gmFO4VR:
-                  regKey := 'Installed Path';
-      gmEnderal, gmEnderalSE:  regKey := 'Install_Path';
-      gmFO76, gmSF1, gmTES4R:  regKey := 'InstallLocation';
-      end;
-
-      wbDataPath := ReadString(regKey);
-      wbDataPath := StringReplace(wbDataPath, '"', '', [rfReplaceAll]);
-
-      if (wbDataPath = '') then begin
-        s := Format('Fatal: Could not determine %s installation path, no "%s" registry key', [wbGameName2, regKey]);
-        ShowMessage(Format('%s'#13#10'This can happen after %s updates, run the game''s launcher to restore registry settings', [s, client]));
-        wbDontSave := True;
-      end;
-    finally
-      Free;
     end;
-
-    if wbDataPath <> '' then
-    begin
-      if wbIsOblivionR then
-        wbDataPath := IncludeTrailingPathDelimiter(wbDataPath) + 'OblivionRemastered\Content\Dev\ObvData\Data\'
-      else
-        wbDataPath := IncludeTrailingPathDelimiter(wbDataPath) + DataName[wbGameMode = gmTES3] + '\';
-    end;
+    lDataPath := aSettings.DataPath;
   end else
-    wbDataPath := IncludeTrailingPathDelimiter(wbDataPath);
+    lDataPath := IncludeTrailingPathDelimiter(lDataPath);
+  aSettings.DataPath := lDataPath;
 
-  wbOutputPath := wbDataPath;
+  lOutputPath := lDataPath;
 
   if wbFindCmdLineParam('O', s) and (Length(s) > 0) then
     if s[1] = '.' then
       //assume relative path
-      wbOutputPath := IncludeTrailingPathDelimiter(wbOutputPath + s)
+      lOutputPath := IncludeTrailingPathDelimiter(lOutputPath + s)
     else
       //assume absolute path
-      wbOutputPath := IncludeTrailingPathDelimiter(s);
+      lOutputPath := IncludeTrailingPathDelimiter(s);
+  aSettings.OutputPath := lOutputPath;
 
-  wbMOHookFile := wbDataPath + '..\Mod Organizer\hook.dll';
+  aSettings.MOHookFile := lDataPath + '..\Mod Organizer\hook.dll';
 
-  if not wbFindCmdLineParam('M', wbMyGamesTheGamePath) then begin
+  if not wbFindCmdLineParam('M', lMyGamesTheGamePath) then begin
     xeMyProfileName := GetCSIDLShellFolder(CSIDL_PERSONAL);
     if xeMyProfileName = '' then begin
-      ShowMessage('Fatal: Could not determine my documents folder');
+      xeInitNotice('Fatal: Could not determine my documents folder');
+      aSettings.MyGamesTheGamePath := lMyGamesTheGamePath;
       Exit;
     end;
 
-    case wbGameMode of
-      gmTES3:
-        wbMyGamesTheGamePath := IncludeTrailingPathDelimiter(ExtractFilePath(ExcludeTrailingPathDelimiter(wbDataPath)));
-    else
-      wbMyGamesTheGamePath := xeMyProfileName + 'My Games\' + wbGameName2 + '\';
-    end;
+    lMyGamesTheGamePath := aSettings.DefaultMyGamesPath(xeGameMode, xeMyProfileName, isEpicNV);
+  end else if lMyGamesTheGamePath <> '' then
+    lMyGamesTheGamePath := IncludeTrailingPathDelimiter(ExpandFileName(lMyGamesTheGamePath));
 
-    if (wbGameMode in [gmFNV]) and FileExists(IncludeTrailingPathDelimiter(ExtractFilePath(ExcludeTrailingPathDelimiter(wbDataPath))) + 'EOSSDK-Win32-Shipping.dll') then begin
-        wbMyGamesTheGamePath := xeMyProfileName + 'My Games\FalloutNV_Epic\';
-        isEpicNV := true;
-    end;
-  end;
+  if not wbFindCmdLineParam('I', lTheGameIniFileName) then
+    lTheGameIniFileName := aSettings.DefaultGameIniFileName(xeGameMode, lMyGamesTheGamePath);
 
-  if not wbFindCmdLineParam('I', wbTheGameIniFileName) then begin
-    if wbGameMode in [gmFO3, gmFNV] then
-      wbTheGameIniFileName := wbMyGamesTheGamePath + 'Fallout.ini'
-    else
-      wbTheGameIniFileName := wbMyGamesTheGamePath + wbGameName + '.ini';
+  if not wbFindCmdLineParam('CustomIni', lCustomIniFileName) then
+    lCustomIniFileName := aSettings.DefaultCustomIniFileName(xeGameMode, lMyGamesTheGamePath);
 
-    // VR games don't create ini file in My Games by default, use the one in the game folder
-    if (wbGameMode in [gmTES5VR, gmFO4VR, gmSF1]) and not FileExists(wbTheGameIniFileName) then
-      wbTheGameIniFileName := ExtractFilePath(ExcludeTrailingPathDelimiter(wbDataPath)) + '\' + ExtractFileName(wbTheGameIniFileName)
-    else if wbIsOblivionR and not FileExists(wbTheGameIniFileName) then
-      wbTheGameIniFileName := ExtractFilePath(ExcludeTrailingPathDelimiter(wbDataPath)) + 'Oblivion.ini';
-  end;
-
-  if not wbFindCmdLineParam('CustomIni', wbCustomIniFileName) then begin
-    if wbGameMode in [gmFO3, gmFNV] then
-      wbCustomIniFileName := wbMyGamesTheGamePath + 'FalloutCustom.ini'
-    else
-      wbCustomIniFileName := wbMyGamesTheGamePath + wbGameName + 'Custom.ini';
-  end;
-
-  if not wbFindCmdLineParam('G', wbSavePath) then begin
-    if wbMyGamesTheGamePath = '' then
-      wbMyGamesTheGamePath := ExtractFilePath(wbTheGameIniFileName);
+  if not wbFindCmdLineParam('G', lSavePath) then begin
+    if lMyGamesTheGamePath = '' then
+      lMyGamesTheGamePath := ExtractFilePath(lTheGameIniFileName);
 
     s := 'Saves\';
-    if FileExists(wbTheGameIniFileName) then begin
-      IniFile := TMemIniFile.Create(wbTheGameIniFileName);
+    if FileExists(lTheGameIniFileName) then begin
+      IniFile := TMemIniFile.Create(lTheGameIniFileName);
       try
         s := IniFile.ReadString('General', 'SLocalSavePath', s);
       finally
@@ -547,8 +404,8 @@ begin
       end;
     end;
 
-    if FileExists(wbCustomIniFileName) then begin
-      with TMemIniFile.Create(wbCustomIniFileName) do try
+    if FileExists(lCustomIniFileName) then begin
+      with TMemIniFile.Create(lCustomIniFileName) do try
         if ValueExists('General', 'SLocalSavePath') then
           s := ReadString('General', 'SLocalSavePath', s);
       finally
@@ -556,66 +413,69 @@ begin
       end;
     end;
 
-    // Oblivion Remastered has a hard coded path and ignores ini settings
-    if wbIsOblivionR then
-      s := 'Saved\SaveGames\';
+    if lLocation.FixedSaveFolder <> '' then
+      s := lLocation.FixedSaveFolder;
 
-    wbSavePath := PathRelativeToFull(wbMyGamesTheGamePath, s);
+    lSavePath := PathRelativeToFull(lMyGamesTheGamePath, s);
   end;
-  wbSavePath := IncludeTrailingPathDelimiter(wbSavePath);
+  lSavePath := IncludeTrailingPathDelimiter(lSavePath);
+  aSettings.MyGamesTheGamePath := lMyGamesTheGamePath;
+  aSettings.TheGameIniFileName := lTheGameIniFileName;
+  aSettings.CustomIniFileName := lCustomIniFileName;
+  aSettings.SavePath := lSavePath;
 
   xeParamIndex := ParamIndex;
-  if not wbFindCmdLineParam('P', wbPluginsFileName) then
-    if not (xeFindNextValidCmdLineFileName(xeParamIndex, wbPluginsFileName) and SameText(ExtractFileExt(wbPluginsFileName), '.txt'))
-       or xeCheckForValidExtension(wbPluginsFileName)
+  var lPluginsFileName: string;
+  if not wbFindCmdLineParam('P', lPluginsFileName) then
+    if not (xeFindNextValidCmdLineFileName(xeParamIndex, lPluginsFileName) and SameText(ExtractFileExt(lPluginsFileName), '.txt'))
+       or xeCheckForValidExtension(lPluginsFileName)
     then begin
       xeParamIndex := ParamIndex;
-      wbPluginsFileName := GetCSIDLShellFolder(CSIDL_LOCAL_APPDATA);
-      if wbPluginsFileName = '' then begin
-        ShowMessage('Fatal: Could not determine the local application data folder');
+      lPluginsFileName := GetCSIDLShellFolder(CSIDL_LOCAL_APPDATA);
+      if lPluginsFileName = '' then begin
+        xeInitNotice('Fatal: Could not determine the local application data folder');
         Exit;
       end;
 
-      if wbGameMode = gmFO76 then
-        wbPluginsFileName := wbPluginsFileName + wbGameName + '\Plugins.txt'
-      else if (wbGameMode = gmFNV) and isEpicNV then
-        wbPluginsFileName := wbPluginsFileName + wbGameName + '_Epic' + '\Plugins.txt'
-      else if wbIsOblivionR then
-        wbPluginsFileName :=  IncludeTrailingPathDelimiter(wbDataPath) + 'Plugins.txt'
+      if lLocation.PluginsInData then
+        lPluginsFileName := IncludeTrailingPathDelimiter(aSettings.DataPath) + 'Plugins.txt'
+      else if isEpicNV then
+        lPluginsFileName := lPluginsFileName + lLocation.PluginsFolder + '_Epic' + '\Plugins.txt'
       else
-        wbPluginsFileName := wbPluginsFileName + wbGameName2 + '\Plugins.txt';
+        lPluginsFileName := lPluginsFileName + lLocation.PluginsFolder + '\Plugins.txt';
     end;
-  if ExtractFilePath(wbPluginsFileName) = '' then
-    wbPluginsFileName := ExpandFileName(wbPluginsFileName);
+  if ExtractFilePath(lPluginsFileName) = '' then
+    lPluginsFileName := ExpandFileName(lPluginsFileName);
+  aSettings.PluginsFileName := lPluginsFileName;
 
   // settings in the ini file next to app, or in the same folder with plugins.txt
-  xeSettingsFileName := wbProgramPath + wbAppName + wbToolName + '.ini';
+  xeSettingsFileName := wbProgramPath + lIdentity.AppName + xeToolName + '.ini';
   if not FileExists(xeSettingsFileName) then
   begin
-    if wbIsOblivionR then
-      xeSettingsFileName := GetCSIDLShellFolder(CSIDL_LOCAL_APPDATA) + wbGameName2 + '\Plugins.'+LowerCase(wbAppName)+'viewsettings'
+    if lLocation.PluginsInData then
+      xeSettingsFileName := GetCSIDLShellFolder(CSIDL_LOCAL_APPDATA) + lLocation.PluginsFolder + '\Plugins.'+LowerCase(lIdentity.AppName)+'viewsettings'
     else
-      xeSettingsFileName := ChangeFileExt(wbPluginsFileName, '.'+LowerCase(wbAppName)+'viewsettings');
+      xeSettingsFileName := ChangeFileExt(aSettings.PluginsFileName, '.'+LowerCase(lIdentity.AppName)+'viewsettings');
   end;
 
-  wbBackupPath := '';
-  if not (wbDontSave or wbFindCmdLineParam('B', wbBackupPath)) then
-    wbBackupPath := wbDataPath + wbAppName + 'Edit Backups\';
+  lBackupPath := '';
+  if not (aSettings.DontSave or wbFindCmdLineParam('B', lBackupPath)) then
+    lBackupPath := lDataPath + lIdentity.AppName + 'Edit Backups\';
+  aSettings.BackupPath := lBackupPath;
 
-  wbCachePath := '';
-  if not (wbDontCache or wbFindCmdLineParam('C', wbCachePath)) then
-    if wbDataPath <> '' then
-      wbCachePath := wbDataPath + wbAppName + 'Edit Cache\';
-  if wbCachePath = '' then
-    wbDontCache := True;
-  if not wbDontCache then
-    if not DirectoryExists(wbCachePath) then
-      if not ForceDirectories(wbCachePath) then
-        wbDontCache := True;
-  if wbDontCache then
-    wbCachePath := '';
-
-  wbFindCmdLineParam('R', xeLogFile);
+  lCachePath := '';
+  if not (aSettings.DontCache or wbFindCmdLineParam('C', lCachePath)) then
+    if lDataPath <> '' then
+      lCachePath := lDataPath + lIdentity.AppName + 'Edit Cache\';
+  if lCachePath = '' then
+    aSettings.DontCache := True;
+  if not aSettings.DontCache then
+    if not DirectoryExists(lCachePath) then
+      if not ForceDirectories(lCachePath) then
+        aSettings.DontCache := True;
+  if aSettings.DontCache then
+    lCachePath := '';
+  aSettings.CachePath := lCachePath;
 end;
 
 var
@@ -736,255 +596,175 @@ function _DoInit: Boolean;
 var
   s: string;
   ToolModes: TwbSetOfMode;
-  ToolSources: TwbSetOfSource;
+  SourceName: string;
   i: Integer;
   ExeName: string;
+  lInputs: TwbGameDefInputs;
+  lSettings: TwbGameContextSettings;
 begin
   ExeName := ChangeFileExt(ExtractFileName(ParamStr(0)), '').ToLowerInvariant;
+  lSettings := TwbGameContextSettings.Defaults;
 
   if not wbIsAeroEnabled then
     wbThemesSupported := False;
 
   Result        := True;
   wbReportMode  := False;
-  wbEditAllowed := True;
-  wbDontSave    := False;
+  lSettings.EditAllowed := True;
+  lSettings.DontSave := False;
   wbDevMode     := FindCmdLineSwitch('devmode');
 
   CheckForcedMode;
   DetectAppMode;
 
-  if isMode('Saves') then begin
-    wbToolSource := tsSaves;
-    wbSourceName := 'Saves';
-    wbUseFalsePlugins := True;
-  end else begin // defaults to plugin
-    wbToolSource := tsPlugins;
-    wbSourceName := 'Plugins';
-  end;
+  xeSavesMode := isMode('Saves');
+  if xeSavesMode then begin
+    SourceName := 'Saves';
+    lSettings.UseFalsePlugins := True;
+  end else // defaults to plugin
+    SourceName := 'Plugins';
 
   if isMode('View') then begin
-    wbToolMode    := tmView;
-    wbToolName    := 'View';
-    wbEditAllowed := False;
-    wbDontSave    := True;
+    xeToolMode    := tmView;
+    xeToolName    := 'View';
+    lSettings.EditAllowed := False;
+    lSettings.DontSave := True;
   end else if isMode('MasterUpdate') then begin
-    wbToolMode    := tmMasterUpdate;
-    wbToolName    := 'MasterUpdate';
+    xeToolMode    := tmMasterUpdate;
+    xeToolName    := 'MasterUpdate';
   end else if isMode('OnamUpdate') then begin
-    wbToolMode    := tmOnamUpdate;
-    wbToolName    := 'OnamUpdate';
+    xeToolMode    := tmOnamUpdate;
+    xeToolName    := 'OnamUpdate';
   end else if isMode('MasterRestore') then begin
-    wbToolMode    := tmMasterRestore;
-    wbToolName    := 'MasterRestore';
+    xeToolMode    := tmMasterRestore;
+    xeToolName    := 'MasterRestore';
   end else if isMode('LODGen') then begin
-    wbToolMode    := tmLODgen;
-    wbToolName    := 'LODGen';
-    wbEditAllowed := False;
-    wbDontSave    := True;
+    xeToolMode    := tmLODgen;
+    xeToolName    := 'LODGen';
+    lSettings.EditAllowed := False;
+    lSettings.DontSave := True;
   end else if isMode('Script') then begin
-    wbToolMode    := tmScript;
-    wbToolName    := 'Script';
+    xeToolMode    := tmScript;
+    xeToolName    := 'Script';
   end else if isMode('Translate') then begin
-    wbToolMode    := tmTranslate;
-    wbToolName    := 'Trans';
+    xeToolMode    := tmTranslate;
+    xeToolName    := 'Trans';
   end else if isMode('setESM') then begin
-    wbToolMode    := tmESMify;
-    wbToolName    := 'SettingESMflag';
+    xeToolMode    := tmESMify;
+    xeToolName    := 'SettingESMflag';
   end else if isMode('clearESM') then begin
-    wbToolMode    := tmESPify;
-    wbToolName    := 'ClearingESMflag';
-  end else if isMode('SortAndClean') then begin
-    wbToolMode    := tmSortAndCleanMasters;
-    wbToolName    := 'SortAndCleanMasters';
+    xeToolMode    := tmESPify;
+    xeToolName    := 'ClearingESMflag';
+  end else if isMode('SortAndClean') or isMode('SortAndCleanMasters') then begin
+    xeToolMode    := tmSortAndCleanMasters;
+    xeToolName    := 'SortAndCleanMasters';
   end else if isMode('CheckForErrors') then begin
-    wbToolMode    := tmCheckForErrors;
-    wbToolName    := 'CheckForErrors';
+    xeToolMode    := tmCheckForErrors;
+    xeToolName    := 'CheckForErrors';
   end else if isMode('CheckForITM') then begin
-    wbToolMode    := tmCheckForITM;
-    wbToolName    := 'CheckForITM';
+    xeToolMode    := tmCheckForITM;
+    xeToolName    := 'CheckForITM';
   end else if isMode('CheckForDR') then begin
-    wbToolMode    := tmCheckForDR;
-    wbToolName    := 'CheckForDR';
+    xeToolMode    := tmCheckForDR;
+    xeToolName    := 'CheckForDR';
   end else if isMode('Edit') then begin
-    wbToolMode    := tmEdit;
-    wbToolName    := 'Edit';
+    xeToolMode    := tmEdit;
+    xeToolName    := 'Edit';
   end else begin
     ShowMessage('Application name must contain Edit, View, LODGen, OnamUpdate, MasterUpdate, MasterRestore, setESM, clearESM, sortAndCleanMasters, CheckForITM, CheckForDR or CheckForErrors to select mode.');
     Exit(False);
   end;
 
-  if not (wbToolMode in [tmView, tmEdit]) then
+  if not (xeToolMode in [tmView, tmEdit]) then
     wbPrettyFormID := False;
 
-  wbLanguage := 'English';
+  if xeToolMode in [tmEdit, tmScript] then begin
+    if FindCmdLineSwitch('autoload') then
+      xeAutoLoad := True;
 
-  wbGameExeName        := '';
+    if FindCmdLineSwitch('autoexit') then
+      xeAutoExit := True;
+  end;
+
+  wbFindCmdLineParam('R', xeLogFile);
+
   if isMode('FNV') then begin
-    wbGameMode         := gmFNV;
-    wbAppName          := 'FNV';
-    wbGameName         := 'FalloutNV';
-    wbGameSteamID      := '22380,22490';
+    xeGameMode         := gmFNV;
     ToolModes          := wbAlwaysMode + [tmMasterUpdate, tmMasterRestore];
-    ToolSources        := [tsPlugins, tsSaves];
   end
 
   else if isMode('FO3') then begin
-    wbGameMode         := gmFO3;
-    wbAppName          := 'FO3';
-    wbGameName         := 'Fallout3';
-    wbGameSteamID      := '22370,22300';
+    xeGameMode         := gmFO3;
     ToolModes          := wbAlwaysMode + [tmMasterUpdate, tmMasterRestore];
-    ToolSources        := [tsPlugins];
   end
 
   else if isMode('TES3') then begin
-    wbGameMode         := gmTES3;
-    wbAppName          := 'TES3';
-    wbGameName         := 'Morrowind';
-    wbGameSteamID      := '22320';
+    xeGameMode         := gmTES3;
     (**)
     ToolModes          := (**)[tmView];(** )wbAlwaysMode - [tmLODgen];(**)
-    ToolSources        := [tsPlugins];
     (**)
   end
 
   else if isMode('TES4') then begin
-    wbGameMode         := gmTES4;
-    wbAppName          := 'TES4';
-    wbGameName         := 'Oblivion';
-    wbGameSteamID      := '22330,900883';
+    xeGameMode         := gmTES4;
     ToolModes          := wbAlwaysMode;
-    ToolSources        := [tsPlugins];
   end
 
   else if isMode('TES4R') then begin
-    wbGameMode         := gmTES4R;
-    wbAppName          := 'TES4R';
-    wbGameName         := 'Oblivion';
-    wbGameExeName      := 'Oblivion Remastered';
-    wbGameName2        := 'Oblivion Remastered';
-    wbGameMasterEsm    := 'Oblivion.esm';
-    wbGameNameReg      := 'Steam App 2623190';
-    wbGameSteamID      := '2623190';
+    xeGameMode         := gmTES4R;
     ToolModes          := wbAlwaysMode;
-    ToolSources        := [tsPlugins];
   end
 
   else if isMode('TES5') then begin
-    wbGameMode         := gmTES5;
-    wbAppName          := 'TES5';
-    wbGameName         := 'Skyrim';
-    wbGameExeName      := 'TESV';
-    wbGameSteamID      := '72850';
+    xeGameMode         := gmTES5;
     ToolModes          := wbAlwaysMode + [tmOnamUpdate];
-    ToolSources        := [tsPlugins, tsSaves];
   end
 
   else if isMode('EnderalSE') then begin
-    wbGameMode         := gmEnderalSE;
-    wbAppName          := 'EnderalSE';
-    wbGameName         := 'Enderal';
-    wbGameExeName      := 'SkyrimSE';
-    wbGameName2        := 'Enderal Special Edition';
-    wbGameNameReg      := 'EnderalSE';
-    wbGameMasterEsm    := 'Skyrim.esm';
-    wbGameSteamID      := '976620';
+    xeGameMode         := gmEnderalSE;
     ToolModes          := wbAlwaysMode + [tmOnamUpdate];
-    ToolSources        := [tsPlugins, tsSaves];
   end
 
   else if isMode('Enderal') then begin
-    wbGameMode         := gmEnderal;
-    wbAppName          := 'Enderal';
-    wbGameName         := 'Enderal';
-    wbGameExeName      := 'TESV';
-    wbGameMasterEsm    := 'Skyrim.esm';
-    wbGameSteamID      := '933480';
+    xeGameMode         := gmEnderal;
     ToolModes          := wbAlwaysMode + [tmOnamUpdate];
-    ToolSources        := [tsPlugins, tsSaves];
   end
 
   else if isMode('TES5VR') then begin
-    wbGameMode         := gmTES5VR;
-    wbAppName          := 'TES5VR';
-    wbGameName         := 'Skyrim';
-    wbGameName2        := 'Skyrim VR';
-    wbGameExeName      := 'SkyrimVR';
-    wbGameSteamID      := '611670';
+    xeGameMode         := gmTES5VR;
     ToolModes          := wbAlwaysMode + [tmOnamUpdate];
-    ToolSources        := [tsPlugins];
   end
 
   else if isMode('SSE') then begin
-    wbGameMode         := gmSSE;
-    wbAppName          := 'SSE';
-    wbGameName         := 'Skyrim';
-    wbGameExeName      := 'SkyrimSE';
-    wbGameName2        := 'Skyrim Special Edition';
-    wbGameSteamID      := '489830';
+    xeGameMode         := gmSSE;
     ToolModes          := wbAlwaysMode + [tmOnamUpdate];
-    ToolSources        := [tsPlugins, tsSaves];
   end
 
   else if isMode('FO4') then begin
-    wbGameMode         := gmFO4;
-    wbAppName          := 'FO4';
-    wbGameName         := 'Fallout4';
-    wbArchiveExtension := '.ba2';
-    wbLanguage         := 'En';
-    wbGameSteamID      := '377160';
+    xeGameMode         := gmFO4;
     ToolModes          := wbAlwaysMode;
-    ToolSources        := [tsPlugins, tsSaves];
   end
 
   else if isMode('FO4VR') then begin
-    wbGameMode         := gmFO4VR;
-    wbAppName          := 'FO4VR';
-    wbGameName         := 'Fallout4';
-    wbGameExeName      := 'Fallout4VR';
-    wbGameName2        := 'Fallout4VR';
-    wbGameNameReg      := 'Fallout 4 VR';
-    wbLanguage         := 'En';
-    wbArchiveExtension := '.ba2';
-    wbGameSteamID      := '611660';
+    xeGameMode         := gmFO4VR;
     ToolModes          := wbAlwaysMode;
-    ToolSources        := [tsPlugins];
   end
 
   else if isMode('FO76') then begin
-    wbGameMode         := gmFO76;
-    wbAppName          := 'FO76';
-    wbGameName         := 'Fallout76';
-    wbGameName2        := 'Fallout 76';
-    wbGameNameReg      := 'Steam App 1151340';
-    wbGameMasterEsm    := 'SeventySix.esm';
-    wbLanguage         := 'En';
-    wbArchiveExtension := '.ba2';
-    wbGameSteamID      := '1151340';
+    xeGameMode         := gmFO76;
     ToolModes          := wbAlwaysMode;
-    ToolSources        := [tsPlugins];
   end
 
   else if isMode('SF1') then begin
-    wbGameMode         := gmSF1;
-    wbAppName          := 'SF1';
-    wbGameName         := 'Starfield';
-    wbGameNameReg      := 'Steam App 1716740';
-    wbArchiveExtension := '.ba2';
-    wbLanguage         := 'En';
-    wbGameSteamID      := '1716740';
+    xeGameMode         := gmSF1;
     ToolModes          := wbAlwaysMode - [tmESMify, tmESPify, tmLODgen];
-    ToolSources        := [tsPlugins];
-    wbLightName        := 'Small';
 
     if    FindCmdLineSwitch('ItJustWorksTM')
       and FindCmdLineSwitch('ThisIsFine')
       and FindCmdLineSwitch('GiveMeTheRedPill')
     then begin
       VersionString.Title := 'ItJustWorks[TM] Edition';
-      wbRedPill := True;
-      wbStarfieldIsABugInfestedHellhole := False; //you wish... but lets pretend
+      lSettings.RedPill := True;
     end;
   end
 
@@ -993,243 +773,117 @@ begin
     Exit(False);
   end;
 
-  if wbGameExeName = '' then
-    wbGameExeName := wbGameName;
+  var lIdentity := wbGameIdentities[xeGameMode];
 
-  wbGameExeName := wbGameExeName + csDotExe;
-
-  if wbGameMode in [gmFO3, gmFNV] then begin
-    wbUDRSetZ := False;
-    wbUDRSetZValue := -15000;
-  end;
-
-  if not (wbToolMode in ToolModes) then begin
-    ShowMessage('Application ' + wbGameName + ' does not currently support ' + wbToolName);
+  if not (xeToolMode in ToolModes) then begin
+    xeInitRefusal('Application ' + lIdentity.GameName + ' does not currently support ' + xeToolName);
     Exit(False);
   end;
-
-  if not (wbToolSource in ToolSources) then begin
-    ShowMessage('Application ' + wbGameName + ' does not currently support ' + wbSourceName);
-    Exit(False);
-  end;
-
-  if (wbToolSource = tsSaves) and (wbToolMode = tmEdit) then begin
-    ShowMessage('Application ' + wbGameName + ' does not currently support ' + wbSourceName + ' in ' + wbToolName + ' mode.');
-    Exit(False);
-  end;
-
-  if wbGameName2 = '' then
-    wbGameName2 := wbGameName;
-
-  if wbGameNameReg = '' then
-    wbGameNameReg := wbGameName2;
-
-  if wbGameMasterEsm = '' then
-    wbGameMasterEsm := wbGameName + csDotEsm;
 
   if FindCmdLineSwitch('DontCache') then
-    wbDontCache := True;
-  if wbDontCache or FindCmdLineSwitch('DontCacheLoad') then
-    wbDontCacheLoad := True;
-  if wbDontCache or FindCmdLineSwitch('DontCacheSave') then
-    wbDontCacheSave := True;
-  if wbDontCacheLoad and wbDontCacheSave then
-    wbDontCache := True;
+    lSettings.DontCache := True;
+  if lSettings.DontCache or FindCmdLineSwitch('DontCacheLoad') then
+    lSettings.DontCacheLoad := True;
+  if lSettings.DontCache or FindCmdLineSwitch('DontCacheSave') then
+    lSettings.DontCacheSave := True;
+  if lSettings.DontCacheLoad and lSettings.DontCacheSave then
+    lSettings.DontCache := True;
 
-  DoInitPath(xeParamIndex);
+  DoInitPath(xeParamIndex, lSettings);
 
-  // specific Game settings
-  case wbGameMode of
-    gmFNV: begin
-      wbVWDInTemporary        := True;
-      wbLoadBSAs              := False;
-      wbCanSortINFO           := True;
-      wbAllowESPMasters       := True;
-      wbAllowESPMastersOnSave := True;
-      wbHNVSE                 := FileExists(wbDataPath + 'NVSE\Plugins\Hnvse.dll');
-    end;
-    gmFO3: begin
-      wbVWDInTemporary      := True;
-      wbLoadBSAs            := False;
-      wbCanSortINFO         := True;
-      wbAllowESPMasters     := True;
-      wbAllowESPMastersOnSave := True;
-    end;
-    gmTES3: begin
-      wbLoadBSAs            := False;
-      wbAllowInternalEdit   := false;
-      wbDontCache           := True;
-      wbDontCacheLoad       := True;
-      wbDontCacheSave       := True;
-      wbBuildRefs           := False;
-      wbVWDInTemporary      := True;
-      wbCreateContainedIn   := False;
-      wbAllowESPMasters     := True;
-      wbAllowESPMastersOnSave := True;
-    end;
-    gmTES4: begin
-      if (not FileExists(wbDataPath + 'Oblivion.esm')) and FileExists(wbDataPath + 'Nehrim.esm') then begin
-        wbAppName           := 'Nehrim';
-        wbGameMasterEsm     := 'Nehrim.esm';
-      end;
-      wbLoadBSAs            := True;
-      wbAllowInternalEdit   := false;
-      wbCanSortINFO         := True;
-      wbAllowESPMasters     := True;
-      wbAllowESPMastersOnSave := True;
-    end;
-    gmTES4R: begin
-      wbLoadBSAs            := False;
-      wbAllowInternalEdit   := False;
-      wbCanSortINFO         := True;
-      wbAllowESPMasters     := True;
-      wbAllowESPMastersOnSave := True;
-    end;
-    gmTES5, gmEnderal, gmTES5VR, gmSSE, gmEnderalSE: begin
-      wbVWDInTemporary      := True;
-      wbLoadBSAs            := True;  // localization won't work otherwise
-      wbHideIgnored         := False; // to show Form Version
-      wbCanSortINFO         := True;
-      wbVRESL               := (wbGameMode in [gmTES5VR]) and FileExists(wbDataPath + 'SKSE\Plugins\skyrimvresl.dll');
-      wbHasAddedLightSupport := wbVRESL;
-      wbHasAddedUpdateSupport := wbVRESL;
-      wbCS                  := wbIsSkyrimSE and FileExists(wbDataPath + 'SKSE\Plugins\CommunityShaders.dll');
-      wbAllowESPMasters     := True;
-      wbAllowESPMastersOnSave := True;
-    end;
-    gmFO4, gmFO4VR: begin
-      wbVWDInTemporary      := True;
-      wbVWDAsQuestChildren  := True;
-      wbLoadBSAs            := True;  // localization won't work otherwise
-      wbHideIgnored         := False; // to show Form Version
-      wbAlwaysSaveOnam      := True;
-      wbAlwaysSaveOnamForce := True;
-      wbVRESL               := (wbGameMode in [gmFO4VR]) and (FileExists(wbDataPath + 'F4SE\Plugins\falloutvresl.dll') or
-                                                              FileExists(wbDataPath + 'F4SE\Plugins\Daytripper4.dll'));
-      wbHasAddedLightSupport := wbVRESL;
-      wbHasAddedUpdateSupport := wbVRESL;
-      wbAllowESPMasters     := True;
-      wbAllowESPMastersOnSave := True;
-    end;
-    gmFO76: begin
-      wbVWDInTemporary      := True;
-      wbVWDAsQuestChildren  := True;
-      wbLoadBSAs            := True;  // localization won't work otherwise
-      wbHideIgnored         := False; // to show Form Version
-      wbAlwaysSaveOnam      := True;
-      wbAlwaysSaveOnamForce := True;
-    end;
-    gmSF1: begin
-      wbComplexFileFileID   := True;
-      wbEnforceAllMasters   := True;
-      wbVWDInTemporary      := True;
-      wbVWDAsQuestChildren  := True;
-      wbLoadBSAs            := True;  // localization won't work otherwise
-      wbHideIgnored         := False; // to show Form Version
-      wbAlwaysSaveOnam      := True;
-      wbAlwaysSaveOnamForce := True;
-      wbDecodeTextureHashes := True;
-    end;
-  else
-    ShowMessage('Unknown GameMode');
+  lSettings.ApplyGameDefaults(xeGameMode);
+  lSettings.ToolName := xeToolName;
+  lInputs := TwbGameDefInputs.Detect(xeGameMode, lSettings.DataPath);
+
+  xeContextRef := wbCreateGameContext(wbCreateGameDef(xeGameMode, lInputs, False));
+  xeContext := xeContextRef as TwbGameContext;
+  xeContext.Settings := lSettings;
+
+  if xeSavesMode and not xeContext.GameDefObj.HasSaveDef then begin
+    xeInitRefusal('Application ' + xeContext.GameDefObj.GameName + ' does not currently support ' + SourceName);
     Exit(False);
   end;
 
-  wbSortINFO := wbCanSortINFO;
+  if xeSavesMode and (xeToolMode = tmEdit) then begin
+    xeInitRefusal('Application ' + xeContext.GameDefObj.GameName + ' does not currently support ' + SourceName + ' in ' + xeToolName + ' mode.');
+    Exit(False);
+  end;
+
+  xeContext.Settings.SortINFO := gcCanSortINFO in xeContext.GameDefObj.Capabilities;
 
   if not ReadSettings then
     Exit(False);
 
-  if wbGameMode = gmSF1 then
-    wbDecodeTextureHashes := True;
+  if xeContext.GameDefObj.GameMode = gmSF1 then begin
+    xeContext.GameDefObj.DefineOptions.DecodeTextureHashes := True;
+    if xeContext.Settings.RedPill then
+      xeContext.GameDefObj.DefineOptions.StarfieldIsABugInfestedHellhole := False; //you wish... but lets pretend
+  end;
 
-  if wbCanSortINFO then begin
+  if gcCanSortINFO in xeContext.GameDefObj.Capabilities then begin
     if FindCmdLineSwitch('sortinfo') then
-      wbSortINFO := True;
+      xeContext.Settings.SortINFO := True;
 
     if FindCmdLineSwitch('nosortinfo') then
-      wbSortINFO := False;
+      xeContext.Settings.SortINFO := False;
 
     if FindCmdLineSwitch('FillPNAM') then
-      wbFillPNAM := True;
+      xeContext.Settings.FillPNAM := True;
 
     if FindCmdLineSwitch('NoFillPNAM') then
-      wbFillPNAM := False;
+      xeContext.Settings.FillPNAM := False;
   end;
 
-  // Was gmTES5, but is now gmEnderal
-  if wbGameMode <= gmEnderal then
-    wbAddDefaultLEncodingsIfMissing(False)
-  else begin
-    wbLEncodingDefault[False] := TEncoding.UTF8;
-    case wbGameMode of
-    gmSSE, gmTES5VR, gmEnderalSE:
-      wbAddLEncodingIfMissing('english', '1252', False);
-    else {FO4, FO76}
-      wbAddLEncodingIfMissing('en', '1252', False);
-    end;
-  end;
-
-  wbAddDefaultLEncodingsIfMissing(True);
+  xeContext.AddGameDefaultLEncodings;
 
   if wbFindCmdLineParam('AllowDirectSaves', s) then begin
-    wbAllowDirectSaveFor := TStringList.Create;
-    wbAllowDirectSaveFor.Sorted := True;
-    wbAllowDirectSaveFor.Duplicates := dupIgnore;
-    wbAllowDirectSaveFor.AddStrings(s.Split([',']).ForEach(Trim).RemoveEmpty);
-    if wbAllowDirectSaveFor.Count < 1 then begin
-      FreeAndNil(wbAllowDirectSaveFor);
-      wbAllowDirectSave := True;
-    end;
+    xeContext.AllowDirectSaveFor.AddStrings(s.Split([',']).ForEach(Trim).RemoveEmpty);
+    if xeContext.AllowDirectSaveFor.Count < 1 then
+      xeContext.Settings.AllowDirectSave := True;
   end else
     if FindCmdLineSwitch('AllowDirectSaves') then
-      wbAllowDirectSave := True;
+      xeContext.Settings.AllowDirectSave := True;
 
   if FindCmdLineSwitch('IKnowWhatImDoing') then
   begin
     wbIKnowWhatImDoing := True;
 
     if FindCmdLineSwitch('AllowMakePartial') then
-      wbAllowMakePartial := True;
+      xeContext.Settings.AllowMakePartial := True;
 
     if FindCmdLineSwitch('AllowMasterFilesEdit') then
-      wbAllowMasterFilesEdit := True;
+      xeContext.GameDefObj.DefineOptions.AllowMasterFilesEdit := True;
 
     if FindCmdLineSwitch('AllowEditHEDRVersion') then
-      wbAllowEditHEDRVersion := True;
+      xeContext.GameDefObj.DefineOptions.AllowEditHEDRVersion := True;
 
     if FindCmdLineSwitch('StripEmptyMasters') then
-      wbStripEmptyMasters := True;
+      xeContext.Settings.StripEmptyMasters := True;
 
     if wbFindCmdLineParam('StripMasters', s) then
     begin
-      wbStripMasters := True;
+      xeContext.Settings.StripMasters := True;
 
-      wbStripMastersFileNames := TStringList.Create;
-      wbStripMastersFileNames.Sorted := True;
-      wbStripMastersFileNames.Duplicates := dupIgnore;
-      wbStripMastersFileNames.AddStrings(s.Split([',']).ForEach(Trim).RemoveEmpty);
+      xeContext.StripMastersFileNames.AddStrings(s.Split([',']).ForEach(Trim).RemoveEmpty);
 
-      if wbStripMastersFileNames.Count < 1 then
-      begin
-        FreeAndNil(wbStripMastersFileNames);
-        wbStripMasters := False;
-      end;
+      if xeContext.StripMastersFileNames.Count < 1 then
+        xeContext.Settings.StripMasters := False;
     end;
 
     if FindCmdLineSwitch('AllowESPMaster') then
-      wbAllowESPMasters := True;
+      xeContext.Settings.AllowESPMasters := True;
   end;
 
-  if wbToolMode in [tmEdit, tmScript] then begin
-    if FindCmdLineSwitch('autoload') then
-      xeAutoLoad := True;
+{$IFDEF XE_TEST_CONTROL_POINTS}
+  if not xeTestSwitches.ParsePump then
+    Exit(False);
+  if not xeTestSwitches.ParseStateManifest then
+    Exit(False);
+  if not xeTestSwitches.ParseToolMode then
+    Exit(False);
+{$ENDIF}
 
-    if FindCmdLineSwitch('autoexit') then
-      xeAutoExit := True;
-  end;
-
-  if wbToolMode = tmEdit then begin
+  if xeToolMode = tmEdit then begin
     if   FindCmdLineSwitch('quickshowconflicts') or FindCmdLineSwitch('qsc')
       or ExeName.Contains('quickshowconflicts') or ExeName.Contains('qsc') then
       xeQuickShowConflicts := True;
@@ -1241,17 +895,10 @@ begin
       xeAutoLoad := True;
     end;
 
-    if wbFindCmdLineParam('testconflicts', xeTestConflictsFile) then begin
-      if xeTestConflictsFile = '' then begin
-        ShowMessage('testconflicts requires an output file, as -testconflicts:<filename>');
-        Exit(False);
-      end;
-      xeTestConflicts := True;
-      xeAutoLoad      := True;
-      wbFindCmdLineParam('comparetofile', xeTestConflictsCompareTo);
-      wbFindCmdLineParam('fieldsfile', xeTestConflictsFieldsFile);
-      xeTestConflictsModGroups := FindCmdLineSwitch('modgroups');
-    end;
+{$IFDEF XE_TEST_CONTROL_POINTS}
+    if not xeTestSwitches.ParseEdit then
+      Exit(False);
+{$ENDIF}
 
     if   FindCmdLineSwitch('autogamelink') or FindCmdLineSwitch('agl')
       or ExeName.Contains('autogamelink') or ExeName.Contains('agl') then begin
@@ -1264,47 +911,52 @@ begin
         xeVeryQuickShowConflicts := True;
 
     if (FindCmdLineSwitch('quickclean') or FindCmdLineSwitch('qc')
-      or ExeName.Contains('quickclean') or ExeName.Contains('qc')) and (wbToolSource in [tsPlugins]) then begin
-      if wbCanSortINFO then
-        wbFillPNAM := True;
+      or ExeName.Contains('quickclean') or ExeName.Contains('qc')) and not xeSavesMode then begin
+      if gcCanSortINFO in xeContext.GameDefObj.Capabilities then
+        xeContext.Settings.FillPNAM := True;
       xeQuickClean := True;
     end;
 
     if (FindCmdLineSwitch('quickautoclean') or FindCmdLineSwitch('qac')
-      or ExeName.Contains('quickautoclean') or ExeName.Contains('qac')) and (wbToolSource in [tsPlugins]) then begin
-      if wbCanSortINFO then
-        wbFillPNAM := True;
+      or ExeName.Contains('quickautoclean') or ExeName.Contains('qac')) and not xeSavesMode then begin
+      if gcCanSortINFO in xeContext.GameDefObj.Capabilities then
+        xeContext.Settings.FillPNAM := True;
       xeQuickClean := True;
       xeQuickCleanAutoSave := xeQuickClean;
     end;
   end;
 
+{$IFDEF XE_TEST_CONTROL_POINTS}
+  if not xeTestSwitches.ParseSaveContexts then
+    Exit(False);
+{$ENDIF}
+
   if FindCmdLineSwitch('showlargesubrecords') then
-    wbHideLargeSubrecords := False;
+    xeContext.GameDefObj.DefineOptions.HideLargeSubrecords := False;
 
   if xeQuickClean then
-    wbWriteOffsetData := True;
+    xeContext.Settings.WriteOffsetData := True;
 
   if xeQuickClean then begin
     wbIKnowWhatImDoing := True;
-    wbFillINOM := False;
-    wbFillINOA := False;
+    xeContext.Settings.FillINOM := False;
+    xeContext.Settings.FillINOA := False;
   end;
 
   if FindCmdLineSwitch('fixup') then
-    wbAllowInternalEdit := True
+    xeContext.Settings.AllowInternalEdit := True
   else if FindCmdLineSwitch('nofixup') then
-    wbAllowInternalEdit := False;
+    xeContext.Settings.AllowInternalEdit := False;
 
   if FindCmdLineSwitch('skipbsa') then
-    wbLoadBSAs := False
+    xeContext.Settings.LoadBSAs := False
   else if FindCmdLineSwitch('forcebsa') then
-    wbLoadBSAs := True;
+    xeContext.Settings.LoadBSAs := True;
 
   if FindCmdLineSwitch('skipInternalEditing') then
-    wbAllowInternalEdit := False
+    xeContext.Settings.AllowInternalEdit := False
   else if FindCmdLineSwitch('forceInternalEditing') then
-    wbAllowInternalEdit := True;
+    xeContext.Settings.AllowInternalEdit := True;
 
   if FindCmdLineSwitch('showfixup') then
     wbShowInternalEdit := True
@@ -1312,103 +964,25 @@ begin
     wbShowInternalEdit := False;
 
   if xeQuickClean then begin
-    wbFixupPGRD := True;
-    wbAllowInternalEdit := True;
-    wbSimpleRecords := False;
+    xeContext.Settings.FixupPGRD := True;
+    xeContext.Settings.AllowInternalEdit := True;
+    xeContext.GameDefObj.DefineOptions.SimpleRecords := False;
   end;
 
-  if wbFindCmdLineParam('l', s) then begin
-    wbLanguage := s;
-  end else begin
-    if FileExists(wbTheGameIniFileName) then begin
-      with TMemIniFile.Create(wbTheGameIniFileName) do try
-        case wbGameMode of
-          gmTES4: case ReadInteger('Controls', 'iLanguage', 0) of
-            1: s := 'German';
-            2: s := 'French';
-            3: s := 'Spanish';
-            4: s := 'Italian';
-          else
-            s := 'English';
-          end;
-        else
-          s := Trim(ReadString('General', 'sLanguage', '')).ToLower;
-        end;
-      finally
-        Free;
-      end;
-    end;
+  if wbFindCmdLineParam('l', s) then
+    xeContext.Settings.Language := s
+  else
+    xeContext.ApplyGameIniLanguage;
 
-    if FileExists(wbCustomIniFileName) then begin
-       with TMemIniFile.Create(wbCustomIniFileName) do try
-        case wbGameMode of
-          gmTES4: begin
-            if ValueExists('Controls', 'iLanguage') then
-              case ReadInteger('Controls', 'iLanguage', 0) of
-                1: s := 'German';
-                2: s := 'French';
-                3: s := 'Spanish';
-                4: s := 'Italian';
-              else
-                s := 'English';
-              end;
-          end else begin
-            if ValueExists('General', 'sLanguage') then
-              s := Trim(ReadString('General', 'sLanguage', '')).ToLower;
-          end;
-        end;
-      finally
-        Free;
-      end;
-    end;
-
-    if (s <> '') and not SameText(s, wbLanguage) then
-      wbLanguage := s;
-  end;
-
-  wbEncodingTrans := wbEncodingForLanguage(wbLanguage, False);
+  xeContext.Settings.EncodingTrans := xeContext.EncodingForLanguage(xeContext.Settings.Language, False);
 
   if wbFindCmdLineParam('cp-general', s) then
-    wbEncoding :=  wbMBCSEncoding(s);
+    xeContext.Settings.Encoding :=  wbMBCSEncoding(s);
 
   if wbFindCmdLineParam('cp', s) or wbFindCmdLineParam('cp-trans', s) then
-    wbEncodingTrans :=  wbMBCSEncoding(s);
+    xeContext.Settings.EncodingTrans :=  wbMBCSEncoding(s);
 
-  // definitions
-  case wbGameMode of
-    gmFNV: case wbToolSource of
-      tsSaves:   DefineFNVSaves;
-      tsPlugins: DefineFNV;
-    end;
-    gmFO3: case wbToolSource of
-      tsSaves:   DefineFO3Saves;
-      tsPlugins: DefineFO3;
-    end;
-    gmFO4, gmFO4VR: case wbToolSource of
-      tsSaves:   DefineFO4Saves;
-      tsPlugins: DefineFO4;
-    end;
-    gmFO76: case wbToolSource of
-      tsPlugins: DefineFO76;
-    end;
-    gmTES3: case wbToolSource of
-      tsPlugins: DefineTES3;
-    end;
-    gmTES4: case wbToolSource of
-      tsSaves:   DefineTES4Saves;
-      tsPlugins: DefineTES4;
-    end;
-    gmTES4R: case wbToolSource of
-      tsPlugins: DefineTES4;
-    end;
-    gmTES5, gmTES5VR, gmEnderal, gmSSE, gmEnderalSE: case wbToolSource of
-      tsSaves:   DefineTES5Saves;
-      tsPlugins: DefineTES5;
-    end;
-    gmSF1: case wbToolSource of
-      tsPlugins: DefineSF1;
-    end;
-  end;
+  xeContext.GameDefObj.EnsureDefined;
 
   if FindCmdLineSwitch('reportinjected') then
     wbReportInjected := True;
@@ -1426,48 +1000,48 @@ begin
     wbMoreInfoForIndex := true;
 
   if wbIKnowWhatImDoing and FindCmdLineSwitch('IKnowIllBreakMyGameWithThis') then
-    wbAllowEditGameMaster := True;
+    xeContext.Settings.AllowEditGameMaster := True;
 
   if FindCmdLineSwitch('TrackAllEditorID') then
-    wbTrackAllEditorID := True;
+    xeContext.Settings.TrackAllEditorID := True;
 
 
   if FindCmdLineSwitch('IgnoreESL') or FindCmdLineSwitch('IgnoreLight') or FindCmdLineSwitch('IgnoreSmall') then
-    wbIgnoreLight := True
+    xeContext.Settings.IgnoreLight := True
   else
     if FindCmdLineSwitch('PseudoESL') or FindCmdLineSwitch('PseudoLight') or FindCmdLineSwitch('PseudoSmall') then
-      wbPseudoLight := True;
+      xeContext.Settings.PseudoLight := True;
 
   if FindCmdLineSwitch('IgnoreMedium') then
-    wbIgnoreMedium := True
+    xeContext.Settings.IgnoreMedium := True
   else
     if FindCmdLineSwitch('PseudoMedium') then
-      wbPseudoMedium := True;
+      xeContext.Settings.PseudoMedium := True;
 
   if FindCmdLineSwitch('IgnoreUpdate') then
-    wbIgnoreUpdate := True
+    xeContext.Settings.IgnoreUpdate := True
   else
     if FindCmdLineSwitch('PseudoUpdate') then
-      wbPseudoUpdate := True;
+      xeContext.Settings.PseudoUpdate := True;
 
-  if wbComplexFileFileID then begin
-    wbIgnoreLight := False;
-    wbPseudoLight := False;
-    wbIgnoreMedium := False;
-    wbPseudoMedium := False;
-    wbIgnoreUpdate := False;
-    wbPseudoUpdate := False;
+  if gcComplexFileFileID in xeContext.GameDefObj.Capabilities then begin
+    xeContext.Settings.IgnoreLight := False;
+    xeContext.Settings.PseudoLight := False;
+    xeContext.Settings.IgnoreMedium := False;
+    xeContext.Settings.PseudoMedium := False;
+    xeContext.Settings.IgnoreUpdate := False;
+    xeContext.Settings.PseudoUpdate := False;
   end;
 
   if FindCmdLineSwitch('SimpleFormIDs') then
     wbPrettyFormID := False;
 
   if FindCmdLineSwitch('EnforceAllMasters') then
-    wbEnforceAllMasters := True;
+    xeContext.Settings.EnforceAllMasters := True;
 
   if wbFindCmdLineParam('quickedit', xePluginToUse) then begin
-    if not (wbToolMode = tmEdit) then
-      ShowMessage(wbToolName+' is incompatible with quickedit request!')
+    if not (xeToolMode = tmEdit) then
+      xeInitNotice(xeToolName+' is incompatible with quickedit request!')
     else
       xeQuickEdit := True;
   end;
@@ -1484,131 +1058,145 @@ begin
     Inc(i);
   if xeAutoGameLink then
     Inc(i);
-  if xeTestConflicts then
+{$IFDEF XE_TEST_CONTROL_POINTS}
+  if xeTestSwitches.Conflicts then
     Inc(i);
+{$ENDIF}
   if xeQuickEdit then
     Inc(i);
   if xeQuickSEQ then
     Inc(i);
 
   if i > 1 then begin
-    if xeTestConflicts then
+{$IFDEF XE_TEST_CONTROL_POINTS}
+    if xeTestSwitches.Conflicts then
       ExitCode := 255
     else
-      ShowMessage('Can''t activate more than one out of Quick Clean, Quick Show Conflicts, Auto GameLink, Test Conflicts, Quick Edit, or Generate SEQ modes same time.');
+{$ENDIF}
+      xeInitRefusal('Can''t activate more than one out of Quick Clean, Quick Show Conflicts, Auto GameLink, Test Conflicts, Quick Edit, or Generate SEQ modes same time.');
     Exit(False);
   end;
 
-  if wbToolMode in wbPluginModes then // look for the file name
-    if not xeFindNextValidCmdLineModule(xeParamIndex, xePluginToUse, wbDataPath) then begin
-      ShowMessage(wbToolName+' mode requires a valid plugin name!');
+  if xeToolMode in wbPluginModes then // look for the file name
+    if not xeFindNextValidCmdLineModule(xeParamIndex, xePluginToUse, xeContext.Settings.DataPath) then begin
+      if xePluginToUse = '' then begin
+        ExitCode := 255;
+        ShowMessage(xeToolName+' mode requires a valid plugin name!');
+      end else begin
+        xeSaveLogs('Error: Selected plugin "' + xePluginToUse + '" does not exist', True);
+        ExitCode := 255;
+      end;
       Exit(False);
     end;
 
   // specific Tool Mode settings overrides
-  case wbToolMode of
+  case xeToolMode of
     tmLODgen: begin
       wbIKnowWhatImDoing       := True;
-      wbAllowInternalEdit      := False;
+      xeContext.Settings.AllowInternalEdit := False;
       wbShowInternalEdit       := False;
-      wbLoadBSAs               := True;
-      wbBuildRefs              := False;
+      xeContext.Settings.LoadBSAs := True;
+      xeContext.Settings.BuildRefs := False;
     end;
     tmScript: begin
       wbIKnowWhatImDoing       := True;
-      wbLoadBSAs               := True;
-      wbBuildRefs              := True;
+      xeContext.Settings.LoadBSAs := True;
+      xeContext.Settings.BuildRefs := True;
     end;
     tmOnamUpdate, tmMasterUpdate, tmESMify: begin
       wbIKnowWhatImDoing       := True;
-      wbAllowInternalEdit      := False;
+      xeContext.Settings.AllowInternalEdit := False;
       wbShowInternalEdit       := False;
-      wbLoadBSAs               := False;
-      wbBuildRefs              := False;
-      wbMasterUpdateFilterONAM := wbToolMode in [tmESMify];
-      if wbToolMode = tmOnamUpdate then begin
-        wbAlwaysSaveOnam       := True;
-        wbAlwaysSaveOnamForce  := True;
+      xeContext.Settings.LoadBSAs := False;
+      xeContext.Settings.BuildRefs := False;
+      xeContext.Settings.MasterUpdateFilterONAM := xeToolMode in [tmESMify];
+      if xeToolMode = tmOnamUpdate then begin
+        xeContext.Settings.AlwaysSaveOnam := True;
+        xeContext.Settings.AlwaysSaveOnamForce := True;
       end;
     end;
     tmMasterRestore, tmESPify, tmCheckForDR, tmCheckForITM, tmCheckForErrors: begin
       wbIKnowWhatImDoing       := True;
-      wbAllowInternalEdit      := False;
+      xeContext.Settings.AllowInternalEdit := False;
       wbShowInternalEdit       := False;
-      wbLoadBSAs               := False;
-      wbBuildRefs              := False;
+      xeContext.Settings.LoadBSAs := False;
+      xeContext.Settings.BuildRefs := False;
     end;
     tmTranslate: begin
-      if wbGameMode >= gmTES5 then
-        wbLoadBSAs             := True; //needed for localization
-      wbTranslationMode        := True;
+      if xeContext.GameDefObj.GameMode in [gmTES5, gmEnderal, gmFO4, gmSSE, gmTES5VR, gmEnderalSE, gmFO4VR, gmFO76, gmSF1] then
+        xeContext.Settings.LoadBSAs := True; //needed for localization
+      xeContext.Settings.TranslationMode := True;
       wbHideUnused             := True;
-      wbHideIgnored            := True;
-      wbHideNeverShow          := True;
+      xeContext.Settings.HideIgnored := True;
+      xeContext.Settings.HideNeverShow := True;
     end;
   end;
 
+  xeContext.Settings.IgnoreESMFlagForLoadOrder := xeToolMode in [tmMasterUpdate, tmMasterRestore];
+
   if FindCmdLineSwitch('alwayssaveonam') then
-    wbAlwaysSaveOnam := True;
+    xeContext.Settings.AlwaysSaveOnam := True;
 
   if FindCmdLineSwitch('filteronam') then
-    wbMasterUpdateFilterONAM := True
+    xeContext.Settings.MasterUpdateFilterONAM := True
   else if FindCmdLineSwitch('noFilteronam') then
-    wbMasterUpdateFilterONAM := False;
+    xeContext.Settings.MasterUpdateFilterONAM := False;
 
   if FindCmdLineSwitch('FixPersistence') then
-    wbMasterUpdateFixPersistence := True
+    xeContext.Settings.MasterUpdateFixPersistence := True
   else if FindCmdLineSwitch('NoFixPersistence') then
-    wbMasterUpdateFixPersistence := False;
+    xeContext.Settings.MasterUpdateFixPersistence := False;
 
   if xeVeryQuickShowConflicts then
-    wbSubMode := 'Very Quick Show Conflicts'
+    xeSubMode := 'Very Quick Show Conflicts'
   else if xeQuickShowConflicts then
-    wbSubMode := 'Quick Show Conflicts'
+    xeSubMode := 'Quick Show Conflicts'
   else if xeQuickCleanAutoSave then
-    wbSubMode := 'Quick Auto Clean'
+    xeSubMode := 'Quick Auto Clean'
   else if xeQuickClean then
-    wbSubMode := 'Quick Clean'
+    xeSubMode := 'Quick Clean'
   else if xeAutoGameLink then
-    wbSubMode := 'Auto Game Link';
+    xeSubMode := 'Auto Game Link';
 
   if not wbFindCmdLineParam('scripthost', s) then
     s := xeDefaultScriptHost;
   TxeScriptHost.Init(s);
 
-  wbApplicationTitle := wbAppName + wbToolName + ' ' + VersionString;
+  xeApplicationTitle := xeContext.GameDefObj.AppName + xeToolName + ' ' + VersionString;
   {$IFDEF LiteVersion}
-  wbApplicationTitle := wbApplicationTitle + ' Lite';
+  xeApplicationTitle := xeApplicationTitle + ' Lite';
   {$ENDIF}
   {$IFDEF WIN64}
-  wbApplicationTitle := wbApplicationTitle + ' x64';
+  xeApplicationTitle := xeApplicationTitle + ' x64';
   {$ENDIF WIN64}
-  if wbSubMode <> '' then
-    wbApplicationTitle := wbApplicationTitle + ' (' + wbSubMode + ')';
+  if xeSubMode <> '' then
+    xeApplicationTitle := xeApplicationTitle + ' (' + xeSubMode + ')';
 
   if xeAutoLoad then
-    wbApplicationTitle := wbApplicationTitle + ' [Auto Load]';
+    xeApplicationTitle := xeApplicationTitle + ' [Auto Load]';
 
   if xeAutoExit then
-    wbApplicationTitle := wbApplicationTitle + ' [Auto Exit]';
+    xeApplicationTitle := xeApplicationTitle + ' [Auto Exit]';
 
   if FindCmdLineSwitch('nobuildrefs') then
-    wbBuildRefs := False;
+    xeContext.Settings.BuildRefs := False;
 
   if FindCmdLineSwitch('fixuppgrd') then
-    wbFixupPGRD := True;
+    xeContext.Settings.FixupPGRD := True;
 
-  wbShouldLoadMOHookFile := wbFindCmdLineParam('moprofile', wbMOProfile);
+  var lMOProfile: string;
+  xeContext.Settings.ShouldLoadMOHookFile := wbFindCmdLineParam('moprofile', lMOProfile);
+  xeContext.Settings.MOProfile := lMOProfile;
 
   if FindCmdLineSwitch('moreunknown') then
     wbMoreInfoForUnknown := True;
 
   try
-    if (wbToolMode = tmEdit) and not wbIsAssociatedWithExtension('.' + wbAppName + 'pas') then
-      wbAssociateWithExtension('.' + wbAppName + 'pas', wbAppName + 'Script', wbAppName + wbToolName + ' script');
+    if (xeToolMode = tmEdit) and not wbIsAssociatedWithExtension('.' + xeContext.GameDefObj.AppName + 'pas') then
+      wbAssociateWithExtension('.' + xeContext.GameDefObj.AppName + 'pas', xeContext.GameDefObj.AppName + 'Script', xeContext.GameDefObj.AppName + xeToolName + ' script');
   except end;
 
-  case wbGameMode of
+  case xeContext.GameDefObj.GameMode of
     gmTES3, gmTES4, gmTES4R,  gmTES5, gmEnderal, gmSSE, gmTES5VR, gmEnderalSE:
       xeIconResource := 'xTESICON';
     gmFO3, gmFNV, gmFO4, gmFO4VR, gmFO76:
@@ -1622,26 +1210,157 @@ begin
   except end;
 end;
 
+function xeNexusModsUrl: string;
+begin
+  Result := xeContext.GameDefObj.NexusModsUrl;
+  if (xeToolMode = tmLODgen) and (xeContext.GameDefObj.LODGenNexusModsUrl <> '') then
+    Result := xeContext.GameDefObj.LODGenNexusModsUrl;
+end;
+
+function xeUnattended: Boolean;
+begin
+  Result := xeAutoExit or (xeToolMode in wbPluginModes);
+end;
+
+function xeFailureExitCode: Integer;
+begin
+  if xeToolMode in wbPluginModes then
+    Result := 255
+  else
+    Result := 1;
+end;
+
+procedure xeSaveLogs(const aText: string; aAllowReplace: Boolean);
+
+  procedure SaveLog(const s: string);
+  var
+    txt      : AnsiString;
+    fs       : TFileStream;
+  begin
+    fs := nil;
+    try
+      try
+        if FileExists(s) then begin
+          fs := TFileStream.Create(s, fmOpenReadWrite);
+          fs.Seek(0, soFromEnd);
+        end else
+          fs := TFileStream.Create(s, fmCreate);
+        if aAllowReplace then
+          if fs.Size > 3 * 1024 * 1024 then // truncate log file at 3MB
+            fs.Size := 0;
+        txt := AnsiString(aText) + #13#10;
+        fs.WriteBuffer(txt[1], Length(txt));
+      // suppress log saving errors, it is not critical for xEdit
+      except end;
+    finally
+      if Assigned(fs) then
+        FreeAndNil(fs);
+    end;
+  end;
+
+begin
+  if Assigned(xeContext) then
+    SaveLog(wbProgramPath + xeContext.GameDefObj.AppName + xeToolName + '_log.txt');
+  if xeLogFile <> '' then
+    SaveLog(xeLogFile);
+end;
+
+procedure xeDumpInitState(const aFileName: string);
+
+  function ValueText(const aValue: TValue): string;
+  begin
+    case aValue.Kind of
+      tkClass: begin
+        var lObject := aValue.AsObject;
+        if not Assigned(lObject) then
+          Result := 'nil'
+        else if lObject is TEncoding then
+          Result := lObject.ClassName + ':' + IntToStr(TEncoding(lObject).CodePage)
+        else
+          Result := lObject.ClassName;
+      end;
+      tkMethod:
+        Result := BoolToStr(Assigned(PMethod(aValue.GetReferenceToRawData).Code), True);
+      tkDynArray: begin
+        Result := '';
+        for var lIdx := 0 to Pred(aValue.GetArrayLength) do
+          Result := Result + '|' + aValue.GetArrayElement(lIdx).ToString;
+        Result := '[' + Copy(Result, 2, MaxInt) + ']';
+      end;
+    else
+      Result := aValue.ToString;
+    end;
+  end;
+
+var
+  lLines         : TStringList;
+  lRtti          : TRttiContext;
+  lField         : TRttiField;
+  lCapabilities  : string;
+  lSettings      : TwbGameContextSettings;
+  lDefineOptions : TwbGameDefineOptions;
+begin
+  lLines := TStringList.Create;
+  try
+    lLines.Add('host.GameMode=' + GetEnumName(TypeInfo(TwbGameMode), Ord(xeGameMode)));
+    lLines.Add('host.ToolMode=' + GetEnumName(TypeInfo(TwbToolMode), Ord(xeToolMode)));
+    lLines.Add('host.ToolName=' + xeToolName);
+    var lIdentity := xeContext.GameDefObj.Identity;
+    lLines.Add('host.AppName=' + lIdentity.AppName);
+    lLines.Add('host.GameName=' + lIdentity.GameName);
+    lLines.Add('host.GameExeName=' + lIdentity.GameExeName);
+    lLines.Add('host.GameName2=' + lIdentity.GameName2);
+    lLines.Add('host.GameNameReg=' + lIdentity.GameNameReg);
+    lLines.Add('host.GameMasterEsm=' + lIdentity.GameMasterEsm);
+    lLines.Add('host.GameSteamID=' + lIdentity.SteamID);
+    lLines.Add('host.LightName=' + lIdentity.LightName);
+    lLines.Add('host.ApplicationTitle=' + xeApplicationTitle);
+    lLines.Add('host.IconResource=' + xeIconResource);
+    lLines.Add('host.NexusModsUrl=' + xeNexusModsUrl);
+    lLines.Add('def.GameMode=' + GetEnumName(TypeInfo(TwbGameMode), Ord(xeContext.GameDefObj.GameMode)));
+    lLines.Add('def.AppName=' + xeContext.GameDefObj.AppName);
+    lLines.Add('def.GameName=' + xeContext.GameDefObj.GameName);
+    lLines.Add('def.GameExeName=' + xeContext.GameDefObj.GameExeName);
+    lLines.Add('def.GameMasterEsm=' + xeContext.GameDefObj.GameMasterEsm);
+    lCapabilities := '';
+    for var lCapability := Low(TwbGameCapability) to High(TwbGameCapability) do
+      if lCapability in xeContext.GameDefObj.Capabilities then
+        lCapabilities := lCapabilities + ' ' + GetEnumName(TypeInfo(TwbGameCapability), Ord(lCapability));
+    lLines.Add('def.Capabilities=' + Trim(lCapabilities));
+    lLines.Add('def.HasSaveDef=' + BoolToStr(xeContext.GameDefObj.HasSaveDef, True));
+    lRtti := TRttiContext.Create;
+    lSettings := xeContext.Settings;
+    for lField in lRtti.GetType(TypeInfo(TwbGameContextSettings)).GetFields do
+      lLines.Add('settings.' + lField.Name + '=' + ValueText(lField.GetValue(@lSettings)));
+    lDefineOptions := xeContext.GameDefObj.DefineOptions;
+    for lField in lRtti.GetType(TypeInfo(TwbGameDefineOptions)).GetFields do
+      lLines.Add('defineoptions.' + lField.Name + '=' + ValueText(lField.GetValue(@lDefineOptions)));
+    lLines.SaveToFile(aFileName);
+  finally
+    lLines.Free;
+  end;
+end;
+
 function xeDoInit: Boolean;
+var
+  s: string;
 begin
   try
     Result := _DoInit;
+    if Result and wbFindCmdLineParam('dumpinit', s) then begin
+      xeDumpInitState(s);
+      Result := False;
+    end;
   except
     on E: Exception do begin
       Result := False;
       if not (E is EAbort) then
-        ShowMessage('Initialization failed: [' + E.ClassName + '] ' + E.Message);
+        if xeUnattended then begin
+          xeSaveLogs('Initialization failed: [' + E.ClassName + '] ' + E.Message, True);
+          ExitCode := xeFailureExitCode;
+        end else
+          ShowMessage('Initialization failed: [' + E.ClassName + '] ' + E.Message);
     end;
-  end;
-end;
-
-procedure xeSwitchToCoSave;
-begin
-  case wbGameMode of
-    gmFNV:  SwitchToFNVCoSave;
-    gmFO3:  SwitchToFO3CoSave;
-    gmTES4: SwitchToTES4CoSave;
-    gmTES5, gmTES5VR, gmEnderal, gmSSE, gmEnderalSE:  SwitchToTES5CoSave;
   end;
 end;
 

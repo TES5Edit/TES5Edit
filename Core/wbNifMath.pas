@@ -793,7 +793,7 @@ begin
 
   for tr := Low(triangles) to High(triangles) do begin
     tri := @triangles[tr];
-    if (tri[0] >= Length(verts)) or (tri[1] >= Length(verts)) or (tri[2] >= Length(verts)) then
+    if (tri[0] >= Cardinal(Length(verts))) or (tri[1] >= Cardinal(Length(verts))) or (tri[2] >= Cardinal(Length(verts))) then
       raise Exception.CreateFmt('Triangle (%d, %d, %d) exceeds the number of vertices %d', [tri[0], tri[1], tri[2], Length(verts)]);
 
     i1 := tri[0];
@@ -881,7 +881,7 @@ begin
 
   for i := Low(triangles) to High(triangles) do begin
     tri := @triangles[i];
-    if (tri[0] >= Length(verts)) or (tri[1] >= Length(verts)) or (tri[2] >= Length(verts)) then
+    if (tri[0] >= Cardinal(Length(verts))) or (tri[1] >= Cardinal(Length(verts))) or (tri[2] >= Cardinal(Length(verts))) then
       raise Exception.CreateFmt('Triangle (%d, %d, %d) exceeds the number of vertices %d', [tri[0], tri[1], tri[2], Length(verts)]);
 
     triVertex[0] := @verts[tri[0]];

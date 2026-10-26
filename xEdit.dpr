@@ -79,7 +79,6 @@ uses
   wbImplementation in 'Core\wbImplementation.pas',
   wbInterface in 'Core\wbInterface.pas',
   wbLoadOrder in 'Core\wbLoadOrder.pas',
-  wbLocalization in 'Core\wbLocalization.pas',
   wbLOD in 'Core\wbLOD.pas',
   wbModGroups in 'Core\wbModGroups.pas',
   wbNifMath in 'Core\wbNifMath.pas',
@@ -88,11 +87,12 @@ uses
   wbSort in 'Core\wbSort.pas',
   wbStreams in 'Core\wbStreams.pas',
 
-  xeInit in 'xEdit\xeInit.pas',
   xeDeveloperMessageForm in 'xEdit\xeDeveloperMessageForm.pas' {frmDeveloperMessage},
   xeEditWarningForm in 'xEdit\xeEditWarningForm.pas' {frmEditWarning},
   xeFileSelectForm in 'xEdit\xeFileSelectForm.pas' {frmFileSelect},
   xeFilterOptionsForm in 'xEdit\xeFilterOptionsForm.pas' {frmFilterOptions},
+  xeGameSelectForm in 'xEdit\xeGameSelectForm.pas' {frmGameSelect},
+  xeInit in 'xEdit\xeInit.pas',
   xejviScriptAdapter in 'xEdit\JvI\xejviScriptAdapter.pas',
   xejviScriptAdapterContainer in 'xEdit\JvI\xejviScriptAdapterContainer.pas',
   xejviScriptAdapterDF in 'xEdit\JvI\xejviScriptAdapterDF.pas',
@@ -105,6 +105,7 @@ uses
   xejviScriptAdapterMiscVcl in 'xEdit\JvI\xejviScriptAdapterMiscVcl.pas',
   xejviScriptAdapterRecord in 'xEdit\JvI\xejviScriptAdapterRecord.pas',
   xejviScriptAdapterResource in 'xEdit\JvI\xejviScriptAdapterResource.pas',
+  xejviScriptArguments in 'xEdit\JvI\xejviScriptArguments.pas',
   xejviScriptHost in 'xEdit\JvI\xejviScriptHost.pas',
   xeLegendForm in 'xEdit\xeLegendForm.pas' {frmLegend},
   xeLocalizationForm in 'xEdit\xeLocalizationForm.pas' {frmLocalization},
@@ -121,8 +122,7 @@ uses
   xeTipForm in 'xEdit\xeTipForm.pas',
   xeViewElementsForm in 'xEdit\xeViewElementsForm.pas' {frmViewElements},
   xeWaitForm in 'xEdit\xeWaitForm.pas' {frmWait},
-  xeWorldspaceCellDetailsForm in 'xEdit\xeWorldspaceCellDetailsForm.pas' {frmWorldspaceCellDetails},
-  xeGameSelectForm in 'xEdit\xeGameSelectForm.pas' {frmGameSelect};
+  xeWorldspaceCellDetailsForm in 'xEdit\xeWorldspaceCellDetailsForm.pas' {frmWorldspaceCellDetails};
 
 {$R *.res}
 {$MAXSTACKSIZE 2097152}
@@ -153,9 +153,9 @@ begin
   end;
 
   {$IFDEF EXCEPTION_LOGGING_ENABLED}
-  nxEHAppVersion := wbApplicationTitle;
+  nxEHAppVersion := xeApplicationTitle;
   {$ENDIF}
-  Application.Title := wbApplicationTitle;
+  Application.Title := xeApplicationTitle;
   try
     Application.CreateForm(TfrmMain, frmMain);
   Application.Run;

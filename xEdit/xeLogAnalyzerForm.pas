@@ -13,6 +13,7 @@ unit xeLogAnalyzerForm;
 interface
 
 uses
+  VirtualTrees.Types,
   System.Classes,
 
   Vcl.Controls,
@@ -109,7 +110,7 @@ type
     property Host: TStream read FHost;
   public
     constructor Create(AHost: TStream);
-    destructor Destroy; override;
+    destructor Destroy; override; final;
     function ReadLn: string; overload;
     function ReadLn(out Line: string): Boolean; overload;
     property EOF: Boolean read FEOF;
@@ -125,6 +126,7 @@ uses
 
   Winapi.Messages,
 
+  xeInit,
   xeMainForm;
 
 {$R *.dfm}
@@ -217,7 +219,7 @@ var
   j      : integer;
 begin
   Result := nil;
-  FileID := FormID.FileID;
+  FileID := FormID.FileID[xeContext.SlotLayout];
 
   if FileID.FullSlot = $FF then
     Exit;
@@ -225,18 +227,18 @@ begin
   _File := nil;
   j := Low(PFiles^);
   while (j <= High(PFiles^)) and not Assigned(_File) do begin
-    if PFiles^[j].LoadOrderFileID = FileID then
+    if PFiles^[j].HasLoadOrderFileID and (PFiles^[j].LoadOrderFileID = FileID) then
       _File := PFiles^[j];
     Inc(j);
   end;
   while Assigned(_File) do begin
-    Result := _File.RecordByFormID[FormID.ChangeFileID(_File.FileFileID[True]), True, True];
+    Result := _File.RecordByFormID[FormID.ChangeFileID(xeContext.SlotLayout, _File.FileFileID[True]), True, True];
     if Assigned(Result) then
       Exit;
 
     _File := nil;
     while (j <= High(PFiles^)) and not Assigned(_File) do begin
-      if PFiles^[j].LoadOrderFileID = FileID then
+      if PFiles^[j].HasLoadOrderFileID and (PFiles^[j].LoadOrderFileID = FileID) then
         _File := PFiles^[j];
       Inc(j);
     end;
@@ -328,7 +330,7 @@ begin
       if IsPlugin then
         CellText := Data.PEntry.Text
       else
-        CellText := Data.PEntry.FormID.ToString(True)
+        CellText := Data.PEntry.FormID.ToDisplayString(xeContext.SlotLayout)
     end;
     1: begin
       if Supports(Data.PEntry.Element, IwbMainRecord, MainRecord) then
@@ -392,7 +394,7 @@ begin
     j := 0;
     for i := Low(LogEntries) to High(LogEntries) do
       if LogEntries[i].LoadOrder = lo then begin
-        if j = Node.Index then
+        if Cardinal(j) = Node.Index then
           Data.PEntry := @LogEntries[i];
         Inc(j);
       end;
@@ -401,7 +403,7 @@ end;
 
 function IsHex(c: char): boolean;
 begin
-  Result := c in ['0'..'9', 'A'..'F'];
+  Result := CharInSet(c, ['0'..'9', 'A'..'F']);
 end;
 
 function IsHexStr(const s: string): boolean;
@@ -495,7 +497,7 @@ begin
     end;
 
   elem := RecordByLoadOrderFormID(fid);
-  if (fid.FileID.FullSlot <> $FF) and not Assigned(elem) then begin
+  if (fid.FileID[xeContext.SlotLayout].FullSlot <> $FF) and not Assigned(elem) then begin
     if FormIDErrors = 0 then
       memoText.Lines.Add('Unknown FormID [' + s + '], changed load order? All other unknown forms will be ignored.');
     Inc(FormIDErrors);
@@ -505,7 +507,7 @@ begin
   SetLength(LogEntries, Succ(Length(LogEntries)));
   with LogEntries[Pred(Length(LogEntries))] do begin
     FormID := fid;
-    LoadOrder := FormID.FileID.FullSlot;
+    LoadOrder := FormID.FileID[xeContext.SlotLayout].FullSlot;
     Element := elem;
     Text := txt;
     if IsError then Value1 := 1 else Value1 := 0;
@@ -523,7 +525,7 @@ begin
   with TTextStream.Create(TFileStream.Create(aFilename, fmOpenRead or fmShareDenyWrite)) do try
     Limit := MaxLogSize;
     while ReadLn(sLine) do begin
-      if (Length(sLine) > 25) and (sLine[1] = '[') and (sLine[2] in ['0'..'9']) then begin
+      if (Length(sLine) > 25) and (sLine[1] = '[') and CharInSet(sLine[2], ['0'..'9']) then begin
         if Length(Entry) > 0 then
           ParsePapyrusData(Entry);
         Entry := sLine;
@@ -573,7 +575,7 @@ begin
     end;
 
   elem := RecordByLoadOrderFormID(fid);
-  if (fid.FileID.FullSlot <> $FF) and not Assigned(elem) then begin
+  if (fid.FileID[xeContext.SlotLayout].FullSlot <> $FF) and not Assigned(elem) then begin
     if FormIDErrors = 0 then
       memoText.Lines.Add('Unknown FormID [' + s + '], changed load order? All other unknown forms will be ignored.');
     Inc(FormIDErrors);
@@ -583,7 +585,7 @@ begin
   SetLength(LogEntries, Succ(Length(LogEntries)));
   with LogEntries[Pred(Length(LogEntries))] do begin
     FormID := fid;
-    LoadOrder := FormID.FileID.FullSlot;
+    LoadOrder := FormID.FileID[xeContext.SlotLayout].FullSlot;
     Element := elem;
     Text := txt;
     Value1 := 1;

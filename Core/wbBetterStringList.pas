@@ -33,7 +33,7 @@ uses
 type
   TAssign = procedure(Source: TPersistent) of object;
 
-  {Still valid up to Delphi 12, check for newer versions}
+  {Still valid up to Delphi 13, check for newer versions}
   TStringsPrivateHacker = class(TPersistent)
   protected
     FEncoding: TEncoding;
@@ -47,7 +47,7 @@ type
     FOptions: TStringsOptions;
   end;
 
-  {Still valid up to Delphi 12, check for newer versions}
+  {Still valid up to Delphi 13, check for newer versions}
   TStringListPrivateHacker = class(TStringsPrivateHacker)
   protected
     FList: TStringItemList;

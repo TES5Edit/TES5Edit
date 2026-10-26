@@ -28,7 +28,7 @@ type
   TListBox = class(Vcl.StdCtrls.TListBox)
   protected
     procedure DrawItem(Index: Integer; Rect: TRect; State: TOwnerDrawState);
-      override;
+      override; final;
   end;
 
   TfrmGameSelect = class(TForm)

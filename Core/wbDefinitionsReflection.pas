@@ -5,6 +5,7 @@ unit wbDefinitionsReflection;
 interface
 
 uses
+  wbDefinitionsCommon,
   wbInterface;
 
 function wbREFLStringToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
@@ -12,7 +13,7 @@ function wbREFLStringToInt(const aString: string; const aElement: IwbElement): I
 function wbREFLDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 function wbREFLShouldInclude(aBasePtr: Pointer; aEndPtr: Pointer; const aArray: IwbElement): Boolean;
 
-function wbREFLColor(const aName: string): IwbValueDef;
+function wbREFLColor(const aGameDef: TwbGameDefCommon; const aName: string): IwbValueDef;
 function wbREFLEffect(const aName: string): IwbValueDef;
 function wbREFLFloat(const aName: string; const aDefaultValue: Integer = 0): IwbValueDef;
 function wbREFLFormID(const aName: string; const aSigs: TwbSignatures = []): IwbValueDef;
@@ -23,7 +24,7 @@ function wbREFLFloatEnum : IwbEnumDef;
 
 function wbREFLOperationEnum : IwbStringDefFormater;
 
-function wbReflection(const aSig  : TwbSignature;
+function wbReflection(const aGameDef: TwbGameDefCommon; const aSig  : TwbSignature;
                       const aData : IwbValueDef = nil)
                                   : IwbRecordMemberDef;
 
@@ -32,7 +33,6 @@ implementation
 uses
   System.Variants,
 
-  wbDefinitionsCommon,
   wbDefinitionsSignatures,
   wbHelpers;
 
@@ -160,14 +160,14 @@ begin
   Result := PWord(aBasePtr)^ <> $FFFF;
 end;
 
-function wbREFLColor(const aName: string): IwbValueDef;
+function wbREFLColor(const aGameDef: TwbGameDefCommon; const aName: string): IwbValueDef;
 begin
   Result :=
     wbStruct(aName, [
       wbLenString('Operation', 2)
         .SetFormater(wbREFLOperationEnum)
         .SetDefaultEditValue('Replace'),
-      wbFloatRGBA('Value'),
+      aGameDef.wbFloatRGBA('Value'),
       wbFloat('Blend Amount').SetDefaultNativeValue(1)
     ]).SetSummaryKey([1])
       .IncludeFlag(dfCollapsed)
@@ -249,7 +249,7 @@ begin
     ]);
 end;
 
-function wbReflection(const aSig  : TwbSignature;
+function wbReflection(const aGameDef: TwbGameDefCommon; const aSig  : TwbSignature;
                       const aData : IwbValueDef = nil)
                                   : IwbRecordMemberDef;
 begin
@@ -297,7 +297,7 @@ begin
             2, 'User',
             3, 'Struct'
             ], False, 4))
-          ).IncludeFlag(dfCollapsed, wbCollapseFlags),
+          ).IncludeFlag(dfCollapsed, clpFlags in aGameDef.DefineOptions.Collapse),
           wbArray('Fields',
             wbStruct('Field', [
               wbInteger('Field Name', itS32, wbREFLStringToStr, wbREFLStringToInt),
