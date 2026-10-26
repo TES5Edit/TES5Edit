@@ -2261,9 +2261,13 @@ begin
       aSize := Length(buf);
       DDSHeader := aData;
     end;
-    aFile.DDS.DXGIFormat := Byte(TwbDDS.GetDXGI(DDSHeader));
-    if TDXGI(aFile.DDS.DXGIFormat) = DXGI_FORMAT_UNKNOWN then
+    var lDXGI := TwbDDS.GetDXGI(DDSHeader);
+    if lDXGI = DXGI_FORMAT_UNKNOWN then
       raise Exception.Create(cExceptionUnsupportedDDS);
+    CheckDDSFitsRecord(DDSHeader, aFile.Name);
+    if not Assigned(fPacker) and (GetDDSMipsSize(DDSHeader, 0) > aSize - TwbDDS.GetHeaderSize(DDSHeader)) then
+      raise Exception.Create('Texture data is shorter than its mipmaps: ' + aFile.Name);
+    aFile.DDS.DXGIFormat := Byte(lDXGI);
     aFile.DDS.Width := DDSHeader.dwWidth;
     aFile.DDS.Height := DDSHeader.dwHeight;
     aFile.DDS.NumMips := DDSHeader.dwMipMapCount;
@@ -2278,7 +2282,6 @@ begin
       chunks := GetDDSMipChunkNum(aFile.DDS.Width, aFile.DDS.Height, aFile.DDS.NumMips);
 
     Off := TwbDDS.GetHeaderSize(DDSHeader); // offset to image data
-    MipSize := (aFile.DDS.Width * aFile.DDS.Height * TwbDDS.GetBitsPerPixel(TDXGI(aFile.DDS.DXGIFormat))) shr 3;
     mips := aFile.DDS.NumMips;
   end
 
@@ -2297,32 +2300,36 @@ begin
     System.Move(GNFHeader.Texture, aFile.GNF, SizeOf(aFile.GNF));
     Off := TwbGNF.GetHeaderSize(GNFHeader);
     mips := GNFHeader.Texture.MipMapCount;
-    MipSize := 0; // suppress compiler warning, recalculated for single chunk below
     chunks := fMaxChunkCount;
   end;
 
   // store chunks
+  for var c in aFile.TexChunks do
+    c.Free;
+  aFile.TexChunks := nil;
   SetLength(aFile.TexChunks, chunks);
   for i := Low(aFile.TexChunks) to High(aFile.TexChunks) do begin
+    var lMipSize: Int64;
     aFile.TexChunks[i] := TwbBSFileChunkTex.Create;
     aFile.TexChunks[i].StartMip := i;
-    if i < High(aFile.TexChunks) then
-      aFile.TexChunks[i].EndMip := i
-    else begin
+    if i < High(aFile.TexChunks) then begin
+      aFile.TexChunks[i].EndMip := i;
+      lMipSize := TwbDDS.GetMipSize(aFile.DDS.Width, aFile.DDS.Height, TDXGI(aFile.DDS.DXGIFormat), i);
+    end else begin
       // last chunk stores all remaining mipmaps
       aFile.TexChunks[i].EndMip := Pred(mips);
-      MipSize := aSize - Off;
+      lMipSize := aSize - Off;
     end;
 
     if Assigned(fPacker) then begin
       var d := nil; var s := 0; var u := 0;
       fPacker.GetChunk(aFile.Name, aFile.FileObject, d, s, u, i + 1);
       PackData(aFile, aFile.TexChunks[i], d, s, u);
-    end else
+    end else begin
+      MipSize := lMipSize;
       PackData(aFile, aFile.TexChunks[i], PByte(aData) + Off, MipSize, MipSize);
-
-    Inc(Off, MipSize);
-    MipSize := MipSize div 4;
+      Inc(Off, MipSize);
+    end;
   end;
 end;
 
