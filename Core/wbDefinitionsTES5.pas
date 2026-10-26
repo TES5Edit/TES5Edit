@@ -8339,7 +8339,7 @@ begin
     wbRArrayS('Factions', wbFaction),
     wbFormIDCk(INAM, 'Death item', [LVLI]),
     wbFormIDCk(VTCK, 'Voice', [VTYP]),
-    wbFormIDCk(TPLT, 'Template', [LVLN, NPC_]),
+    wbFormIDCk(TPLT, 'Template', [LVLN, NPC_]).SetToStr(wbNPCTemplateToStr),
     wbFormIDCk(RNAM, 'Race', [RACE]).SetRequired,
     wbSPCT,
     wbSPLOs,

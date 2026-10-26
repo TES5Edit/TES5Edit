@@ -554,6 +554,7 @@ procedure wbDIALQuestToStr                   (var aValue: string; aBasePtr, aEnd
 procedure wbFactionRelationToStr             (var aValue: string; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 procedure wbItemToStr                        (var aValue: string; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 procedure wbNPCPackageToStr                  (var aValue: string; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
+procedure wbNPCTemplateToStr                 (var aValue: string; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 procedure wbPERKRankToStr                    (var aValue: string; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 procedure wbObjectPropertyToStr              (var aValue: string; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 procedure wbQUSTAliasToStr                   (var aValue: string; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
@@ -4944,6 +4945,39 @@ begin
   case aType of
     ctCheck: aValue := '<Error: Package [' + lPACKRecord.EditorID + '] is owned by Quest [' + lQUSTRecord.EditorID + '] and cannot be assigned to an NPC record>';
     ctToStr: aValue := aElement.EditValue + ' <Error: Package is owned by Quest [' + lQUSTRecord.EditorID + '] and cannot be assigned to an NPC record>';
+  end;
+end;
+
+procedure wbNPCTemplateToStr(var aValue: string; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
+begin
+  if not (Assigned(aElement) and (aType in [ctCheck])) then
+    Exit;
+
+  var lMainRecord := aElement.ContainingMainRecord;
+  if not Assigned(lMainRecord) then
+    Exit;
+
+  var lACBS := lMainRecord.ElementBySignature[ACBS] as IwbContainerElementRef;
+  if not Assigned(lACBS) then
+    Exit;
+
+  if (lACBS.ElementNativeValues['Flags'] and $20) = 0 then
+    Exit;
+
+  var lLinksTo := aElement.LinksTo as IwbMainRecord;
+  while Assigned(lLinksTo) do
+  begin
+    if lLinksTo.Signature = LVLN then
+    begin
+      aValue := ' <Warning: NPC has a leveled template, but is flagged unique>';
+      Exit;
+    end;
+
+    var lTemplate := lLinksTo.ElementBySignature[TPLT];
+    if not Assigned(lTemplate) then
+      Exit;
+
+    lLinksTo := lTemplate.LinksTo as IwbMainRecord;
   end;
 end;
 
