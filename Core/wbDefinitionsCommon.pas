@@ -1025,7 +1025,7 @@ begin
           if not Assigned(lRef) then
             Continue;
 
-          var lRefElement := lRef.ElementByName['Reference'];
+          var lRefElement := lRef.ElementByName['Ref'];
           if not Assigned(lRefElement) then
             Continue;
 
