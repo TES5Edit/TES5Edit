@@ -3078,7 +3078,7 @@ begin
       ])),
       wbUnion('Data', wbTypeDecider, [
         wbFormIDCk('Topic', [DIAL, NULL]),
-        wbString('Subtype', 4)
+        wbInteger('Subtype', itU32, wbSubtypeNamesEnum)
       ])
     ]);
 
