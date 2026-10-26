@@ -2047,7 +2047,7 @@ begin
         if (fHeader.Magic2 = MAGIC_GNRL) and (f.Offset = 0) then
           raise Exception.Create('Packed file has no data: ' + f.Name);
 
-        if fHeader.Magic2 = MAGIC_DX10 then begin
+        if (fHeader.Magic2 = MAGIC_DX10) or (fHeader.Magic2 = MAGIC_GNMF) then begin
           if Length(f.TexChunks) = 0 then
             raise Exception.Create('Packed file has no data: ' + f.Name);
 
