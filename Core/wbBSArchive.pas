@@ -104,7 +104,6 @@ type
       DXGIFormat : Byte;
       Flags      : Byte;
       TileMode   : Byte;
-      TexChunks  : array of TwbBSFileChunkTex;
     end;
     GNF: TGNFTextureDescriptor;
     TexChunks  : array of TwbBSFileChunkTex;
@@ -2042,10 +2041,10 @@ begin
           raise Exception.Create('Packed file has no data: ' + f.Name);
 
         if fHeader.Magic2 = MAGIC_DX10 then begin
-          if Length(f.DDS.TexChunks) = 0 then
+          if Length(f.TexChunks) = 0 then
             raise Exception.Create('Packed file has no data: ' + f.Name);
 
-          for var c in f.DDS.TexChunks do
+          for var c in f.TexChunks do
             if not Assigned(c) or (c.Offset = 0) then
               raise Exception.Create('Packed file has no data: ' + f.Name);
         end;
@@ -2434,10 +2433,10 @@ begin
         // offset to image data (total size of texture header)
         MipOffset := TexSize;
         var lTexSize: Int64 := TexSize;
-        for var c in aFile.DDS.TexChunks do Inc(lTexSize, c.Size);
+        for var c in aFile.TexChunks do Inc(lTexSize, c.Size);
         if lTexSize > High(Integer) then
           raise Exception.Create('Invalid texture size ' + IntToStr(lTexSize) + ' for: ' + aFile.Name);
-        for var c in aFile.DDS.TexChunks do begin
+        for var c in aFile.TexChunks do begin
           var lStored: Int64 := c.Size;
           if c.Compressed then
             lStored := c.PackedSize;
