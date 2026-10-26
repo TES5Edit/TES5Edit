@@ -740,9 +740,7 @@ uses
   System.Variants,
 
   wbDefinitionsSignatures,
-  wbHelpers,
-
-  xeInit;
+  wbHelpers;
 
 {>>> Add Info Callbacks <<<} //10
 
@@ -950,7 +948,7 @@ end;
 
 procedure wbLargeRefsAfterLoad(const aElement: IwbElement);
 begin
-  if (not Assigned(aElement)) or (xeToolMode in [tmLodGen]) or (esModified in aElement.ElementStates) then
+  if (not Assigned(aElement)) or (not aElement.ContextObj.Settings.CleanLargeReferences) or (esModified in aElement.ElementStates) then
     Exit;
 
   var lContainer := aElement as IwbContainerElementRef;
@@ -984,7 +982,7 @@ end;
 
 procedure wbLargeRefsRNAMAfterLoad(const aElement: IwbElement);
 begin
-  if (not Assigned(aElement)) or (xeToolMode in [tmLodGen]) or (esModified in aElement.ElementStates) then
+  if (not Assigned(aElement)) or (not aElement.ContextObj.Settings.CleanLargeReferences) or (esModified in aElement.ElementStates) then
 
     Exit;
 

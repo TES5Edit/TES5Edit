@@ -643,6 +643,7 @@ begin
     xeToolName    := 'LODGen';
     lSettings.EditAllowed := False;
     lSettings.DontSave := True;
+    lSettings.CleanLargeReferences := False;
   end else if isMode('Script') then begin
     xeToolMode    := tmScript;
     xeToolName    := 'Script';
