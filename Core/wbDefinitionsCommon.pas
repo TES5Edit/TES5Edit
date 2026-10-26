@@ -4686,8 +4686,15 @@ begin
     Exit;
 
   var lNAMELinksTo := lNAME.LinksTo as IwbMainRecord;
+  var lVisited: TArray<IwbMainRecord>;
   while Assigned(lNAMELinksTo) do
   begin
+    var lMaster := lNAMELinksTo.MasterOrSelf;
+    for var lVisitedRecord in lVisited do
+      if lVisitedRecord = lMaster then
+        Exit;
+    lVisited := lVisited + [lMaster];
+
     var lTPLT := lNAMELinksTo.ElementBySignature[TPLT];
     if not Assigned(lTPLT) then
       Exit;
@@ -5041,8 +5048,15 @@ begin
     Exit;
 
   var lLinksTo := aElement.LinksTo as IwbMainRecord;
+  var lVisited: TArray<IwbMainRecord>;
   while Assigned(lLinksTo) do
   begin
+    var lMaster := lLinksTo.MasterOrSelf;
+    for var lVisitedRecord in lVisited do
+      if lVisitedRecord = lMaster then
+        Exit;
+    lVisited := lVisited + [lMaster];
+
     if lLinksTo.Signature = LVLN then
     begin
       aValue := ' <Warning: NPC has a leveled template, but is flagged unique>';
