@@ -546,6 +546,7 @@ procedure wbScriptPropertyObjectToStr(const aContainer: IwbContainerElementRef; 
 
 procedure wbABGRToStr                        (var aValue: string; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 procedure wbACBSFlagsToStr                   (var aValue: string; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
+procedure wbACHRToStr                        (var aValue: string; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 procedure wbBGRAToStr                        (var aValue: string; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 procedure wbCELLRegionToStr                  (var aValue: string; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 procedure wbConditionToStr                   (var aValue: string; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
@@ -4670,6 +4671,42 @@ begin
   end;
 end;
 
+procedure wbACHRToStr(var aValue: string; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
+begin
+  if not (Assigned(aElement) and (aType in [ctCheck])) then
+    Exit;
+
+  var lMainRecord := aElement as IwbMainRecord;
+  if not Assigned(lMainRecord) then
+    Exit;
+
+  if Assigned(lMainRecord.ElementBySignature[XLCM]) then
+    Exit;
+
+  var lNAME := lMainRecord.ElementBySignature[NAME];
+  if not Assigned(lNAME) then
+    Exit;
+
+  var lNAMELinksTo := lNAME.LinksTo as IwbMainRecord;
+  while Assigned(lNAMELinksTo) do
+  begin
+    var lTPLT := lNAMELinksTo.ElementBySignature[TPLT];
+    if not Assigned(lTPLT) then
+      Exit;
+
+    var lTPLTLinksTo := lTPLT.LinksTo as IwbMainRecord;
+    if not Assigned(lTPLTLinksTo) then
+      Exit;
+
+    if lTPLTLinksTo.Signature = LVLN then
+    begin
+      aValue := ' <Hint: Actor uses a leveled template, but has no Level Modifier>';
+      Exit;
+    end;
+
+    lNAMELinksTo := lTPLTLinksTo;
+  end;
+end;
 procedure wbBGRAToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 var
   Container  : IwbContainerElementRef;

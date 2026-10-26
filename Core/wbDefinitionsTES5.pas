@@ -3187,6 +3187,7 @@ begin
     wbXSCL,
     wbVec3PosRot(DATA).SetRequired
   ]).SetAddInfo(wbPlacedAddInfo)
+    .SetToStr(wbACHRToStr)
     .SetUnordered;
 
   RegisterRecordDef(ACTI, 'Activator',
