@@ -8301,12 +8301,10 @@ begin
         11, 'Protected',
         14, 'Summonable',
         16, 'Doesn''t bleed',
-        17, 'Unknown 17',
         18, 'Bleedout Override',
         19, 'Opposite Gender Anims',
         20, 'Simple Actor',
         21, 'looped script?',
-        26, 'Unknown 26',
         28, 'looped audio?',
         29, 'Is Ghost',
         31, 'Invulnerable'
