@@ -158,6 +158,7 @@ type
     procedure CheckDDSFitsRecord(aDDSHeader: PDDSHeader; const aFileName: string);
     class function IsCubemapName(const aFileName: string): Boolean; static;
     class function IsTextureName(const aFileName: string): Boolean; static;
+    class function IsXboxName(const aFileName: string): Boolean; static;
 
   public
   const
@@ -912,7 +913,7 @@ end;
 
 function TwbBSFileEntry.IsXbox: Boolean;
 begin
-  Result := LowerCase(ExtractFileName(Archive.FileName.Replace('/', '\'))).Contains('_xbox.');
+  Result := Archive.IsXboxName(Archive.FileName);
 end;
 
 function TwbBSFileEntry.DDSHeaderSize: Integer;
@@ -1377,6 +1378,11 @@ begin
   Result := aFileName.EndsWith('.dds', True) or aFileName.EndsWith('.ddx', True);
 end;
 
+class function TwbCustomBSArchive.IsXboxName(const aFileName: string): Boolean;
+begin
+  Result := LowerCase(ExtractFileName(aFileName.Replace('/', '\'))).Contains('_xbox.');
+end;
+
 function TwbBSArchive.FindPackedData(aSize: Cardinal; aHash: TwbLookupHash; aCompress, aCubemap: Boolean; aChunk: TwbBSFileChunk): Boolean;
 begin
   Result := False;
@@ -1431,6 +1437,7 @@ begin
   //if fStates * [stReading, stWriting] <> [] then
   Close;
 
+  fTarget := btPC;
   fFileName := aFileName;
   fStream := TwbReadOnlyCachedFileStream.Create(fFileName, fmOpenRead or fmShareDenyWrite);
 
@@ -1562,7 +1569,7 @@ begin
           fTarget := btPS
         // idk how to differentiare between PC and XBox, something in the image data itself
         // use archive filename
-        else if LowerCase(FileName).Contains('_xbox.') then
+        else if IsXboxName(FileName) then
           fTarget := btXBox;
       end;
 
@@ -2467,8 +2474,8 @@ begin
         end
         // set up DDS header
         else begin
-          TwbDDS.SetUpHeader(Result, TDXGI(aFile.DDS.DXGIFormat), aFile.DDS.Width, aFile.DDS.Height, aFile.DDS.NumMips, aFile.IsCubeMap, ArchiveTarget = btXBox);
-          if ArchiveTarget = btXBox then
+          TwbDDS.SetUpHeader(Result, TDXGI(aFile.DDS.DXGIFormat), aFile.DDS.Width, aFile.DDS.Height, aFile.DDS.NumMips, aFile.IsCubeMap, IsXBox);
+          if IsXBox then
             TwbDDS.HeaderXBOX(Result).tileMode := aFile.DDS.TileMode;
         end;
 
