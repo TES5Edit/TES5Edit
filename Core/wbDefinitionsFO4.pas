@@ -7251,7 +7251,7 @@ begin
         .IncludeFlag(dfFastAssign)
         .IncludeFlag(dfSummaryMembersNoName)
     ).SetAfterLoad(wbNAVINavmeshInfosAfterLoad)
-	 .IncludeFlag(dfCollapsed, clpNavmesh in DefineOptions.Collapse),
+     .IncludeFlag(dfCollapsed, clpNavmesh in DefineOptions.Collapse),
     wbStruct(NVPP, 'Precomputed Pathing', [
       wbArray('Precomputed Paths',
         wbArray('Path',

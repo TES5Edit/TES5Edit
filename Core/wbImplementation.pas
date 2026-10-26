@@ -6835,8 +6835,7 @@ constructor TwbFile.CreateNew(const aContext: TwbGameContext; const aFileName: s
 var
   Header : IwbMainRecord;
 begin
-  flContextObj := aContext;  
-  
+  flContextObj := aContext;
   var lGameDef := flContextObj.GameDefObj;
   Assert(not (aIsLight and aIsMedium));
 
@@ -6917,7 +6916,6 @@ var
   i      : Integer;
 begin
   flContextObj := aContext;
-
   var lGameDef := flContextObj.GameDefObj;
   flLoadOrderFileID := TwbFileID.Invalid;
   Include(flStates, fsIsNew);
