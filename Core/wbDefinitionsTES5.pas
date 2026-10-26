@@ -8819,6 +8819,8 @@ begin
                 ]),
             {1} wbRStruct('Unique Actor', [
                   wbFormIDCk(ALUA, 'Actor', [NPC_])
+                    .SetFormIDFilter(wbQUSTUniqueActorFilter)
+                    .SetToStr(wbQUSTUniqueActorToStr)
                 ]),
             {2} wbRStruct('Location Alias Reference', [
                   wbInteger(ALFA, 'Alias', itS32, wbQuestAliasToStr, wbAliasToInt),

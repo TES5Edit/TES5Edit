@@ -429,10 +429,11 @@ function wbWorldXWEMDontShow     (const aElement: IwbElement): Boolean;
 {>>> Float Normalizers <<<} //1
 function wbNormalizeToRange(aMin, aMax: Extended): TwbFloatNormalizer;
 
-{>>> FormID Filter Callbacks <<<} //3
-function wbCELLRegionFilter  (const aElement: IwbElement; const aMainRecord: IwbMainRecord): Boolean;
-function wbREFRTeleportFilter(const aElement: IwbElement; const aMainRecord: IwbMainRecord): Boolean;
-function wbVMADObjectFilter  (const aElement: IwbElement; const aMainRecord: IwbMainRecord): Boolean;
+{>>> FormID Filter Callbacks <<<} //4
+function wbCELLRegionFilter     (const aElement: IwbElement; const aMainRecord: IwbMainRecord): Boolean;
+function wbQUSTUniqueActorFilter(const aElement: IwbElement; const aMainRecord: IwbMainRecord): Boolean;
+function wbREFRTeleportFilter   (const aElement: IwbElement; const aMainRecord: IwbMainRecord): Boolean;
+function wbVMADObjectFilter     (const aElement: IwbElement; const aMainRecord: IwbMainRecord): Boolean;
 
 {>>> Get Functions <<<} //4
 function wbGetItemStr                (const aContainer: IwbContainerElementRef): string;
@@ -557,6 +558,7 @@ procedure wbPERKRankToStr                    (var aValue: string; aBasePtr, aEnd
 procedure wbObjectPropertyToStr              (var aValue: string; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 procedure wbQUSTAliasToStr                   (var aValue: string; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 procedure wbQUSTEventToStr                   (var aValue: string; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
+procedure wbQUSTUniqueActorToStr             (var aValue: string; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 procedure wbREFRPersistLocToStr              (var aValue: string; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 procedure wbREFRRadiusToStr                  (var aValue: string; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 procedure wbREFRTeleportToStr                (var aValue: string; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
@@ -2447,7 +2449,7 @@ begin
     aConflictPriority := cpIgnore;
 end;
 
-{>>> FormID Filter Callbacks <<<} //3
+{>>> FormID Filter Callbacks <<<} //4
 
 function wbCELLRegionFilter(const aElement: IwbElement; const aMainRecord: IwbMainRecord): Boolean;
 begin
@@ -2469,6 +2471,21 @@ begin
     Exit;
 
   if lWorld.MasterOrSelf = lWNAM.MasterOrSelf then
+    Result := True;
+end;
+
+function wbQUSTUniqueActorFilter(const aElement: IwbElement; const aMainRecord: IwbMainRecord): Boolean;
+begin
+  Result := False;
+
+  if not (Assigned(aElement) and Assigned(aMainRecord)) then
+    Exit;
+
+  var lACBS := aMainRecord.ElementBySignature[ACBS] as IwbContainerElementRef;
+  if not Assigned(lACBS) then
+    Exit;
+
+  if (lACBS.ElementNativeValues['Flags'] and $20) <> 0 then
     Result := True;
 end;
 
@@ -5083,6 +5100,26 @@ begin
     ctCheck: aValue := '<Warning: ' + lMainRecord.ShortName + ' has not been added to the story manager>';
     ctToStr: aValue := aElement.EditValue + '<Warning: ' + lMainRecord.ShortName + ' has not been added to the story manager>';
   end;
+end;
+
+procedure wbQUSTUniqueActorToStr(var aValue: string; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
+begin
+  if not (Assigned(aElement) and (aType in [ctCheck, ctToStr])) then
+    Exit;
+
+  var lLinksTo := aElement.LinksTo as IwbMainRecord;
+  if not Assigned(lLinksTo) then
+    Exit;
+
+  var lACBS := lLinksTo.ElementBySignature[ACBS] as IwbContainerElementRef;
+  if not Assigned(lACBS) then
+    Exit;
+
+  if (lACBS.ElementNativeValues['Flags'] and $20) = 0 then
+    case aType of
+      ctCheck: aValue := ' <Warning: NPC [' + lLinksTo.EditorID + '] is not flagged Unique>';
+      ctToStr: aValue := aValue + ' <Warning: NPC is not flagged unique>';
+    end;
 end;
 
 procedure wbREFRPersistLocToStr(var aValue: string; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
