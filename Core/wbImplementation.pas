@@ -14532,6 +14532,9 @@ begin
   KAR := wbCreateKeepAliveRoot;
   SelfRef := Self as IwbContainerElementRef;
 
+  if not GetIsEditable then
+    Exit(False);
+
   mrBaseRecordID := TwbFormID.Null;
   Exclude(mrStates, mrsBaseRecordChecked);
 
