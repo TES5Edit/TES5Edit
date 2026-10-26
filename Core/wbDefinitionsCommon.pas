@@ -1990,45 +1990,80 @@ end;
 
 function wbFlagNavmeshFilterDontSHow(const aElement: IwbElement): Boolean;
 begin
-  var lGameDef := aElement.GameDefObj;
-  Result := (aElement.ContainingMainRecord.Flags._Flags and $8000000 <> 0)
-         or ((aElement.ContainingMainRecord.Flags._Flags and $10000000 <> 0) and lGameDef.IsStarfield)
-         or ((aElement.ContainingMainRecord.Flags._Flags and $20000000 <> 0) and lGameDef.IsStarfield)
-         or (aElement.ContainingMainRecord.Flags._Flags and $40000000 <> 0);
+  Result := False;
+  if not Assigned(aElement) then
+    Exit;
+  var lMainRecord := aElement.ContainingMainRecord;
+  if not Assigned(lMainRecord) then
+    Exit;
+  var lStarfield := aElement.GameDefObj.IsStarfield;
+  var lFlags := lMainRecord.Flags._Flags;
+  Result := (lFlags and $8000000 <> 0)
+         or ((lFlags and $10000000 <> 0) and lStarfield)
+         or ((lFlags and $20000000 <> 0) and lStarfield)
+         or (lFlags and $40000000 <> 0);
 end;
 
 function wbFlagNavmeshBoundingBoxDontSHow(const aElement: IwbElement): Boolean;
 begin
-  var lGameDef := aElement.GameDefObj;
-  Result := (aElement.ContainingMainRecord.Flags._Flags and $4000000 <> 0)
-         or ((aElement.ContainingMainRecord.Flags._Flags and $10000000 <> 0) and lGameDef.IsStarfield)
-         or ((aElement.ContainingMainRecord.Flags._Flags and $20000000 <> 0) and lGameDef.IsStarfield)
-         or (aElement.ContainingMainRecord.Flags._Flags and $40000000 <> 0);
+  Result := False;
+  if not Assigned(aElement) then
+    Exit;
+  var lMainRecord := aElement.ContainingMainRecord;
+  if not Assigned(lMainRecord) then
+    Exit;
+  var lStarfield := aElement.GameDefObj.IsStarfield;
+  var lFlags := lMainRecord.Flags._Flags;
+  Result := (lFlags and $4000000 <> 0)
+         or ((lFlags and $10000000 <> 0) and lStarfield)
+         or ((lFlags and $20000000 <> 0) and lStarfield)
+         or (lFlags and $40000000 <> 0);
 end;
 
 function wbFlagNavmeshOnlyCutDontSHow(const aElement: IwbElement): Boolean;
 begin
-  Result := (aElement.ContainingMainRecord.Flags._Flags and $4000000 <> 0)
-         or (aElement.ContainingMainRecord.Flags._Flags and $8000000 <> 0)
-         or (aElement.ContainingMainRecord.Flags._Flags and $20000000 <> 0)
-         or (aElement.ContainingMainRecord.Flags._Flags and $40000000 <> 0);
+  Result := False;
+  if not Assigned(aElement) then
+    Exit;
+  var lMainRecord := aElement.ContainingMainRecord;
+  if not Assigned(lMainRecord) then
+    Exit;
+  var lFlags := lMainRecord.Flags._Flags;
+  Result := (lFlags and $4000000 <> 0)
+         or (lFlags and $8000000 <> 0)
+         or (lFlags and $20000000 <> 0)
+         or (lFlags and $40000000 <> 0);
 end;
 
 function wbFlagNavmeshIgnoreErosionDontSHow(const aElement: IwbElement): Boolean;
 begin
-  Result := (aElement.ContainingMainRecord.Flags._Flags and $4000000 <> 0)
-         or (aElement.ContainingMainRecord.Flags._Flags and $8000000 <> 0)
-         or (aElement.ContainingMainRecord.Flags._Flags and $10000000 <> 0)
-         or (aElement.ContainingMainRecord.Flags._Flags and $40000000 <> 0);
+  Result := False;
+  if not Assigned(aElement) then
+    Exit;
+  var lMainRecord := aElement.ContainingMainRecord;
+  if not Assigned(lMainRecord) then
+    Exit;
+  var lFlags := lMainRecord.Flags._Flags;
+  Result := (lFlags and $4000000 <> 0)
+         or (lFlags and $8000000 <> 0)
+         or (lFlags and $10000000 <> 0)
+         or (lFlags and $40000000 <> 0);
 end;
 
 function wbFlagNavmeshGroundDontSHow(const aElement: IwbElement): Boolean;
 begin
-  var lGameDef := aElement.GameDefObj;
-  Result := (aElement.ContainingMainRecord.Flags._Flags and $4000000 <> 0)
-         or (aElement.ContainingMainRecord.Flags._Flags and $8000000 <> 0)
-         or ((aElement.ContainingMainRecord.Flags._Flags and $10000000 <> 0) and lGameDef.IsStarfield)
-         or ((aElement.ContainingMainRecord.Flags._Flags and $20000000 <> 0) and lGameDef.IsStarfield);
+  Result := False;
+  if not Assigned(aElement) then
+    Exit;
+  var lMainRecord := aElement.ContainingMainRecord;
+  if not Assigned(lMainRecord) then
+    Exit;
+  var lStarfield := aElement.GameDefObj.IsStarfield;
+  var lFlags := lMainRecord.Flags._Flags;
+  Result := (lFlags and $4000000 <> 0)
+         or (lFlags and $8000000 <> 0)
+         or ((lFlags and $10000000 <> 0) and lStarfield)
+         or ((lFlags and $20000000 <> 0) and lStarfield);
 end;
 
 function wbFlagPartialFormDontShow(const aElement: IwbElement): Boolean;

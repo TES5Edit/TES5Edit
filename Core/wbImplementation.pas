@@ -693,6 +693,8 @@ type
     procedure RemoveInjectedMainRecord(const aRecord: IwbMainRecord; const aFormID: TwbFormID);
     procedure IdentityKeyChanged(aClash: Boolean);
     function HoldsBlockedIdentities: Boolean;
+    function HoldsRecordAt(const aRecord: IwbMainRecord; const aFormID: TwbFormID): Boolean;
+    function RecordCountAt(const aFormID: TwbFormID): Integer;
     function InjectionTarget(const aFormID: TwbFormID): IwbFileInternal;
     function IsOwnFormID(const aFormID: TwbFormID; aNew: Boolean): Boolean;
     function HoldsInjected(const aRecord: IwbMainRecord): Boolean;
@@ -817,6 +819,8 @@ type
     function BuildOrLoadRef(aOnlyLoad: Boolean): TwbBuildOrLoadRefResult;
 
     function FindFormID(aFormID: TwbFormID; var Index: Integer; aNewMasters: Boolean): Boolean;
+    function RecordRunAt(const aFormID: TwbFormID; out aCount: Integer): Integer;
+    function IndexOfRecordAt(const aRecord: IwbMainRecord; const aFormID: TwbFormID): Integer;
     function FindInjectedID(const aFormID: TwbFormID; var Index: Integer): Boolean;
     function GetMasterRecordByFormID(aFormID: TwbFormID; aAllowInjected, aNewMasters: Boolean): IwbMainRecord;
 
@@ -1007,6 +1011,8 @@ type
     procedure ReKeyIdentities;
     procedure IdentityKeyChanged(aClash: Boolean);
     function HoldsBlockedIdentities: Boolean;
+    function HoldsRecordAt(const aRecord: IwbMainRecord; const aFormID: TwbFormID): Boolean;
+    function RecordCountAt(const aFormID: TwbFormID): Integer;
     procedure RenumberOwnSlot(aOldSlot, aNewSlot: Integer);
     function InjectionTarget(const aFormID: TwbFormID): IwbFileInternal;
     function IsOwnFormID(const aFormID: TwbFormID; aNew: Boolean): Boolean;
@@ -6135,7 +6141,12 @@ begin
       end;
       _RefBuilder := True;
       try
-        inherited BuildRef;
+        try
+          inherited BuildRef;
+        except
+          Exclude(cntStates, csRefsBuild);
+          raise;
+        end;
       finally
         _RefBuilder := False;
       end;
@@ -6158,11 +6169,16 @@ begin
           try
             if wbParallelRefBuilds <> 0 then
               _RefDeferred := lDeferred;
-            inherited BuildRef;
-            _RefDeferred := nil;
-            _RefDraining := True;
-            for var lLater in lDeferred do
-              lLater.BuildRef;
+            try
+              inherited BuildRef;
+              _RefDeferred := nil;
+              _RefDraining := True;
+              for var lLater in lDeferred do
+                lLater.BuildRef;
+            except
+              Exclude(cntStates, csRefsBuild);
+              raise;
+            end;
           finally
             _RefDraining := False;
             _RefDeferred := nil;
@@ -6225,11 +6241,16 @@ begin
       try
         if wbParallelRefBuilds <> 0 then
           _RefDeferred := lDeferred;
-        inherited BuildRef;
-        _RefDeferred := nil;
-        _RefDraining := True;
-        for var lLater in lDeferred do
-          lLater.BuildRef;
+        try
+          inherited BuildRef;
+          _RefDeferred := nil;
+          _RefDraining := True;
+          for var lLater in lDeferred do
+            lLater.BuildRef;
+        except
+          Exclude(cntStates, csRefsBuild);
+          raise;
+        end;
       finally
         _RefDraining := False;
         _RefDeferred := nil;
@@ -6533,7 +6554,7 @@ begin
   var lSummary := 'Has no masters.';
   if Length(flMasters) >= 1 then begin
     flOldMasters := Copy(flMasters);
-    var lCancelLocked := False;
+    wbCancelLock;
     try
       MasterFiles := Header.ElementByName['Master Files'] as IwbContainerElementRef;
       Assert(Assigned(MasterFiles), '[TwbFile.CleanMasters] not Assigned(MasterFiles)');
@@ -6569,8 +6590,6 @@ begin
               KeepMasters.Add(lFileMasters[j].FileName);
           end;
 
-        wbCancelLock;
-        lCancelLocked := True;
         Old := nil;
         New := nil;
         var nextFullID := 0;
@@ -6689,8 +6708,7 @@ begin
       end;
       lSummary := Format('Removed %d unused masters.', [lRemovedCount]);
     finally
-      if lCancelLocked then
-        wbCancelUnlock;
+      wbCancelUnlock;
       flOldMasters := nil;
       flInvalidateReferencesInjected;
     end;
@@ -7147,6 +7165,29 @@ begin
   end;
 
  Index := L;
+end;
+
+function TwbFile.RecordRunAt(const aFormID: TwbFormID; out aCount: Integer): Integer;
+begin
+  aCount := 0;
+  if (Length(flRecords) < 1) or not FindFormID(aFormID, Result, True) then
+    Exit(-1);
+  var lKey := flRecords[Result].FixedFormID;
+  while (Result > 0) and (flRecords[Pred(Result)].FixedFormID = lKey) do
+    Dec(Result);
+  while (Result + aCount <= High(flRecords)) and (flRecords[Result + aCount].FixedFormID = lKey) do
+    Inc(aCount);
+end;
+
+function TwbFile.IndexOfRecordAt(const aRecord: IwbMainRecord; const aFormID: TwbFormID): Integer;
+var
+  lCount : Integer;
+begin
+  var lFirst := RecordRunAt(aFormID, lCount);
+  for var lIdx := lFirst to lFirst + Pred(lCount) do
+    if aRecord.Equals(flRecords[lIdx]) then
+      Exit(lIdx);
+  Result := -1;
 end;
 
 function TwbFile.FindInjectedID(const aFormID: TwbFormID; var Index: Integer): Boolean;
@@ -9408,7 +9449,7 @@ var
   lOldKeys : array of TwbFormID;
   lNewKeys : array of TwbFormID;
   lMoves   : array of Boolean;
-  lIndex   : Integer;
+  lHolders : Integer;
   lChanged : Boolean;
 begin
   flIdentityClash := False;
@@ -9434,11 +9475,12 @@ begin
     for var j := Low(lRecords) to High(lRecords) do
       if (j <> i) and (lNewKeys[j] = lNewKeys[i]) then
         lMoves[i] := False;
-    if lMoves[i] and FindFormID(lNewKeys[i], lIndex, True) then begin
-      lMoves[i] := False;
+    if lMoves[i] then begin
+      RecordRunAt(lNewKeys[i], lHolders);
       for var j := Low(lRecords) to High(lRecords) do
         if lOldKeys[j] = lNewKeys[i] then
-          lMoves[i] := True;
+          Dec(lHolders);
+      lMoves[i] := lHolders = 0;
     end;
   end;
 
@@ -9483,6 +9525,16 @@ begin
   Result := flIdentityClash;
 end;
 
+function TwbFile.HoldsRecordAt(const aRecord: IwbMainRecord; const aFormID: TwbFormID): Boolean;
+begin
+  Result := IndexOfRecordAt(aRecord, aFormID) >= 0;
+end;
+
+function TwbFile.RecordCountAt(const aFormID: TwbFormID): Integer;
+begin
+  RecordRunAt(aFormID, Result);
+end;
+
 procedure TwbFile.RenumberOwnSlot(aOldSlot, aNewSlot: Integer);
 begin
   for var lRecord in flRecords do
@@ -9508,8 +9560,8 @@ begin
       lFormID := aRecord.FixedFormID;
 
 
-      var lFoundIdx: Integer;
-      if (Length(flRecords) < 1) or not FindFormID(lFormID, lFoundIdx, True) then
+      var lFoundIdx := IndexOfRecordAt(aRecord, lFormID);
+      if lFoundIdx < 0 then
         raise Exception.Create('Can''t remove FormID [' + lFormID.ToDisplayString(flContextObj.SlotLayout) + '] from file ' + GetName + ': FormID not registered');
 
       flRecords[lFoundIdx] := nil;
@@ -15318,6 +15370,8 @@ begin
   end;
 end;
 
+function CompareReferencedBy(Item1, Item2: Pointer): Integer; forward;
+
 function TwbMainRecord.FindReferencedBy(const aMainRecord: IwbMainRecord; var Index: Integer): Boolean;
 var
   L, H, I, C: Integer;
@@ -15335,9 +15389,7 @@ begin
   while L <= H do begin
     I := (L + H) shr 1;
 
-    C := TwbFormID.Compare(mrReferencedBy[I].LoadOrderFormID , aMainRecord.LoadOrderFormID);
-    if C = 0 then
-      C := CmpI32(mrReferencedBy[I]._File.LoadOrder, aMainRecord._File.LoadOrder);
+    C := CompareReferencedBy(Pointer(mrReferencedBy[I]), Pointer(aMainRecord));
 
     if C < 0 then
       L := I + 1
@@ -18923,44 +18975,49 @@ procedure TwbMainRecord.Remove;
 var
   _File: IwbFileInternal;
 begin
-  DoBuildRef(True);
+  wbCancelLock;
+  try
+    DoBuildRef(True);
 
-  var lGroup := GetChildGroup;
-  if Assigned(lGroup) then
-    lGroup.Remove;
+    var lGroup := GetChildGroup;
+    if Assigned(lGroup) then
+      lGroup.Remove;
 
-  _File := GetFile as IwbFileInternal;
-  if Assigned(_File) then
-    _File.RemoveMainRecord(Self);
+    _File := GetFile as IwbFileInternal;
+    if Assigned(_File) then
+      _File.RemoveMainRecord(Self);
 
-  var lMaster := IwbMainRecord(mrMaster);
-  if Assigned(lMaster) then
-    (lMaster as IwbMainRecordInternal).RemoveOverride(Self)
-  else
-    if Length(mrOverrides) > 0 then begin
-      SortOverrides;
-      lMaster := mrOverrides[0];
-      (lMaster as IwbMainRecordInternal).YouAreTheMaster(mrOverrides, mrReferencedBy, mrReferencedByCount);
-    end else
-      InvalidateReferencers;
+    var lMaster := IwbMainRecord(mrMaster);
+    if Assigned(lMaster) then
+      (lMaster as IwbMainRecordInternal).RemoveOverride(Self)
+    else
+      if Length(mrOverrides) > 0 then begin
+        SortOverrides;
+        lMaster := mrOverrides[0];
+        (lMaster as IwbMainRecordInternal).YouAreTheMaster(mrOverrides, mrReferencedBy, mrReferencedByCount);
+      end else
+        InvalidateReferencers;
 
-  mrMaster := nil;
-  mrOverrides := nil;
-  mrReferencedBy := nil;
-  mrReferencedByCount := 0;
-  mrReferencedBySize := 0;
-  mrFixedFormID := TwbFormID.Null;
-  mrLoadOrderFormID := TwbFormID.Null;
-  Exclude(mrStates, mrsIsInjectedChecked);
-  Exclude(mrStates, mrsConflictStored);
+    mrMaster := nil;
+    mrOverrides := nil;
+    mrReferencedBy := nil;
+    mrReferencedByCount := 0;
+    mrReferencedBySize := 0;
+    mrFixedFormID := TwbFormID.Null;
+    mrLoadOrderFormID := TwbFormID.Null;
+    Exclude(mrStates, mrsIsInjectedChecked);
+    Exclude(mrStates, mrsConflictStored);
 
-  if Assigned(lMaster) then
-    lMaster.ResetConflict;
+    if Assigned(lMaster) then
+      lMaster.ResetConflict;
 
-  inherited;
+    inherited;
 
-  if Assigned(_File) then
-    _File.IdentityKeyChanged(False);
+    if Assigned(_File) then
+      _File.IdentityKeyChanged(False);
+  finally
+    wbCancelUnlock;
+  end;
 end;
 
 procedure TwbMainRecord.RemoveChildGroup(const aGroup: IwbGroupRecord);
@@ -19845,7 +19902,7 @@ begin
     lFile.IdentityKeyChanged(False);
     Exit;
   end;
-  if not Equals(lFile.RecordByFormID[lOld, False, True]) then
+  if not lFile.HoldsRecordAt(Self, lOld) then
     Exit;
 
   lHolder := lFile.RecordByFormID[lNew, False, True];
@@ -20035,7 +20092,11 @@ end;
 
 function CompareReferencedByFile(Item1, Item2: Pointer): Integer;
 begin
-  Result := CmpW32(IwbMainRecord(Item1)._File.LoadOrder, IwbMainRecord(Item2)._File.LoadOrder);
+  var lFile1 := IwbMainRecord(Item1)._File;
+  var lFile2 := IwbMainRecord(Item2)._File;
+  Result := CmpW32(lFile1.LoadOrder, lFile2.LoadOrder);
+  if (Result = 0) and (lFile1 <> lFile2) then
+    Result := CmpW32((lFile1 as TObject as TwbFile).flSerial, (lFile2 as TObject as TwbFile).flSerial);
 end;
 
 function CompareReferencedBy(Item1, Item2: Pointer): Integer;
@@ -20705,19 +20766,24 @@ begin
 
   Assert(Assigned(aMaster));
   Assert(not Assigned(mrMaster));
-  var lInjectionMaster := ListedInjectedIn;
-  if Assigned(lInjectionMaster) then
-    lInjectionMaster.RemoveInjectedMainRecord(Self, GetFormID);
+  wbCancelLock;
+  try
+    var lInjectionMaster := ListedInjectedIn;
+    if Assigned(lInjectionMaster) then
+      lInjectionMaster.RemoveInjectedMainRecord(Self, GetFormID);
 
-  (aMaster as IwbMainRecordInternal).YouAreTheMaster(Self as IwbMainRecord, mrOverrides, mrReferencedBy, mrReferencedByCount);
+    (aMaster as IwbMainRecordInternal).YouAreTheMaster(Self as IwbMainRecord, mrOverrides, mrReferencedBy, mrReferencedByCount);
 
-  Assert(aMaster.Equals(IwbElement(mrMaster)));
-  mrOverrides := nil;
-  mrReferencedBy := nil;
-  mrReferencedBySize := 0;
-  mrReferencedByCount := 0;
+    Assert(aMaster.Equals(IwbElement(mrMaster)));
+    mrOverrides := nil;
+    mrReferencedBy := nil;
+    mrReferencedBySize := 0;
+    mrReferencedByCount := 0;
 
-  Exclude(mrStates, mrsIsInjectedChecked);
+    Exclude(mrStates, mrsIsInjectedChecked);
+  finally
+    wbCancelUnlock;
+  end;
 end;
 
 { TwbSubRecord }
@@ -22788,9 +22854,16 @@ var
       lFormID := _File.NewFormID
     else begin
       Result := _File.ContainedRecordByLoadOrderFormID[aSource.LoadOrderFormID, False];
-      if Assigned(Result) then
-        lFormID := (Result as IwbMainRecord).FixedFormID
-      else
+      if Assigned(Result) then begin
+        lFormID := (Result as IwbMainRecord).FixedFormID;
+        var lHolders := (_File as IwbFileInternal).RecordCountAt(lFormID);
+        if lHolders > 1 then begin
+          wbProgress('Error adding [%s] to [%s]: %d records of %s share its key [%s]',
+            [aElement.FullPath, GetFullPath, lHolders, _File.Name, lFormID.ToDisplayString(ContextObj.SlotLayout)]);
+          Result := nil;
+          Exit;
+        end;
+      end else
         lFormID := _File.LoadOrderFormIDtoFileFormID(aSource.LoadOrderFormID, True);
     end;
 
@@ -25225,9 +25298,10 @@ begin
       UpdateEnded;
     finally
       Exclude(eStates, esEndingUpdate);
+      eUpdateCount := Result;
     end;
-  end;
-  eUpdateCount := Result;
+  end else
+    eUpdateCount := Result;
 end;
 
 function TwbElement.Equals(const aElement: IwbElement): Boolean;

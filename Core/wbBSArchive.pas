@@ -104,6 +104,7 @@ type
       DXGIFormat : Byte;
       Flags      : Byte;
       TileMode   : Byte;
+      TexChunks  : array of TwbBSFileChunkTex;
     end;
     GNF: TGNFTextureDescriptor;
     TexChunks  : array of TwbBSFileChunkTex;
@@ -1010,6 +1011,20 @@ begin
   inherited;
 end;
 
+procedure TwbCustomBSArchive.CheckDDSFitsRecord(aDDSHeader: PDDSHeader; const aFileName: string);
+begin
+  if (aDDSHeader.dwWidth > High(Word)) or (aDDSHeader.dwHeight > High(Word)) or (aDDSHeader.dwMipMapCount > High(Byte)) then
+    raise Exception.Create('Texture size or mip count does not fit an archive record: ' + aFileName);
+  var lNot2D := (aDDSHeader.dwCaps2 and DDSCAPS2_CUBEMAP_VOLUME <> 0) or
+    ((aDDSHeader.dwFlags and DDSD_DEPTH <> 0) and (aDDSHeader.dwDepth > 1));
+  if (aDDSHeader.ddspf.dwFourCC = MAGIC_DX10) or (aDDSHeader.ddspf.dwFourCC = MAGIC_XBOX) then begin
+    var lDX10 := TwbDDS.HeaderDX10(aDDSHeader);
+    lNot2D := lNot2D or (lDX10.resourceDimension <> DDS_DIMENSION_TEXTURE2D) or (lDX10.arraySize > 1);
+  end;
+  if lNot2D then
+    raise Exception.Create('Only a 2D texture or a cubemap fits an archive record: ' + aFileName);
+end;
+
 procedure TwbCustomBSArchive.Close;
 begin
   fType := baNone;
@@ -1034,6 +1049,19 @@ begin
     aWidth := aWidth div 2;
     aHeight := aHeight div 2;
   end;
+end;
+
+function TwbCustomBSArchive.GetDDSMipsSize(aDDSHeader: PDDSHeader; aFirstMip: Integer): Int64;
+begin
+  Result := 0;
+  var lDXGI := TwbDDS.GetDXGI(aDDSHeader);
+  var lMips := Integer(aDDSHeader.dwMipMapCount);
+  if lMips = 0 then
+    lMips := 1;
+  for var m := aFirstMip to Pred(lMips) do
+    Inc(Result, TwbDDS.GetMipSize(aDDSHeader.dwWidth, aDDSHeader.dwHeight, lDXGI, m));
+  if TwbDDS.IsCubeMap(aDDSHeader) then
+    Result := Result * 6;
 end;
 
 procedure TwbCustomBSArchive.SetMultiThreaded(aValue: Boolean);
@@ -2730,9 +2758,8 @@ end;
 procedure TwbSplitPacker.LoadFile(aPackedFile: PPackedFile);
 var
   buf: TBytes;
-  Size, Off, MipSize, chunks: Integer;
+  Size, SharedSize, Off, MipSize: Integer;
   DDSHeader: PDDSHeader;
-  GNFHeader: PGNFHeader;
 
   procedure AddChunk(const aData: TBytes; aCompress: Boolean);
   var
@@ -2753,6 +2780,7 @@ var
 
 begin
   Size := 0;
+  SharedSize := 0;
 
   Inc(fLoadingCount);
   SyncEndWrite;
@@ -2763,58 +2791,40 @@ begin
     if not IsDDSArchive(fType) then
       AddChunk(buf, aPackedFile.Compress)
 
-    // texture archives - multiple chunks for mipmaps
+    // DDS archives - multiple chunks for mipmaps
     else begin
-      // DDS
-      if fTarget in [btPC, btXBox] then begin
-        if not TwbDDS.IsDDS(buf, Length(buf)) then
-          raise Exception.Create(cExceptionInvalidDDS);
+      if not TwbDDS.IsDDS(buf, Length(buf)) then
+        raise Exception.Create(cExceptionInvalidDDS);
 
-        if (fTarget = btPC) and TwbDDS.IsXBOX(buf) then
-          raise Exception.Create(cExceptionIsXboxDDS);
+      if (fTarget = btPC) and TwbDDS.IsXBOX(buf) then
+        raise Exception.Create(cExceptionIsXboxDDS);
 
-        if (fTarget = btXBox) and not TwbDDS.IsXBOX(buf) then
-          raise Exception.Create(cExceptionIsNotXboxDDS);
+      if (fTarget = btXBox) and not TwbDDS.IsXBOX(buf) then
+        raise Exception.Create(cExceptionIsNotXboxDDS);
 
+      DDSHeader := @buf[0];
+      // convert unsupported uncompressed 24 bit RGB to 32 bit BGRX
+      if TwbDDS.GetD3DFMT(DDSHeader) = D3DFMT_R8G8B8 then begin
+        buf := TwbDDS.ConvertR8G8B8toB8G8R8X8(buf, Length(buf));
         DDSHeader := @buf[0];
-        // convert unsupported uncompressed 24 bit RGB to 32 bit BGRX
-        if TwbDDS.GetD3DFMT(DDSHeader) = D3DFMT_R8G8B8 then begin
-          buf := TwbDDS.ConvertR8G8B8toB8G8R8X8(buf, Length(buf));
-          DDSHeader := @buf[0];
-        end;
-        if TwbDDS.GetDXGI(DDSHeader) = DXGI_FORMAT_UNKNOWN then
-          raise Exception.Create(cExceptionUnsupportedDDS);
-
-        Off := TwbDDS.GetHeaderSize(DDSHeader);
-        MipSize := TwbDDS.GetMipSize(DDSHeader);
-        chunks := GetDDSMipChunkNum(DDSHeader.dwWidth, DDSHeader.dwHeight, DDSHeader.dwMipMapCount);
-        if TwbDDS.IsCubeMap(DDSHeader) then chunks := 1; // cubemaps are not chunked
-      end
-      // GNF
-      else begin
-        if fMaxChunkCount <> 1 then
-          raise Exception.Create(cExceptionSingleChunk);
-
-        if not TwbGNF.IsGNF(buf, Length(buf)) then
-          raise Exception.Create(cExceptionInvalidGNF);
-
-        GNFHeader := @buf[0];
-        if GNFHeader.NumTextures <> 1 then
-          raise Exception.Create(cExceptionUnsupportedGNF);
-
-        Off := TwbGNF.GetHeaderSize(GNFHeader);
-        chunks := fMaxChunkCount;
-        MipSize := 0; // suppress compiler warning, recalculated for single chunk below
       end;
+      if TwbDDS.GetDXGI(DDSHeader) = DXGI_FORMAT_UNKNOWN then
+        raise Exception.Create(cExceptionUnsupportedDDS);
+      CheckDDSFitsRecord(DDSHeader, aPackedFile.FileName);
 
-      // chunk 0 is uncompressed texture header
+      Off := TwbDDS.GetHeaderSize(DDSHeader);
+      if GetDDSMipsSize(DDSHeader, 0) > Length(buf) - Off then
+        raise Exception.Create('Texture data is shorter than its mipmaps: ' + aPackedFile.FileName);
+      // chunk 0 is uncompressed DDS header
       AddChunk(Copy(buf, 0, Off), False);
-
-      for var i := 1 to chunks do begin
-        if i = chunks then MipSize := Length(buf) - Off;
+      var c := GetDDSMipChunkNum(DDSHeader.dwWidth, DDSHeader.dwHeight, DDSHeader.dwMipMapCount);
+      if TwbDDS.IsCubeMap(DDSHeader) then c := 1; // cubemaps are not chunked
+      for var i := 1 to c do begin
+        var lMipSize := TwbDDS.GetMipSize(DDSHeader.dwWidth, DDSHeader.dwHeight, TwbDDS.GetDXGI(DDSHeader), i - 1);
+        if i = c then lMipSize := Length(buf) - Off;
+        MipSize := lMipSize;
         AddChunk(Copy(buf, Off, MipSize), aPackedFile.Compress);
         Inc(Off, MipSize);
-        MipSize := MipSize div 4;
       end;
     end;
 

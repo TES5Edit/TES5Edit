@@ -1605,7 +1605,7 @@ end;
 procedure GeneralProgress(const s: string);
 begin
   GeneralProgressNoAbortCheck(s);
-  if wbForceTerminate and not wbCancelLocked then
+  if wbForceTerminate and not wbCancelLocked and (ProcessMessagesLockCount < 1) then
     Abort;
 end;
 
@@ -19828,7 +19828,7 @@ end;
 procedure LoaderProgress(const s: string);
 begin
   LoaderProgressNoAbortCheck(s);
-  if wbForceTerminate and not wbCancelLocked then
+  if wbForceTerminate and not wbCancelLocked and (ProcessMessagesLockCount < 1) then
     Abort;
 end;
 
