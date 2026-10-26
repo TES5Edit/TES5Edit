@@ -8866,9 +8866,14 @@ begin
         Exit;
       end
 
-      // string editor
-      else if Assigned(Element.ResolvedValueDef) and (Element.ResolvedValueDef.DefType = dtString) then
-      begin
+      else if Assigned(Element.ResolvedValueDef) and Element.IsEditable and
+        (Element.ResolvedValueDef.DefType in [dtInteger, dtFlag, dtFloat, dtGuid]) then begin
+        if not InputQuery('Edit Value', 'Please change the value:', EditValue) then
+          Exit;
+      end
+
+      // element editor
+      else begin
         with TfrmViewElements.Create(Self) do
         try
           Caption := lPath;
