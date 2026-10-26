@@ -478,7 +478,7 @@ type
   TwbGNF = class abstract
   public
     class function IsGNF(aGNFData: Pointer; aSize: Integer): Boolean;
-    class function GetHeaderSize(aGNFData: Pointer): Integer;
+    class function GetHeaderSize(aGNFData: Pointer): Int64;
   end;
 
 
@@ -1316,15 +1316,16 @@ begin
   Result := Assigned(aGNFData) and
     (aSize >= SizeOf(TGNFHeader)) and
     (PGNFHeader(aGNFData).Magic = MAGIC_GNF) and
+    (GetHeaderSize(aGNFData) >= SizeOf(TGNFHeader)) and
     (aSize >= GetHeaderSize(aGNFData));
 end;
 
-class function TwbGNF.GetHeaderSize(aGNFData: Pointer): Integer;
+class function TwbGNF.GetHeaderSize(aGNFData: Pointer): Int64;
 var
   GNFHeader: PGNFHeader;
 begin
   GNFHeader := aGNFData;
-  Result := SizeOf(GNFHeader.Magic) + SizeOf(GNFHeader.ContentSize) + GNFHeader.ContentSize;
+  Result := Int64(SizeOf(GNFHeader.Magic)) + SizeOf(GNFHeader.ContentSize) + GNFHeader.ContentSize;
 end;
 
 end.
