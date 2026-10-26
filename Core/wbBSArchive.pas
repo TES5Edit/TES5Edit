@@ -918,6 +918,8 @@ end;
 
 function TwbBSFileEntry.DDSHeaderSize: Integer;
 begin
+  if Archive.ArchiveTarget = btPS then
+    Exit(GNF_PADDED_HEADER_SIZE);
   Result := SizeOf(TDDSHeader);
   var lXbox := IsXbox;
   if lXbox or not (TDXGI(DDS.DXGIFormat) in TwbDDS.DXGI_DX9) then begin
