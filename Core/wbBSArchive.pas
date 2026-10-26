@@ -2806,6 +2806,22 @@ begin
     if not IsDDSArchive(fType) then
       AddChunk(buf, aPackedFile.Compress)
 
+    // GNF
+    else if fTarget = btPS then begin
+      if fMaxChunkCount <> 1 then
+        raise Exception.Create(cExceptionSingleChunk);
+
+      if not TwbGNF.IsGNF(buf, Length(buf)) then
+        raise Exception.Create(cExceptionInvalidGNF);
+
+      if PGNFHeader(@buf[0]).NumTextures <> 1 then
+        raise Exception.Create(cExceptionUnsupportedGNF);
+
+      Off := TwbGNF.GetHeaderSize(@buf[0]);
+      AddChunk(Copy(buf, 0, Off), False);
+      AddChunk(Copy(buf, Off, Length(buf) - Off), aPackedFile.Compress);
+    end
+
     // DDS archives - multiple chunks for mipmaps
     else begin
       if not TwbDDS.IsDDS(buf, Length(buf)) then
