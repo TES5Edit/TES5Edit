@@ -2471,7 +2471,7 @@ begin
           gnf.ContentSize := GNF_PADDED_HEADER_SIZE - SizeOf(gnf.Magic) - SizeOf(gnf.ContentSize);
           gnf.Alignment := GNF_ALIGNMENT;
           gnf.NumTextures := 1;
-          gnf.StreamSize := TexSize;
+          gnf.StreamSize := lTexSize;
           System.Move(aFile.GNF, gnf.Texture, SizeOf(aFile.GNF));
         end
         // set up DDS header
