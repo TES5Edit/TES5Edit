@@ -13,20 +13,33 @@ unit xejviScriptAdapterContainer;
 interface
 
 uses
-  JvInterpreter;
+  JvInterpreter,
+  wbInterface;
 
 procedure RegisterJvInterpreterAdapter(JvInterpreterAdapter: TJvInterpreterAdapter);
+procedure RequireEditable(const aElement: IwbElement);
 
 implementation
 
 uses
   System.SysUtils,
-  System.Variants,
-
-  wbInterface;
+  System.Variants;
 
 const
   cUnit = 'Dummy';
+
+procedure RequireEditable(const aElement: IwbElement);
+begin
+  if wbAllowUnsafeScripts then
+    Exit;
+  var lMainRecord := aElement.ContainingMainRecord;
+  if Assigned(lMainRecord) then begin
+    if lMainRecord.IsEditable then
+      Exit;
+  end else if Assigned(aElement._File) and aElement._File.IsEditable then
+    Exit;
+  raise Exception.Create(aElement.Path + ': Does not support editing');
+end;
 
 
 { IwbContainer }
@@ -45,8 +58,10 @@ var
   Element: IwbElement;
 begin
   if Supports(IInterface(Args.Values[0]), IwbContainerElementRef, Container) then
-    if Supports(IInterface(Args.Values[1]), IwbElement, Element) then
+    if Supports(IInterface(Args.Values[1]), IwbElement, Element) then begin
+      RequireEditable(Container);
       Container.AddElement(Element);
+    end;
 end;
 
 procedure IwbContainer_AdditionalElementCount(var Value: Variant; Args: TJvInterpreterArgs);
@@ -162,8 +177,10 @@ var
   Element: IwbElement;
 begin
   if Supports(IInterface(Args.Values[0]), IwbContainerElementRef, Container) then
-    if Supports(IInterface(Args.Values[2]), IwbElement, Element) then
+    if Supports(IInterface(Args.Values[2]), IwbElement, Element) then begin
+      RequireEditable(Container);
       Container.InsertElement(integer(Args.Values[1]), Element);
+    end;
 end;
 
 procedure IwbContainer_IsSorted(var Value: Variant; Args: TJvInterpreterArgs);
@@ -187,8 +204,10 @@ procedure IwbContainer_RemoveByIndex(var Value: Variant; Args: TJvInterpreterArg
 var
   Container: IwbContainerElementRef;
 begin
-  if Supports(IInterface(Args.Values[0]), IwbContainerElementRef, Container) then
+  if Supports(IInterface(Args.Values[0]), IwbContainerElementRef, Container) then begin
+    RequireEditable(Container);
     Value := Container.RemoveElement(integer(Args.Values[1]), boolean(Args.Values[2]));
+  end;
 end;
 
 procedure IwbContainer_RemoveElement(var Value: Variant; Args: TJvInterpreterArgs);
@@ -198,6 +217,7 @@ var
   vtyp: integer;
 begin
   if Supports(IInterface(Args.Values[0]), IwbContainerElementRef, Container) then begin
+    RequireEditable(Container);
     vtyp := VarType(Args.Values[1]);
     case vtyp of
       varInteger, varInt64, varWord, varLongWord, varShortInt:
@@ -215,8 +235,10 @@ procedure IwbContainer_ReverseElements(var Value: Variant; Args: TJvInterpreterA
 var
   Container: IwbContainerElementRef;
 begin
-  if Supports(IInterface(Args.Values[0]), IwbContainerElementRef, Container) then
+  if Supports(IInterface(Args.Values[0]), IwbContainerElementRef, Container) then begin
+    RequireEditable(Container);
     Container.ReverseElements;
+  end;
 end;
 
 function MemberTarget(const aContainer: IwbContainerElementRef; const aPath: string; out aParent: IwbContainerElementRef; out aName: string): Boolean;

@@ -22,7 +22,8 @@ implementation
 uses
   System.SysUtils,
 
-  wbInterface;
+  wbInterface,
+  xejviScriptAdapterContainer;
 
 const
   cUnit = 'Dummy';
@@ -73,6 +74,7 @@ var
   Signature: TwbSignature;
 begin
   if Supports(IInterface(Args.Values[0]), IwbMainRecord, MainRecord) then begin
+    RequireEditable(MainRecord);
     Signature := StrToSignature(Args.Values[1]);
     MainRecord.ChangeFormSignature(Signature);
   end;
@@ -338,8 +340,10 @@ procedure IwbMainRecord_SetEditorID(var Value: Variant; Args: TJvInterpreterArgs
 var
   MainRecord: IwbMainRecord;
 begin
-  if Supports(IInterface(Args.Values[0]), IwbMainRecord, MainRecord) then
+  if Supports(IInterface(Args.Values[0]), IwbMainRecord, MainRecord) then begin
+    RequireEditable(MainRecord);
     MainRecord.EditorID := Args.Values[1];
+  end;
 end;
 
 procedure IwbMainRecord_SetFormVCS1(var Value: Variant; Args: TJvInterpreterArgs);
@@ -370,40 +374,50 @@ procedure IwbMainRecord_SetIsDeleted(var Value: Variant; Args: TJvInterpreterArg
 var
   MainRecord: IwbMainRecord;
 begin
-  if Supports(IInterface(Args.Values[0]), IwbMainRecord, MainRecord) then
+  if Supports(IInterface(Args.Values[0]), IwbMainRecord, MainRecord) then begin
+    RequireEditable(MainRecord);
     MainRecord.IsDeleted := Args.Values[1];
+  end;
 end;
 
 procedure IwbMainRecord_SetIsInitiallyDisabled(var Value: Variant; Args: TJvInterpreterArgs);
 var
   MainRecord: IwbMainRecord;
 begin
-  if Supports(IInterface(Args.Values[0]), IwbMainRecord, MainRecord) then
+  if Supports(IInterface(Args.Values[0]), IwbMainRecord, MainRecord) then begin
+    RequireEditable(MainRecord);
     MainRecord.IsInitiallyDisabled := Args.Values[1];
+  end;
 end;
 
 procedure IwbMainRecord_SetIsPersistent(var Value: Variant; Args: TJvInterpreterArgs);
 var
   MainRecord: IwbMainRecord;
 begin
-  if Supports(IInterface(Args.Values[0]), IwbMainRecord, MainRecord) then
+  if Supports(IInterface(Args.Values[0]), IwbMainRecord, MainRecord) then begin
+    RequireEditable(MainRecord);
     MainRecord.IsPersistent := Args.Values[1];
+  end;
 end;
 
 procedure IwbMainRecord_SetIsVisibleWhenDistant(var Value: Variant; Args: TJvInterpreterArgs);
 var
   MainRecord: IwbMainRecord;
 begin
-  if Supports(IInterface(Args.Values[0]), IwbMainRecord, MainRecord) then
+  if Supports(IInterface(Args.Values[0]), IwbMainRecord, MainRecord) then begin
+    RequireEditable(MainRecord);
     MainRecord.IsVisibleWhenDistant := Args.Values[1];
+  end;
 end;
 
 procedure IwbMainRecord_SetLoadOrderFormID(var Value: Variant; Args: TJvInterpreterArgs);
 var
   MainRecord: IwbMainRecord;
 begin
-  if Supports(IInterface(Args.Values[0]), IwbMainRecord, MainRecord) then
+  if Supports(IInterface(Args.Values[0]), IwbMainRecord, MainRecord) then begin
+    RequireEditable(MainRecord);
     MainRecord.LoadOrderFormID := TwbFormID.FromVar(Args.Values[1]);
+  end;
 end;
 
 procedure IwbMainRecord_Signature(var Value: Variant; Args: TJvInterpreterArgs);

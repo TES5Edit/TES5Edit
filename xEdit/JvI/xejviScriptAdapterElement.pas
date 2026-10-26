@@ -27,7 +27,8 @@ uses
   wbInterface,
   wbConflict,
   xeMainForm,
-  xejviScriptArguments;
+  xejviScriptArguments,
+  xejviScriptAdapterContainer;
 
 const
   cUnit = 'Dummy';
@@ -82,8 +83,10 @@ var
 begin
   Element2 := nil;
   if Supports(IInterface(Args.Values[0]), IwbElement, Element) then
-    if (V2O(Args.Values[2]) = nil) or Supports(IInterface(Args.Values[2]), IwbElement, Element2) then
+    if (V2O(Args.Values[2]) = nil) or Supports(IInterface(Args.Values[2]), IwbElement, Element2) then begin
+      RequireEditable(Element);
       Value := Element.Assign(Args.Values[1], Element2, Args.Values[3]);
+    end;
 end;
 
 procedure IwbElement_AssignTemplateByIndex(var Value: Variant; Args: TJvInterpreterArgs);
@@ -534,8 +537,10 @@ procedure IwbElement_Remove(var Value: Variant; Args: TJvInterpreterArgs);
 var
   Element: IwbElement;
 begin
-  if Supports(IInterface(Args.Values[0]), IwbElement, Element) then
+  if Supports(IInterface(Args.Values[0]), IwbElement, Element) then begin
+    RequireEditable(Element);
     Element.Remove;
+  end;
 end;
 
 procedure IwbElement_ReportRequiredMasters(var Value: Variant; Args: TJvInterpreterArgs);
@@ -617,8 +622,10 @@ procedure IwbElement_SetToDefault(var Value: Variant; Args: TJvInterpreterArgs);
 var
   Element: IwbElement;
 begin
-  if Supports(IInterface(Args.Values[0]), IwbElement, Element) then
+  if Supports(IInterface(Args.Values[0]), IwbElement, Element) then begin
+    RequireEditable(Element);
     Element.SetToDefault;
+  end;
 end;
 
 procedure IwbElement_ShortName(var Value: Variant; Args: TJvInterpreterArgs);
