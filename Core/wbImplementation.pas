@@ -691,6 +691,8 @@ type
     procedure RemoveMainRecord(const aRecord: IwbMainRecord);
     procedure InjectMainRecord(const aRecord: IwbMainRecord);
     procedure RemoveInjectedMainRecord(const aRecord: IwbMainRecord; const aFormID: TwbFormID);
+    procedure IdentityKeyChanged(aClash: Boolean);
+    function HoldsBlockedIdentities: Boolean;
     function InjectionTarget(const aFormID: TwbFormID): IwbFileInternal;
     function IsOwnFormID(const aFormID: TwbFormID; aNew: Boolean): Boolean;
     function HoldsInjected(const aRecord: IwbMainRecord): Boolean;
@@ -758,6 +760,7 @@ type
     flRecordsCount           : Integer; {only used during loading}
     flRecordProcessing       : IwbMainRecord;
     flRecordNeedCompactFrom  : Integer;
+    flIdentityClash          : Boolean;
     flRecordBits             : array of array of array of set of Byte;
 
     flRecordsIndices         : array of TwbMainRecordIndexDictionary;
@@ -920,6 +923,8 @@ type
 
     procedure SortMasters;
     procedure CleanMasters;
+    function UnwrittenMasterCount: Integer;
+    procedure AddHardcodedFirstMaster;
 
     procedure BuildReachable;
 
@@ -999,6 +1004,10 @@ type
     procedure RemoveMainRecord(const aRecord: IwbMainRecord);
     procedure InjectMainRecord(const aRecord: IwbMainRecord);
     procedure RemoveInjectedMainRecord(const aRecord: IwbMainRecord; const aFormID: TwbFormID);
+    procedure ReKeyIdentities;
+    procedure IdentityKeyChanged(aClash: Boolean);
+    function HoldsBlockedIdentities: Boolean;
+    procedure RenumberOwnSlot(aOldSlot, aNewSlot: Integer);
     function InjectionTarget(const aFormID: TwbFormID): IwbFileInternal;
     function IsOwnFormID(const aFormID: TwbFormID; aNew: Boolean): Boolean;
     function HoldsInjected(const aRecord: IwbMainRecord): Boolean;
@@ -1093,6 +1102,8 @@ type
     procedure InformStorage(var aBasePtr: Pointer; aEndPtr: Pointer); override;
     function DoCheckSizeAfterWrite: Boolean; virtual;
     procedure SetToDefaultInternal; override;
+    function GetDataBytes: TBytes;
+    procedure NotifyIfDataChanged(const aOldData: TBytes);
     function IsFlags: Boolean; virtual;
 
     function GetEditType: TwbEditType; override; final;
@@ -1188,6 +1199,7 @@ type
     procedure SetChildGroup(const aGroup: IwbGroupRecord);
     procedure RemoveChildGroup(const aGroup: IwbGroupRecord);
     procedure InvalidateReferencesInjected;
+    procedure RenumberOwnSlot(aOldSlot, aNewSlot: Integer);
     procedure ClearForRelease;
     function DoBuildRef(aRemove: Boolean): Boolean;
 
@@ -1205,8 +1217,10 @@ type
     procedure ResetConflictMember;
     procedure TakeDenseIDFrom(aContext: TwbLoadingGameContext; aMark: Cardinal);
     procedure BumpChainStampAtMost(aMark: Cardinal);
-    procedure CheckIdentityAfterSet(const aElement: IwbElement; const aOldValue: Variant);
-    procedure RegisterWithIdentity(aFresh: Boolean);
+    procedure RegisterWithIdentity(aNew: Boolean);
+    function IdentityKey: TwbFormID;
+    procedure LeaveFileIndex(const aFile: IwbFileInternal);
+    procedure TakeIdentityKey(const aFile: IwbFileInternal);
   end;
 
   IwbMainRecordEntry = interface(IwbMainRecordInternal)
@@ -1267,7 +1281,8 @@ type
     mrsOFSTReserved,
     mrsIndexKeysActive,
     mrsConflictStored,
-    mrsRegisterLater
+    mrsRegisterLater,
+    mrsAssigningWhole
   );
 
   TwbMainRecordStates = set of TwbMainRecordState;
@@ -1408,10 +1423,17 @@ type
     procedure UpdateCellChildGroup;
     procedure UpdateInteriorCellGroup;
     procedure ReRegister(const aFile: IwbFileInternal; const aFileFormID: TwbFormID; const aMoveKey: TProc);
+    function RegistrationMaster(const aFile: IwbFileInternal; const aFileFormID: TwbFormID): IwbMainRecord;
+    procedure LeaveFileIndex(const aFile: IwbFileInternal);
+    procedure JoinFileIndex(const aFile: IwbFileInternal; const aMaster: IwbMainRecord; const aMoveKey: TProc);
+    procedure TakeChainFromLaterRoot(const aFile: IwbFileInternal);
+    procedure MoveGroupLabel;
+    function IdentityKey: TwbFormID;
+    procedure TakeIdentityKey(const aFile: IwbFileInternal);
     procedure UpdateIdentityKey;
-    procedure RegisterWithIdentity(aFresh: Boolean);
+    procedure RegisterWithIdentity(aNew: Boolean);
     function RefreshKnownSubRecord(const aSubRecord: IwbSubRecord): Boolean;
-    function IdentityChange(const aElement: IwbElement; out aHolder: IwbMainRecord): Boolean;
+    procedure RefreshKnownSubRecords;
 
     procedure MarkModifiedRecursive(const aElementTypes: TwbElementTypes); override; final;
 
@@ -1561,6 +1583,7 @@ type
     procedure SetChildGroup(const aGroup: IwbGroupRecord);
     procedure RemoveChildGroup(const aGroup: IwbGroupRecord);
     procedure InvalidateReferencesInjected;
+    procedure RenumberOwnSlot(aOldSlot, aNewSlot: Integer);
     procedure ClearForRelease;
     procedure SaveRefsToStream(aStream: TStream; aSaveNames: Boolean);
     procedure LoadRefsFromStream(aStream: TStream; aLoadNames: Boolean);
@@ -1569,7 +1592,6 @@ type
     procedure ResetConflictMember;
     procedure TakeDenseIDFrom(aContext: TwbLoadingGameContext; aMark: Cardinal);
     procedure BumpChainStampAtMost(aMark: Cardinal);
-    procedure CheckIdentityAfterSet(const aElement: IwbElement; const aOldValue: Variant);
 
     {---IwbMainRecordEntry---}
     procedure RemoveEntry;
@@ -3079,20 +3101,25 @@ begin
       for l := 0 to Pred(lRecord.OverrideCount) do
         lOverrides[l] := lRecord.Overrides[l];
 
-      lRecord.LoadOrderFormID := lNew;
-      if Length(lOverrides) > 0 then begin
-        wbProgress('Record has '+Length(lOverrides).ToString+' override(s)');
-        for l := Low(lOverrides) to High(lOverrides) do
-          lOverrides[l].LoadOrderFormID := lNew;
-      end;
+      wbCancelLock;
+      try
+        lRecord.LoadOrderFormID := lNew;
+        if Length(lOverrides) > 0 then begin
+          wbProgress('Record has '+Length(lOverrides).ToString+' override(s)');
+          for l := Low(lOverrides) to High(lOverrides) do
+            lOverrides[l].LoadOrderFormID := lNew;
+        end;
 
-      lOverrides := nil;
+        lOverrides := nil;
 
-      wbTick;
+        wbTick;
 
-      if Length(lUpdate.Items) > 0 then begin
-        wbProgress('Record is referenced by '+Length(lUpdate.Items).ToString+' other record(s)');
-        lUpdate.Apply(lOld, lNew);
+        if Length(lUpdate.Items) > 0 then begin
+          wbProgress('Record is referenced by '+Length(lUpdate.Items).ToString+' other record(s)');
+          lUpdate.Apply(lOld, lNew);
+        end;
+      finally
+        wbCancelUnlock;
       end;
     except
       on E: Exception do begin
@@ -5121,6 +5148,20 @@ var
       Assert(False, '[AddMasters] not flContextObj.BeginInternalEdit');
   end;
 
+  procedure MoveOwnSlot;
+  begin
+    if Length(flOldMasters) = Length(flMasters) then
+      Exit;
+    if gcMasterSlotsInFormID in flContextObj.GameDefObj.Capabilities then begin
+      var lOldCount := TwbSlotCounts.Create(flOldMasters, flComplexFileFileID);
+      var lNewCount := TwbSlotCounts.Create(flMasters, flComplexFileFileID);
+
+      MastersUpdated([], [], lOldCount, lNewCount);
+      SortRecords;
+    end else
+      RenumberOwnSlot(Length(flOldMasters), Length(flMasters));
+  end;
+
 var
   i    : Integer;
   s, t : string;
@@ -5129,6 +5170,7 @@ begin;
 
   lMasters := TStringList.Create;
   flOldMasters := Copy(flMasters);
+  wbCancelLock;
   try
     if Assigned(aMasters) then
       for i := 0 to Pred(aMasters.Count) do begin
@@ -5143,23 +5185,25 @@ begin;
     if lMasters.Count < 1 then
       Exit;
 
-    Inner;
-
-    if gcMasterSlotsInFormID in flContextObj.GameDefObj.Capabilities then
+    try
+      Inner;
+    except
       if Length(flOldMasters) <> Length(flMasters) then begin
-        var lOldCount := TwbSlotCounts.Create(flOldMasters, flComplexFileFileID);
-        var lNewCount := TwbSlotCounts.Create(flMasters, flComplexFileFileID);
-
-        MastersUpdated([], [], lOldCount, lNewCount);
-        SortRecords;
+        MoveOwnSlot;
+        SetModified(True);
+        IncGeneration;
       end;
+      raise;
+    end;
 
+    MoveOwnSlot;
     SetModified(True);
     IncGeneration;
 
     if NotAllAdded then
       raise Exception.Create('Only ' + (Length(flMasters) - Length(flOldMasters)).ToString + ' of ' + lMasters.Count.ToString + ' masters could be added. Master list now contains ' + Length(flMasters).ToString + ' entries and is full.');
   finally
+    wbCancelUnlock;
     lMasters.Free;
     flOldMasters := nil;
     flInvalidateReferencesInjected;
@@ -6481,11 +6525,15 @@ begin
     raise Exception.Create('File "' + GetFileName + '" is not editable');
   if GetIsNotPlugin then
     Exit;
+  if not (gcMasterSlotsInFormID in flContextObj.GameDefObj.Capabilities) then
+    Exit;
   if (GetElementCount < 1) or not Supports(GetElement(0), IwbContainerElementRef, Header) then
     raise Exception.CreateFmt('Unexpected error reading file "%s"', [flFileName]);
 
+  var lSummary := 'Has no masters.';
   if Length(flMasters) >= 1 then begin
     flOldMasters := Copy(flMasters);
+    var lCancelLocked := False;
     try
       MasterFiles := Header.ElementByName['Master Files'] as IwbContainerElementRef;
       Assert(Assigned(MasterFiles), '[TwbFile.CleanMasters] not Assigned(MasterFiles)');
@@ -6521,6 +6569,8 @@ begin
               KeepMasters.Add(lFileMasters[j].FileName);
           end;
 
+        wbCancelLock;
+        lCancelLocked := True;
         Old := nil;
         New := nil;
         var nextFullID := 0;
@@ -6637,15 +6687,17 @@ begin
         SortRecords;
         flInvalidateReferencesInjected;
       end;
-      flProgress(Format('Removed %d unused masters.', [lRemovedCount]));
+      lSummary := Format('Removed %d unused masters.', [lRemovedCount]);
     finally
+      if lCancelLocked then
+        wbCancelUnlock;
       flOldMasters := nil;
       flInvalidateReferencesInjected;
     end;
-  end
-  else flProgress('Has no masters.');
+  end;
 
   UpdateModuleMasters;
+  flProgress(lSummary);
 end;
 
 constructor TwbFile.Create(const aContext: TwbGameContext; const aFileName: string; aLoadOrder: Integer; const aCompareTo: string; aStates: TwbFileStates; const aData: TBytes);
@@ -6834,6 +6886,7 @@ begin
     end;
   end;
 
+  AddHardcodedFirstMaster;
   if Length(lGameDef.NewFileMasters) > 0 then
     AddMasters(lGameDef.NewFileMasters);
 
@@ -6926,11 +6979,13 @@ begin
     end;
   end;
 
+  AddHardcodedFirstMaster;
+  var lUnwritten := UnwrittenMasterCount;
   with aTemplate^ do
     for i := Low(miMasters) to High(miMasters) do
       if Assigned(miMasters[i]) then
         with miMasters[i]^ do
-          if Assigned(miFile) then
+          if Assigned(miFile) and ((lUnwritten = 0) or not _File.Equals(flMasters[0])) then
             AddMaster(_File);
 
   if Length(lGameDef.NewFileMasters) > 0 then
@@ -7106,7 +7161,7 @@ begin
   H := High(flInjectedRecords);
   while L <= H do begin
     I := (L + H) shr 1;
-    C := TwbFormID.Compare(flInjectedRecords[I].FormID.ChangeFileID(lLayout, TwbFileID.CreateFull(0)), aFormID);
+    C := TwbFormID.Compare(flInjectedRecords[I].FixedFormID.ChangeFileID(lLayout, TwbFileID.CreateFull(0)), aFormID);
     if C < 0 then
       L := I + 1
     else begin
@@ -8925,13 +8980,11 @@ begin
     if not Assigned(HEDR) then
       raise Exception.Create('File ' + GetFileName + ' has a file header with missing HEDR subrecord');
 
-    if not (gcFormIDInRecordHeader in lGameDef.Capabilities) then begin
-      var lLayout := flContextObj.SlotLayout;
+    if not (gcFormIDInRecordHeader in lGameDef.Capabilities) then
       for var lRecord in flRecords do
-        if Assigned(lRecord) and (lRecord.FormID.ObjectID[lLayout] <> lRecord.FixedFormID.ObjectID[lLayout]) then
+        if Assigned(lRecord) and ((lRecord as IwbMainRecordInternal).IdentityKey <> lRecord.FixedFormID) then
           raise Exception.Create('File ' + GetFileName + ' can not be saved: ' + lRecord.Name + ' is registered as [' +
-            lRecord.FixedFormID.ToDisplayString(lLayout) + '], not under its current identity');
-    end;
+            lRecord.FixedFormID.ToDisplayString(flContextObj.SlotLayout) + '], not under its current identity');
 
     if flModule.miExtension = meESM then
       SetIsESM(True);
@@ -9347,6 +9400,95 @@ begin
 
     IncGeneration;
   end;
+end;
+
+procedure TwbFile.ReKeyIdentities;
+var
+  lRecords : array of IwbMainRecordInternal;
+  lOldKeys : array of TwbFormID;
+  lNewKeys : array of TwbFormID;
+  lMoves   : array of Boolean;
+  lIndex   : Integer;
+  lChanged : Boolean;
+begin
+  flIdentityClash := False;
+  if gcFormIDInRecordHeader in flContextObj.GameDefObj.Capabilities then
+    Exit;
+
+  for var lRecord in flRecords do
+    if Assigned(lRecord) then begin
+      var lInternal := lRecord as IwbMainRecordInternal;
+      var lNew := lInternal.IdentityKey;
+      if lNew <> lRecord.FixedFormID then begin
+        lRecords := lRecords + [lInternal];
+        lOldKeys := lOldKeys + [lRecord.FixedFormID];
+        lNewKeys := lNewKeys + [lNew];
+      end;
+    end;
+  if Length(lRecords) < 1 then
+    Exit;
+
+  SetLength(lMoves, Length(lRecords));
+  for var i := Low(lRecords) to High(lRecords) do begin
+    lMoves[i] := True;
+    for var j := Low(lRecords) to High(lRecords) do
+      if (j <> i) and (lNewKeys[j] = lNewKeys[i]) then
+        lMoves[i] := False;
+    if lMoves[i] and FindFormID(lNewKeys[i], lIndex, True) then begin
+      lMoves[i] := False;
+      for var j := Low(lRecords) to High(lRecords) do
+        if lOldKeys[j] = lNewKeys[i] then
+          lMoves[i] := True;
+    end;
+  end;
+
+  repeat
+    lChanged := False;
+    for var i := Low(lRecords) to High(lRecords) do
+      if lMoves[i] then
+        for var j := Low(lRecords) to High(lRecords) do
+          if not lMoves[j] and (lOldKeys[j] = lNewKeys[i]) then begin
+            lMoves[i] := False;
+            lChanged := True;
+            Break;
+          end;
+  until not lChanged;
+
+  var lSelf: IwbFileInternal := Self;
+  wbCancelLock;
+  try
+    for var i := Low(lRecords) to High(lRecords) do
+      if lMoves[i] then
+        lRecords[i].LeaveFileIndex(lSelf);
+    for var i := Low(lRecords) to High(lRecords) do
+      if lMoves[i] then
+        lRecords[i].TakeIdentityKey(lSelf)
+      else
+        flIdentityClash := True;
+  finally
+    wbCancelUnlock;
+  end;
+end;
+
+procedure TwbFile.IdentityKeyChanged(aClash: Boolean);
+begin
+  if aClash then
+    flIdentityClash := True;
+  if flIdentityClash then
+    ReKeyIdentities;
+end;
+
+function TwbFile.HoldsBlockedIdentities: Boolean;
+begin
+  Result := flIdentityClash;
+end;
+
+procedure TwbFile.RenumberOwnSlot(aOldSlot, aNewSlot: Integer);
+begin
+  for var lRecord in flRecords do
+    if Assigned(lRecord) then
+      (lRecord as IwbMainRecordInternal).RenumberOwnSlot(aOldSlot, aNewSlot);
+  SortRecords;
 end;
 
 procedure TwbFile.RemoveMainRecord(const aRecord: IwbMainRecord);
@@ -10133,6 +10275,26 @@ begin
   Result := CompareText(IwbMainRecord(Item1).EditorID, IwbMainRecord(Item2).EditorID);
 end;
 
+procedure TwbFile.AddHardcodedFirstMaster;
+begin
+  if (gcHardcodedFileIsFirstMaster in flContextObj.GameDefObj.Capabilities) and (flLoadOrder > 0) then
+    for var lFile in flContextObj.Files do
+      if fsIsHardcoded in lFile.FileStates then begin
+        AddMaster(lFile);
+        Exit;
+      end;
+end;
+
+function TwbFile.UnwrittenMasterCount: Integer;
+begin
+  if (gcHardcodedFileIsFirstMaster in flContextObj.GameDefObj.Capabilities) and (Length(flMasters) > 0) and
+    (fsIsHardcoded in flMasters[0].FileStates)
+  then
+    Result := 1
+  else
+    Result := 0;
+end;
+
 procedure TwbFile.SortMasters;
 var
   i, j        : Integer;
@@ -10166,34 +10328,53 @@ var
     Inc(lNextFull);
   end;
 
+  function HoldsMasterSlotRecord: Boolean;
+  begin
+    var lLayout := flContextObj.SlotLayout;
+    for var lRecord in flRecords do
+      if Assigned(lRecord) then begin
+        var lSlot := lRecord.FixedFormID.FileID[lLayout].FullSlot;
+        var lIdentitySlot := (lRecord as IwbMainRecordInternal).IdentityKey.FileID[lLayout].FullSlot;
+        if ((lSlot > 0) and (lSlot < Length(flMasters))) or ((lIdentitySlot > 0) and (lIdentitySlot < Length(flMasters))) then
+          Exit(True);
+      end;
+    Result := False;
+  end;
+
 begin
   if not IsElementEditable(nil) then
     raise Exception.Create('File "' + GetFileName + '" is not editable');
   if GetIsNotPlugin then
     Exit;
+  if not (gcMasterSlotsInFormID in flContextObj.GameDefObj.Capabilities) and HoldsMasterSlotRecord then
+    Exit;
 
   if (GetElementCount < 1) or not Supports(GetElement(0), IwbContainerElementRef, Header) then
     raise Exception.CreateFmt('Unexpected error reading file "%s"', [flFileName]);
 
-  if Length(flMasters) > 1 then begin
+  var lUnwritten := UnwrittenMasterCount;
+  if Length(flMasters) > Succ(lUnwritten) then begin
     flOldMasters := Copy(flMasters);
+    wbCancelLock;
     try
       MasterFiles := Header.ElementByName['Master Files'] as IwbContainerElementRef;
       Assert(Assigned(MasterFiles));
-      Assert(MasterFiles.ElementCount = Length(flMasters));
+      Assert(MasterFiles.ElementCount + lUnwritten = Length(flMasters));
       SetLength(lEntries, Length(flMasters));
       SetLength(lOrder, Length(flMasters));
       for i := Low(flMasters) to High(flMasters) do begin
-        Rec := (MasterFiles[i] as IwbContainer).RecordBySignature['MAST'];
-        Assert(Assigned(Rec));
-        Assert(SameText(Rec.EditValue, flMasters[i].FileName));
         lEntries[i].mseFile := Pointer(flMasters[i]);
         lEntries[i].mseIndex := i;
         lOrder[i] := @lEntries[i];
-        MasterFiles[i].SortOrder := i;
+        if i >= lUnwritten then begin
+          Rec := (MasterFiles[i - lUnwritten] as IwbContainer).RecordBySignature['MAST'];
+          Assert(Assigned(Rec));
+          Assert(SameText(Rec.EditValue, flMasters[i].FileName));
+          MasterFiles[i - lUnwritten].SortOrder := i - lUnwritten;
+        end;
       end;
 
-      wbMergeSortPtr(@lOrder[0], Length(lOrder), CompareMasterSortEntries);
+      wbMergeSortPtr(@lOrder[lUnwritten], Length(lOrder) - lUnwritten, CompareMasterSortEntries);
       //!!! SF1 support
       SetLength(lOldIDs, Length(flOldMasters));
       lNextFull := 0;
@@ -10211,7 +10392,7 @@ begin
         flMasters[i] := flOldMasters[j];
         var lNewID := NextFileID(flMasters[i]);
         if i <> j then
-          MasterFiles[j].SortOrder := i;
+          MasterFiles[j - lUnwritten].SortOrder := i - lUnwritten;
         if (i <> j) or (lNewID <> lOldIDs[j]) then begin
           SetLength(Old, Succ(Length(Old)));
           SetLength(New, Succ(Length(New)));
@@ -10237,6 +10418,7 @@ begin
       end;
       SortRecords;
     finally
+      wbCancelUnlock;
       flOldMasters := nil;
     end;
   end;
@@ -13488,26 +13670,32 @@ begin
           _AddRef; _Release;
         end;
 
-        if Assigned(aElement) then begin
-          for i := 0 to Pred(Container.ElementCount) do begin
-            Element := Container.Elements[i];
-            if Assigned(Element.Def) and (dfNoCopyAsOverride in Element.Def.DefFlags) then
-              if GetMasterOrSelf.Equals(Element.ContainingMainRecord.MasterOrSelf) then
+        Include(mrStates, mrsAssigningWhole);
+        try
+          if Assigned(aElement) then begin
+            for i := 0 to Pred(Container.ElementCount) do begin
+              Element := Container.Elements[i];
+              if Assigned(Element.Def) and (dfNoCopyAsOverride in Element.Def.DefFlags) then
+                if GetMasterOrSelf.Equals(Element.ContainingMainRecord.MasterOrSelf) then
+                  Continue;
+              if (TObject(Element.ElementID) is TwbContainedInElement) and
+                 not GetMasterOrSelf.Equals(Element.ContainingMainRecord.MasterOrSelf) then
                 Continue;
-            if (TObject(Element.ElementID) is TwbContainedInElement) and
-               not GetMasterOrSelf.Equals(Element.ContainingMainRecord.MasterOrSelf) then
-              Continue;
-            Assign(Element.SortOrder, Element, aOnlySK);
+              Assign(Element.SortOrder, Element, aOnlySK);
+            end;
+          end else begin
+            for i := 0 to Pred(mrDef.MemberCount) do
+              if mrDef.Members[i].Required then
+                Assign(i, nil, False);
           end;
-        end else begin
-          for i := 0 to Pred(mrDef.MemberCount) do
-            if mrDef.Members[i].Required then
-              Assign(i, nil, False);
+        finally
+          Exclude(mrStates, mrsAssigningWhole);
         end;
 
         if NeedUpdate then
           UpdateCellChildGroup;
 
+        RefreshKnownSubRecords;
         CollapseStorage(nil, True);
 
       end else begin
@@ -14026,7 +14214,7 @@ begin
       mrName := '';
       mrShortName := '';
       mrDisplayName := '';
-      if not (gcFormIDInRecordHeader in GameDefObj.Capabilities) then
+      if not (gcFormIDInRecordHeader in GameDefObj.Capabilities) and not (mrsAssigningWhole in mrStates) then
         UpdateIdentityKey;
     end;
   inherited;
@@ -14054,6 +14242,30 @@ begin
     Include(mrStates, mrsGridCellChecked);
   end else
     Result := False;
+end;
+
+procedure TwbMainRecord.RefreshKnownSubRecords;
+var
+  lSubRecord : IwbSubRecord;
+  lFile      : IwbFileInternal;
+begin
+  mrEditorID := '';
+  Exclude(mrStates, mrsEditorIDFromCache);
+  mrFullName := '';
+  Exclude(mrStates, mrsFullNameFromCache);
+  Exclude(mrStates, mrsBaseRecordChecked);
+  Exclude(mrStates, mrsHasGridCell);
+  Include(mrStates, mrsGridCellChecked);
+  for var lKnown := Low(TwbKnownSubRecord) to High(TwbKnownSubRecord) do
+    if Supports(GetRecordBySignature(mrDef.KnownSubRecordSignatures[lKnown]), IwbSubRecord, lSubRecord) then
+      RefreshKnownSubRecord(lSubRecord);
+  if Supports(GetFile, IwbFileInternal, lFile) then
+    lFile.IncGeneration;
+  mrName := '';
+  mrShortName := '';
+  mrDisplayName := '';
+  if not (gcFormIDInRecordHeader in GameDefObj.Capabilities) then
+    UpdateIdentityKey;
 end;
 
 function TwbMainRecord.EnsureChildGroup: IwbGroupRecord;
@@ -14436,7 +14648,7 @@ begin
         end;
 
       if aRegister then
-        RegisterWithIdentity(False);
+        RegisterWithIdentity(True);
     end);
 
     CollapseStorage(nil, True);
@@ -16987,6 +17199,11 @@ begin
   Result := GetFile;
   if not Assigned(Result) then
     Exit;
+  if not (gcMasterSlotsInFormID in GameDefObj.Capabilities) then begin
+    if Assigned(mrMaster) then
+      Result := IwbMainRecord(mrMaster)._File;
+    Exit;
+  end;
   var lLayout := ContextObj.SlotLayout;
   var lFormID := GetFormID;
   if not lFormID.IsNull and
@@ -18741,6 +18958,9 @@ begin
     lMaster.ResetConflict;
 
   inherited;
+
+  if Assigned(_File) then
+    _File.IdentityKeyChanged(False);
 end;
 
 procedure TwbMainRecord.RemoveChildGroup(const aGroup: IwbGroupRecord);
@@ -19520,15 +19740,28 @@ begin
 end;
 
 procedure TwbMainRecord.ReRegister(const aFile: IwbFileInternal; const aFileFormID: TwbFormID; const aMoveKey: TProc);
-var
-  Master : IwbMainRecord;
 begin
-  Master := aFile.RecordByFormID[aFileFormID, True, True];
-  if Assigned(Master) then
-    Master := Master.MasterOrSelf;
-  if Assigned(Master) and Equals(Master) then
-    Master := nil;
+  var lMaster := RegistrationMaster(aFile, aFileFormID);
+  wbCancelLock;
+  try
+    LeaveFileIndex(aFile);
+    JoinFileIndex(aFile, lMaster, aMoveKey);
+  finally
+    wbCancelUnlock;
+  end;
+end;
 
+function TwbMainRecord.RegistrationMaster(const aFile: IwbFileInternal; const aFileFormID: TwbFormID): IwbMainRecord;
+begin
+  Result := aFile.RecordByFormID[aFileFormID, True, True];
+  if Assigned(Result) then
+    Result := Result.MasterOrSelf;
+  if Assigned(Result) and Equals(Result) then
+    Result := nil;
+end;
+
+procedure TwbMainRecord.LeaveFileIndex(const aFile: IwbFileInternal);
+begin
   aFile.RemoveMainRecord(Self);
 
   if Assigned(mrMaster) then
@@ -19547,7 +19780,10 @@ begin
   mrReferencedBySize := 0;
   Exclude(mrStates, mrsIsInjectedChecked);
   Exclude(mrStates, mrsConflictStored);
+end;
 
+procedure TwbMainRecord.JoinFileIndex(const aFile: IwbFileInternal; const aMaster: IwbMainRecord; const aMoveKey: TProc);
+begin
   aMoveKey;
   mrFixedFormID := TwbFormID.Null;
   mrLoadOrderFormID := TwbFormID.Null;
@@ -19556,16 +19792,39 @@ begin
 
   aFile.AddMainRecord(Self);
 
-  var lMaster := IwbMainRecord(mrMaster);
-  if Assigned(lMaster) then begin
-    if (lMaster._File.LoadOrder > aFile.LoadOrder) or
-      ((lMaster._File.LoadOrder = aFile.LoadOrder) and not (fsIsCompareLoad in aFile.FileStates))
-    then
-      (lMaster as IwbMainRecordInternal).YouGotAMaster(Self);
-  end else if Assigned(Master) and ((Master as IwbMainRecordInternal).ListedInjectedIn <> nil) then
-    (Master as IwbMainRecordInternal).YouGotAMaster(Self);
+  if Assigned(mrMaster) then
+    TakeChainFromLaterRoot(aFile)
+  else if Assigned(aMaster) and ((aMaster as IwbMainRecordInternal).ListedInjectedIn <> nil) then
+    (aMaster as IwbMainRecordInternal).YouGotAMaster(Self);
 
   ResetConflict;
+end;
+
+procedure TwbMainRecord.MoveGroupLabel;
+begin
+  if Assigned(mrGroup) then
+    mrGroup.GroupLabel := GetFormID.ToCardinal;
+end;
+
+function TwbMainRecord.IdentityKey: TwbFormID;
+var
+  lCacheable: Boolean;
+begin
+  Result := ComputeFixedFormID(lCacheable);
+end;
+
+procedure TwbMainRecord.TakeIdentityKey(const aFile: IwbFileInternal);
+begin
+  JoinFileIndex(aFile, RegistrationMaster(aFile, IdentityKey), MoveGroupLabel);
+end;
+
+procedure TwbMainRecord.TakeChainFromLaterRoot(const aFile: IwbFileInternal);
+begin
+  var lMaster := IwbMainRecord(mrMaster);
+  if Assigned(lMaster) and ((lMaster._File.LoadOrder > aFile.LoadOrder) or
+    ((lMaster._File.LoadOrder = aFile.LoadOrder) and not (fsIsCompareLoad in aFile.FileStates)))
+  then
+    (lMaster as IwbMainRecordInternal).YouGotAMaster(Self);
 end;
 
 procedure TwbMainRecord.UpdateIdentityKey;
@@ -19582,26 +19841,36 @@ begin
   var lLayout := ContextObj.SlotLayout;
   var lOld := mrFixedFormID;
   var lNew := ComputeFixedFormID(lCacheable);
-  if lNew.ObjectID[lLayout] = lOld.ObjectID[lLayout] then
+  if lNew.ObjectID[lLayout] = lOld.ObjectID[lLayout] then begin
+    lFile.IdentityKeyChanged(False);
     Exit;
+  end;
   if not Equals(lFile.RecordByFormID[lOld, False, True]) then
     Exit;
 
   lHolder := lFile.RecordByFormID[lNew, False, True];
   if Assigned(lHolder) and not Equals(lHolder) and (lHolder._File as IwbFileInternal).Equals(lFile) then begin
-    wbProgress('<Error: %s [%s] can not take the identity "%s": %s holds it in %s; it keeps its previous identity>',
-      [string(GetSignature), lOld.ToDisplayString(lLayout), mrDef.GetIdentity(Self), lHolder.Name, lFile.Name]);
+    var lHolderName := lHolder.Name;
+    lFile.IdentityKeyChanged(True);
+    if not Equals(lFile.RecordByFormID[lNew, False, True]) then
+      wbProgress('<Error: %s [%s] can not take the identity "%s": %s holds it in %s; it keeps its previous identity>',
+        [string(GetSignature), lOld.ToDisplayString(lLayout), mrDef.GetIdentity(Self), lHolderName, lFile.Name]);
     Exit;
   end;
 
-  ReRegister(lFile, lNew, procedure
-  begin
-    if Assigned(mrGroup) then
-      mrGroup.GroupLabel := GetFormID.ToCardinal;
-  end);
+  if lFile.HoldsBlockedIdentities then begin
+    lFile.IdentityKeyChanged(False);
+    if not Equals(lFile.RecordByFormID[lNew, False, True]) then
+      wbProgress('<Error: %s [%s] can not take the identity "%s": another record of %s wants it too; it keeps its previous identity>',
+        [string(GetSignature), lOld.ToDisplayString(lLayout), mrDef.GetIdentity(Self), lFile.Name]);
+    Exit;
+  end;
+
+  ReRegister(lFile, lNew, MoveGroupLabel);
+  lFile.IdentityKeyChanged(False);
 end;
 
-procedure TwbMainRecord.RegisterWithIdentity(aFresh: Boolean);
+procedure TwbMainRecord.RegisterWithIdentity(aNew: Boolean);
 var
   lFile      : IwbFileInternal;
   lFormID    : TwbFormID;
@@ -19612,9 +19881,9 @@ begin
 
   var lIndexed := Supports(mrDef.GetKnownSubRecordMember(ksrEditorID), IwbSubRecordDef, lEditorID) and
     Supports(lEditorID.Value, IwbIntegerDef);
-  if not lIndexed and not mrDef.GetFormID(Self, lFormID) then begin
+  if aNew and not lIndexed and not mrDef.GetFormID(Self, lFormID) then begin
     var lIdentity := mrDef.GetIdentity(Self);
-    if (lIdentity = '') or (aFresh and ContextObj.IsKnownIdentity(mrDef.GetFormIDNameBase, lIdentity)) then
+    if (lIdentity = '') or ContextObj.IsKnownIdentity(mrDef.GetFormIDNameBase, lIdentity) then
       if ContextObj.BeginInternalEdit(True) then try
         SetEditorID(ContextObj.UnusedIdentity(mrDef.GetFormIDNameBase, 'xEdit_' + GetSignature + '_'));
       finally
@@ -19625,73 +19894,22 @@ begin
   Exclude(mrStates, mrsRegisterLater);
   mrFixedFormID := TwbFormID.Null;
   mrLoadOrderFormID := TwbFormID.Null;
-  if Supports(GetFile, IwbFileInternal, lFile) then try
-    lFile.AddMainRecord(Self);
-  except
-    var lContainer := GetContainer;
-    if Assigned(lContainer) then
-      lContainer.RemoveElement(Self);
-    raise;
+  if Supports(GetFile, IwbFileInternal, lFile) then begin
+    wbCancelLock;
+    try
+      try
+        lFile.AddMainRecord(Self);
+      except
+        var lContainer := GetContainer;
+        if Assigned(lContainer) then
+          lContainer.RemoveElement(Self);
+        raise;
+      end;
+      TakeChainFromLaterRoot(lFile);
+    finally
+      wbCancelUnlock;
+    end;
   end;
-end;
-
-function TwbMainRecord.IdentityChange(const aElement: IwbElement; out aHolder: IwbMainRecord): Boolean;
-var
-  lChild     : IwbElement;
-  lSubRecord : IwbSubRecord;
-  lFile      : IwbFileInternal;
-  lCacheable : Boolean;
-begin
-  Result := False;
-  aHolder := nil;
-  if (mrsRegisterLater in mrStates) or mrFixedFormID.IsNull or not Assigned(mrDef) then
-    Exit;
-
-  lChild := aElement;
-  while Assigned(lChild) and Assigned(lChild.Container) and not Equals(lChild.Container) do
-    lChild := lChild.Container;
-  if not Supports(lChild, IwbSubRecord, lSubRecord) then
-    Exit;
-
-  var lLayout := ContextObj.SlotLayout;
-  var lBefore := ComputeFixedFormID(lCacheable);
-  if not RefreshKnownSubRecord(lSubRecord) then
-    Exit;
-  if not Supports(GetFile, IwbFileInternal, lFile) then
-    Exit;
-
-  var lNew := ComputeFixedFormID(lCacheable);
-  if (lNew.ObjectID[lLayout] = lBefore.ObjectID[lLayout]) or (lNew.ObjectID[lLayout] = mrFixedFormID.ObjectID[lLayout]) then
-    Exit;
-  if not Equals(lFile.RecordByFormID[mrFixedFormID, False, True]) then
-    Exit;
-
-  Result := True;
-  aHolder := lFile.RecordByFormID[lNew, False, True];
-  if Assigned(aHolder) and (Equals(aHolder) or not (aHolder._File as IwbFileInternal).Equals(lFile)) then
-    aHolder := nil;
-end;
-
-procedure TwbMainRecord.CheckIdentityAfterSet(const aElement: IwbElement; const aOldValue: Variant);
-var
-  lHolder : IwbMainRecord;
-begin
-  if VarIsEmpty(aOldValue) or not IdentityChange(aElement, lHolder) then
-    Exit;
-
-  if not Assigned(lHolder) then begin
-    UpdateIdentityKey;
-    Exit;
-  end;
-
-  var lIdentity := mrDef.GetIdentity(Self);
-  if ContextObj.BeginInternalEdit(True) then try
-    aElement.NativeValue := aOldValue;
-  finally
-    wbEndInternalEdit;
-  end;
-  raise Exception.Create(Format('%s can not take the identity "%s": %s holds it in %s', [GetName, lIdentity, lHolder.Name,
-    GetFile.FileName]));
 end;
 
 procedure TwbMainRecord.SetMaster(const aMaster: IwbMainRecord);
@@ -19800,6 +20018,19 @@ procedure TwbMainRecord.InvalidateReferencesInjected;
 begin
   Exclude(mrStates, mrsReferencesInjectedChecked);
   Exclude(mrStates, mrsReferencesInjected);
+end;
+
+procedure TwbMainRecord.RenumberOwnSlot(aOldSlot, aNewSlot: Integer);
+var
+  lCacheable : Boolean;
+begin
+  if mrFixedFormID.IsNull then
+    Exit;
+  var lLayout := ContextObj.SlotLayout;
+  if (mrFixedFormID.FileID[lLayout].FullSlot = aOldSlot) and
+     (ComputeFixedFormID(lCacheable).FileID[lLayout].FullSlot <> aOldSlot)
+  then
+    mrFixedFormID.FileID[lLayout] := TwbFileID.CreateFull(aNewSlot);
 end;
 
 function CompareReferencedByFile(Item1, Item2: Pointer): Integer;
@@ -22076,6 +22307,7 @@ var
   i: Integer;
 begin
   SelfRef := Self as IwbContainerElementRef;
+  var lOldData := GetDataBytes;
 
   if csInit in cntStates then
     DoReset(True);
@@ -22096,6 +22328,7 @@ begin
     end;
     UpdateCountViaPath;
   end;
+  NotifyIfDataChanged(lOldData);
 end;
 
 function TwbSubRecord.srStruct: PwbSubRecordHeaderStruct;
@@ -24938,9 +25171,8 @@ end;
 
 procedure TwbElement.DoAfterSet(const aOldValue, aNewValue: Variant);
 var
-  NamedDef1  : IwbNamedDef;
-  NamedDef2  : IwbNamedDef;
-  MainRecord : IwbMainRecordInternal;
+  NamedDef1: IwbNamedDef;
+  NamedDef2: IwbNamedDef;
 begin
   NamedDef1 := GetValueDef;
   if Assigned(NamedDef1) then
@@ -24951,12 +25183,6 @@ begin
       NamedDef2.AfterSet(Self, aOldValue, aNewValue);
 
   Exclude(eStates, esReportedErrorReading);
-
-  var lGameDef := GameDefObj;
-  if Assigned(lGameDef) and not (gcFormIDInRecordHeader in lGameDef.Capabilities) and
-    Supports(GetContainingMainRecord, IwbMainRecordInternal, MainRecord)
-  then
-    MainRecord.CheckIdentityAfterSet(Self, aOldValue);
 end;
 
 procedure TwbElement.DoReset(aForce: Boolean);
@@ -30767,6 +30993,28 @@ begin
   inherited;
 end;
 
+function TwbDataContainer.GetDataBytes: TBytes;
+begin
+  Result := nil;
+  var lBasePtr := GetDataBasePtr;
+  var lEndPtr := GetDataEndPtr;
+  if Assigned(lBasePtr) and (NativeUInt(lEndPtr) > NativeUInt(lBasePtr)) then begin
+    SetLength(Result, NativeUInt(lEndPtr) - NativeUInt(lBasePtr));
+    Move(lBasePtr^, Result[0], Length(Result));
+  end;
+end;
+
+procedure TwbDataContainer.NotifyIfDataChanged(const aOldData: TBytes);
+begin
+  if Length(aOldData) < 1 then
+    Exit;
+  var lNewData := GetDataBytes;
+  if (Length(lNewData) = Length(aOldData)) and CompareMem(@lNewData[0], @aOldData[0], Length(aOldData)) then
+    Exit;
+  SetModified(True);
+  NotifyChanged(eContainer);
+end;
+
 procedure TwbDataContainer.UpdateStorageFromElements;
 var
   PrefixSize            : Integer;
@@ -31268,6 +31516,7 @@ var
   BasePtr, EndPtr: Pointer;
 begin
   SelfRef := Self as IwbContainerElementRef;
+  var lOldData := GetDataBytes;
 
   if csInit in cntStates then
     DoReset(True);
@@ -31279,6 +31528,7 @@ begin
   DoInit(True);
   RequestStorageChange(BasePtr, EndPtr, vbValueDef.DefaultSize[nil, nil, Self]{ + GetDataPrefixSize});
   inherited;
+  NotifyIfDataChanged(lOldData);
 end;
 
 { TwbRecordHeaderStruct }

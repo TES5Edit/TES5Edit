@@ -5890,6 +5890,9 @@ function wbSaveTablesFor(const aElement: IwbElement): IwbSaveTables;
 
 function wbProgressLock: Integer;
 function wbProgressUnlock: Integer;
+function wbCancelLock: Integer;
+function wbCancelUnlock: Integer;
+function wbCancelLocked: Boolean;
 function wbHasProgressCallback(aForce: Boolean = False): Boolean;
 procedure wbProgressCallback(const aStatus: string = ''; aForce: Boolean = False);
 procedure wbProgress(const aStatus: string = ''; aForce: Boolean = False); overload;
@@ -6143,6 +6146,7 @@ end;
 
 threadvar
   _ProgressLockCount : Integer;
+  _CancelLockCount   : Integer;
 
 function wbProgressLock: Integer;
 begin
@@ -6154,6 +6158,23 @@ function wbProgressUnlock: Integer;
 begin
   Result := _ProgressLockCount;
   Dec(_ProgressLockCount);
+end;
+
+function wbCancelLock: Integer;
+begin
+  Result := _CancelLockCount;
+  Inc(_CancelLockCount);
+end;
+
+function wbCancelUnlock: Integer;
+begin
+  Result := _CancelLockCount;
+  Dec(_CancelLockCount);
+end;
+
+function wbCancelLocked: Boolean;
+begin
+  Result := _CancelLockCount > 0;
 end;
 
 function wbHasProgressCallback(aForce: Boolean = False): Boolean;
