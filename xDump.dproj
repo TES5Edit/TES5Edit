@@ -8,7 +8,7 @@
         <Platform Condition="'$(Platform)'==''">Win64</Platform>
         <ProjectGuid>{8CD0A7C7-3B98-4D5D-892F-E91C7E50D144}</ProjectGuid>
         <ProjectName Condition="'$(ProjectName)'==''">xDump</ProjectName>
-        <ProjectVersion>20.3</ProjectVersion>
+        <ProjectVersion>20.5</ProjectVersion>
         <TargetedPlatforms>3</TargetedPlatforms>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Config)'=='Base' or '$(Base)'!=''">
@@ -149,13 +149,7 @@
         </DelphiCompile>
         <DCCReference Include="Core\wbBSA.pas"/>
         <DCCReference Include="Core\wbCommandLine.pas"/>
-        <DCCReference Include="Core\wbSort.pas"/>
-        <DCCReference Include="Core\wbInterface.pas"/>
-        <DCCReference Include="Core\wbSaveInterface.pas"/>
-        <DCCReference Include="Core\wbImplementation.pas"/>
-        <DCCReference Include="Core\wbHelpers.pas"/>
-        <DCCReference Include="Core\wbLoadOrder.pas"/>
-        <DCCReference Include="Core\wbHardcoded.pas"/>
+        <DCCReference Include="Core\wbConflict.pas"/>
         <DCCReference Include="Core\wbDataFormatWwise.pas"/>
         <DCCReference Include="Core\wbDefinitionsCommon.pas"/>
         <DCCReference Include="Core\wbDefinitionsFNV.pas"/>
@@ -171,6 +165,14 @@
         <DCCReference Include="Core\wbDefinitionsTES5.pas"/>
         <DCCReference Include="Core\wbDefinitionsTES5Saves.pas"/>
         <DCCReference Include="Core\wbDefinitionsSF1.pas"/>
+        <DCCReference Include="Core\wbDiff.pas"/>
+        <DCCReference Include="Core\wbHardcoded.pas"/>
+        <DCCReference Include="Core\wbHelpers.pas"/>
+        <DCCReference Include="Core\wbImplementation.pas"/>
+        <DCCReference Include="Core\wbInterface.pas"/>
+        <DCCReference Include="Core\wbLoadOrder.pas"/>
+        <DCCReference Include="Core\wbSaveInterface.pas"/>
+        <DCCReference Include="Core\wbSort.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

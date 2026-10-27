@@ -1,4 +1,3 @@
-
 {******************************************************************************
 
   This Source Code Form is subject to the terms of the Mozilla Public License,
@@ -4153,6 +4152,7 @@ type
     AlwaysSaveOnamForce   : Boolean;
     ClampFormID           : Boolean;
     FixupPGRD             : Boolean;
+    CleanLargeReferences  : Boolean;
     ConvertIntFormID      : Boolean;
     ForceNewHeader        : Boolean;
     NewHeaderAddon        : Cardinal;
@@ -7386,6 +7386,7 @@ begin
   Result.MasterUpdateFixPersistence := True;
   Result.ResetModifiedOnSave := True;
   Result.ClampFormID := True;
+  Result.CleanLargeReferences := True;
   Result.NewHeaderAddon := 40;
 end;
 

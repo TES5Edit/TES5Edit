@@ -312,7 +312,7 @@ end;
 var
   GetRelativeDeciderHint: Integer = -1;
 
-function GetRelativeDeciderInteger(anOffset: Integer; aSize: Integer; const aContainerName, anIntegerName: string;
+function GetRelativeDeciderInteger(anOffset: Cardinal; aSize: Integer; const aContainerName, anIntegerName: string;
   aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
   Element   : IwbElement;

@@ -8,7 +8,7 @@
         <Platform Condition="'$(Platform)'==''">Win64</Platform>
         <ProjectGuid>{BB5B51E2-CC9A-4404-A582-958449C5049E}</ProjectGuid>
         <ProjectName Condition="'$(ProjectName)'==''">xEdit</ProjectName>
-        <ProjectVersion>20.3</ProjectVersion>
+        <ProjectVersion>20.5</ProjectVersion>
         <TargetedPlatforms>3</TargetedPlatforms>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Config)'=='Base' or '$(Base)'!=''">
@@ -154,6 +154,7 @@
         <DCCReference Include="Core\wbBetterStringList.pas"/>
         <DCCReference Include="Core\wbBSA.pas"/>
         <DCCReference Include="Core\wbCommandLine.pas"/>
+        <DCCReference Include="Core\wbConflict.pas"/>
         <DCCReference Include="Core\wbDataFormat.pas"/>
         <DCCReference Include="Core\wbDataFormatMaterial.pas"/>
         <DCCReference Include="Core\wbDataFormatMisc.pas"/>
@@ -176,6 +177,7 @@
         <DCCReference Include="Core\wbDefinitionsTES4Saves.pas"/>
         <DCCReference Include="Core\wbDefinitionsTES5.pas"/>
         <DCCReference Include="Core\wbDefinitionsTES5Saves.pas"/>
+        <DCCReference Include="Core\wbDiff.pas"/>
         <DCCReference Include="Core\wbHash.pas"/>
         <DCCReference Include="Core\wbHalfFloat.pas"/>
         <DCCReference Include="Core\wbHardcoded.pas">
@@ -194,7 +196,6 @@
         <DCCReference Include="Core\wbSaveInterface.pas"/>
         <DCCReference Include="Core\wbSort.pas"/>
         <DCCReference Include="Core\wbStreams.pas"/>
-        <DCCReference Include="xEdit\xeInit.pas"/>
         <DCCReference Include="xEdit\xeDeveloperMessageForm.pas">
             <Form>frmDeveloperMessage</Form>
             <FormType>dfm</FormType>
@@ -211,6 +212,11 @@
             <Form>frmFilterOptions</Form>
             <FormType>dfm</FormType>
         </DCCReference>
+        <DCCReference Include="xEdit\xeGameSelectForm.pas">
+            <Form>frmGameSelect</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
+        <DCCReference Include="xEdit\xeInit.pas"/>
         <DCCReference Include="xEdit\JvI\xejviScriptAdapter.pas"/>
         <DCCReference Include="xEdit\JvI\xejviScriptAdapterContainer.pas"/>
         <DCCReference Include="xEdit\JvI\xejviScriptAdapterDF.pas"/>
@@ -223,6 +229,7 @@
         <DCCReference Include="xEdit\JvI\xejviScriptAdapterMiscVcl.pas"/>
         <DCCReference Include="xEdit\JvI\xejviScriptAdapterRecord.pas"/>
         <DCCReference Include="xEdit\JvI\xejviScriptAdapterResource.pas"/>
+        <DCCReference Include="xEdit\JvI\xejviScriptArguments.pas"/>
         <DCCReference Include="xEdit\JvI\xejviScriptHost.pas"/>
         <DCCReference Include="xEdit\xeLegendForm.pas">
             <Form>frmLegend</Form>
@@ -271,10 +278,6 @@
         </DCCReference>
         <DCCReference Include="xEdit\xeWorldspaceCellDetailsForm.pas">
             <Form>frmWorldspaceCellDetails</Form>
-            <FormType>dfm</FormType>
-        </DCCReference>
-        <DCCReference Include="xEdit\xeGameSelectForm.pas">
-            <Form>frmGameSelect</Form>
             <FormType>dfm</FormType>
         </DCCReference>
         <BuildConfiguration Include="Base">

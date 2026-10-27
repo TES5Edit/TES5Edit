@@ -3275,7 +3275,7 @@ begin
     ]));
 
   var wbScriptObjectSignatures : TwbSignatures := [
-    ACHR,ACTI,AFFE,ALCH,AMMO,ARMO,ARTO,AVIF,BOOK,CELL,CHAL,CNDF,CONT,CSTY,CURV,DIAL,EFSH,EXPL,FACT,FLST,FURN,GBFM,GLOB,GPOF,HAZD,IDLE,IMAD,INFO,INNR,IRES,KEYM,KYWD,LCRT,LCTN,LGDI,LIGH,LVLB,LVLI,LVLN,MESG,MGEF,MISC,MSTT,MUSC,NPC_,OMOD,OTFT,PACK,PERK,PHZD,PKIN,PLYR,PNDT,PROJ,QUST,RACE,REFR,RFGP,RSPJ,SCEN,SPEL,STAT,TMLM,VTYP,WEAP,WRLD,WTHS,WWED,NULL
+    ACHR,ACTI,AFFE,ALCH,AMMO,ARMO,ARTO,AVIF,BOOK,CELL,CHAL,CNDF,CONT,CSTY,CURV,DIAL,EFSH,EXPL,FACT,FLST,FURN,GBFM,GLOB,GPOF,HAZD,IDLE,IMAD,INFO,INNR,IRES,KEYM,KYWD,LCRT,LCTN,LGDI,LIGH,LVLB,LVLI,LVLN,MESG,MGEF,MISC,MSTT,MUSC,NPC_,OMOD,OTFT,PACK,PERK,PHZD,PKIN,PLYR,PNDT,PROJ,QUST,RACE,REFR,RFGP,RSPJ,SCEN,SPEL,STAT,TACT,TMLM,VTYP,WEAP,WRLD,WTHS,WWED,NULL
   ];
 
   var wbScriptPropertyObject :=
@@ -3545,7 +3545,8 @@ begin
         .IncludeFlag(dfSummaryMembersNoName),
     -2)
   ]).SetOptionalFrom(3)
-    .SetSummaryKeyOnValue([2, 3, 4]);
+    .SetSummaryKeyOnValue([2, 3, 4])
+    .IncludeFlag(dfKeepInPartialForm);
 
   var wbVMADFragmentedSCEN := wbStruct(VMAD, 'Virtual Machine Adapter', [
     wbVMADVersion,
@@ -8745,7 +8746,7 @@ begin
       wbUnknown(4),
       wbUnknown(4)
     ]).SetOptionalFrom(4),
-    wbFloat(XRDS, 'Radius', cpNormal, False, 1, 2).SetToStr(wbREFRRadiusToStr),
+    wbFloat(XRDS, 'Radius', cpNormal, False, 1, 2),
     wbRArray('Water Current Data',
       wbRStruct('Current', [
         wbRUnion('', [
@@ -13400,7 +13401,7 @@ begin
     4, 'Ground Piece',
     9, 'Hidden From Local Map',
     11, 'Interior Cells Use Ref Location for world map player marker',
-    14, 'Unknown 14', //Partial Form
+    14, 'Partial Form',
     17, 'Off Limits',
     19, 'Can''t Wait',
     20, 'Public Area',
@@ -13409,16 +13410,16 @@ begin
     28, 'Navmesh - Only Cut',
     29, 'Navmesh - Ignore Erosion/Child Can Use',
     30, 'Navmesh - Ground'
-    ])).SetFlagHasDontShow(14, wbFlagPartialFormDontShow)
-    .SetFlagHasDontShow(26, wbFlagNavmeshFilterDontShow)
-    .SetFlagHasDontShow(27, wbFlagNavmeshBoundingBoxDontShow)
-    .SetFlagHasDontShow(28, wbFlagNavmeshOnlyCutDontShow)
-    .SetFlagHasDontShow(29, wbFlagNavmeshIgnoreErosionDontShow)
-    .SetFlagHasDontShow(30, wbFlagNavmeshGroundDontShow), [
+    ]), [14])
+      .SetFlagHasDontShow(26, wbFlagNavmeshFilterDontShow)
+      .SetFlagHasDontShow(27, wbFlagNavmeshBoundingBoxDontShow)
+      .SetFlagHasDontShow(28, wbFlagNavmeshOnlyCutDontShow)
+      .SetFlagHasDontShow(29, wbFlagNavmeshIgnoreErosionDontShow)
+      .SetFlagHasDontShow(30, wbFlagNavmeshGroundDontShow), [
     wbEDID,
     wbVMAD,
     wbBaseFormComponents,
-    wbPRPS,
+    wbPRPS.IncludeFlag(dfKeepInPartialForm),
     wbArrayS(ACPR, 'Added Persist Location References',
       wbStructSK([0], 'Reference', [
         wbFormIDCk('Ref', sigReferences, False, cpBenign),
@@ -13427,7 +13428,7 @@ begin
         wbInteger('Grid X', itS16, nil, cpBenign).SetDontShow(wbLCTNCellDontShow),
         wbUnknown(4, cpBenign)
       ], cpBenign),
-    0, cpBenign),
+    0, cpBenign).IncludeFlag(dfKeepInPartialForm),
     wbArrayS(LCPR, 'Master Persist Location References',
       wbStructSK([0], 'Reference', [
         wbFormIDCk('Ref', sigReferences, False, cpBenign),
@@ -13439,31 +13440,31 @@ begin
     0, cpBenign),
     wbArrayS(RCPR, 'Removed Persist Location References',
       wbFormIDCk('Reference', [ACHR, REFR], False, cpBenign),
-    0, cpBenign),
+    0, cpBenign).IncludeFlag(dfKeepInPartialForm),
     wbArrayS(ACUR, 'Added Unique Base Forms',
       wbStructSK([0], 'Base Form', [
-        wbFormIDCk('Generic Base Form', [GBFM]),
-        wbFormIDCk('Placed Object', [REFR]),
-        wbFormIDCk('Location', [LCTN])
+        wbFormIDCk('Generic Base Form', [GBFM], False, cpBenign),
+        wbFormIDCk('Placed Object', [REFR], False, cpBenign),
+        wbFormIDCk('Location', [LCTN], False, cpBenign)
       ], cpBenign),
-    0, cpBenign),
+    0, cpBenign).IncludeFlag(dfKeepInPartialForm),
     wbArrayS(LCUR, 'Master Unique Base Forms',
       wbStructSK([0], 'Base Form', [
-        wbFormIDCk('Generic Base Form', [GBFM]),
-        wbFormIDCk('Placed Object', [REFR]),
-        wbFormIDCk('Location', [LCTN])
+        wbFormIDCk('Generic Base Form', [GBFM], False, cpBenign),
+        wbFormIDCk('Placed Object', [REFR], False, cpBenign),
+        wbFormIDCk('Location', [LCTN], False, cpBenign)
       ], cpBenign),
     0, cpBenign),
     wbArrayS(RCUR, 'Removed Unique Base Forms',
       wbFormIDCk('Generic Base Form', [GBFM], False, cpBenign),
-    0, cpBenign),
+    0, cpBenign).IncludeFlag(dfKeepInPartialForm),
     wbArrayS(ACUN, 'Added Unique NPCs',
       wbStructSK([1], 'Actor', [
         wbFormIDCk('NPC', [NPC_], False, cpBenign),
         wbFormIDCk('Actor Ref', [ACHR], False, cpBenign),
         wbFormIDCk('Location', [LCTN, NULL], False, cpBenign)
       ], cpBenign),
-    0, cpBenign),
+    0, cpBenign).IncludeFlag(dfKeepInPartialForm),
     wbArrayS(LCUN, 'Master Unique NPCs',
       wbStructSK([1], 'Actor', [
         wbFormIDCk('NPC', [NPC_], False, cpBenign),
@@ -13473,7 +13474,7 @@ begin
     0, cpBenign),
     wbArrayS(RCUN, 'Removed Unique NPCs',
       wbFormIDCk('Actor', [NPC_], False, cpBenign),
-    0, cpBenign),
+    0, cpBenign).IncludeFlag(dfKeepInPartialForm),
     wbArrayS(ACSR, 'Added Special References',
       wbStructSK([1], 'Reference', [
         wbFormIDCk('Loc Ref Type', [LCRT], False, cpBenign),
@@ -13483,7 +13484,7 @@ begin
         wbInteger('Grid X', itS16, nil, cpBenign).SetDontShow(wbLCTNCellDontShow),
         wbUnknown(4, cpBenign)
       ], cpBenign),
-    0, cpBenign),
+    0, cpBenign).IncludeFlag(dfKeepInPartialForm),
     wbArrayS(LCSR, 'Master Special References',
       wbStructSK([1], 'Reference', [
         wbFormIDCk('Loc Ref Type', [LCRT], False, cpBenign),
@@ -13496,7 +13497,7 @@ begin
     0, cpBenign),
     wbArrayS(RCSR, 'Removed Special References',
       wbFormIDCk('Reference', [ACHR, REFR], False, cpBenign),
-    0, cpBenign),
+    0, cpBenign).IncludeFlag(dfKeepInPartialForm),
     wbRArrayS('Added Worldspace Cells',
       wbStructSK(ACEC, [0], 'Worldspace', [
         wbFormIDCk('World', [WRLD], False, cpBenign),
@@ -13507,7 +13508,7 @@ begin
           ], cpBenign),
         0, cpBenign)
       ], cpBenign),
-    cpBenign),
+    cpBenign).IncludeFlag(dfKeepInPartialForm),
     wbRArrayS('Master Worldspace Cells',
       wbStructSK(LCEC, [0], 'Worldspace', [
         wbFormIDCk('World', [WRLD], False, cpBenign),
@@ -13529,10 +13530,10 @@ begin
           ], cpBenign),
         0, cpBenign)
       ], cpBenign),
-    cpBenign),
+    cpBenign).IncludeFlag(dfKeepInPartialForm),
     wbArrayS(ACID, 'Added Initially Disabled References',
       wbFormIDCk('Ref', sigReferences, False, cpBenign),
-    0, cpBenign),
+    0, cpBenign).IncludeFlag(dfKeepInPartialForm),
     wbArrayS(LCID, 'Master Initially Disabled References',
       wbFormIDCk('Ref', sigReferences, False, cpBenign),
     0, cpBenign),
@@ -13548,7 +13549,7 @@ begin
         cpBenign).IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse),
         wbUnused(3)
       ], cpBenign),
-    0, cpBenign),
+    0, cpBenign).IncludeFlag(dfKeepInPartialForm),
     wbArrayS(LCEP, 'Master Enable Parent References',
       wbStruct('Reference', [
         wbFormIDCk('Ref', sigReferences, False, cpBenign),
@@ -14895,7 +14896,8 @@ begin
         .IncludeFlag(dfCollapsed, clpNavmesh in DefineOptions.Collapse)
         .IncludeFlag(dfFastAssign)
         .IncludeFlag(dfSummaryMembersNoName)
-    ).IncludeFlag(dfCollapsed, clpNavmesh in DefineOptions.Collapse),
+    ).SetAfterLoad(wbNAVINavmeshInfosAfterLoad)
+     .IncludeFlag(dfCollapsed, clpNavmesh in DefineOptions.Collapse),
     wbStruct(NVPP, 'Precomputed Pathing', [
       wbArray('Precomputed Paths',
         wbArray('Path',
@@ -16377,8 +16379,8 @@ begin
     .SetFlagHasDontShow(30, wbFlagNavmeshGroundDontShow), [
     wbEDID,
     wbVMADFragmentedQUST,
-    wbFULL,
     wbBaseFormComponents,
+    wbFULL,
     wbStruct(DNAM, 'General', [
       wbInteger('Flags', itU32, wbFlags([
         {0x000001} 'Start Game Enabled',
@@ -18977,7 +18979,7 @@ begin
       .SetFlagHasDontShow(29, wbFlagNavmeshIgnoreErosionDontShow)
       .SetFlagHasDontShow(30, wbFlagNavmeshGroundDontShow), [
     wbEDID,
-    wbBaseFormComponents,
+    wbBaseFormComponents.IncludeFlag(dfKeepInPartialForm),
     wbWorldLargeRefs,
     wbWorldMaxHeight,
     wbFULL,

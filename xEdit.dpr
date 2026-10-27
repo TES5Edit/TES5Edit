@@ -48,6 +48,7 @@ uses
   wbBetterStringList in 'Core\wbBetterStringList.pas',
   wbBSA in 'Core\wbBSA.pas',
   wbCommandLine in 'Core\wbCommandLine.pas',
+  wbConflict in 'Core\wbConflict.pas',
   wbDataFormat in 'Core\wbDataFormat.pas',
   wbDataFormatMaterial in 'Core\wbDataFormatMaterial.pas',
   wbDataFormatMisc in 'Core\wbDataFormatMisc.pas',
@@ -70,6 +71,7 @@ uses
   wbDefinitionsTES4Saves in 'Core\wbDefinitionsTES4Saves.pas',
   wbDefinitionsTES5 in 'Core\wbDefinitionsTES5.pas',
   wbDefinitionsTES5Saves in 'Core\wbDefinitionsTES5Saves.pas',
+  wbDiff in 'Core\wbDiff.pas',
   wbHash in 'Core\wbHash.pas',
   wbHalfFloat in 'Core\wbHalfFloat.pas',
   wbHardcoded in 'Core\wbHardcoded.pas' {wbHardcodedContainer: TDataModule},
@@ -85,11 +87,12 @@ uses
   wbSort in 'Core\wbSort.pas',
   wbStreams in 'Core\wbStreams.pas',
 
-  xeInit in 'xEdit\xeInit.pas',
   xeDeveloperMessageForm in 'xEdit\xeDeveloperMessageForm.pas' {frmDeveloperMessage},
   xeEditWarningForm in 'xEdit\xeEditWarningForm.pas' {frmEditWarning},
   xeFileSelectForm in 'xEdit\xeFileSelectForm.pas' {frmFileSelect},
   xeFilterOptionsForm in 'xEdit\xeFilterOptionsForm.pas' {frmFilterOptions},
+  xeGameSelectForm in 'xEdit\xeGameSelectForm.pas' {frmGameSelect},
+  xeInit in 'xEdit\xeInit.pas',
   xejviScriptAdapter in 'xEdit\JvI\xejviScriptAdapter.pas',
   xejviScriptAdapterContainer in 'xEdit\JvI\xejviScriptAdapterContainer.pas',
   xejviScriptAdapterDF in 'xEdit\JvI\xejviScriptAdapterDF.pas',
@@ -119,8 +122,7 @@ uses
   xeTipForm in 'xEdit\xeTipForm.pas',
   xeViewElementsForm in 'xEdit\xeViewElementsForm.pas' {frmViewElements},
   xeWaitForm in 'xEdit\xeWaitForm.pas' {frmWait},
-  xeWorldspaceCellDetailsForm in 'xEdit\xeWorldspaceCellDetailsForm.pas' {frmWorldspaceCellDetails},
-  xeGameSelectForm in 'xEdit\xeGameSelectForm.pas' {frmGameSelect};
+  xeWorldspaceCellDetailsForm in 'xEdit\xeWorldspaceCellDetailsForm.pas' {frmWorldspaceCellDetails};
 
 {$R *.res}
 {$MAXSTACKSIZE 2097152}

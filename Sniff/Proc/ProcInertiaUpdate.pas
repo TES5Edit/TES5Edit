@@ -246,6 +246,9 @@ begin
           Break;
         end;
 
+      var minpen: Single;
+      if nif.NifVersion < nfTES5 then minpen := 0.01 else minpen := 0.002;
+
       // box
       if shape.BlockType = 'bhkBoxShape' then begin
         x := shape.NativeValues['Dimensions\X'];
@@ -260,7 +263,7 @@ begin
         if fCenter then
           bChanged := SetCenter(Center, tx, ty, tz) or bChanged;
         if fPenetration then
-          bChanged := SetPenetration(Depth, MinValue([x, y, z]) * fDepthMult) or bChanged;
+          bChanged := SetPenetration(Depth, Max(MinValue([x, y, z]) * fDepthMult, minpen)) or bChanged;
       end
 
       // sphere
@@ -273,7 +276,7 @@ begin
         if fCenter then
           bChanged := SetCenter(Center, tx, ty, tz) or bChanged;
         if fPenetration then
-          bChanged := SetPenetration(Depth, 2*r * fDepthMult) or bChanged;
+          bChanged := SetPenetration(Depth, Max(2*r * fDepthMult, minpen)) or bChanged;
       end
 
       // capsule
@@ -307,7 +310,7 @@ begin
           bChanged := SetCenter(Center, x + tx, y + ty, z + tz) or bChanged;
         end;
         if fPenetration then
-          bChanged := SetPenetration(Depth, {MinValue([2*r, Abs(lx), Abs(ly), Abs(lz)])} 2*r * fDepthMult) or bChanged;
+          bChanged := SetPenetration(Depth, {MinValue([2*r, Abs(lx), Abs(ly), Abs(lz)])} Max(2*r * fDepthMult, minpen)) or bChanged;
       end
 
       // convex or MOPP shape
@@ -393,7 +396,7 @@ begin
         if fCenter then
           bChanged := SetCenter(Center, tx + c.x, ty + c.y, tz + c.z) or bChanged;
         if fPenetration then
-          bChanged := SetPenetration(Depth, 2*rmin * dm) or bChanged;
+          bChanged := SetPenetration(Depth, Max(2*rmin * dm, minpen)) or bChanged;
       end;
     end;
 

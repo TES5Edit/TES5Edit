@@ -348,6 +348,7 @@ procedure wbDOBJObjectsAfterLoad       (const aElement: IwbElement);
 procedure wbLargeRefsAfterLoad         (const aElement: IwbElement);
 procedure wbLargeRefsRNAMAfterLoad     (const aElement: IwbElement);
 procedure wbMESGAfterLoad              (const aElement: IwbElement);
+procedure wbNAVINavmeshInfosAfterLoad  (const aElement: IwbElement);
 procedure wbPACKDateAfterLoad          (const aElement: IwbElement);
 procedure wbPACKDataBoolAfterLoad      (const aElement: IwbElement);
 procedure wbPERKNumRanksAfterLoad      (const aElement: IwbElement);
@@ -428,10 +429,11 @@ function wbWorldXWEMDontShow     (const aElement: IwbElement): Boolean;
 {>>> Float Normalizers <<<} //1
 function wbNormalizeToRange(aMin, aMax: Extended): TwbFloatNormalizer;
 
-{>>> FormID Filter Callbacks <<<} //3
-function wbCELLRegionFilter  (const aElement: IwbElement; const aMainRecord: IwbMainRecord): Boolean;
-function wbREFRTeleportFilter(const aElement: IwbElement; const aMainRecord: IwbMainRecord): Boolean;
-function wbVMADObjectFilter  (const aElement: IwbElement; const aMainRecord: IwbMainRecord): Boolean;
+{>>> FormID Filter Callbacks <<<} //4
+function wbCELLRegionFilter     (const aElement: IwbElement; const aMainRecord: IwbMainRecord): Boolean;
+function wbQUSTUniqueActorFilter(const aElement: IwbElement; const aMainRecord: IwbMainRecord): Boolean;
+function wbREFRTeleportFilter   (const aElement: IwbElement; const aMainRecord: IwbMainRecord): Boolean;
+function wbVMADObjectFilter     (const aElement: IwbElement; const aMainRecord: IwbMainRecord): Boolean;
 
 {>>> Get Functions <<<} //4
 function wbGetItemStr                (const aContainer: IwbContainerElementRef): string;
@@ -543,6 +545,8 @@ procedure wbScriptPropertyArrayToStr(const aContainer: IwbContainerElementRef; v
 procedure wbScriptPropertyObjectToStr(const aContainer: IwbContainerElementRef; var PropertyName: string; var PropertyType: string; var PropertyValue: string);
 
 procedure wbABGRToStr                        (var aValue: string; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
+procedure wbACBSFlagsToStr                   (var aValue: string; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
+procedure wbACHRToStr                        (var aValue: string; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 procedure wbBGRAToStr                        (var aValue: string; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 procedure wbCELLRegionToStr                  (var aValue: string; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 procedure wbConditionToStr                   (var aValue: string; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
@@ -551,11 +555,14 @@ procedure wbCrowdPropertyToStr               (var aValue: string; aBasePtr, aEnd
 procedure wbDIALQuestToStr                   (var aValue: string; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 procedure wbFactionRelationToStr             (var aValue: string; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 procedure wbItemToStr                        (var aValue: string; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
+procedure wbLCTNUniqueNPCToStr               (var aValue: string; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 procedure wbNPCPackageToStr                  (var aValue: string; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
+procedure wbNPCTemplateToStr                 (var aValue: string; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 procedure wbPERKRankToStr                    (var aValue: string; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 procedure wbObjectPropertyToStr              (var aValue: string; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 procedure wbQUSTAliasToStr                   (var aValue: string; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 procedure wbQUSTEventToStr                   (var aValue: string; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
+procedure wbQUSTUniqueActorToStr             (var aValue: string; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 procedure wbREFRPersistLocToStr              (var aValue: string; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 procedure wbREFRRadiusToStr                  (var aValue: string; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 procedure wbREFRTeleportToStr                (var aValue: string; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
@@ -941,12 +948,16 @@ end;
 
 procedure wbLargeRefsAfterLoad(const aElement: IwbElement);
 begin
-  if not Assigned(aElement) then
+  if (not Assigned(aElement)) or (not aElement.ContextObj.Settings.CleanLargeReferences) or (esModified in aElement.ElementStates) then
+    Exit;
+
+  var lContainer := aElement as IwbContainerElementRef;
+  if not Assigned(lContainer) then
     Exit;
 
   if aElement.ContextObj.BeginInternalEdit then
   try
-    var lContainer := aElement as IwbContainerElementRef;
+    lContainer.BeginUpdate;
 
     for var lIndex := Pred(lContainer.ElementCount) downto 0 do
     begin
@@ -955,33 +966,46 @@ begin
         Continue;
 
       var lReferences := lRNAM.ElementByName['References'] as IwbContainerElementRef;
+      if not Assigned(lReferences) then
+        Continue;
 
       if lReferences.ElementCount = 0 then
         lRNAM.Remove;
     end;
 
   finally
+    lContainer.EndUpdate;
+
     wbEndInternalEdit;
   end;
 end;
 
 procedure wbLargeRefsRNAMAfterLoad(const aElement: IwbElement);
 begin
-  if not Assigned(aElement) then
+  if (not Assigned(aElement)) or (not aElement.ContextObj.Settings.CleanLargeReferences) or (esModified in aElement.ElementStates) then
+
+    Exit;
+
+  var lContainer := aElement as IwbContainerElementRef;
+  if not Assigned(lContainer) then
     Exit;
 
   if aElement.ContextObj.BeginInternalEdit then
   try
-    var lContainer := aElement as IwbContainerElementRef;
+    lContainer.BeginUpdate;
 
     var lX := lContainer.ElementNativeValues['X'];
     var lY := lContainer.ElementNativeValues['Y'];
 
     var lRefs := lContainer.ElementByName['References'] as IwbContainerElementRef;
+    if not Assigned(lRefs) then
+      Exit;
 
-    for var lIndex := Pred(lRefs.ElementCount) downto 0 do
+    var lIndex: Integer;
+    var lRef: IwbContainerElementRef;
+    for lIndex := Pred(lRefs.ElementCount) downto 0 do
     begin
-      var lRef := lRefs.Elements[lIndex] as IwbContainerElementRef;
+      lRef := lRefs[lIndex] as IwbContainerElementRef;
       if not Assigned(lRef) then
         Continue;
 
@@ -991,7 +1015,36 @@ begin
         lRef.Remove;
     end;
 
+    if lRefs.ElementCount > 0 then
+    begin
+      var lList := TStringList.Create;
+      try
+        for lIndex := Pred(lRefs.ElementCount) downto 0 do
+        begin
+          lRef := lRefs[lIndex] as IwbContainerElementRef;
+          if not Assigned(lRef) then
+            Continue;
+
+          var lRefElement := lRef.ElementByName['Ref'];
+          if not Assigned(lRefElement) then
+            Continue;
+
+          var lRefValue := string(lRefElement.NativeValue);
+
+          if lList.IndexOf(lRefValue) > -1 then
+            lRef.Remove
+          else
+            lList.Add(lRefValue);
+        end;
+
+      finally
+        lList.Free;
+      end;
+    end;
+
   finally
+    lContainer.EndUpdate;
+
     wbEndInternalEdit;
   end;
 end;
@@ -1010,6 +1063,44 @@ begin
       if lMainRecord.ElementExists['TNAM'] then
         lMainRecord.RemoveElement('TNAM');
   finally
+    wbEndInternalEdit;
+  end;
+end;
+
+procedure wbNAVINavmeshInfosAfterLoad(const aElement: IwbElement);
+begin
+  if not Assigned(aElement) then
+    Exit;
+
+  if esModified in aElement.ElementStates then
+    Exit;
+
+  var lContainer := aElement as IwbContainerElementRef;
+  if not Assigned(lContainer) then
+    Exit;
+
+  if aElement.ContextObj.BeginInternalEdit then
+  try
+    lContainer.BeginUpdate;
+
+    for var lIndex := Pred(lContainer.ElementCount) downto 0 do
+    begin
+      var lNVMI := lContainer[lIndex] as IwbContainerElementRef;
+
+      if not Assigned(lNVMI) then
+        Continue;
+
+      var lNavmesh := lNVMI.ElementByName['Navmesh'];
+      if not Assigned(lNavmesh) then
+        Continue;
+
+      var lLinksTo := lNavmesh.LinksTo as IwbMainRecord;
+      if (not Assigned(lLinksTo)) or (lLinksTo.Signature <> NAVM) then
+        lNVMI.Remove;
+    end;
+  finally
+    lContainer.EndUpdate;
+
     wbEndInternalEdit;
   end;
 end;
@@ -2360,7 +2451,7 @@ begin
     aConflictPriority := cpIgnore;
 end;
 
-{>>> FormID Filter Callbacks <<<} //3
+{>>> FormID Filter Callbacks <<<} //4
 
 function wbCELLRegionFilter(const aElement: IwbElement; const aMainRecord: IwbMainRecord): Boolean;
 begin
@@ -2382,6 +2473,21 @@ begin
     Exit;
 
   if lWorld.MasterOrSelf = lWNAM.MasterOrSelf then
+    Result := True;
+end;
+
+function wbQUSTUniqueActorFilter(const aElement: IwbElement; const aMainRecord: IwbMainRecord): Boolean;
+begin
+  Result := False;
+
+  if not (Assigned(aElement) and Assigned(aMainRecord)) then
+    Exit;
+
+  var lACBS := aMainRecord.ElementBySignature[ACBS] as IwbContainerElementRef;
+  if not Assigned(lACBS) then
+    Exit;
+
+  if (lACBS.ElementNativeValues['Flags'] and $20) <> 0 then
     Result := True;
 end;
 
@@ -4544,6 +4650,68 @@ begin
     aValue := 'RGB(' + R + ', ' + G + ', ' + B + ')';
 end;
 
+procedure wbACBSFlagsToStr(var aValue: string; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
+begin
+  if not (Assigned(aElement) and (aType in [ctCheck])) then
+    Exit;
+
+  case aType of
+    ctCheck: begin
+      var lValue := aElement.NativeValue;
+      var lMainRecord := aElement.ContainingMainRecord;
+      if not Assigned(lMainRecord) then
+        Exit;
+
+      if (lValue and $80) <> 0 then
+        if (lValue and $10) = 0 then
+          aValue := ' <Warning: NPC [' + lMainRecord.ShortName + '] Matches PC Level, but does not Auto Calc Stats >';
+    end;
+  end;
+end;
+
+procedure wbACHRToStr(var aValue: string; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
+begin
+  if not (Assigned(aElement) and (aType in [ctCheck])) then
+    Exit;
+
+  var lMainRecord := aElement as IwbMainRecord;
+  if not Assigned(lMainRecord) then
+    Exit;
+
+  if Assigned(lMainRecord.ElementBySignature[XLCM]) then
+    Exit;
+
+  var lNAME := lMainRecord.ElementBySignature[NAME];
+  if not Assigned(lNAME) then
+    Exit;
+
+  var lNAMELinksTo := lNAME.LinksTo as IwbMainRecord;
+  var lVisited: TArray<IwbMainRecord>;
+  while Assigned(lNAMELinksTo) do
+  begin
+    var lMaster := lNAMELinksTo.MasterOrSelf;
+    for var lVisitedRecord in lVisited do
+      if lVisitedRecord = lMaster then
+        Exit;
+    lVisited := lVisited + [lMaster];
+
+    var lTPLT := lNAMELinksTo.ElementBySignature[TPLT];
+    if not Assigned(lTPLT) then
+      Exit;
+
+    var lTPLTLinksTo := lTPLT.LinksTo as IwbMainRecord;
+    if not Assigned(lTPLTLinksTo) then
+      Exit;
+
+    if lTPLTLinksTo.Signature = LVLN then
+    begin
+      aValue := ' <Hint: Actor uses a leveled template, but has no Level Modifier>';
+      Exit;
+    end;
+
+    lNAMELinksTo := lTPLTLinksTo;
+  end;
+end;
 procedure wbBGRAToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 var
   Container  : IwbContainerElementRef;
@@ -4724,10 +4892,7 @@ end;
 
 procedure wbDIALQuestToStr(var aValue: string; aBasePtr, aEndPtr: Pointer; const aElement : IwbElement; aType : TwbCallbackType);
 begin
-  if (aType <> ctCheck) and (aType <> ctToStr) then
-    Exit;
-
-  if not Assigned(aElement) then
+  if not (Assigned(aElement) and (aType in [ctCheck, ctToStr])) then
     Exit;
 
   var lBNAM := aElement.ContainingMainRecord.ElementBySignature[BNAM];
@@ -4746,14 +4911,11 @@ begin
   if not Assigned(lBranchQuest) then
     Exit;
 
-  lBranchQuest := lBranchQuest.MasterOrSelf;
-
   var lElementQuest := aElement.LinksTo as IwbMainRecord;
   if not Assigned(lElementQuest) then
     Exit;
 
-  lElementQuest := lElementQuest.MasterOrSelf;
-  if lElementQuest = lBranchQuest then
+  if lElementQuest.MasterOrSelf = lBranchQuest.MasterOrSelf then
     Exit;
 
   case aType of
@@ -4826,6 +4988,26 @@ begin
   end;
 end;
 
+procedure wbLCTNUniqueNPCToStr(var aValue: string; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
+begin
+  if not (Assigned(aElement) and (aType in [ctCheck, ctToStr])) then
+    Exit;
+
+  var lLinksTo := aElement.LinksTo as IwbMainRecord;
+  if not Assigned(lLinksTo) then
+    Exit;
+
+  var lACBS := lLinksTo.ElementBySignature[ACBS] as IwbContainerElementRef;
+  if not Assigned(lACBS) then
+    Exit;
+
+  if (lACBS.ElementNativeValues['Flags'] and $20) = 0 then
+    case aType of
+      ctCheck: aValue := ' <Warning: NPC [' + lLinksTo.EditorID + '] is not flagged as Unique>';
+      ctToStr: aValue := aValue + ' <Warning: NPC is not flagged as Unique>';
+    end;
+end;
+
 procedure wbNPCPackageToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 begin
   if not Assigned(aElement) then
@@ -4846,6 +5028,46 @@ begin
   case aType of
     ctCheck: aValue := '<Error: Package [' + lPACKRecord.EditorID + '] is owned by Quest [' + lQUSTRecord.EditorID + '] and cannot be assigned to an NPC record>';
     ctToStr: aValue := aElement.EditValue + ' <Error: Package is owned by Quest [' + lQUSTRecord.EditorID + '] and cannot be assigned to an NPC record>';
+  end;
+end;
+
+procedure wbNPCTemplateToStr(var aValue: string; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
+begin
+  if not (Assigned(aElement) and (aType in [ctCheck])) then
+    Exit;
+
+  var lMainRecord := aElement.ContainingMainRecord;
+  if not Assigned(lMainRecord) then
+    Exit;
+
+  var lACBS := lMainRecord.ElementBySignature[ACBS] as IwbContainerElementRef;
+  if not Assigned(lACBS) then
+    Exit;
+
+  if (lACBS.ElementNativeValues['Flags'] and $20) = 0 then
+    Exit;
+
+  var lLinksTo := aElement.LinksTo as IwbMainRecord;
+  var lVisited: TArray<IwbMainRecord>;
+  while Assigned(lLinksTo) do
+  begin
+    var lMaster := lLinksTo.MasterOrSelf;
+    for var lVisitedRecord in lVisited do
+      if lVisitedRecord = lMaster then
+        Exit;
+    lVisited := lVisited + [lMaster];
+
+    if lLinksTo.Signature = LVLN then
+    begin
+      aValue := ' <Warning: NPC has a leveled template, but is flagged unique>';
+      Exit;
+    end;
+
+    var lTemplate := lLinksTo.ElementBySignature[TPLT];
+    if not Assigned(lTemplate) then
+      Exit;
+
+    lLinksTo := lTemplate.LinksTo as IwbMainRecord;
   end;
 end;
 
@@ -5002,6 +5224,26 @@ begin
     ctCheck: aValue := '<Warning: ' + lMainRecord.ShortName + ' has not been added to the story manager>';
     ctToStr: aValue := aElement.EditValue + '<Warning: ' + lMainRecord.ShortName + ' has not been added to the story manager>';
   end;
+end;
+
+procedure wbQUSTUniqueActorToStr(var aValue: string; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
+begin
+  if not (Assigned(aElement) and (aType in [ctCheck, ctToStr])) then
+    Exit;
+
+  var lLinksTo := aElement.LinksTo as IwbMainRecord;
+  if not Assigned(lLinksTo) then
+    Exit;
+
+  var lACBS := lLinksTo.ElementBySignature[ACBS] as IwbContainerElementRef;
+  if not Assigned(lACBS) then
+    Exit;
+
+  if (lACBS.ElementNativeValues['Flags'] and $20) = 0 then
+    case aType of
+      ctCheck: aValue := ' <Warning: NPC [' + lLinksTo.EditorID + '] is not flagged Unique>';
+      ctToStr: aValue := aValue + ' <Warning: NPC is not flagged unique>';
+    end;
 end;
 
 procedure wbREFRPersistLocToStr(var aValue: string; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
@@ -8938,32 +9180,32 @@ begin
       aName := 'Textures';
 
     if not DefineOptions.DecodeTextureHashes then
-      Exit(wbByteArray(aSignature, aName, 0, cpIgnore).SetDontShow(wbNeverShow));
+      Exit(wbByteArray(aSignature, aName, 0, cpBenign).SetDontShow(wbNeverShow));
 
     var TextureFile := wbStruct('Texture', [
-      wbInteger('File Hash (PC)', itU64, wbFileHashCallback),
-      wbInteger('File Hash (Console)', itU64, wbFileHashCallback),
-      wbInteger('Folder Hash', itU64, wbFolderHashCallback)
-    ]).SetSummaryKey([2,0])
-      .SetSummaryDelimiter('')
-      .SetSummaryMemberPrefixSuffix(0, '', '')
-      .SetSummaryMemberPrefixSuffix(2, '', '\')
-      .IncludeFlag(dfSummaryMembersNoName)
-      .IncludeFlag(dfCollapsed, clpModelInfoTexture in DefineOptions.Collapse);
+      wbInteger('File Hash (PC)', itU64, wbFileHashCallback, nil, cpBenign),
+      wbInteger('File Hash (Console)', itU64, wbFileHashCallback, nil, cpBenign),
+      wbInteger('Folder Hash', itU64, wbFolderHashCallback, nil, cpBenign)
+    ], cpBenign).SetSummaryKey([2,0])
+                .SetSummaryDelimiter('')
+                .SetSummaryMemberPrefixSuffix(0, '', '')
+                .SetSummaryMemberPrefixSuffix(2, '', '\')
+                .IncludeFlag(dfSummaryMembersNoName)
+                .IncludeFlag(dfCollapsed, clpModelInfoTexture in DefineOptions.Collapse);
 
-    Result := wbArray(aSignature, aName, TextureFile).IncludeFlag(dfCollapsed, clpModelInfoTextures in DefineOptions.Collapse);
+    Result := wbArray(aSignature, aName, TextureFile, 0, cpBenign).IncludeFlag(dfCollapsed, clpModelInfoTextures in DefineOptions.Collapse);
   end else begin
     if aName = '' then
       aName := 'Model Information';
 
     if not DefineOptions.DecodeTextureHashes then
-      Exit(wbByteArray(aSignature, aName, 0, cpIgnore).SetDontShow(wbNeverShow));
+      Exit(wbByteArray(aSignature, aName, 0, cpBenign).SetDontShow(wbNeverShow));
 
     var CreateFileEntry := function(const aName: string): IwbValueDef begin
       Result := wbStruct(aName, [
-        wbInteger('File Hash', itU32, wbFileHashCallback),
-        wbString('Extension', 4),
-        wbInteger('Folder Hash', itU32, wbFolderHashCallback)
+        wbInteger('File Hash', itU32, wbFileHashCallback, nil, cpBenign),
+        wbString('Extension', 4, cpBenign),
+        wbInteger('Folder Hash', itU32, wbFolderHashCallback, nil, cpBenign)
       ]).SetSummaryKey([2,0,1])
         .SetSummaryDelimiter('')
         .SetSummaryMemberPrefixSuffix(0, '', '')
@@ -8979,23 +9221,23 @@ begin
       wbStruct('', [
         IsTES5(
           wbArray('Counters',
-            wbInteger('Counter', itU32, nil, nil, cpIgnore),
-          -1, ['Textures', 'Addon Nodes'], cpIgnore)
+            wbInteger('Counter', itU32, nil, nil, cpBenign),
+          -1, ['Textures', 'Addon Nodes'], cpBenign)
             .IncludeFlag(dfCollapsed, clpModelInfoHeader in DefineOptions.Collapse)
             .IncludeFlag(dfNotAlignable),
           wbArray('Counters',
-            wbIntegeR('Counter', itU32, nil, nil, cpIgnore),
-          -1, ['Textures', 'Addon Nodes', 'SRGB', 'Materials'], cpIgnore)
+            wbIntegeR('Counter', itU32, nil, nil, cpBenign),
+          -1, ['Textures', 'Addon Nodes', 'SRGB', 'Materials'], cpBenign)
             .IncludeFlag(dfCollapsed, clpModelInfoHeader in DefineOptions.Collapse)
             .IncludeFlag(dfNotAlignable)
         ),
-        wbArray('Textures', TextureFile)
+        wbArray('Textures', TextureFile, 0, cpBenign)
           .SetCountPath('Counters\[0]', True)
           .SetSummaryPassthroughMaxLength(80)
           .SetSummaryPassthroughMaxDepth(1)
           .IncludeFlag(dfCollapsed, clpModelInfoTextures in DefineOptions.Collapse),
         wbArray('Addon Nodes',
-          wbInteger('Addon Node', itU32)
+          wbInteger('Addon Node', itU32, nil, cpBenign)
             .SetLinksToCallback(function(const aElement: IwbElement): IwbElement
             begin
               Result := nil;
@@ -9019,13 +9261,13 @@ begin
          .IncludeFlag(dfCollapsed, clpModelInfoAddons in DefineOptions.Collapse),
         IsTES5(
           nil,
-          wbArray('Materials', MaterialFile)
+          wbArray('Materials', MaterialFile, 0, cpBenign)
             .SetCountPath('Counters\[3]', True)
             .SetSummaryPassthroughMaxLength(80)
             .SetSummaryPassthroughMaxDepth(1)
             .IncludeFlag(dfCollapsed, clpModelInfoMaterials in DefineOptions.Collapse))
-      ]).SetSummaryKey([1, 2, 3])
-        .IncludeFlag(dfSummaryMembersNoName);
+      ], cpBenign).SetSummaryKey([1, 2, 3])
+                  .IncludeFlag(dfSummaryMembersNoName);
 
     Result := wbUnion(aSignature, aName, wbModelInfoDecider, [
       wbStruct('', [
@@ -9699,7 +9941,11 @@ function TwbGameDefCommon.wbWorldCellSizeData: IwbRecordMemberDef;
 begin
   Result :=
     IfThen(DefineOptions.HideLargeSubrecords,
-      wbByteArray(CLSZ, 'Cell Sizes', 0, cpIgnore).SetDontShow(wbNeverShow),
+      wbByteArray(CLSZ, 'Cell Sizes', 0, cpIgnore)
+        .SetDontShow(wbNeverShow)
+        .IncludeFlag(dfInternalEditOnly)
+        .IncludeFlag(dfKeepInPartialForm)
+        .IncludeFlag(dfNoCopyAsOverride),
       wbArray(CLSZ, 'Cell Sizes',
         wbArray('Row',
           wbInteger('Cell', itU32, nil, cpIgnore),
@@ -9711,6 +9957,8 @@ begin
        .SetSummaryName('Rows')
        .IncludeFlag(dfCollapsed, clpObjectBounds in DefineOptions.Collapse)
        .IncludeFlag(dfFastAssign)
+       .IncludeFlag(dfInternalEditOnly)
+       .IncludeFlag(dfKeepInPartialForm)
        .IncludeFlag(dfNoCopyAsOverride)
        .IncludeFlag(dfNotAlignable));
 end;
@@ -9958,7 +10206,8 @@ begin
       .SetSummaryMemberPrefixSuffix(1, 'Max', ']')
       .SetSummaryDelimiter(', ')
       .SetRequired
-      .IncludeFlag(dfCollapsed, clpObjectBounds in DefineOptions.Collapse);
+      .IncludeFlag(dfCollapsed, clpObjectBounds in DefineOptions.Collapse)
+      .IncludeFlag(dfKeepInPartialForm);
 end;
 
 function TwbGameDefCommon.wbWorldOffsetData: IwbRecordMemberDef;
@@ -9967,6 +10216,8 @@ begin
     IfThen(DefineOptions.HideLargeSubrecords,
       wbByteArray(OFST, 'Offsets', 0, cpIgnore)
         .SetDontShow(wbNeverShow)
+        .IncludeFlag(dfInternalEditOnly)
+        .IncludeFlag(dfKeepInPartialForm)
         .IncludeFlag(dfNoCopyAsOverride),
       wbArray(OFST, 'Offsets',
         wbArray('Row',
@@ -9979,6 +10230,8 @@ begin
        .SetSummaryName('Rows')
        .IncludeFlag(dfCollapsed, clpOther in DefineOptions.Collapse)
        .IncludeFlag(dfFastAssign)
+       .IncludeFlag(dfInternalEditOnly)
+       .IncludeFlag(dfKeepInPartialForm)
        .IncludeFlag(dfNoCopyAsOverride)
        .IncludeFlag(dfNotAlignable));
 end;

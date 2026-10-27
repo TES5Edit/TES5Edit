@@ -127,7 +127,7 @@ type
     wbVMAD: IwbSubRecordDef;
     wbVMADFragmentedPERK: IwbSubRecordDef;
     wbVMADFragmentedPACK: IwbSubRecordDef;
-    wbVMADFragmentedQUST: IwbSubRecordDef;
+    wbVMADFragmentedQUST: IwbRecordMemberDef;
     wbVMADFragmentedSCEN: IwbSubRecordDef;
     wbVMADFragmentedINFO: IwbSubRecordDef;
     wbCOCT: IwbSubRecordDef;
@@ -5114,7 +5114,8 @@ begin
       .SetSummaryDelimiter(' ')
       .IncludeFlag(dfSummaryMembersNoName)
     , -2)
-  ]).SetOptionalFrom(3);
+  ]).SetOptionalFrom(3)
+    .IncludeFlag(dfKeepInPartialForm);
 
   wbVMADFragmentedSCEN := wbStruct(VMAD, 'Virtual Machine Adapter', [
     wbVMADVersion,
@@ -7960,7 +7961,7 @@ begin
 
     wbInteger(CNAM, 'Precombined Object Level XY', itU8),
     wbInteger(ZNAM, 'Precombined Object Level Z', itU8),
-    wbByteArray(TVDT, 'Unknown', 0, cpNormal),
+    wbByteArray(TVDT, 'Terrain Visibility Data'),
     wbMHDTCELL,
     wbFormIDCk(LTMP, 'Lighting Template', [LGTM, NULL], False, cpNormal, True),
 
@@ -9303,7 +9304,8 @@ begin
         .IncludeFlag(dfCollapsed, clpNavmesh in DefineOptions.Collapse)
         .IncludeFlag(dfFastAssign)
         .IncludeFlag(dfSummaryMembersNoName)
-    ).IncludeFlag(dfCollapsed, clpNavmesh in DefineOptions.Collapse),
+    ).SetAfterLoad(wbNAVINavmeshInfosAfterLoad)
+     .IncludeFlag(dfCollapsed, clpNavmesh in DefineOptions.Collapse),
     wbStruct(NVPP, 'Precomputed Pathing', [
       wbArray('Precomputed Paths',
         wbArray('Path',
@@ -10222,8 +10224,8 @@ begin
     2,  'Interior Location',
     8,  'Unknown 8',
     11, 'Interior Cells Use Ref Location for world map player marker',
-    14, 'Unknown 14' //Partial Form
-    ])), [
+    14, 'Partial Form'
+    ]), [14]), [
     wbEDID,
     wbDURL,
     wbArrayS(ACPR, 'Added Persist Location References',
@@ -10233,7 +10235,7 @@ begin
         wbInteger('Grid Y', itS16, nil, cpBenign).SetDontShow(wbLCTNCellDontShow),
         wbInteger('Grid X', itS16, nil, cpBenign).SetDontShow(wbLCTNCellDontShow)
       ], cpBenign),
-    0, cpBenign),
+    0, cpBenign).IncludeFlag(dfKeepInPartialForm),
     wbArrayS(LCPR, 'Master Persist Location References',
       wbStructSK([0], 'Reference', [
         wbFormIDCk('Ref', sigReferences, False, cpBenign),
@@ -10244,14 +10246,14 @@ begin
     0, cpBenign),
     wbArrayS(RCPR, 'Removed Persist Location References',
       wbFormIDCk('Reference', [ACHR, REFR], False, cpBenign),
-    0, cpBenign),
+    0, cpBenign).IncludeFlag(dfKeepInPartialForm),
     wbArrayS(ACUN, 'Added Unique NPCs',
       wbStructSK([1], 'Actor', [
         wbFormIDCk('NPC', [NPC_], False, cpBenign),
         wbFormIDCk('Actor Ref', [ACHR], False, cpBenign),
         wbFormIDCk('Location', [LCTN, NULL], False, cpBenign)
       ], cpBenign),
-    0, cpBenign),
+    0, cpBenign).IncludeFlag(dfKeepInPartialForm),
     wbArrayS(LCUN, 'Master Unique NPCs',
       wbStructSK([1], 'Actor', [
         wbFormIDCk('NPC', [NPC_], False, cpBenign),
@@ -10261,7 +10263,7 @@ begin
     0, cpBenign),
     wbArrayS(RCUN, 'Removed Unique NPCs',
       wbFormIDCk('Actor', [NPC_], False, cpBenign),
-    0, cpBenign),
+    0, cpBenign).IncludeFlag(dfKeepInPartialForm),
     wbArrayS(ACSR, 'Added Special References',
       wbStructSK([1], 'Reference', [
         wbFormIDCk('Loc Ref Type', [LCRT], False, cpBenign),
@@ -10270,7 +10272,7 @@ begin
         wbInteger('Grid Y', itS16, nil, cpBenign).SetDontShow(wbLCTNCellDontShow),
         wbInteger('Grid X', itS16, nil, cpBenign).SetDontShow(wbLCTNCellDontShow)
       ], cpBenign),
-    0, cpBenign),
+    0, cpBenign).IncludeFlag(dfKeepInPartialForm),
     wbArrayS(LCSR, 'Master Special References',
       wbStructSK([1], 'Reference', [
         wbFormIDCk('Loc Ref Type', [LCRT], False, cpBenign),
@@ -10282,7 +10284,7 @@ begin
     0, cpBenign),
     wbArrayS(RCSR, 'Removed Special References',
       wbFormIDCk('Reference', [ACHR, REFR], False, cpBenign),
-    0, cpBenign),
+    0, cpBenign).IncludeFlag(dfKeepInPartialForm),
     wbRArrayS('Added Worldspace Cells',
       wbStructSK(ACEC, [0], 'Worldspace', [
         wbFormIDCk('World', [WRLD], False, cpBenign),
@@ -10293,7 +10295,7 @@ begin
           ], cpBenign),
         0, cpBenign)
       ], cpBenign),
-    cpBenign),
+    cpBenign).IncludeFlag(dfKeepInPartialForm),
     wbRArrayS('Master Worldspace Cells',
       wbStructSK(LCEC, [0], 'Worldspace', [
         wbFormIDCk('World', [WRLD], False, cpBenign),
@@ -10315,10 +10317,10 @@ begin
           ], cpBenign),
         0, cpBenign)
       ], cpBenign),
-    cpBenign),
+    cpBenign).IncludeFlag(dfKeepInPartialForm),
     wbArrayS(ACID, 'Added Initially Disabled References',
       wbFormIDCk('Ref', sigReferences, False, cpBenign),
-    0, cpBenign),
+    0, cpBenign).IncludeFlag(dfKeepInPartialForm),
     wbArrayS(LCID, 'Master Initially Disabled References',
       wbFormIDCk('Ref', sigReferences, False, cpBenign),
     0, cpBenign),
@@ -10334,7 +10336,7 @@ begin
         cpBenign).IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse),
         wbUnused(3)
       ], cpBenign),
-    0, cpBenign),
+    0, cpBenign).IncludeFlag(dfKeepInPartialForm),
     wbArrayS(LCEP, 'Master Enable Parent References',
       wbStruct('Reference', [
         wbFormIDCk('Ref', sigReferences, False, cpBenign),
@@ -13430,7 +13432,7 @@ begin
 
   RegisterRecordDef(QUST, 'Quest',
     wbFlags(wbFlagsList([
-      {0x00004000} 14, 'Partial Form'
+    14, 'Partial Form'
     ]), [14]), [
     wbEDID,
     wbDURL,

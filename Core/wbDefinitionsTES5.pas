@@ -118,9 +118,7 @@ type
     wbNull: IwbValueDef;
     wbYNAM: IwbSubRecordDef;
     wbZNAM: IwbSubRecordDef;
-    wbTVDT: IwbSubRecordDef;
     wbNVNM: IwbSubRecordDef;
-    wbStaticPart: IwbRecordMemberDef;
     wbFactionRank: IwbRecordMemberDef;
     wbSubtypeNamesEnum: IwbEnumDef;
   protected
@@ -1911,10 +1909,12 @@ begin
     Result := 6
   else if lSig = MSTT then
     Result := 7
-  else if lSig = STAT then
+  else if lSig = SCOL then
     Result := 8
+  else if lSig = STAT then
+    Result := 9
   else if lSig = TREE then
-    Result := 9;
+    Result := 10;
 end;
 
 function wbTintLayerToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
@@ -2626,7 +2626,7 @@ begin
   wbXSCL := wbFloat(XSCL, 'Scale').SetNormalizer(wbNormalizeToRange(0.0, 10.0));
 
   var wbScriptObjectSignatures : TwbSignatures := [
-    AACT,ACHR,ACTI,ALCH,AMMO,APPA,ARMO,ASTP,AVIF,BOOK,CELL,CLAS,CONT,DIAL,DOOR,ECZN,EFSH,ENCH,EXPL,FACT,FLOR,FLST,FURN,GLOB,HAZD,IDLE,IMAD,INGR,IPDS,KEYM,KYWD,LCRT,LCTN,LIGH,LVLI,LVLN,MESG,MGEF,MISC,MUSC,NPC_,OTFT,PACK,PERK,PHZD,PLYR,PROJ,QUST,RACE,REFR,RFCT,SCEN,SCRL,SHOU,SLGM,SNCT,SNDR,SOUN,SPEL,SPGD,STAT,TREE,TXST,VTYP,WEAP,WOOP,WRLD,WTHR,NULL
+    AACT,ACHR,ACTI,ALCH,AMMO,APPA,ARMO,ASTP,AVIF,BOOK,CELL,CLAS,CONT,DIAL,DOOR,ECZN,EFSH,ENCH,EXPL,FACT,FLOR,FLST,FURN,GLOB,HAZD,IDLE,IMAD,INGR,IPDS,KEYM,KYWD,LCRT,LCTN,LIGH,LVLI,LVLN,MESG,MGEF,MISC,MUSC,NPC_,OTFT,PACK,PERK,PHZD,PLYR,PROJ,QUST,RACE,REFR,RFCT,SCEN,SCRL,SHOU,SLGM,SNCT,SNDR,SOUN,SPEL,SPGD,STAT,TACT,TREE,TXST,VTYP,WEAP,WOOP,WRLD,WTHR,NULL
   ];
 
   wbScriptPropertyObject := wbUnion('Object Union', wbScriptObjFormatDecider, [
@@ -3070,6 +3070,112 @@ begin
     wbUnused(3)
   ]);
 
+  wbSubtypeNamesEnum := wbEnum([], [
+    Sig2Int('ACAC'), 'ActorCollidewithActor',
+    Sig2Int('ACYI'), 'AcceptYield',
+    Sig2Int('AGRE'), 'Agree',
+    Sig2Int('ALIL'), 'AlertIdle',
+    Sig2Int('ALKL'), 'AllyKilled',
+    Sig2Int('ALTC'), 'AlertToCombat',
+    Sig2Int('ALTN'), 'AlertToNormal',
+    Sig2Int('ASKF'), 'Ask Favor',
+    Sig2Int('ASKG'), 'Ask Gift',
+    Sig2Int('ASNC'), 'AssaultNC',
+    Sig2Int('ASSA'), 'Assault',
+    Sig2Int('ATCK'), 'Attack',
+    Sig2Int('AVTH'), 'AvoidThreat',
+    Sig2Int('BAEX'), 'BarterExit',
+    Sig2Int('BASH'), 'Bash',
+    Sig2Int('BLED'), 'BleedOut',
+    Sig2Int('BLOC'), 'Block',
+    Sig2Int('BREA'), 'EnterSprintBreath',
+    Sig2Int('BRIB'), 'Bribe',
+    Sig2Int('COLO'), 'CombatToLost',
+    Sig2Int('COTN'), 'CombatToNormal',
+    Sig2Int('CUST'), 'Custom',
+    Sig2Int('DEOB'), 'DestroyObject',
+    Sig2Int('DETH'), 'Death',
+    Sig2Int('DFDA'), 'DetectFriendDie',
+    Sig2Int('ENBZ'), 'EnterBowZoomBreath',
+    Sig2Int('EXBZ'), 'ExitBowZoomBreath',
+    Sig2Int('FAVO'), 'Favor',
+    Sig2Int('FEXT'), 'ExitFavorState',
+    Sig2Int('FIWE'), 'ShootBow',
+    Sig2Int('FLAT'), 'Flatter',
+    Sig2Int('FLEE'), 'Flee',
+    Sig2Int('FMAT'), 'FlyingMountAcceptTarget',
+    Sig2Int('FMDR'), 'FlyingMountDestinationReached',
+    Sig2Int('FMLX'), 'FlyingMountLand',
+    Sig2Int('FMNT'), 'FlyingMountNoTarget',
+    Sig2Int('FMRT'), 'FlyingMountRejectTarget',
+    Sig2Int('FMXL'), 'FlyingMountCancelLand',
+    Sig2Int('FOLL'), 'Follow',
+    Sig2Int('FRJT'), 'Reject',
+    Sig2Int('FVDL'), 'Custom?',
+    Sig2Int('GBYE'), 'Goodbye',
+    Sig2Int('GIFF'), 'Gift',
+    Sig2Int('GRNT'), 'CombatGrunt',
+    Sig2Int('GRST'), 'GroupStrategy',
+    Sig2Int('HELO'), 'Hello',
+    Sig2Int('HIT_'), 'Hit',
+    Sig2Int('IDAT'), 'SharedInfo',
+    Sig2Int('IDLE'), 'Idle',
+    Sig2Int('INTI'), 'Intimidate',
+    Sig2Int('JUMP'), 'Jump',
+    Sig2Int('KNOO'), 'KnockOverObject',
+    Sig2Int('LOIL'), 'LostIdle',
+    Sig2Int('LOOB'), 'LockedObject',
+    Sig2Int('LOTC'), 'LostToCombat',
+    Sig2Int('LOTN'), 'LostToNormal',
+    Sig2Int('LWBS'), 'LeaveWaterBreath',
+    Sig2Int('MREF'), 'MoralRefusal',
+    Sig2Int('MUNC'), 'MurderNC',
+    Sig2Int('MURD'), 'Murder',
+    Sig2Int('NOTA'), 'NormalToAlert',
+    Sig2Int('NOTC'), 'NormalToCombat',
+    Sig2Int('NOTI'), 'NoticeCorpse',
+    Sig2Int('OBCO'), 'ObserveCombat',
+    Sig2Int('OUTB'), 'OutofBreath',
+    Sig2Int('PCPS'), 'PlayerCastProjectileSpell',
+    Sig2Int('PCSH'), 'PlayerShout',
+    Sig2Int('PCSS'), 'PlayerCastSelfSpell',
+    Sig2Int('PFGT'), 'ForceGreet',
+    Sig2Int('PICC'), 'PickpocketCombat',
+    Sig2Int('PICN'), 'PickpocketNC',
+    Sig2Int('PICT'), 'PickpocketTopic',
+    Sig2Int('PIRN'), 'PlayerinIronSights',
+    Sig2Int('POAT'), 'PowerAttack',
+    Sig2Int('PURS'), 'PursueIdleTopic',
+    Sig2Int('RCEX'), 'RechargeExit',
+    Sig2Int('RECH'), 'Recharge',
+    Sig2Int('REEX'), 'RepairExit',
+    Sig2Int('REFU'), 'Refuse',
+    Sig2Int('REPA'), 'Repair',
+    Sig2Int('RUMO'), 'Rumors',
+    Sig2Int('SCEN'), 'Scene',
+    Sig2Int('SERU'), 'ServiceRefusal',
+    Sig2Int('SHOW'), 'Show',
+    Sig2Int('SHRE'), 'Show Relationships',
+    Sig2Int('STEA'), 'Steal',
+    Sig2Int('STFN'), 'StealFromNC',
+    Sig2Int('STOF'), 'StandonFurniture',
+    Sig2Int('SWMW'), 'SwingMeleeWeapon',
+    Sig2Int('TAUT'), 'Taunt',
+    Sig2Int('TITG'), 'TimeToGo',
+    Sig2Int('TRAI'), 'Training',
+    Sig2Int('TRAN'), 'TrespassAgainstNC',
+    Sig2Int('TRAV'), 'Travel',
+    Sig2Int('TRES'), 'Trespass',
+    Sig2Int('TREX'), 'TrainingExit',
+    Sig2Int('VPEL'), 'VoicePowerEndLong',
+    Sig2Int('VPES'), 'VoicePowerEndShort',
+    Sig2Int('VPSL'), 'VoicePowerStartLong',
+    Sig2Int('VPSS'), 'VoicePowerStartShort',
+    Sig2Int('WTCR'), 'WereTransformCrime',
+    Sig2Int('YIEL'), 'Yield',
+    Sig2Int('ZKEY'), 'ZKeyObject'
+  ]);
+
   wbPDTO :=
     wbStruct(PDTO, 'Topic Data', [
       wbInteger('Type', itU32, wbEnum([
@@ -3078,7 +3184,7 @@ begin
       ])),
       wbUnion('Data', wbTypeDecider, [
         wbFormIDCk('Topic', [DIAL, NULL]),
-        wbString('Subtype', 4)
+        wbInteger('Subtype', itU32, wbSubtypeNamesEnum)
       ])
     ]);
 
@@ -3090,9 +3196,6 @@ begin
     'Hard',
     'Very Hard'
   ]));
-
-  wbTVDT := wbByteArray(TVDT, 'Occlusion Data', 0, cpNormal);
-//  wbTVDT := wbArray(TVDT, 'Occlusion Data', wbInteger('Unknown', itS32)),
 
   RegisterRefRecordDef(ACHR, 'Placed NPC',
     wbFlags(wbFlagsList([
@@ -3190,6 +3293,7 @@ begin
     wbXSCL,
     wbVec3PosRot(DATA).SetRequired
   ]).SetAddInfo(wbPlacedAddInfo)
+    .SetToStr(wbACHRToStr)
     .SetUnordered;
 
   RegisterRecordDef(ACTI, 'Activator',
@@ -4245,7 +4349,7 @@ begin
       .SetDontShow(wbCellExteriorDontShow)
       .SetIsRemovable(wbCellLightingIsRemovable),
 
-    wbTVDT,
+    wbByteArray(TVDT, 'Terrain Visibility Data'),
     wbMHDTCELL,
     wbFormIDCk(LTMP, 'Lighting Template', [LGTM, NULL], False, cpNormal, True),
     wbByteArray(LNAM, 'Unknown', 0, cpIgnore), // leftover flags, they are now in XCLC
@@ -4555,112 +4659,6 @@ begin
       {0x02} 'Flanking',
       {0x04} 'Allow Dual Wielding'
     ])).SetRequired.IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse)
-  ]);
-
-  wbSubtypeNamesEnum := wbEnum([], [
-    Sig2Int('ACAC'), 'ActorCollidewithActor',
-    Sig2Int('ACYI'), 'AcceptYield',
-    Sig2Int('AGRE'), 'Agree',
-    Sig2Int('ALIL'), 'AlertIdle',
-    Sig2Int('ALKL'), 'AllyKilled',
-    Sig2Int('ALTC'), 'AlertToCombat',
-    Sig2Int('ALTN'), 'AlertToNormal',
-    Sig2Int('ASKF'), 'Ask Favor',
-    Sig2Int('ASKG'), 'Ask Gift',
-    Sig2Int('ASNC'), 'AssaultNC',
-    Sig2Int('ASSA'), 'Assault',
-    Sig2Int('ATCK'), 'Attack',
-    Sig2Int('AVTH'), 'AvoidThreat',
-    Sig2Int('BAEX'), 'BarterExit',
-    Sig2Int('BASH'), 'Bash',
-    Sig2Int('BLED'), 'BleedOut',
-    Sig2Int('BLOC'), 'Block',
-    Sig2Int('BREA'), 'EnterSprintBreath',
-    Sig2Int('BRIB'), 'Bribe',
-    Sig2Int('COLO'), 'CombatToLost',
-    Sig2Int('COTN'), 'CombatToNormal',
-    Sig2Int('CUST'), 'Custom',
-    Sig2Int('DEOB'), 'DestroyObject',
-    Sig2Int('DETH'), 'Death',
-    Sig2Int('DFDA'), 'DetectFriendDie',
-    Sig2Int('ENBZ'), 'EnterBowZoomBreath',
-    Sig2Int('EXBZ'), 'ExitBowZoomBreath',
-    Sig2Int('FAVO'), 'Favor',
-    Sig2Int('FEXT'), 'ExitFavorState',
-    Sig2Int('FIWE'), 'ShootBow',
-    Sig2Int('FLAT'), 'Flatter',
-    Sig2Int('FLEE'), 'Flee',
-    Sig2Int('FMAT'), 'FlyingMountAcceptTarget',
-    Sig2Int('FMDR'), 'FlyingMountDestinationReached',
-    Sig2Int('FMLX'), 'FlyingMountLand',
-    Sig2Int('FMNT'), 'FlyingMountNoTarget',
-    Sig2Int('FMRT'), 'FlyingMountRejectTarget',
-    Sig2Int('FMXL'), 'FlyingMountCancelLand',
-    Sig2Int('FOLL'), 'Follow',
-    Sig2Int('FRJT'), 'Reject',
-    Sig2Int('FVDL'), 'Custom?',
-    Sig2Int('GBYE'), 'Goodbye',
-    Sig2Int('GIFF'), 'Gift',
-    Sig2Int('GRNT'), 'CombatGrunt',
-    Sig2Int('GRST'), 'GroupStrategy',
-    Sig2Int('HELO'), 'Hello',
-    Sig2Int('HIT_'), 'Hit',
-    Sig2Int('IDAT'), 'SharedInfo',
-    Sig2Int('IDLE'), 'Idle',
-    Sig2Int('INTI'), 'Intimidate',
-    Sig2Int('JUMP'), 'Jump',
-    Sig2Int('KNOO'), 'KnockOverObject',
-    Sig2Int('LOIL'), 'LostIdle',
-    Sig2Int('LOOB'), 'LockedObject',
-    Sig2Int('LOTC'), 'LostToCombat',
-    Sig2Int('LOTN'), 'LostToNormal',
-    Sig2Int('LWBS'), 'LeaveWaterBreath',
-    Sig2Int('MREF'), 'MoralRefusal',
-    Sig2Int('MUNC'), 'MurderNC',
-    Sig2Int('MURD'), 'Murder',
-    Sig2Int('NOTA'), 'NormalToAlert',
-    Sig2Int('NOTC'), 'NormalToCombat',
-    Sig2Int('NOTI'), 'NoticeCorpse',
-    Sig2Int('OBCO'), 'ObserveCombat',
-    Sig2Int('OUTB'), 'OutofBreath',
-    Sig2Int('PCPS'), 'PlayerCastProjectileSpell',
-    Sig2Int('PCSH'), 'PlayerShout',
-    Sig2Int('PCSS'), 'PlayerCastSelfSpell',
-    Sig2Int('PFGT'), 'ForceGreet',
-    Sig2Int('PICC'), 'PickpocketCombat',
-    Sig2Int('PICN'), 'PickpocketNC',
-    Sig2Int('PICT'), 'PickpocketTopic',
-    Sig2Int('PIRN'), 'PlayerinIronSights',
-    Sig2Int('POAT'), 'PowerAttack',
-    Sig2Int('PURS'), 'PursueIdleTopic',
-    Sig2Int('RCEX'), 'RechargeExit',
-    Sig2Int('RECH'), 'Recharge',
-    Sig2Int('REEX'), 'RepairExit',
-    Sig2Int('REFU'), 'Refuse',
-    Sig2Int('REPA'), 'Repair',
-    Sig2Int('RUMO'), 'Rumors',
-    Sig2Int('SCEN'), 'Scene',
-    Sig2Int('SERU'), 'ServiceRefusal',
-    Sig2Int('SHOW'), 'Show',
-    Sig2Int('SHRE'), 'Show Relationships',
-    Sig2Int('STEA'), 'Steal',
-    Sig2Int('STFN'), 'StealFromNC',
-    Sig2Int('STOF'), 'StandonFurniture',
-    Sig2Int('SWMW'), 'SwingMeleeWeapon',
-    Sig2Int('TAUT'), 'Taunt',
-    Sig2Int('TITG'), 'TimeToGo',
-    Sig2Int('TRAI'), 'Training',
-    Sig2Int('TRAN'), 'TrespassAgainstNC',
-    Sig2Int('TRAV'), 'Travel',
-    Sig2Int('TRES'), 'Trespass',
-    Sig2Int('TREX'), 'TrainingExit',
-    Sig2Int('VPEL'), 'VoicePowerEndLong',
-    Sig2Int('VPES'), 'VoicePowerEndShort',
-    Sig2Int('VPSL'), 'VoicePowerStartLong',
-    Sig2Int('VPSS'), 'VoicePowerStartShort',
-    Sig2Int('WTCR'), 'WereTransformCrime',
-    Sig2Int('YIEL'), 'Yield',
-    Sig2Int('ZKEY'), 'ZKeyObject'
   ]);
 
   RegisterRecordDef(DIAL, 'Dialog Topic',
@@ -5659,7 +5657,8 @@ begin
         .SetSummaryPrefixSuffixOnValue(7, 'is island with ', '')
         .IncludeFlag(dfCollapsed, clpNavmesh in DefineOptions.Collapse)
         .IncludeFlag(dfSummaryMembersNoName)
-    ).IncludeFlag(dfCollapsed, clpNavmesh in DefineOptions.Collapse),
+    ).SetAfterLoad(wbNAVINavmeshInfosAfterLoad)
+     .IncludeFlag(dfCollapsed, clpNavmesh in DefineOptions.Collapse),
     wbStruct(NVPP, 'Precomputed Pathing', [
       wbArray('Precomputed Paths',
         wbArray('Path', wbFormIDCk('Navmesh', [NAVM]), -1).IncludeFlag(dfCollapsed, clpNavmesh in DefineOptions.Collapse),
@@ -6305,7 +6304,7 @@ begin
         wbInteger('Grid X', itS16, nil, cpBenign).SetDontShow(wbLCTNCellDontShow)
       ], cpBenign),
     0, cpBenign),
-    wbArrayS(LCPR, 'Location Persist Location References',
+    wbArrayS(LCPR, 'Master Persist Location References',
       wbStructSK([0], 'Reference', [
         wbFormIDCk('Ref', [PLYR, ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA], False, cpBenign),
         wbFormIDCk('World/Cell', [WRLD, CELL], False, cpBenign),
@@ -6318,14 +6317,14 @@ begin
     0, cpBenign),
     wbArrayS(ACUN, 'Added Unique NPCs',
       wbStructSK([1], 'Actor', [
-        wbFormIDCk('NPC', [NPC_], False, cpBenign),
+        wbFormIDCk('NPC', [NPC_], False, cpBenign).SetToStr(wbLCTNUniqueNPCToStr),
         wbFormIDCk('Actor Ref', [ACHR], False, cpBenign),
         wbFormIDCk('Location', [LCTN, NULL], False, cpBenign)
       ], cpBenign),
     0, cpBenign),
     wbArrayS(LCUN, 'Master Unique NPCs',
       wbStructSK([1], 'Actor', [
-        wbFormIDCk('NPC', [NPC_], False, cpBenign),
+        wbFormIDCk('NPC', [NPC_], False, cpBenign).SetToStr(wbLCTNUniqueNPCToStr),
         wbFormIDCk('Actor Ref', [ACHR], False, cpBenign),
         wbFormIDCk('Location', [LCTN, NULL], False, cpBenign)
       ], cpBenign),
@@ -8288,40 +8287,30 @@ begin
     wbVMAD,
     wbObjectBounds,
     wbStruct(ACBS, 'Configuration', [
-      wbInteger('Flags', itU32, wbFlags([
-        {0x00000001} 'Female',
-        {0x00000002} 'Essential',
-        {0x00000004} 'Is CharGen Face Preset',
-        {0x00000008} 'Respawn',
-        {0x00000010} 'Auto-calc stats',
-        {0x00000020} 'Unique',
-        {0x00000040} 'Doesn''t affect stealth meter',
-        {0x00000080} 'PC Level Mult',
-        {0x00000100} 'Use Template?',
-        {0x00000200} 'Unknown 9',
-        {0x00000400} 'Unknown 10',
-        {0x00000800} 'Protected',
-        {0x00001000} 'Unknown 12',
-        {0x00002000} 'Unknown 13',
-        {0x00004000} 'Summonable',
-        {0x00008000} 'Unknown 15',
-        {0x00010000} 'Doesn''t bleed',
-        {0x00020000} 'Unknown 17',
-        {0x00040000} 'Bleedout Override',
-        {0x00080000} 'Opposite Gender Anims',
-        {0x00100000} 'Simple Actor',
-        {0x00200000} 'looped script?',
-        {0x00400000} 'Unknown 22',
-        {0x00800000} 'Unknown 23',
-        {0x01000000} 'Unknown 24',
-        {0x02000000} 'Unknown 25',
-        {0x04000000} 'Unknown 26',
-        {0x08000000} 'Unknown 27',
-        {0x10000000} 'looped audio?',
-        {0x20000000} 'Is Ghost',
-        {0x40000000} 'Unknown 30',
-        {0x80000000} 'Invulnerable'
-      ])).IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse),
+      wbInteger('Flags', itU32,
+        wbFlags(wbSparseFlags([
+        0,  'Female',
+        1,  'Essential',
+        2,  'Is CharGen Face Preset',
+        3,  'Respawn',
+        4,  'Auto-calc stats',
+        5,  'Unique',
+        6,  'Doesn''t affect stealth meter',
+        7,  'PC Level Mult',
+        8,  'Use Template?',
+        11, 'Protected',
+        14, 'Summonable',
+        16, 'Doesn''t bleed',
+        18, 'Bleedout Override',
+        19, 'Opposite Gender Anims',
+        20, 'Simple Actor',
+        21, 'looped script?',
+        28, 'looped audio?',
+        29, 'Is Ghost',
+        31, 'Invulnerable'
+        ]))
+      ).SetToStr(wbACBSFlagsToStr)
+       .IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse),
       wbInteger('Magicka Offset', itS16),
       wbInteger('Stamina Offset', itS16),
       wbUnion('Level', wbACBSLevelDecider, [
@@ -8341,7 +8330,7 @@ begin
     wbRArrayS('Factions', wbFaction),
     wbFormIDCk(INAM, 'Death item', [LVLI]),
     wbFormIDCk(VTCK, 'Voice', [VTYP]),
-    wbFormIDCk(TPLT, 'Template', [LVLN, NPC_]),
+    wbFormIDCk(TPLT, 'Template', [LVLN, NPC_]).SetToStr(wbNPCTemplateToStr),
     wbFormIDCk(RNAM, 'Race', [RACE]).SetRequired,
     wbSPCT,
     wbSPLOs,
@@ -8821,6 +8810,8 @@ begin
                 ]),
             {1} wbRStruct('Unique Actor', [
                   wbFormIDCk(ALUA, 'Actor', [NPC_])
+                    .SetFormIDFilter(wbQUSTUniqueActorFilter)
+                    .SetToStr(wbQUSTUniqueActorToStr)
                 ]),
             {2} wbRStruct('Location Alias Reference', [
                   wbInteger(ALFA, 'Alias', itS32, wbQuestAliasToStr, wbAliasToInt),
@@ -9578,6 +9569,19 @@ begin
     31, 'Multibound'
     ])).SetFlagHasDontShow(16, wbFlagREFRInteriorDontShow)
        .SetFlagHasDontShow(28, wbFlagREFRInteriorDontShow),
+    wbFlags(wbFlagsList([ //SCOL
+    10, 'Persistent',
+    11, 'Initially Disabled',
+    15, 'Visible When Distant',
+    16, 'Is Full LOD',
+    26, 'Navmesh - Filter (Collision Geometry)',
+    27, 'Navmesh - Bounding Box (Collision Geometry)',
+    28, 'Reflected By Auto Water',
+    29, 'Don''t Havok Settle',
+    30, 'Navmesh - Ground',
+    31, 'Multibound'
+    ])).SetFlagHasDontShow(16, wbFlagREFRInteriorDontShow)
+       .SetFlagHasDontShow(28, wbFlagREFRInteriorDontShow),
     wbFlags(wbFlagsList([ //STAT
     9,  'Hidden From Local Map',
     10, 'Persistent',
@@ -9591,7 +9595,7 @@ begin
     29, 'Don''t Havok Settle',
     30, 'Navmesh - Ground',
     31, 'Multibound'
-    ])).SetFlagHasDontShow(23, wbFlagREFRSkyMarkerDontShow)
+    ])).SetFlagHasDontShow(13, wbFlagREFRSkyMarkerDontShow)
        .SetFlagHasDontShow(16, wbFlagREFRInteriorDontShow)
        .SetFlagHasDontShow(28, wbFlagREFRInteriorDontShow),
     wbFlags
@@ -9611,7 +9615,9 @@ begin
     wbEDID,
     wbVMAD,
     wbFormIDCk(NAME, 'Base', [
-      ACTI, ADDN, ALCH, AMMO, APPA, ARMO, ARTO, ASPC, BOOK, CONT, DOOR, FLOR, FURN, IDLM, INGR, KEYM, LIGH, MISC, MSTT, SCRL, SLGM, SOUN, STAT, TACT, TREE, TXST, WEAP
+      ACTI,ADDN,ALCH,AMMO,APPA,ARMO,ARTO,ASPC,BOOK,CONT,
+      DOOR,FLOR,FURN,IDLM,INGR,KEYM,LIGH,MISC,MSTT,SCOL,
+      SCRL,SLGM,SOUN,STAT,TACT,TREE,TXST,WEAP
     ]).SetRequired,
 
     {--- Bound Contents ---}
@@ -10712,23 +10718,27 @@ begin
   RegisterRecordDef(PWAT, 'PWAT', [
     wbEDID
   ]);
-  {
-  wbRecord(SCOL, 'SCOL', [
-    wbEDID
-  ]);
-  }
 
-  wbStaticPart :=
-    wbRStruct('Part', [
-      wbFormIDCk(ONAM, 'Static', [STAT]),
-      wbStaticPartPlacements
-    ], [], cpNormal, True);
-
-  RegisterRecordDef(SCOL, 'Static Collection', [
+  RegisterRecordDef(SCOL, 'Static Collection',
+    wbFlags(wbFlagsList([
+    6,  'Has Tree LOD',
+    9,  'Hidden From Local Map',
+    25, 'Obstacle',
+    26, 'Navmesh - Filter',
+    27, 'Navmesh - Bounding Box',
+    30, 'Navmesh - Ground'
+    ])).SetFlagHasDontShow(26, wbFlagNavmeshFilterDontShow)
+       .SetFlagHasDontShow(27, wbFlagNavmeshBoundingBoxDontShow)
+       .SetFlagHasDontShow(30, wbFlagNavmeshGroundDontShow), [
     wbEDID,
     wbObjectBounds,
     wbGenericModel(True),
-    wbRArray('Parts', wbStaticPart)
+    wbRArray('Parts',
+      wbRStruct('Part', [
+        wbFormIDCk(ONAM, 'Static', [STAT]),
+        wbStaticPartPlacements
+      ]).SetRequired
+    )
   ]);
 
   RegisterRecordDef(SCPT, 'SCPT', [

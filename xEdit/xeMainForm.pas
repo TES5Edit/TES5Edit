@@ -13,8 +13,6 @@ unit xeMainForm;
 interface
 
 uses
-  VirtualTrees.BaseTree,
-  VirtualTrees.Types,
   System.Actions,
   System.Generics.Collections,
   System.Generics.Defaults,
@@ -34,6 +32,10 @@ uses
   Vcl.Menus,
   Vcl.StdCtrls,
 
+  Winapi.ActiveX,
+  Winapi.Messages,
+  Winapi.Windows,
+
   FileContainer,
 
   JvBalloonHint,
@@ -42,11 +44,11 @@ uses
   SynMemo,
 
   VirtualTrees,
+  VirtualTrees.AncestorVCL,
+  VirtualTrees.BaseAncestorVCL,
+  VirtualTrees.BaseTree,
+  VirtualTrees.Types,
   VirtualEditTree,
-
-  Winapi.ActiveX,
-  Winapi.Messages,
-  Winapi.Windows,
 
   wbDataFormat,
   wbHash,
@@ -8864,23 +8866,39 @@ begin
         Exit;
       end
 
-      // string editor
-      else with TfrmViewElements.Create(Self) do
-      begin
-        Caption := lPath;
-        Settings := Self.Settings;
+      else if Assigned(Element.ResolvedValueDef) and Element.IsEditable and
+        (Element.ResolvedValueDef.DefType in [dtInteger, dtFlag, dtFloat, dtGuid]) then begin
+        if not InputQuery('Edit Value', 'Please change the value:', EditValue) then
+          Exit;
+      end
 
-        if Assigned(lMaster) then
-          Caption := lMaster.Name + '\' + Caption;
+      // element editor
+      else begin
+        with TfrmViewElements.Create(Self) do
+        try
+          Caption := lPath;
+          Settings := Self.Settings;
 
-        for var lIndex := Low(lRow) to High(lRow) do begin
-          var lNodeElement := lRow[lIndex];
-          if Assigned(lNodeElement) then
-            AddElement(lNodeElement, lColumn = lIndex, lNodeElement.IsEditable);
+          if Assigned(lMaster) then
+            Caption := lMaster.Name + '\' + Caption;
+
+          for var lIndex := Low(lRow) to High(lRow) do begin
+            var lNodeElement := lRow[lIndex];
+            if Assigned(lNodeElement) then
+              AddElement(lNodeElement, lColumn = lIndex, lNodeElement.IsEditable);
+          end;
+
+          ShowModal;
+        finally
+          Free;
         end;
 
-        ShowModal;
-        EditValue := Element.EditValue;
+        lColumnCell.UpdateRefs;
+        ViewFocusedElement := Element;
+        EditFocusedViewElement := False;
+        PostResetActiveTree;
+        InvalidateElementsTreeView(NoNodes);
+        Exit;
       end;
 
       if xeContext.Settings.ConvertIntFormID and Element.CanContainFormIDs then

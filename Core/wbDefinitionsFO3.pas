@@ -2867,9 +2867,9 @@ begin
   wbBIPL := wbFormIDCk(BIPL, 'Biped Model List', [FLST]);
   wbDESC := wbStringKC(DESC, 'Description', 0, cpTranslate);
   wbDESCReq := wbStringKC(DESC, 'Description', 0, cpTranslate).SetRequired;
-  wbEDID := wbString(EDID, 'Editor ID'); // not cpBenign according to Arthmoor
-  wbEDIDReq := wbString(EDID, 'Editor ID').SetRequired; // not cpBenign according to Arthmoor
-  wbEDIDReqKC := wbStringKC(EDID, 'Editor ID').SetRequired; // not cpBenign according to Arthmoor
+  wbEDID := wbString(EDID, 'Editor ID').IncludeFlag(dfKeepInPartialForm); // not cpBenign according to Arthmoor
+  wbEDIDReq := wbString(EDID, 'Editor ID').SetRequired.IncludeFlag(dfKeepInPartialForm); // not cpBenign according to Arthmoor
+  wbEDIDReqKC := wbStringKC(EDID, 'Editor ID').SetRequired.IncludeFlag(dfKeepInPartialForm); // not cpBenign according to Arthmoor
   wbEFID := wbFormIDCk(EFID, 'Base Effect', [MGEF]);
   wbETYP := wbInteger(ETYP, 'Equipment Type', itS32, wbEquipTypeEnum);
   wbETYPReq := wbInteger(ETYP, 'Equipment Type', itS32, wbEquipTypeEnum).SetRequired;
@@ -3638,10 +3638,13 @@ begin
 
   RegisterRecordDef(CELL, 'Cell',
     wbFlags(wbFlagsList([
-      10, 'Persistent',
-      17, 'Off Limits',
-      19, 'Can''t Wait'
-    ])), [
+    10, 'Persistent',
+    14, 'Partial Form',
+    17, 'Off Limits',
+    19, 'Can''t Wait'
+    ]), [14])
+      .SetFlagHasDontShow(14, wbFlagPartialFormDontShow),
+    [
     wbEDID,
     wbFULL,
     wbInteger(DATA, 'Flags', itU8,
@@ -4050,7 +4053,10 @@ begin
     ]).SetRequired
   ]);
 
-  RegisterRecordDef(DIAL, 'Dialog Topic', [
+  RegisterRecordDef(DIAL, 'Dialog Topic',
+    wbFlags(wbFlagsList([
+    14, 'Partial Form'
+    ]), [14]), [
     wbEDIDReqKC,
     wbQSTI,
     wbQSTR,
@@ -4693,7 +4699,8 @@ begin
         .SetSummaryPrefixSuffixOnValue(2, 'in ', '')
         .SetSummaryPrefixSuffixOnValue(5, 'is island with ', '')
         .IncludeFlag(dfCollapsed, clpNavmesh in DefineOptions.Collapse)
-    ).IncludeFlag(dfCollapsed, clpNavmesh in DefineOptions.Collapse),
+    ).SetAfterLoad(wbNAVINavmeshInfosAfterLoad)
+     .IncludeFlag(dfCollapsed, clpNavmesh in DefineOptions.Collapse),
     wbRArrayS('Navmesh Connections',
       wbStructSK(NVCI, [0], 'Connection', [
         wbFormIDCk('Navmesh', [NAVM]),
@@ -7732,8 +7739,9 @@ begin
 
   RegisterRecordDef(WRLD, 'Worldspace',
     wbFlags(wbFlagsList([
-      19, 'Can''t Wait'
-    ])), [
+    14, 'Partial Form',
+    19, 'Can''t Wait'
+    ]), [14]), [
     wbEDIDReq,
     wbFULL,
     wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]),
