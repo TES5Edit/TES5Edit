@@ -6944,7 +6944,10 @@ begin
   try
     lLines.Add('# xEdit filter probe');
     lLines.Add('# ' + xeApplicationTitle);
-    if xeTestSwitches.FilterPreset = '' then
+    if (xeTestSwitches.FilterBaseEditorID <> '') or (xeTestSwitches.FilterBaseName <> '') then
+      lLines.Add('# filter = by base Editor ID regex "' + xeTestSwitches.FilterBaseEditorID + '" / base name regex "' +
+        xeTestSwitches.FilterBaseName + '", everything else off')
+    else if xeTestSwitches.FilterPreset = '' then
       lLines.Add('# filter = by persistent, everything else off')
     else
       lLines.Add('# filter = the "' + xeTestSwitches.FilterPreset + '" preset');
@@ -7005,6 +7008,15 @@ begin
         FlattenCellChilds := True;
         AssignPersWrldChild := True;
         InheritConflictByParent := True;
+        FilterByRegexComparison := False;
+        if (xeTestSwitches.FilterBaseEditorID <> '') or (xeTestSwitches.FilterBaseName <> '') then begin
+          FilterByPersistent := False;
+          FilterByRegexComparison := True;
+          FilterByBaseEditorID := xeTestSwitches.FilterBaseEditorID <> '';
+          FilterBaseEditorID := xeTestSwitches.FilterBaseEditorID;
+          FilterByBaseName := xeTestSwitches.FilterBaseName <> '';
+          FilterBaseName := xeTestSwitches.FilterBaseName;
+        end;
         FilterPreset := True;
         try
           mniNavFilterApplyClick(nil);

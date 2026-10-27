@@ -11937,13 +11937,13 @@ begin
                       (
                         (FilterByBaseEditorID and
                           (
-                          (FilterByRegexComparison and CheckValueRegex(FilterBaseEditorID, BaseRecord.EditorID)) or
+                          (FilterByRegexComparison and not CheckValueRegex(FilterBaseEditorID, BaseRecord.EditorID)) or
                           (not FilterByRegexComparison and (Pos(AnsiUpperCase(FilterBaseEditorID), AnsiUpperCase(BaseRecord.EditorID)) < 1))
                           )
                         ) or
                         (FilterByBaseName and
                           (
-                          (FilterByRegexComparison and CheckValueRegex(FilterBaseName, BaseRecord.DisplayName[True])) or
+                          (FilterByRegexComparison and not CheckValueRegex(FilterBaseName, BaseRecord.DisplayName[True])) or
                           (not FilterByRegexComparison and (Pos(AnsiUpperCase(FilterBaseName), AnsiUpperCase(BaseRecord.DisplayName[True])) < 1))
                           )
                         ) or

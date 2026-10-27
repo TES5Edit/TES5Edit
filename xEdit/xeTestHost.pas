@@ -325,6 +325,8 @@ type
     FilterPreset          : string;
     FilterByValue         : string;
     FilterRemove          : string;
+    FilterBaseEditorID    : string;
+    FilterBaseName        : string;
     FilterImages          : Integer;
     Pump                  : string;
     PumpFile              : string;
@@ -813,13 +815,15 @@ begin
     wbFindCmdLineParam('testfilterpreset', FilterPreset);
     wbFindCmdLineParam('testfilterbyvalue', FilterByValue);
     wbFindCmdLineParam('testfilterremove', FilterRemove);
+    wbFindCmdLineParam('testfilterbaseeditorid', FilterBaseEditorID);
+    wbFindCmdLineParam('testfilterbasename', FilterBaseName);
     if wbFindCmdLineParam('testfilterimages', s) then
       FilterImages := StrToIntDef(s, 0);
     if (FilterFile = '') or
        not ((FilterPreset = '') or SameText(FilterPreset, 'cleaning') or SameText(FilterPreset, 'onlyone') or
             SameText(FilterPreset, 'conflicts')) then begin
       ShowMessage('testfilter requires -testfilter:<filename> [-testfilterpreset:<cleaning|onlyone|conflicts>] ' +
-        '[-testfilterbyvalue:<text>] [-testfilterremove:<module>]');
+        '[-testfilterbyvalue:<text>] [-testfilterremove:<module>] [-testfilterbaseeditorid:<regex>] [-testfilterbasename:<regex>]');
       Exit(False);
     end;
     Filter := True;
