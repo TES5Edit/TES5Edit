@@ -6947,6 +6947,10 @@ begin
     if (xeTestSwitches.FilterBaseEditorID <> '') or (xeTestSwitches.FilterBaseName <> '') then
       lLines.Add('# filter = by base Editor ID regex "' + xeTestSwitches.FilterBaseEditorID + '" / base name regex "' +
         xeTestSwitches.FilterBaseName + '", everything else off')
+    else if xeTestSwitches.FilterHasVWDMesh <> '' then
+      lLines.Add('# filter = by has visible when distant mesh = ' + xeTestSwitches.FilterHasVWDMesh + ', everything else off')
+    else if xeTestSwitches.FilterScaledActors then
+      lLines.Add('# filter = scaled actors, everything else off')
     else if xeTestSwitches.FilterPreset = '' then
       lLines.Add('# filter = by persistent, everything else off')
     else
@@ -7016,6 +7020,13 @@ begin
           FilterBaseEditorID := xeTestSwitches.FilterBaseEditorID;
           FilterByBaseName := xeTestSwitches.FilterBaseName <> '';
           FilterBaseName := xeTestSwitches.FilterBaseName;
+        end else if xeTestSwitches.FilterHasVWDMesh <> '' then begin
+          FilterByPersistent := False;
+          FilterByHasVWDMesh := True;
+          FilterHasVWDMesh := SameText(xeTestSwitches.FilterHasVWDMesh, 'true');
+        end else if xeTestSwitches.FilterScaledActors then begin
+          FilterByPersistent := False;
+          FilterScaledActors := True;
         end;
         FilterPreset := True;
         try

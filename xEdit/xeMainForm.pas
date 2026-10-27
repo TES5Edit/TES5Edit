@@ -11679,33 +11679,33 @@ begin
   end;
 
   if FilterScaledActors then
-    if Assigned(BaseSignatures) then begin
-      HasACHR := BaseSignatures.Find('ACHR', Dummy);
-      HasACRE := BaseSignatures.Find('ACRE', Dummy);
-      BaseSignatures.Clear;
+    if Assigned(Signatures) then begin
+      HasACHR := Signatures.Find('ACHR', Dummy);
+      HasACRE := Signatures.Find('ACRE', Dummy);
+      Signatures.Clear;
       if HasACHR then
-        BaseSignatures.Add('ACHR');
+        Signatures.Add('ACHR');
       if HasACRE then
-        BaseSignatures.Add('ACRE');
+        Signatures.Add('ACRE');
     end else begin
-      BaseSignatures := TStringList.Create;
-      BaseSignatures.Add('ACHR');
-      BaseSignatures.Add('ACRE');
-      BaseSignatures.Sorted := True;
-      BaseSignatures.Duplicates := dupIgnore;
+      Signatures := TStringList.Create;
+      Signatures.Add('ACHR');
+      Signatures.Add('ACRE');
+      Signatures.Sorted := True;
+      Signatures.Duplicates := dupIgnore;
     end;
 
   if FilterByHasVWDMesh then
-    if Assigned(BaseSignatures) then begin
-      HasREFR := BaseSignatures.Find('REFR', Dummy);
-      BaseSignatures.Clear;
+    if Assigned(Signatures) then begin
+      HasREFR := Signatures.Find('REFR', Dummy);
+      Signatures.Clear;
       if HasREFR then
-        BaseSignatures.Add('REFR');
+        Signatures.Add('REFR');
     end else begin
-      BaseSignatures := TStringList.Create;
-      BaseSignatures.Add('REFR');
-      BaseSignatures.Sorted := True;
-      BaseSignatures.Duplicates := dupIgnore;
+      Signatures := TStringList.Create;
+      Signatures.Add('REFR');
+      Signatures.Sorted := True;
+      Signatures.Duplicates := dupIgnore;
     end;
 
   if Assigned(Signatures) or Assigned(BaseSignatures) then begin
@@ -11926,7 +11926,7 @@ begin
                     (FilterByVWD and (MainRecord.IsVisibleWhenDistant <> FilterVWD)) or
                     (FilterByBaseFormID and (MainRecord.BaseRecordID <> FilterBaseFormID)) or
                     (Assigned(BaseSignatures) and not BaseSignatures.Find(MainRecord.BaseRecordSignature, Dummy)) or
-                    (FilterScaledActors and //BaseSignatures will have been set that only actors get this far
+                    (FilterScaledActors and //Signatures will have been set that only actors get this far
                       (
                         not Supports(MainRecord.RecordBySignature['XSCL'], IwbRecord, Rec) or
                         SameValue(Rec.NativeValue, 1)
