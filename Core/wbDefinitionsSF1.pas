@@ -5677,10 +5677,10 @@ begin
         wbRStruct('Progression Configuration', [
           wbString(ANAM).SetRequired,
           wbString(ATAV, 'Configuration')
+            .IncludeFlagOnValue(dfNoZeroTerminator)
             .SetAfterLoad(wbPerkActivityAfterLoad)
             .SetAfterSet(wbPerkActivityAfterSet)
             .IncludeFlag(dfCanContainFormID)
-            .IncludeFlag(dfNoZeroTerminator)
             .SetRequired,
           wbVirtualPerkActivity,
           wbEmpty(ATAF, 'Unknown').SetRequired // always empty
@@ -6113,7 +6113,7 @@ begin
         ]),
         //BGSCityMapsUsage_Component
         wbRStruct('Component Data - City Map', [
-          wbString(MOD2, 'Model Path', 260).IncludeFlag(dfHasZeroTerminator)
+          wbString(MOD2, 'Model Path', 260)
         ]),
         //BGSContactShadowComponent_Component
         wbRStruct('Component Data - Contact Shadow', [
