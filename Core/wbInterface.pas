@@ -18725,7 +18725,7 @@ begin
     if lLen > 0 then
       Move(b[0], aBasePtr^, lLen);
   end else begin
-    if NewSize > 1 then
+    if Length(b) > 0 then
       Move(b[0], aBasePtr^, Length(b));
 
     if not (dfNoZeroTerminator in defFlags) then
