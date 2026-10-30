@@ -16136,6 +16136,15 @@ begin
   ApplyReferencedByFilter;
 end;
 
+function SpreadSheetEnchantmentTES4(const aMainRecord: IwbMainRecord): IwbElement;
+var
+  Enchantment                 : IwbContainer;
+begin
+  Result := nil;
+  if Supports(aMainRecord.ElementBySignature['ENAM'], IwbContainer, Enchantment) then
+    Result := Enchantment.RecordBySignature['ENAM'];
+end;
+
 procedure TfrmMain.vstSpreadSheetAmmoInitNode(Sender: TBaseVirtualTree; ParentNode, Node: PVirtualNode; var InitialStates: TVirtualNodeInitStates);
 var
   NodeDatas                   : PSpreadsheetNodeDatas;
@@ -16153,7 +16162,7 @@ begin
   NodeDatas[3].Element := MainRecord.RecordBySignature['FULL'];
 
   if xeContext.GameDefObj.IsOblivion then begin
-    NodeDatas[4].Element := MainRecord.RecordBySignature['ENAM'];
+    NodeDatas[4].Element := SpreadSheetEnchantmentTES4(MainRecord);
 
     Rec := MainRecord.RecordBySignature['DATA'];
     if Assigned(Rec) then begin
@@ -16190,7 +16199,7 @@ begin
   NodeDatas[3].Element := MainRecord.RecordBySignature['FULL'];
 
   if xeContext.GameDefObj.IsOblivion then begin
-    NodeDatas[4].Element := MainRecord.RecordBySignature['ENAM'];
+    NodeDatas[4].Element := SpreadSheetEnchantmentTES4(MainRecord);
 
     Rec := MainRecord.RecordBySignature['BMDT'];
     if Assigned(Rec) then begin
@@ -18951,7 +18960,7 @@ begin
 
   if xeContext.GameDefObj.IsOblivion then begin
     {Enchantment}
-    NodeDatas[4].Element := MainRecord.RecordBySignature['ENAM'];
+    NodeDatas[4].Element := SpreadSheetEnchantmentTES4(MainRecord);
 
     Rec := MainRecord.RecordBySignature['DATA'];
     if Assigned(Rec) then begin
