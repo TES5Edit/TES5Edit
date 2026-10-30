@@ -4431,6 +4431,7 @@ type
     function NameKeyIdentity(const aElement: IwbElement; const aKey: TwbFormID; out aSelected: IwbMainRecord;
                              out aIdentity: string): TwbNameTarget; virtual; abstract;
     function NameFileKey(const aElement: IwbElement; const aLoadOrderFormID: TwbFormID; out aKey: TwbFormID): Boolean; virtual; abstract;
+    function FileRecordsInStreamOrder(const aFile: IwbFile): TArray<IwbMainRecord>; virtual; abstract;
   public
     Settings: TwbGameContextSettings;
 
@@ -4457,6 +4458,7 @@ type
     function UnusedIdentity(aFormIDNameBase: Byte; const aPrefix: string): string;
     function ExpandFileName(const aFileName: string): string;
     function FlagPluginsESM(const aReport: TProc<string>): Boolean;
+    procedure CheckLeveledCycles(const aReport: TProc<string>);
     procedure MarkMasterOnamsForRebuild;
     function MarkPluginOnamsForRebuild(const aReport: TProc<string>): Boolean;
     function ClearEspESMFlags(const aReport: TProc<string>): Boolean;
@@ -8046,6 +8048,258 @@ begin
     if SameText(gcFiles[lIdx].FileName, aModuleName) then
       Exit(gcFiles[lIdx]);
   Result := nil;
+end;
+
+type
+  TwbStoredLeveledRecord = record
+    Key     : string;
+    HasKey  : Boolean;
+    Deleted : Boolean;
+    Entries : TArray<string>;
+  end;
+
+  TwbLeveledCycleRun = class
+  private
+    lcStores  : TDictionary<Cardinal, TDictionary<string, IwbMainRecord>>;
+    lcRanked  : TArray<Cardinal>;
+    lcStates  : TDictionary<string, Boolean>;
+    lcPath    : TList<IwbMainRecord>;
+    lcEdges   : TDictionary<string, Boolean>;
+    lcReport  : TProc<string>;
+    lcContext : TwbGameContext;
+    procedure ReadFile(const aFile: IwbFile);
+    function Effective(const aKey: string): IwbMainRecord;
+    procedure Visit(const aFrom, aKey: string; const aRecord: IwbMainRecord);
+  public
+    constructor Create(aContext: TwbGameContext; const aReport: TProc<string>);
+    destructor Destroy; override;
+    procedure Run(const aFiles: TArray<IwbFile>);
+  end;
+
+const
+  cLeveledCacheable: array[0 .. 20] of TwbSignature = ('ACTI', 'ALCH', 'APPA', 'ARMO', 'BOOK', 'CLOT', 'CONT', 'CREA', 'DOOR', 'INGR', 'LEVC', 'LEVI',
+    'LIGH', 'LOCK', 'MISC', 'NPC_', 'PROB', 'REPA', 'STAT', 'WEAP', 'BODY');
+
+function wbFourCC(const aSignature: TwbSignature): Cardinal;
+begin
+  Result := PCardinal(@aSignature)^;
+end;
+
+function wbStoredKey(aPtr: PByte; aSize: Cardinal): string;
+begin
+  var lLen: Cardinal := 0;
+  while (lLen < aSize) and (aPtr[lLen] <> 0) do
+    Inc(lLen);
+  SetLength(Result, lLen);
+  for var i := 0 to Pred(Integer(lLen)) do
+    if aPtr[i] in [Ord('A') .. Ord('Z')] then
+      Result[Succ(i)] := Char(aPtr[i] + 32)
+    else
+      Result[Succ(i)] := Char(aPtr[i]);
+end;
+
+function wbReadStoredLeveled(const aRecord: IwbMainRecord): TwbStoredLeveledRecord;
+var
+  lData  : IwbDataContainer;
+  lEntry : TwbSignature;
+begin
+  Result := Default(TwbStoredLeveledRecord);
+  if not Supports(aRecord, IwbDataContainer, lData) then
+    Exit;
+  var lSig := aRecord.Signature;
+  var lIsList := (lSig = 'LEVI') or (lSig = 'LEVC');
+  if lSig = 'LEVI' then
+    lEntry := 'INAM'
+  else
+    lEntry := 'CNAM';
+  var lPtr := PByte(lData.DataBasePtr);
+  var lEnd := PByte(lData.DataEndPtr);
+
+  var TryNext := function(out aSub: TwbSignature; out aPayload: PByte; out aSize: Cardinal): Boolean
+    begin
+      Result := NativeUInt(lEnd) - NativeUInt(lPtr) >= 8;
+      if not Result then
+        Exit;
+      aSub := PwbSignature(lPtr)^;
+      aSize := PCardinal(lPtr + 4)^;
+      Result := NativeUInt(lEnd) - NativeUInt(lPtr) - 8 >= aSize;
+      if Result then begin
+        aPayload := lPtr + 8;
+        Inc(lPtr, 8 + aSize);
+      end;
+    end;
+
+  var SkipPad := procedure(aSize: Cardinal)
+    begin
+      if (aSize = 0) and (lPtr <> lEnd) and (lPtr^ = 0) then
+        Inc(lPtr);
+    end;
+
+  var lSub: TwbSignature;
+  var lPayload: PByte;
+  var lSize: Cardinal;
+  var lDone := False;
+  while not lDone and TryNext(lSub, lPayload, lSize) do
+    if lSub = 'NAME' then begin
+      Result.Key := wbStoredKey(lPayload, lSize);
+      Result.HasKey := True;
+      SkipPad(lSize);
+    end else if lSub = 'DELE' then
+      Result.Deleted := True
+    else if lIsList then
+      if ((lSub = 'DATA') and (lSize = 4)) or ((lSub = 'NNAM') and (lSize = 1)) then
+        Continue
+      else if (lSub = 'INDX') and (lSize = 4) then begin
+        Result.Entries := nil;
+        for var i: Cardinal := 1 to PCardinal(lPayload)^ do begin
+          if not TryNext(lSub, lPayload, lSize) or (lSub <> lEntry) then begin
+            Result.Entries := nil;
+            Exit;
+          end;
+          var lKey := wbStoredKey(lPayload, lSize);
+          SkipPad(lSize);
+          if not TryNext(lSub, lPayload, lSize) or (lSub <> 'INTV') or (lSize <> 2) then begin
+            Result.Entries := nil;
+            Exit;
+          end;
+          Result.Entries := Result.Entries + [lKey];
+        end;
+      end else begin
+        Result.Entries := nil;
+        lDone := True;
+      end;
+  if lIsList and not lDone and (lPtr <> lEnd) then
+    Result.Entries := nil;
+end;
+
+constructor TwbLeveledCycleRun.Create(aContext: TwbGameContext; const aReport: TProc<string>);
+begin
+  inherited Create;
+  lcContext := aContext;
+  lcReport := aReport;
+  lcStores := TObjectDictionary<Cardinal, TDictionary<string, IwbMainRecord>>.Create([doOwnsValues]);
+  lcStates := TDictionary<string, Boolean>.Create;
+  lcPath := TList<IwbMainRecord>.Create;
+  lcEdges := TDictionary<string, Boolean>.Create;
+  SetLength(lcRanked, Length(cLeveledCacheable));
+  for var i := Low(cLeveledCacheable) to High(cLeveledCacheable) do begin
+    lcRanked[i] := wbFourCC(cLeveledCacheable[i]);
+    lcStores.Add(lcRanked[i], TDictionary<string, IwbMainRecord>.Create);
+  end;
+  TArray.Sort<Cardinal>(lcRanked);
+end;
+
+destructor TwbLeveledCycleRun.Destroy;
+begin
+  lcEdges.Free;
+  lcPath.Free;
+  lcStates.Free;
+  lcStores.Free;
+  inherited;
+end;
+
+procedure TwbLeveledCycleRun.ReadFile(const aFile: IwbFile);
+var
+  lStore : TDictionary<string, IwbMainRecord>;
+begin
+  for var lRecord in lcContext.FileRecordsInStreamOrder(aFile) do
+    if lcStores.TryGetValue(wbFourCC(lRecord.Signature), lStore) and not lRecord.Flags.IsIgnored then begin
+      wbTick;
+      var lStored := wbReadStoredLeveled(lRecord);
+      if lStored.HasKey then
+        if lStored.Deleted then
+          lStore.Remove(lStored.Key)
+        else
+          lStore.AddOrSetValue(lStored.Key, lRecord);
+    end;
+end;
+
+function TwbLeveledCycleRun.Effective(const aKey: string): IwbMainRecord;
+begin
+  for var i := High(lcRanked) downto 0 do
+    if lcStores[lcRanked[i]].TryGetValue(aKey, Result) then
+      Exit;
+  Result := nil;
+end;
+
+procedure TwbLeveledCycleRun.Visit(const aFrom, aKey: string; const aRecord: IwbMainRecord);
+var
+  lDone : Boolean;
+begin
+  if lcStates.TryGetValue(aKey, lDone) then begin
+    var lEdge := aFrom + #0 + aKey;
+    if not lDone and not lcEdges.ContainsKey(lEdge) then begin
+      lcEdges.Add(lEdge, True);
+      var lLine := aRecord.Name;
+      for var i := Pred(lcPath.Count) downto 0 do begin
+        lLine := lcPath[i].Name + ' -> ' + lLine;
+        if lcPath[i].Equals(aRecord) then
+          Break;
+      end;
+      lcReport('Circular Leveled List found: ' + lLine);
+    end;
+    Exit;
+  end;
+  wbTick;
+  lcStates.Add(aKey, False);
+  lcPath.Add(aRecord);
+  for var lEntry in wbReadStoredLeveled(aRecord).Entries do begin
+    var lTarget := Effective(lEntry);
+    if Assigned(lTarget) and ((lTarget.Signature = 'LEVI') or (lTarget.Signature = 'LEVC')) then
+      Visit(aKey, lEntry, lTarget);
+  end;
+  lcPath.Delete(Pred(lcPath.Count));
+  lcStates[aKey] := True;
+end;
+
+procedure TwbLeveledCycleRun.Run(const aFiles: TArray<IwbFile>);
+begin
+  for var lFile in aFiles do
+    ReadFile(lFile);
+  var lStarts: TArray<string> := nil;
+  for var lFourCC in lcRanked do
+    if (lFourCC = wbFourCC('LEVI')) or (lFourCC = wbFourCC('LEVC')) then
+      for var lPair in lcStores[lFourCC] do
+        if Effective(lPair.Key).Equals(lPair.Value) then
+          lStarts := lStarts + [lPair.Key];
+  TArray.Sort<string>(lStarts, TStringComparer.Ordinal);
+  for var lKey in lStarts do
+    Visit('', lKey, Effective(lKey));
+end;
+
+procedure TwbGameContext.CheckLeveledCycles(const aReport: TProc<string>);
+begin
+  var lGameFiles: TArray<IwbFile> := nil;
+  var lOutside := '';
+  for var lFile in gcFiles do
+    if [fsIsHardcoded, fsIsCompareLoad, fsIsDeltaPatch] * lFile.FileStates = [] then begin
+      lGameFiles := lGameFiles + [lFile];
+      if not NameReferencesJudged(lFile) then begin
+        if lOutside <> '' then
+          lOutside := lOutside + ', ';
+        lOutside := lOutside + lFile.FileName;
+      end;
+    end;
+  if lOutside <> '' then begin
+    aReport('Circular leveled lists were not checked: the game loads ' + lOutside + ', outside a load order starting at ' +
+      GameDefObj.GameExeName + ' with each master once and none a delta patch, and such a file can change the graph');
+    Exit;
+  end;
+  for var i := 1 to High(lGameFiles) do begin
+    var lMoved := lGameFiles[i];
+    var j := i;
+    while (j > 0) and (lGameFiles[Pred(j)].LoadOrder > lMoved.LoadOrder) do begin
+      lGameFiles[j] := lGameFiles[Pred(j)];
+      Dec(j);
+    end;
+    lGameFiles[j] := lMoved;
+  end;
+  var lRun := TwbLeveledCycleRun.Create(Self, aReport);
+  try
+    lRun.Run(lGameFiles);
+  finally
+    lRun.Free;
+  end;
 end;
 
 function TwbGameContext.FlagPluginsESM(const aReport: TProc<string>): Boolean;

@@ -3082,6 +3082,17 @@ var
   i     : Integer;
   _File : IwbFile;
 begin
+  if xeContext.GameDefObj.IsMorrowind then begin
+    if not xeContext.LoaderDone then begin
+      PostAddMessage('Circular leveled lists cannot be checked while the background loader is running');
+      Exit;
+    end;
+    PerformLongAction('Checking for Circular Leveled Lists', '', procedure
+    begin
+      xeContext.CheckLeveledCycles(procedure(aLine: string) begin PostAddMessage(aLine); end);
+    end, True);
+    Exit;
+  end;
   ResetAllTags;
   for i := Low(Files) to High(Files) do begin
     _File := Files[i];
@@ -13207,23 +13218,28 @@ begin
     (Element.ElementType = etMainRecord) and
     ((Element as IwbMainRecord).MasterOrSelf.ReferencedByCount > 0);
 
-  mniNavCheckForErrors.Visible :=
+  var lEditCommands :=
     not xeContext.Settings.TranslationMode and
     xeContext.Settings.EditAllowed and
+    Assigned(Element);
+
+  mniNavCheckForErrors.Visible :=
+    not xeContext.Settings.TranslationMode and
+    (xeContext.Settings.EditAllowed or lGameDef.IsMorrowind) and
     Assigned(Element);
 
   mniNavCheckForCircularLeveledLists.Visible :=
     mniNavCheckForErrors.Visible;
 
-  mniNavSetVWDAuto.Visible := mniNavCheckForErrors.Visible and lGameDef.IsOblivion;
-  mniNavSetVWDAutoInto.Visible := mniNavCheckForErrors.Visible and lGameDef.IsOblivion;
-  mniNavLOManagersDirtyInfo.Visible := mniNavCheckForErrors.Visible and (Length(LOOTPluginInfos) <> 0);
+  mniNavSetVWDAuto.Visible := lEditCommands and lGameDef.IsOblivion;
+  mniNavSetVWDAutoInto.Visible := lEditCommands and lGameDef.IsOblivion;
+  mniNavLOManagersDirtyInfo.Visible := lEditCommands and (Length(LOOTPluginInfos) <> 0);
 
   if wbManualCleaningAllow then begin
     mniNavFilterForCleaning.Visible := True;
     mniNavFilterForCleaningSelected.Visible := True;
-    mniNavRemoveIdenticalToMaster.Visible := mniNavCheckForErrors.Visible;
-    mniNavUndeleteAndDisableReferences.Visible := mniNavCheckForErrors.Visible;
+    mniNavRemoveIdenticalToMaster.Visible := lEditCommands;
+    mniNavUndeleteAndDisableReferences.Visible := lEditCommands;
 
     mniNavFilterForCleaningObsolete.Visible := False;
     mniNavFilterForCleaningSelectedObsolete.Visible := False;
@@ -13237,8 +13253,8 @@ begin
 
     mniNavFilterForCleaningObsolete.Visible := not wbManualCleaningHide;
     mniNavFilterForCleaningSelectedObsolete.Visible := not wbManualCleaningHide;
-    mniNavRemoveIdenticalToMasterObsolete.Visible := (not wbManualCleaningHide) and mniNavCheckForErrors.Visible;
-    mniNavUndeleteAndDisableReferencesObsolete.Visible := (not wbManualCleaningHide) and mniNavCheckForErrors.Visible;
+    mniNavRemoveIdenticalToMasterObsolete.Visible := (not wbManualCleaningHide) and lEditCommands;
+    mniNavUndeleteAndDisableReferencesObsolete.Visible := (not wbManualCleaningHide) and lEditCommands;
   end;
 
   mniNavRemove.Visible :=
@@ -13252,11 +13268,11 @@ begin
 
   mniNavCompareTo.Visible := Supports(Element, IwbFile);
   mniNavCreateDeltaPatch.Visible := not xeContext.Settings.TranslationMode and Supports(Element, IwbFile);
-  mniNavAddMasters.Visible := mniNavCheckForErrors.Visible and Supports(Element, IwbFile);
+  mniNavAddMasters.Visible := lEditCommands and Supports(Element, IwbFile);
   mniNavSortMasters.Visible := mniNavAddMasters.Visible;
   mniNavCleanMasters.Visible := mniNavAddMasters.Visible;
   mniNavBatchChangeReferencingRecords.Visible := mniNavAddMasters.Visible;
-  mniNavApplyScript.Visible := mniNavCheckForErrors.Visible;
+  mniNavApplyScript.Visible := lEditCommands;
   mniNavGenerateLOD.Visible := mniNavCompareTo.Visible and (lGameDef.GameMode in [gmTES4, gmFO3, gmFNV, gmTES5, gmEnderal, gmTES5VR, gmSSE, gmEnderalSE, gmFO4, gmFO4VR]);
 
   mniNavAdd.Clear;
@@ -13288,7 +13304,7 @@ begin
 
   var IsMainRecord := Supports(Element, IwbMainRecord, MainRecord);
 
-  mniNavCopyAsOverride.Visible := mniNavCheckForErrors.Visible and not mniNavAddMasters.Visible;
+  mniNavCopyAsOverride.Visible := lEditCommands and not mniNavAddMasters.Visible;
 
   if IsMainRecord and MainRecord.ContainsReflection then
     mniNavCopyAsOverride.Visible := False;
@@ -13316,7 +13332,7 @@ begin
   mniNavCopyAsSpawnRateOverride.Visible :=
     mniNavCopyAsWrapper.Visible;
 
-  mniNavCopyIdle.Visible := (lGameDef.GameMode <= gmFNV) and mniNavCheckForErrors.Visible and not mniNavAddMasters.Visible;
+  mniNavCopyIdle.Visible := (lGameDef.GameMode <= gmFNV) and lEditCommands and not mniNavAddMasters.Visible;
 
   mniNavCleanupInjected.Visible :=
     mniNavCopyAsOverride.Visible and
@@ -13370,7 +13386,7 @@ begin
 
   mniNavCellChildPers.Visible := False;
   mniNavCellChildTemp.Visible := False;
-  mniNavCellChildNotVWD.Visible := mniNavCheckForErrors.Visible and SelectionIncludesOnlyREFR(NoNodes);
+  mniNavCellChildNotVWD.Visible := lEditCommands and SelectionIncludesOnlyREFR(NoNodes);
   mniNavCellChildVWD.Visible := mniNavCellChildNotVWD.Visible;
   if mniNavCellChildNotVWD.Visible then begin
     mniNavCellChildNotVWD.Checked := SelectionIncludesAnyNotVWD(NoNodes);

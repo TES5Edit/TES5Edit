@@ -39,6 +39,7 @@ type
     function NameKeyIdentity(const aElement: IwbElement; const aKey: TwbFormID; out aSelected: IwbMainRecord;
                              out aIdentity: string): TwbNameTarget; override; final;
     function NameFileKey(const aElement: IwbElement; const aLoadOrderFormID: TwbFormID; out aKey: TwbFormID): Boolean; override; final;
+    function FileRecordsInStreamOrder(const aFile: IwbFile): TArray<IwbMainRecord>; override; final;
   protected
     lgcDenseRecords : TArray<Pointer>;
     lgcFreeIDs      : TArray<Cardinal>;
@@ -837,6 +838,7 @@ type
     class function CurrentIdentityIs(const aRecord: IwbMainRecord; const aLowerValue: string): Boolean; static;
     function HoldsCurrentIdentityAtNameKey(const aKey: TwbFormID; const aLowerValue: string): Boolean;
     function ViewNameKeyInternal(const aKey: TwbFormID; const aValue: string; out aSelected: IwbMainRecord): TwbNameKeyState;
+    function RecordsInStreamOrder: TArray<IwbMainRecord>;
     function FindInjectedID(const aFormID: TwbFormID; var Index: Integer): Boolean;
     function GetMasterRecordByFormID(aFormID: TwbFormID; aAllowInjected, aNewMasters: Boolean): IwbMainRecord;
 
@@ -7315,6 +7317,47 @@ begin
     Exit(nksNone);
   aSelected := lSelected;
   Result := nksMatch;
+end;
+
+function TwbFile.RecordsInStreamOrder: TArray<IwbMainRecord>;
+var
+  lAt : TDictionary<Pointer, Integer>;
+begin
+  lAt := TDictionary<Pointer, Integer>.Create;
+  try
+    for var i := Low(flRecordStream) to High(flRecordStream) do
+      if Assigned(flRecordStream[i].rseRecord) then
+        lAt.AddOrSetValue(Pointer(flRecordStream[i].rseRecord), i);
+    var lByPos: TArray<IwbMainRecord>;
+    SetLength(lByPos, Length(flRecordStream));
+    var lNew: TArray<IwbMainRecord>;
+    SetLength(lNew, Length(flRecords));
+    var lNewCount := 0;
+    for var lRecord in flRecords do
+      if Assigned(lRecord) then begin
+        var lPos: Integer;
+        if lAt.TryGetValue(Pointer(lRecord), lPos) then
+          lByPos[lPos] := lRecord
+        else begin
+          lNew[lNewCount] := lRecord;
+          Inc(lNewCount);
+        end;
+      end;
+    SetLength(Result, Length(flRecords));
+    var lCount := 0;
+    for var lRecord in lByPos do
+      if Assigned(lRecord) then begin
+        Result[lCount] := lRecord;
+        Inc(lCount);
+      end;
+    for var i := 0 to Pred(lNewCount) do begin
+      Result[lCount] := lNew[i];
+      Inc(lCount);
+    end;
+    SetLength(Result, lCount);
+  finally
+    lAt.Free;
+  end;
 end;
 
 function TwbFile.RecordRunAt(const aFormID: TwbFormID; out aCount: Integer): Integer;
@@ -30425,6 +30468,11 @@ begin
   if aIdentity = '' then
     Exit(ntEmpty);
   Result := ntFound;
+end;
+
+function TwbLoadingGameContext.FileRecordsInStreamOrder(const aFile: IwbFile): TArray<IwbMainRecord>;
+begin
+  Result := (aFile as TObject as TwbFile).RecordsInStreamOrder;
 end;
 
 function TwbLoadingGameContext.NameFileKey(const aElement: IwbElement; const aLoadOrderFormID: TwbFormID;
