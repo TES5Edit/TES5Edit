@@ -4490,7 +4490,7 @@ begin
     wbPatron := Settings.ReadBool('Options', 'Patron', wbPatron);
     if (not wbPatron or not xeAutoLoad)
 {$IFDEF XE_TEST_CONTROL_POINTS}
-      and not (xeTestSwitches.Conflicts or xeTestSwitches.NavCopy or xeTestSwitches.ViewText or xeTestSwitches.ViewTree or xeTestSwitches.Options or xeTestSwitches.CopyIntoGap or xeTestSwitches.NewFile or xeTestSwitches.GameLink or xeTestSwitches.FormIDSearch or xeTestSwitches.SplitTreeLOD or xeTestSwitches.DropMaster or xeTestSwitches.DeltaPatch or xeTestSwitches.Merge or xeTestSwitches.MergedPatch or xeTestSwitches.CopyInto or xeTestSwitches.Renumber or xeTestSwitches.ChangeFormID or xeTestSwitches.Hide or xeTestSwitches.Filter or xeTestSwitches.SaveContexts or xeTestSwitches.EndSession or (xeTestSwitches.PumpDuringLoad <> ''))
+      and not (xeTestSwitches.Conflicts or xeTestSwitches.NavCopy or xeTestSwitches.ViewText or xeTestSwitches.ViewTree or xeTestSwitches.Options or xeTestSwitches.CopyIntoGap or xeTestSwitches.NewFile or xeTestSwitches.GameLink or xeTestSwitches.CheckMenus or xeTestSwitches.FormIDSearch or xeTestSwitches.SplitTreeLOD or xeTestSwitches.DropMaster or xeTestSwitches.DeltaPatch or xeTestSwitches.Merge or xeTestSwitches.MergedPatch or xeTestSwitches.CopyInto or xeTestSwitches.Renumber or xeTestSwitches.ChangeFormID or xeTestSwitches.Hide or xeTestSwitches.Filter or xeTestSwitches.SaveContexts or xeTestSwitches.EndSession or (xeTestSwitches.PumpDuringLoad <> ''))
 {$ENDIF}
     then
       ShowDeveloperMessage;
@@ -19159,7 +19159,7 @@ begin
 {$IFDEF XE_TEST_CONTROL_POINTS}
           if xeTestSwitches.Conflicts or xeTestSwitches.NavCopy or xeTestSwitches.Merge or xeTestSwitches.MergedPatch or
              xeTestSwitches.CopyInto or xeTestSwitches.Renumber or xeTestSwitches.ChangeFormID or xeTestSwitches.NewFile or
-             xeTestSwitches.GameLink or xeTestSwitches.FormIDSearch or xeTestSwitches.SplitTreeLOD or xeTestSwitches.EndSession then begin
+             xeTestSwitches.GameLink or xeTestSwitches.CheckMenus or xeTestSwitches.FormIDSearch or xeTestSwitches.SplitTreeLOD or xeTestSwitches.EndSession then begin
             wbProgress('Test mode FAILED: an error occured while loading modules');
             CheckResult := 255;
             if xeAutoExit then
@@ -19410,6 +19410,9 @@ begin
 
         if xeTestSwitches.GameLink then
           DoTestGameLink;
+
+        if xeTestSwitches.CheckMenus then
+          DoTestCheckMenus;
 
         if xeTestSwitches.FormIDSearch then
           DoTestFormIDSearch;

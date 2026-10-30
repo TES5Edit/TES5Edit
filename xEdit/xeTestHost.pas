@@ -70,6 +70,13 @@ type
     TestGameLinkPointed      : UInt64;
     TestGameLinkPointFailures : Integer;
     TestGameLinkLock         : TFileStream;
+    TestCheckMenusTimer      : TTimer;
+    TestCheckMenusLines      : TStringList;
+    TestCheckMenusStart      : Integer;
+    TestCheckMenusStage      : Integer;
+    TestCheckMenusAnswer     : TTimer;
+    TestCheckMenusTyped      : string;
+    TestCheckMenusSeen       : string;
     TestFormIDSearchTimer    : TTimer;
     TestFormIDSearchTarget   : IwbMainRecord;
     TestFormIDSearchStart    : UInt64;
@@ -236,6 +243,10 @@ type
     GameLinkLocked        : string;
     GameLinkPluggy        : string;
     GameLinkMyGames       : string;
+    CheckMenus            : Boolean;
+    CheckMenusFile        : string;
+    CheckMenusModule      : string;
+    CheckMenusRecord      : string;
     FormIDSearch          : Boolean;
     FormIDSearchFile      : string;
     FormIDSearchModule    : string;
@@ -450,6 +461,17 @@ begin
     xeAutoLoad := True;
   ToolModeFault := FindCmdLineSwitch('testtoolmodefault');
   LoaderHold := FindCmdLineSwitch('testloaderhold');
+  if wbFindCmdLineParam('testcheckmenus', CheckMenusFile) then begin
+    if (CheckMenusFile = '') or not wbFindCmdLineParam('testcheckmenusmodule', CheckMenusModule) then begin
+      ShowMessage('testcheckmenus requires -testcheckmenus:<filename> -testcheckmenusmodule:<module>');
+      Exit(False);
+    end;
+    if not wbFindCmdLineParam('testcheckmenusrecord', CheckMenusRecord) then
+      CheckMenusRecord := 'LEVI';
+    CheckMenus := True;
+    xeAutoLoad := True;
+    xeAutoExit := True;
+  end;
 end;
 
 function TxeTestSwitches.ParseEdit: Boolean;
@@ -855,7 +877,7 @@ end;
 
 function TxeTestSwitches.Any: Boolean;
 begin
-  Result := Conflicts or NavCopy or ViewText or ViewTree or Options or CopyIntoGap or NewFile or GameLink or FormIDSearch or SplitTreeLOD or DropMaster or DeltaPatch or Merge or MergedPatch or CopyInto or
+  Result := Conflicts or NavCopy or ViewText or ViewTree or Options or CopyIntoGap or NewFile or GameLink or CheckMenus or FormIDSearch or SplitTreeLOD or DropMaster or DeltaPatch or Merge or MergedPatch or CopyInto or
     Renumber or ChangeFormID or Hide or Filter or SaveContexts or EndSession or (Pump <> '') or (StateManifest <> '');
 end;
 

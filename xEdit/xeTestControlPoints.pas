@@ -150,6 +150,10 @@ type
     function TestGameLinkPluggyFile(const aView: string): string;
     function TestGameLinkPluggyWorld(const aRecord: IwbMainRecord): string;
     procedure TestGameLinkWriteFile(const aFileName, aText: string);
+    procedure DoTestCheckMenus;
+    procedure TestCheckMenusRunTimer(Sender: TObject);
+    procedure TestCheckMenusAnswerTimer(Sender: TObject);
+    procedure TestCheckMenusWrite;
     procedure DoTestFormIDSearch;
     procedure TestFormIDSearchRunTimer(Sender: TObject);
     procedure TestFormIDSearchWrite(const aBody: string);
@@ -3274,6 +3278,258 @@ begin
     if xeAutoExit then
       tmrShutdown.Enabled := True;
   end;
+end;
+
+procedure TxeTestFormHelper.DoTestCheckMenus;
+begin
+  xeContext.Settings.DontSave := True;
+  EditWarnOk := True;
+  TestHost.TestCheckMenusLines := TStringList.Create;
+  TestHost.TestCheckMenusAnswer := TTimer.Create(Self);
+  TestHost.TestCheckMenusAnswer.Enabled := False;
+  TestHost.TestCheckMenusAnswer.Interval := 200;
+  TestHost.TestCheckMenusAnswer.OnTimer := TestCheckMenusAnswerTimer;
+  TestHost.TestCheckMenusTimer := TTimer.Create(Self);
+  TestHost.TestCheckMenusTimer.Interval := 500;
+  TestHost.TestCheckMenusTimer.OnTimer := TestCheckMenusRunTimer;
+  TestHost.TestCheckMenusTimer.Enabled := True;
+end;
+
+procedure TxeTestFormHelper.TestCheckMenusRunTimer(Sender: TObject);
+
+  function Module: IwbFile;
+  begin
+    for var lFile in Files do
+      if SameText(lFile.FileName, xeTestSwitches.CheckMenusModule) then
+        Exit(lFile);
+    raise Exception.Create('no module ' + xeTestSwitches.CheckMenusModule);
+  end;
+
+  procedure Select(const aElement: IwbElement);
+  begin
+    var lNode := FindNodeForElement(aElement);
+    if not Assigned(lNode) then
+      raise Exception.Create('no nav node for ' + aElement.Name);
+    vstNav.ClearSelection;
+    vstNav.FullyVisible[lNode] := True;
+    vstNav.FocusedNode := lNode;
+    vstNav.Selected[lNode] := True;
+  end;
+
+  procedure Menus(const aStage: string);
+  begin
+    pmuNavPopup(nil);
+    for var lItem in TArray<TMenuItem>.Create(mniNavCheckForErrors, mniNavCheckForCircularLeveledLists, mniNavSetVWDAuto, mniNavSetVWDAutoInto,
+      mniNavLOManagersDirtyInfo, mniNavRemoveIdenticalToMaster, mniNavUndeleteAndDisableReferences, mniNavRemoveIdenticalToMasterObsolete,
+      mniNavUndeleteAndDisableReferencesObsolete, mniNavAddMasters, mniNavSortMasters, mniNavCleanMasters, mniNavBatchChangeReferencingRecords,
+      mniNavApplyScript, mniNavCopyAsOverride, mniNavCopyIdle, mniNavCellChildNotVWD) do
+      TestHost.TestCheckMenusLines.Add('menu' + #9 + aStage + #9 + lItem.Name + #9 + BoolToStr(lItem.Visible, True));
+  end;
+
+  procedure RunChecks;
+  begin
+    var lModule := Module;
+    var lRecord: IwbMainRecord := nil;
+    for var j := 0 to Pred(lModule.RecordCount) do
+      if string(lModule.Records[j].Signature) = xeTestSwitches.CheckMenusRecord then begin
+        lRecord := lModule.Records[j];
+        Break;
+      end;
+    if not Assigned(lRecord) then
+      raise Exception.Create('no ' + xeTestSwitches.CheckMenusRecord + ' in ' + lModule.FileName);
+
+    Select(lModule);
+    Menus('module');
+    Select(lRecord);
+    Menus('record');
+    var lAllow := wbManualCleaningAllow;
+    var lHide := wbManualCleaningHide;
+    try
+      wbManualCleaningHide := False;
+      wbManualCleaningAllow := True;
+      Menus('record-cleaning-allowed');
+      wbManualCleaningAllow := False;
+      Menus('record-cleaning-not-allowed');
+    finally
+      wbManualCleaningAllow := lAllow;
+      wbManualCleaningHide := lHide;
+    end;
+
+    Application.ProcessMessages;
+    tmrMessagesTimer(nil);
+    TestHost.TestCheckMenusStart := mmoMessages.Lines.Count;
+    mniNavCheckForErrorsClick(nil);
+    var lWatch := TStopwatch.StartNew;
+    mniNavCheckForCircularLeveledListsClick(nil);
+    TestHost.TestCheckMenusLines.Add('timing' + #9 + 'circular' + #9 + IntToStr(lWatch.ElapsedMilliseconds));
+    if xeContext.GameDefObj.IsMorrowind then begin
+      var lLoaderDone := xeContext.LoaderDone;
+      try
+        xeContext.LoaderDone := False;
+        mniNavCheckForCircularLeveledListsClick(nil);
+      finally
+        xeContext.LoaderDone := lLoaderDone;
+      end;
+    end;
+  end;
+
+  procedure ReportMessages;
+  begin
+    Application.ProcessMessages;
+    tmrMessagesTimer(nil);
+    for var i := TestHost.TestCheckMenusStart to Pred(mmoMessages.Lines.Count) do
+      TestHost.TestCheckMenusLines.Add('message' + #9 + mmoMessages.Lines[i]);
+  end;
+
+  procedure CaptureSheet(aTab: TTabSheet; const aName: string);
+  const
+    cRowsWritten = 50;
+    cEnchantmentColumn = 4;
+  begin
+    var lTree := aTab.Controls[0] as TVirtualEditTree;
+    TestHost.TestCheckMenusTyped := '';
+    TestHost.TestCheckMenusSeen := '';
+    TestHost.TestCheckMenusAnswer.Enabled := True;
+    try
+      pgMain.ActivePage := aTab;
+    finally
+      TestHost.TestCheckMenusAnswer.Enabled := False;
+    end;
+    TestHost.TestCheckMenusLines.Add(aName + 'dialogs' + #9 + TestHost.TestCheckMenusSeen);
+
+    var Cells := function(aNode: PVirtualNode): string
+    begin
+      Result := '';
+      for var c := 0 to Pred(lTree.Header.Columns.Count) do
+        Result := Result + #9 + lTree.Text[aNode, c, False];
+    end;
+
+    var lRow := 0;
+    var lEnchanted := False;
+    for var lNode in lTree.Nodes(False) do begin
+      if lRow < cRowsWritten then
+        TestHost.TestCheckMenusLines.Add(aName + #9 + IntToStr(lRow) + Cells(lNode));
+      if not lEnchanted and (lTree.Text[lNode, cEnchantmentColumn, False] <> '') then begin
+        lEnchanted := True;
+        TestHost.TestCheckMenusLines.Add(aName + 'enchanted' + #9 + IntToStr(lRow) + Cells(lNode));
+      end;
+      Inc(lRow);
+    end;
+    TestHost.TestCheckMenusLines.Add(aName + 'rows' + #9 + IntToStr(lRow));
+    pgMain.ActivePage := tbsView;
+  end;
+
+  procedure EditFormIDValue;
+  begin
+    var lModule := Module;
+    var lRecord: IwbMainRecord := nil;
+    for var j := 0 to Pred(lModule.RecordCount) do
+      if (lModule.Records[j].Signature = 'WEAP') and Assigned(lModule.Records[j].ElementBySignature['ENAM']) then begin
+        lRecord := lModule.Records[j];
+        Break;
+      end;
+    if not Assigned(lRecord) then
+      raise Exception.Create('no WEAP holding ENAM in ' + lModule.FileName);
+
+    DoSetActiveRecord(IwbMainRecord(nil));
+    DoSetActiveRecord(lRecord, True);
+    var lColumn := -1;
+    for var c := Low(ActiveRecords) to High(ActiveRecords) do
+      if lRecord.Equals(ActiveRecords[c].Element) then
+        lColumn := c;
+    var lRow: PVirtualNode := nil;
+    var lElement: IwbElement := nil;
+    if lColumn >= 0 then
+      for var lNode in vstView.Nodes(False) do begin
+        lElement := ViewCells(lNode)[lColumn].Element;
+        if Assigned(lElement) and lElement.Name.StartsWith('ENAM') then begin
+          lRow := lNode;
+          Break;
+        end;
+      end;
+    if not Assigned(lRow) then
+      raise Exception.Create('no ENAM row for ' + lRecord.Name);
+
+    var lOld := lElement.EditValue;
+    var lFormID := lOld.Substring(Succ(lOld.LastIndexOf(':'))).TrimRight([']']);
+    var lConvert := xeContext.Settings.ConvertIntFormID;
+    xeContext.Settings.ConvertIntFormID := True;
+    try
+      TestHost.TestCheckMenusTyped := IntToStr(StrToInt('$' + lFormID));
+      TestHost.TestCheckMenusSeen := '';
+      vstViewFocusedNode := lRow;
+      vstView.FocusedColumn := Succ(lColumn);
+      TestHost.TestCheckMenusAnswer.Enabled := True;
+      try
+        mniViewEditClick(nil);
+      finally
+        TestHost.TestCheckMenusAnswer.Enabled := False;
+      end;
+    finally
+      xeContext.Settings.ConvertIntFormID := lConvert;
+    end;
+    TestHost.TestCheckMenusLines.Add('edit' + #9 + lRecord.Name + #9 + lOld + #9 + TestHost.TestCheckMenusTyped + #9 +
+      TestHost.TestCheckMenusSeen + #9 + lElement.EditValue);
+  end;
+
+begin
+  TestHost.TestCheckMenusTimer.Enabled := False;
+  try
+    case TestHost.TestCheckMenusStage of
+      0: RunChecks;
+      1: ReportMessages;
+      2: if tbsWEAPSpreadsheet.TabVisible then begin
+           CaptureSheet(tbsWEAPSpreadsheet, 'sheetweap');
+           CaptureSheet(tbsARMOSpreadsheet, 'sheetarmo');
+           CaptureSheet(tbsAMMOSpreadsheet, 'sheetammo');
+         end;
+      3: if tbsWEAPSpreadsheet.TabVisible and xeContext.Settings.EditAllowed then
+           EditFormIDValue;
+    else
+      TestCheckMenusWrite;
+      Exit;
+    end;
+  except
+    on E: Exception do begin
+      CheckResult := 2;
+      TestHost.TestCheckMenusLines.Add('# FAILED: ' + E.ClassName + ': ' + E.Message);
+      TestCheckMenusWrite;
+      Exit;
+    end;
+  end;
+  Inc(TestHost.TestCheckMenusStage);
+  TestHost.TestCheckMenusTimer.Enabled := True;
+end;
+
+procedure TxeTestFormHelper.TestCheckMenusAnswerTimer(Sender: TObject);
+begin
+  for var i := 0 to Pred(Screen.CustomFormCount) do begin
+    var lForm := Screen.CustomForms[i];
+    if (lForm = Self) or not lForm.Visible or not (fsModal in lForm.FormState) or (lForm.ModalResult <> mrNone) then
+      Continue;
+    TestHost.TestCheckMenusSeen := TestHost.TestCheckMenusSeen + ' ' + lForm.ClassName;
+    if lForm is TfrmFileSelect then begin
+      var lList := TfrmFileSelect(lForm).CheckListBox1;
+      for var j := 0 to Pred(lList.Count) do
+        lList.Checked[j] := True;
+    end;
+    if TestHost.TestCheckMenusTyped <> '' then
+      for var j := 0 to Pred(lForm.ComponentCount) do
+        if lForm.Components[j] is TEdit then
+          TEdit(lForm.Components[j]).Text := TestHost.TestCheckMenusTyped;
+    lForm.ModalResult := mrOk;
+    Exit;
+  end;
+end;
+
+procedure TxeTestFormHelper.TestCheckMenusWrite;
+begin
+  var lTmp := xeTestSwitches.CheckMenusFile + '.partial';
+  TestHost.TestCheckMenusLines.Insert(0, '# xEdit check menus probe: ' + xeApplicationTitle);
+  TestHost.TestCheckMenusLines.SaveToFile(lTmp, TEncoding.UTF8);
+  MoveFileEx(PChar(lTmp), PChar(xeTestSwitches.CheckMenusFile), MOVEFILE_REPLACE_EXISTING);
+  FreeAndNil(TestHost.TestCheckMenusLines);
+  tmrShutdown.Enabled := True;
 end;
 
 procedure TxeTestFormHelper.DoTestFormIDSearch;
