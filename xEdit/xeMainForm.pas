@@ -16136,13 +16136,13 @@ begin
   ApplyReferencedByFilter;
 end;
 
-function SpreadSheetEnchantmentTES4(const aMainRecord: IwbMainRecord): IwbElement;
+function SpreadSheetEnchantment(const aMainRecord: IwbMainRecord; const aSignature: TwbSignature): IwbElement;
 var
   Enchantment                 : IwbContainer;
 begin
   Result := nil;
-  if Supports(aMainRecord.ElementBySignature['ENAM'], IwbContainer, Enchantment) then
-    Result := Enchantment.RecordBySignature['ENAM'];
+  if Supports(aMainRecord.ElementByName['Enchantment'], IwbContainer, Enchantment) then
+    Result := Enchantment.RecordBySignature[aSignature];
 end;
 
 procedure TfrmMain.vstSpreadSheetAmmoInitNode(Sender: TBaseVirtualTree; ParentNode, Node: PVirtualNode; var InitialStates: TVirtualNodeInitStates);
@@ -16162,7 +16162,7 @@ begin
   NodeDatas[3].Element := MainRecord.RecordBySignature['FULL'];
 
   if xeContext.GameDefObj.IsOblivion then begin
-    NodeDatas[4].Element := SpreadSheetEnchantmentTES4(MainRecord);
+    NodeDatas[4].Element := SpreadSheetEnchantment(MainRecord, 'ENAM');
 
     Rec := MainRecord.RecordBySignature['DATA'];
     if Assigned(Rec) then begin
@@ -16199,7 +16199,7 @@ begin
   NodeDatas[3].Element := MainRecord.RecordBySignature['FULL'];
 
   if xeContext.GameDefObj.IsOblivion then begin
-    NodeDatas[4].Element := SpreadSheetEnchantmentTES4(MainRecord);
+    NodeDatas[4].Element := SpreadSheetEnchantment(MainRecord, 'ENAM');
 
     Rec := MainRecord.RecordBySignature['BMDT'];
     if Assigned(Rec) then begin
@@ -18960,7 +18960,7 @@ begin
 
   if xeContext.GameDefObj.IsOblivion then begin
     {Enchantment}
-    NodeDatas[4].Element := SpreadSheetEnchantmentTES4(MainRecord);
+    NodeDatas[4].Element := SpreadSheetEnchantment(MainRecord, 'ENAM');
 
     Rec := MainRecord.RecordBySignature['DATA'];
     if Assigned(Rec) then begin
@@ -18974,9 +18974,9 @@ begin
     end;
   end else begin
     {Enchantment}
-    NodeDatas[4].Element := MainRecord.RecordBySignature['EITM'];
+    NodeDatas[4].Element := SpreadSheetEnchantment(MainRecord, 'EITM');
     {Amount}
-    NodeDatas[12].Element := MainRecord.RecordBySignature['EAMT'];
+    NodeDatas[12].Element := SpreadSheetEnchantment(MainRecord, 'EAMT');
 
     {Type}
     NodeDatas[5].Element := MainRecord.RecordBySignature['ETYP'];
