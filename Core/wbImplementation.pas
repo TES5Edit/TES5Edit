@@ -19424,6 +19424,17 @@ begin
 end;
 
 procedure TwbMainRecord.SetEditorID(const aValue: string);
+
+  function CurrentEditorID: string;
+  var
+    lNow: IwbSubRecord;
+  begin
+    if Supports(GetRecordBySignature(mrDef.KnownSubRecordSignatures[ksrEditorID]), IwbSubRecord, lNow) then
+      Result := mrDef.GetEditorID(lNow)
+    else
+      Result := '';
+  end;
+
 var
   SelfRef : IwbContainerElementRef;
   Rec     : IwbRecord;
@@ -19450,7 +19461,7 @@ begin
 
   mrDef.SetEditorID(Rec as IwbSubRecord, aValue);
 
-  Assert(mrEditorID = aValue);
+  Assert(mrEditorID = CurrentEditorID);
 end;
 
 procedure TwbMainRecord.SetEditValue(const aValue: string);

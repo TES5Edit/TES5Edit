@@ -721,7 +721,7 @@ end;
 function wbEditorID: IwbRecordMemberDef;
 begin
   Result :=
-    wbString(NAME, 'Editor ID')
+    wbStringForward(NAME, 'Editor ID')
       .SetRequired
       .IncludeFlag(dfSummarySelfAsShortName);
 end;
@@ -1093,7 +1093,7 @@ begin
   ]).SetFormIDBase($10);
 
   RegisterRecordDef(CELL, 'Cell', [
-    wbString(NAME, 'Location').SetRequired,
+    wbStringForward(NAME, 'Location').SetRequired,
     wbDeleted,
     wbStruct(DATA, 'Data', [
       wbInteger('Flags', itU32,
@@ -1403,7 +1403,7 @@ begin
     .IncludeFlag(dfIndexEditorID);
 
   RegisterRecordDef(INFO, 'Dialog Response', @wbKnownSubRecordSignaturesINFO, [
-    wbString(INAM, 'Response ID').SetRequired,
+    wbStringForward(INAM, 'Response ID').SetRequired,
     wbString(PNAM, 'Previous Response ID').SetRequired,
     wbString(NNAM, 'Next Response ID').SetRequired,
     wbStruct(DATA, 'Data', [
@@ -2001,7 +2001,7 @@ begin
       wbInteger('Granularity', itU16).SetDefaultNativeValue(1024),
       wbInteger('Point Count', itU16)
     ]).SetRequired,
-    wbString(NAME, 'Location ID', 0, cpIgnore).SetRequired,
+    wbStringForward(NAME, 'Location ID', 0, cpIgnore).SetRequired,
     IfThen(DefineOptions.SimpleRecords,
       wbArray(PGRP, 'Points',
         wbByteArray('Point', 16)
@@ -2234,7 +2234,7 @@ begin
   RegisterRecordDef(SCPT, 'Script', @wbKnownSubRecordSignaturesSCPT, [
     wbStruct(SCHD, 'Script Header', [
       //Name can be saved with 36 characters in the CS, but it collides with Number of Shorts.
-      wbString('Name', 32),
+      wbStringForward('Name', 32),
       wbInteger('Number of Shorts', itU32),
       wbInteger('Number of Longs', itU32),
       wbInteger('Number of Floats', itU32),
@@ -2398,7 +2398,7 @@ begin
 
   RegisterRecordDef(SSCR, 'Start Script', @wbKnownSubRecordSignaturesSSCR, [
     wbDeleted,
-    wbString(DATA, 'Numerical ID').SetRequired,
+    wbStringForward(DATA, 'Numerical ID').SetRequired,
     wbString(NAME, 'Script').SetRequired //[SCPT]
   ]).SetFormIDBase($3F)
     .SetAfterLoad(wbDeletedAfterLoad);
