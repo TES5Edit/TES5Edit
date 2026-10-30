@@ -19,6 +19,7 @@ uses
   System.SysUtils,
   System.IOUtils,
   System.UITypes,
+  System.SyncObjs,
 
   JsonDataObjects,
 
@@ -2802,6 +2803,9 @@ type
     function GetFormIDNameBase: Byte;
     function SetFormIDNameBase(aBase: Byte): IwbMainRecordDef;
 
+    function GetGridFormIDBase: Byte;
+    function SetGridFormIDBase(aBase: Byte): IwbMainRecordDef;
+
     function GetFormID(const aMainRecord: IwbMainRecord; out aFormID: TwbFormID): Boolean;
     function SetGetFormIDCallback(const aCallback: TwbMainRecordGetFormIDCallback): IwbMainRecordDef;
 
@@ -3841,6 +3845,8 @@ type
     gdDefined          : Boolean;
     gdDefining         : Boolean;
     gdDefinedOptions   : TwbGameDefineOptions;
+    gdIdentityKeyCapacity : array[Byte] of Cardinal;
+    gdIdentityNameBaseOf  : array[Byte] of Byte;
     gdGameMode         : TwbGameMode;
     gdCapabilities     : TwbGameCapabilities;
     gdIdentity         : TwbGameIdentity;
@@ -3940,6 +3946,7 @@ type
     function RegisterRecordDef(const aSignature: TwbSignature; const aName: string; const aMembers: array of IwbRecordMemberDef; aPriority: TwbConflictPriority = cpNormal; aRequired: Boolean = False): IwbMainRecordDef; overload;
     function RegisterRefRecordDef(const aSignature: TwbSignature; const aName: string; const aRecordFlags: IwbIntegerDefFormater; const aMembers: array of IwbRecordMemberDef; aPriority: TwbConflictPriority = cpNormal; aRequired: Boolean = False): IwbMainRecordDef; overload;
     function RegisterRefRecordDef(const aSignature: TwbSignature; const aName: string; const aMembers: array of IwbRecordMemberDef; aPriority: TwbConflictPriority = cpNormal; aRequired: Boolean = False): IwbMainRecordDef; overload;
+    procedure ComputeIdentityKeyCapacity;
   public
     DefineOptions: TwbGameDefineOptions;
 
@@ -3949,6 +3956,8 @@ type
     destructor Destroy; override; final;
 
     procedure EnsureDefined;
+    function IdentityKeyCapacity(aFormIDNameBase: Byte): Cardinal;
+    function IdentityNameBaseOf(aFormIDBase: Byte): Byte;
     property DefinedOptions: TwbGameDefineOptions
       read gdDefinedOptions;
 
@@ -4353,6 +4362,7 @@ type
     gcConflictRulesGeneration : Cardinal;
     gcIdentities           : array[Byte] of TDictionary<string, Cardinal>;
     gcNextIDs              : array[Byte] of Cardinal;
+    gcIdentitiesLock       : TLightweightMREW;
     gcUnusedIdentityCount  : Cardinal;
     gcSaveContexts         : TArray<TwbSaveContext>;
     gcSaveContextsLock     : TObject;
@@ -4391,6 +4401,7 @@ type
     procedure DetachFilesFromModules; virtual;
     function SlotLayout: TwbSlotLayout;
     function FormIDFromIdentity(aFormIDBase, aFormIDNameBase: Byte; aIdentity: string): TwbFormID;
+    function FindIdentity(aFormIDBase, aFormIDNameBase: Byte; const aIdentity: string; out aFormID: TwbFormID): Boolean;
     function IsKnownIdentity(aFormIDNameBase: Byte; const aIdentity: string): Boolean;
     function UnusedIdentity(aFormIDNameBase: Byte; const aPrefix: string): string;
     function ExpandFileName(const aFileName: string): string;
@@ -7173,10 +7184,21 @@ begin
   try
     gdDefinedOptions := DefineOptions;
     Define;
+    ComputeIdentityKeyCapacity;
     gdDefined := True;
   finally
     gdDefining := False;
   end;
+end;
+
+function TwbGameDef.IdentityKeyCapacity(aFormIDNameBase: Byte): Cardinal;
+begin
+  Result := gdIdentityKeyCapacity[aFormIDNameBase];
+end;
+
+function TwbGameDef.IdentityNameBaseOf(aFormIDBase: Byte): Byte;
+begin
+  Result := gdIdentityNameBaseOf[aFormIDBase];
 end;
 
 function wbCreateGameContext(const aGameDef: IwbGameDef): IwbGameContext;
@@ -7725,24 +7747,62 @@ function TwbGameContext.FormIDFromIdentity(aFormIDBase, aFormIDNameBase: Byte; a
 var
   i: Cardinal;
 begin
+  if gcGameDefObj.IdentityNameBaseOf(aFormIDBase) <> aFormIDNameBase then
+    raise Exception.CreateFmt('FormID base $%.2x does not take its identities from name base $%.2x', [aFormIDBase, aFormIDNameBase]);
+
+  if FindIdentity(aFormIDBase, aFormIDNameBase, aIdentity, Result) then
+    Exit;
+
   aIdentity := aIdentity.ToLowerInvariant;
-
-  if not Assigned(gcIdentities[aFormIDNameBase]) then
-    gcIdentities[aFormIDNameBase] := TDictionary<string, Cardinal>.Create;
-
-  if not gcIdentities[aFormIDNameBase].TryGetValue(aIdentity, i) then begin
-    i := gcNextIDs[aFormIDNameBase];
-    Inc(gcNextIDs[aFormIDNameBase]);
-    gcIdentities[aFormIDNameBase].Add(aIdentity, i);
+  gcIdentitiesLock.BeginWrite;
+  try
+    var lIdentities := gcIdentities[aFormIDNameBase];
+    if not (Assigned(lIdentities) and lIdentities.TryGetValue(aIdentity, i)) then begin
+      i := gcNextIDs[aFormIDNameBase];
+      if i >= gcGameDefObj.IdentityKeyCapacity(aFormIDNameBase) then
+        raise Exception.CreateFmt('"%s" can not be given a FormID: the identities of this session have filled the range of FormID base $%.2x', [aIdentity, aFormIDBase]);
+      if not Assigned(lIdentities) then begin
+        lIdentities := TDictionary<string, Cardinal>.Create;
+        gcIdentities[aFormIDNameBase] := lIdentities;
+      end;
+      Inc(gcNextIDs[aFormIDNameBase]);
+      lIdentities.Add(aIdentity, i);
+    end;
+  finally
+    gcIdentitiesLock.EndWrite;
   end;
 
   Result := TwbFormID.FromCardinal( (Cardinal(aFormIDBase) shl 16) + i );
 end;
 
+function TwbGameContext.FindIdentity(aFormIDBase, aFormIDNameBase: Byte; const aIdentity: string; out aFormID: TwbFormID): Boolean;
+var
+  i: Cardinal;
+begin
+  var lIdentity := aIdentity.ToLowerInvariant;
+  gcIdentitiesLock.BeginRead;
+  try
+    var lIdentities := gcIdentities[aFormIDNameBase];
+    Result := Assigned(lIdentities) and lIdentities.TryGetValue(lIdentity, i);
+  finally
+    gcIdentitiesLock.EndRead;
+  end;
+  if Result then
+    aFormID := TwbFormID.FromCardinal( (Cardinal(aFormIDBase) shl 16) + i )
+  else
+    aFormID := TwbFormID.Null;
+end;
+
 function TwbGameContext.IsKnownIdentity(aFormIDNameBase: Byte; const aIdentity: string): Boolean;
 begin
-  var lIdentities := gcIdentities[aFormIDNameBase];
-  Result := Assigned(lIdentities) and lIdentities.ContainsKey(aIdentity.ToLowerInvariant);
+  var lIdentity := aIdentity.ToLowerInvariant;
+  gcIdentitiesLock.BeginRead;
+  try
+    var lIdentities := gcIdentities[aFormIDNameBase];
+    Result := Assigned(lIdentities) and lIdentities.ContainsKey(lIdentity);
+  finally
+    gcIdentitiesLock.EndRead;
+  end;
 end;
 
 function TwbGameContext.UnusedIdentity(aFormIDNameBase: Byte; const aPrefix: string): string;
@@ -8474,6 +8534,7 @@ type
     recGetGridCellCallback: TwbMainRecordGetGridCellCallback;
     recFormIDBase         : Byte;
     recFormIDNameBase     : Byte;
+    recGridFormIDBase     : Byte;
     recSummaryKey         : array of Integer;
     recSummaryPrefix      : TwbStringArray;
     recSummarySuffix      : TwbStringArray;
@@ -8561,6 +8622,9 @@ type
     function SetFormIDBase(aBase: Byte): IwbMainRecordDef;
     function GetFormIDNameBase: Byte;
     function SetFormIDNameBase(aBase: Byte): IwbMainRecordDef;
+
+    function GetGridFormIDBase: Byte;
+    function SetGridFormIDBase(aBase: Byte): IwbMainRecordDef;
 
     function GetFormID(const aMainRecord: IwbMainRecord; out aFormID: TwbFormID): Boolean;
     function SetGetFormIDCallback(const aCallback: TwbMainRecordGetFormIDCallback): IwbMainRecordDef;
@@ -12805,6 +12869,7 @@ begin
     Self.recDefFlags := recDefFlags;
     Self.recFormIDBase := recFormIDBase;
     Self.recFormIDNameBase := recFormIDNameBase;
+    Self.recGridFormIDBase := recGridFormIDBase;
     Self.recGetEditorIDCallback := recGetEditorIDCallback;
     Self.recGetFormIDCallback := recGetFormIDCallback;
     Self.recGetGridCellCallback := recGetGridCellCallback;
@@ -13160,6 +13225,15 @@ begin
   recFormIDNameBase := aBase;
 end;
 
+function TwbMainRecordDef.SetGridFormIDBase(aBase: Byte): IwbMainRecordDef;
+begin
+  if defIsLocked then
+    Exit(TwbMainRecordDef(Duplicate).SetGridFormIDBase(aBase));
+
+  Result := Self;
+  recGridFormIDBase := aBase;
+end;
+
 function TwbMainRecordDef.SetGetEditorIDCallback(const aCallback: TwbMainRecordGetEditorIDCallback): IwbMainRecordDef;
 begin
   if defIsLocked then
@@ -13503,6 +13577,49 @@ begin
   Result := recFormIDNameBase;
   if Result < 1 then
     Result := GetFormIDBase;
+end;
+
+function TwbMainRecordDef.GetGridFormIDBase: Byte;
+begin
+  Result := recGridFormIDBase;
+end;
+
+procedure TwbGameDef.ComputeIdentityKeyCapacity;
+begin
+  var lStarts: TArray<Cardinal> := [$01000000];
+  var lGrids: TArray<Cardinal> := [];
+  for var lEntry in gdRecordDefs do begin
+    var lDef := lEntry.rdeDef as TwbMainRecordDef;
+    if lDef.recFormIDBase > 0 then
+      lStarts := lStarts + [Cardinal(lDef.recFormIDBase) shl 16];
+    if lDef.recGridFormIDBase > 0 then begin
+      lStarts := lStarts + [Cardinal(lDef.recGridFormIDBase) shl 16];
+      lGrids := lGrids + [Cardinal(lDef.recGridFormIDBase) shl 16];
+    end;
+  end;
+  TArray.Sort<Cardinal>(lStarts);
+  FillChar(gdIdentityNameBaseOf, SizeOf(gdIdentityNameBaseOf), 0);
+  FillChar(gdIdentityKeyCapacity, SizeOf(gdIdentityKeyCapacity), 0);
+  for var lEntry in gdRecordDefs do begin
+    var lDef := lEntry.rdeDef as TwbMainRecordDef;
+    if lDef.recFormIDBase = 0 then
+      Continue;
+    var lStart := Cardinal(lDef.recFormIDBase) shl 16;
+    var lNameBase := lDef.GetFormIDNameBase;
+    Assert(gdIdentityNameBaseOf[lDef.recFormIDBase] in [0, lNameBase]);
+    gdIdentityNameBaseOf[lDef.recFormIDBase] := lNameBase;
+    for var lGrid in lGrids do
+      Assert((lStart < lGrid) or (lStart >= lGrid + $100000));
+    var lLimit: Cardinal := $01000000;
+    for var lS in lStarts do
+      if lS > lStart then begin
+        lLimit := lS;
+        Break;
+      end;
+    var lCap := lLimit - lStart;
+    if (gdIdentityKeyCapacity[lNameBase] = 0) or (lCap < gdIdentityKeyCapacity[lNameBase]) then
+      gdIdentityKeyCapacity[lNameBase] := lCap;
+  end;
 end;
 
 function TwbMainRecordDef.GetGridCell(const aSubRecord: IwbSubRecord; out aGridCell: TwbGridCell): Boolean;

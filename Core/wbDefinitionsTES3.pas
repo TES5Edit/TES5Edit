@@ -330,6 +330,11 @@ begin
   end;
 end;
 
+const
+  wbCellGridFormIDBase     = $A0;
+  wbLandGridFormIDBase     = $C0;
+  wbPathgridGridFormIDBase = $E0;
+
 function wbGridCellToFormID(aFormIDBase: Byte; const aGridCell: TwbGridCell; out aFormID: TwbFormID): Boolean;
 begin
   Result := False;
@@ -1119,6 +1124,7 @@ begin
       wbFloat('Fog Density', cpNormal, False, 1, 2).SetDefaultNativeValue(1)
     ]).SetDontShow(wbCellExteriorDontShow)
   ]).SetFormIDBase($B0)
+    .SetGridFormIDBase(wbCellGridFormIDBase)
     .SetGetGridCellCallback(function(const aSubRecord: IwbSubRecord; out aGridCell: TwbGridCell): Boolean begin
       with aGridCell, aSubRecord do begin
         Result := not (ElementNativeValues['Flags\Is Interior Cell'] = True);
@@ -1130,7 +1136,7 @@ begin
     end)
     .SetGetFormIDCallback(function(const aMainRecord: IwbMainRecord; out aFormID: TwbFormID): Boolean begin
       var GridCell: TwbGridCell;
-      Result := aMainRecord.GetGridCell(GridCell) and wbGridCellToFormID($A0, GridCell, aFormID);
+      Result := aMainRecord.GetGridCell(GridCell) and wbGridCellToFormID(wbCellGridFormIDBase, GridCell, aFormID);
     end)
     .SetIdentityCallback(function(const aMainRecord: IwbMainRecord): string begin
       var GridCell: TwbGridCell;
@@ -1695,9 +1701,10 @@ begin
          .IncludeFlag(dfCollapsed, clpOther in DefineOptions.Collapse))
   ]).SetFormIDBase($D0)
     .SetFormIDNameBase($B0)
+    .SetGridFormIDBase(wbLandGridFormIDBase)
     .SetGetFormIDCallback(function(const aMainRecord: IwbMainRecord; out aFormID: TwbFormID): Boolean begin
       var GridCell: TwbGridCell;
-      Result := aMainRecord.GetGridCell(GridCell) and wbGridCellToFormID($C0, GridCell, aFormID);
+      Result := aMainRecord.GetGridCell(GridCell) and wbGridCellToFormID(wbLandGridFormIDBase, GridCell, aFormID);
     end)
     .SetIdentityCallback(function(const aMainRecord: IwbMainRecord): string begin
       Result := '';
@@ -2022,6 +2029,7 @@ begin
         wbCalcPGRCSize)).IncludeFlag(dfCollapsed, clpNavmesh in DefineOptions.Collapse))
   ]).SetFormIDBase($F0)
     .SetFormIDNameBase($B0)
+    .SetGridFormIDBase(wbPathgridGridFormIDBase)
     .SetGetGridCellCallback(function(const aSubRecord: IwbSubRecord; out aGridCell: TwbGridCell): Boolean begin
       with aGridCell, aSubRecord do begin
         X := ElementNativeValues['Grid\X'];
@@ -2031,7 +2039,7 @@ begin
     end)
     .SetGetFormIDCallback(function(const aMainRecord: IwbMainRecord; out aFormID: TwbFormID): Boolean begin
       var GridCell: TwbGridCell;
-      Result := aMainRecord.GetGridCell(GridCell) and wbGridCellToFormID($E0, GridCell, aFormID);
+      Result := aMainRecord.GetGridCell(GridCell) and wbGridCellToFormID(wbPathgridGridFormIDBase, GridCell, aFormID);
     end)
     .SetIdentityCallback(function(const aMainRecord: IwbMainRecord): string begin
       var GridCell: TwbGridCell;
