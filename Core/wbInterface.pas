@@ -2176,6 +2176,7 @@ type
     x, y: Integer;
     class operator Equal(const a, b: TwbGridCell): Boolean; static;
     function SortKey: string;
+    function ToGridKey(aFormIDBase: Byte; out aKey: TwbFormID): Boolean;
   end;
 
   TDynMainRecords = TArray<IwbMainRecord>;
@@ -26941,6 +26942,13 @@ end;
 function TwbGridCell.SortKey: string;
 begin
   Result := IntToHex(Int64(x) + Abs(Low(Integer)), 8) + '|' + IntToHex(Int64(y) + Abs(Low(Integer)), 8);
+end;
+
+function TwbGridCell.ToGridKey(aFormIDBase: Byte; out aKey: TwbFormID): Boolean;
+begin
+  Result := (x >= -512) and (x <= 511) and (y >= -512) and (y <= 511);
+  if Result then
+    aKey := TwbFormID.FromCardinal((Cardinal(x + 512) shl 10) + Cardinal(y + 512) + (Cardinal(aFormIDBase) shl 16));
 end;
 
 { TwbVersion }

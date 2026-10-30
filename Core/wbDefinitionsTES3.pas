@@ -335,16 +335,6 @@ const
   wbLandGridFormIDBase     = $C0;
   wbPathgridGridFormIDBase = $E0;
 
-function wbGridCellToFormID(aFormIDBase: Byte; const aGridCell: TwbGridCell; out aFormID: TwbFormID): Boolean;
-begin
-  Result := False;
-  with aGridCell do begin
-    if (x < -512) or (x > 511) or (y < -512) or (y > 511) then
-      Exit;
-    aFormID := TwbFormID.FromCardinal((Cardinal(x + 512) shl 10) + Cardinal(y + 512) + (Cardinal(aFormIDBase) shl 16));
-    Result := True;
-  end;
-end;
 
 procedure wbIngredientAfterLoad(const aElement: IwbElement);
 var
@@ -1136,7 +1126,7 @@ begin
     end)
     .SetGetFormIDCallback(function(const aMainRecord: IwbMainRecord; out aFormID: TwbFormID): Boolean begin
       var GridCell: TwbGridCell;
-      Result := aMainRecord.GetGridCell(GridCell) and wbGridCellToFormID(wbCellGridFormIDBase, GridCell, aFormID);
+      Result := aMainRecord.GetGridCell(GridCell) and GridCell.ToGridKey(wbCellGridFormIDBase, aFormID);
     end)
     .SetIdentityCallback(function(aHasGrid: Boolean; const aGrid: TwbGridCell; aHasEditorID: Boolean; const aEditorID: string;
       out aIdentity: string): Boolean begin
@@ -1707,7 +1697,7 @@ begin
     .SetGridFormIDBase(wbLandGridFormIDBase)
     .SetGetFormIDCallback(function(const aMainRecord: IwbMainRecord; out aFormID: TwbFormID): Boolean begin
       var GridCell: TwbGridCell;
-      Result := aMainRecord.GetGridCell(GridCell) and wbGridCellToFormID(wbLandGridFormIDBase, GridCell, aFormID);
+      Result := aMainRecord.GetGridCell(GridCell) and GridCell.ToGridKey(wbLandGridFormIDBase, aFormID);
     end)
     .SetIdentityCallback(function(aHasGrid: Boolean; const aGrid: TwbGridCell; aHasEditorID: Boolean; const aEditorID: string;
       out aIdentity: string): Boolean begin
@@ -2042,7 +2032,7 @@ begin
     end)
     .SetGetFormIDCallback(function(const aMainRecord: IwbMainRecord; out aFormID: TwbFormID): Boolean begin
       var GridCell: TwbGridCell;
-      Result := aMainRecord.GetGridCell(GridCell) and wbGridCellToFormID(wbPathgridGridFormIDBase, GridCell, aFormID);
+      Result := aMainRecord.GetGridCell(GridCell) and GridCell.ToGridKey(wbPathgridGridFormIDBase, aFormID);
     end)
     .SetIdentityCallback(function(aHasGrid: Boolean; const aGrid: TwbGridCell; aHasEditorID: Boolean; const aEditorID: string;
       out aIdentity: string): Boolean begin

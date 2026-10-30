@@ -704,6 +704,7 @@ type
     function HoldsBlockedIdentities: Boolean;
     function HoldsRecordAt(const aRecord: IwbMainRecord; const aFormID: TwbFormID): Boolean;
     function RecordCountAt(const aFormID: TwbFormID): Integer;
+    function OthersAtKey(const aRecord: IwbMainRecord; const aKey: TwbFormID; aMax: Integer; out aOthers: Integer): TArray<IwbMainRecord>;
     function InjectionTarget(const aFormID: TwbFormID): IwbFileInternal;
     function IsOwnFormID(const aFormID: TwbFormID; aNew: Boolean): Boolean;
     function HoldsInjected(const aRecord: IwbMainRecord): Boolean;
@@ -1028,6 +1029,7 @@ type
     function HoldsBlockedIdentities: Boolean;
     function HoldsRecordAt(const aRecord: IwbMainRecord; const aFormID: TwbFormID): Boolean;
     function RecordCountAt(const aFormID: TwbFormID): Integer;
+    function OthersAtKey(const aRecord: IwbMainRecord; const aKey: TwbFormID; aMax: Integer; out aOthers: Integer): TArray<IwbMainRecord>;
     procedure RenumberOwnSlot(aOldSlot, aNewSlot: Integer);
     function InjectionTarget(const aFormID: TwbFormID): IwbFileInternal;
     function IsOwnFormID(const aFormID: TwbFormID; aNew: Boolean): Boolean;
@@ -1474,7 +1476,10 @@ type
     function ContextObj: TwbGameContext; override; final;
     function GetFormID: TwbFormID; inline;
     function GetFixedFormID: TwbFormID; inline;
-    function GetCurrentIdentity(out aIdentity: string; out aHasGrid: Boolean): Boolean;
+    function GetCurrentIdentity(out aIdentity: string; out aHasGrid: Boolean; out aGrid: TwbGridCell): Boolean; overload;
+    function GetCurrentIdentity(out aIdentity: string; out aHasGrid: Boolean): Boolean; overload;
+    function CheckContents: string;
+    function CheckOwnKey: string;
     function ComputeFixedFormID(out aCacheable: Boolean): TwbFormID;
     function DoGetFixedFormID: TwbFormID;
     function GetLoadOrderFormID: TwbFormID; inline;
@@ -9679,6 +9684,21 @@ begin
   Result := IndexOfRecordAt(aRecord, aFormID) >= 0;
 end;
 
+function TwbFile.OthersAtKey(const aRecord: IwbMainRecord; const aKey: TwbFormID; aMax: Integer; out aOthers: Integer): TArray<IwbMainRecord>;
+var
+  lCount : Integer;
+begin
+  Result := nil;
+  aOthers := 0;
+  var lFirst := RecordRunAt(aKey, lCount);
+  for var lIdx := lFirst to lFirst + Pred(lCount) do
+    if not aRecord.Equals(flRecords[lIdx]) then begin
+      Inc(aOthers);
+      if Length(Result) < aMax then
+        Result := Result + [flRecords[lIdx]];
+    end;
+end;
+
 function TwbFile.RecordCountAt(const aFormID: TwbFormID): Integer;
 begin
   RecordRunAt(aFormID, Result);
@@ -15878,6 +15898,78 @@ end;
 
 function TwbMainRecord.GetCheck: string;
 var
+  SelfRef : IwbContainerElementRef;
+begin
+  SelfRef := Self as IwbContainerElementRef;
+  Result := CheckContents;
+  if Assigned(mrDef) and not recSkipped and GameDefObj.IsMorrowind then begin
+    var lOwn := CheckOwnKey;
+    if lOwn <> '' then
+      if Result = '' then
+        Result := lOwn
+      else
+        Result := lOwn + '; ' + Result;
+  end;
+end;
+
+function TwbMainRecord.CheckOwnKey: string;
+var
+  lIdentity : string;
+  lHasGrid  : Boolean;
+  lGrid     : TwbGridCell;
+  lKey      : TwbFormID;
+  lFile     : IwbFileInternal;
+  lOthers   : Integer;
+
+  procedure Report(const aText: string);
+  begin
+    if Result <> '' then
+      Result := Result + '; ';
+    Result := Result + aText;
+  end;
+
+begin
+  Result := '';
+  var lHasIdentity := GetCurrentIdentity(lIdentity, lHasGrid, lGrid);
+  var lSitsAt := GetFixedFormID;
+  var lLayout := ContextObj.SlotLayout;
+
+  if (GetSignature <> 'INFO') and Supports(GetFile, IwbFileInternal, lFile) then begin
+    var lNamed := lFile.OthersAtKey(Self, lSitsAt, 3, lOthers);
+    if lOthers > 0 then begin
+      var lNames := '';
+      for var lRecord in lNamed do begin
+        if lNames <> '' then
+          lNames := lNames + ', ';
+        lNames := lNames + lRecord.Name;
+      end;
+      if lOthers > Length(lNamed) then
+        lNames := lNames + ', ...';
+      var lWord := 'records';
+      if lOthers = 1 then
+        lWord := 'record';
+      Report(Format('shares its key [%s] with %d other %s in this file: %s',
+        [lSitsAt.ToDisplayString(lLayout), lOthers, lWord, lNames]));
+    end;
+  end;
+
+  var lGridBase := mrDef.GetGridFormIDBase;
+  var lGridKeyed := lHasGrid and (lGridBase > 0);
+  var lInRange := lGridKeyed and lGrid.ToGridKey(lGridBase, lKey);
+  if lGridKeyed and not lInRange then
+    Report(Format('grid %d, %d lies outside the grid keys'' range', [lGrid.x, lGrid.y]));
+
+  if lHasIdentity then
+    if lInRange or ContextObj.FindIdentity(mrDef.GetFormIDBase, mrDef.GetFormIDNameBase, lIdentity, lKey) then begin
+      if lKey.ObjectID[lLayout] <> lSitsAt.ObjectID[lLayout] then
+        Report(Format('its identity gives the key [%s], not the key it sits at [%s]',
+          [lKey.ToDisplayString(lLayout), lSitsAt.ToDisplayString(lLayout)]));
+    end else
+      Report(Format('its identity "%s" has no key yet, not the key it sits at [%s]', [lIdentity, lSitsAt.ToDisplayString(lLayout)]));
+end;
+
+function TwbMainRecord.CheckContents: string;
+var
   i, j: Integer;
   RequiredCount: Integer;
   Element: IwbElement;
@@ -16497,27 +16589,34 @@ begin
   end;
 end;
 
-function TwbMainRecord.GetCurrentIdentity(out aIdentity: string; out aHasGrid: Boolean): Boolean;
+function TwbMainRecord.GetCurrentIdentity(out aIdentity: string; out aHasGrid: Boolean; out aGrid: TwbGridCell): Boolean;
 var
   lSelfRef  : IwbContainerElementRef;
   lSub      : IwbSubRecord;
-  lGrid     : TwbGridCell;
   lEditorID : string;
 begin
   var lRefHold: TRefGuard;
   RefShortHold(lRefHold, Self);
   aIdentity := '';
   aHasGrid := False;
+  aGrid := Default(TwbGridCell);
   if not Assigned(mrDef) then
     Exit(False);
   lSelfRef := Self as IwbContainerElementRef;
   if mrDef.ContainsKnownSubRecord[ksrGridCell] and
      Supports(GetRecordBySignature(mrDef.KnownSubRecordSignatures[ksrGridCell]), IwbSubRecord, lSub) then
-    aHasGrid := mrDef.GetGridCell(lSub, lGrid);
+    aHasGrid := mrDef.GetGridCell(lSub, aGrid);
   var lHasEditorID := mrDef.ContainsKnownSubRecord[ksrEditorID] and
     Supports(GetRecordBySignature(mrDef.KnownSubRecordSignatures[ksrEditorID]), IwbSubRecord, lSub) and
     mrDef.TryGetEditorID(lSub, lEditorID);
-  Result := mrDef.IdentityFrom(aHasGrid, lGrid, lHasEditorID, lEditorID, aIdentity);
+  Result := mrDef.IdentityFrom(aHasGrid, aGrid, lHasEditorID, lEditorID, aIdentity);
+end;
+
+function TwbMainRecord.GetCurrentIdentity(out aIdentity: string; out aHasGrid: Boolean): Boolean;
+var
+  lGrid : TwbGridCell;
+begin
+  Result := GetCurrentIdentity(aIdentity, aHasGrid, lGrid);
 end;
 
 procedure TwbMainRecord.ChangeFormSignature(const aSignature: TwbSignature);
