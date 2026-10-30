@@ -3431,6 +3431,9 @@ procedure TxeTestFormHelper.TestCheckMenusRunTimer(Sender: TObject);
     if not Assigned(lRecord) then
       raise Exception.Create('no WEAP holding ENAM in ' + lModule.FileName);
 
+    var lOtherFormID := '';
+    var lIsEdit := xeContext.Settings.EditAllowed;
+
     DoSetActiveRecord(IwbMainRecord(nil));
     DoSetActiveRecord(lRecord, True);
     var lColumn := -1;
@@ -3451,11 +3454,20 @@ procedure TxeTestFormHelper.TestCheckMenusRunTimer(Sender: TObject);
       raise Exception.Create('no ENAM row for ' + lRecord.Name);
 
     var lOld := lElement.EditValue;
-    var lFormID := lOld.Substring(Succ(lOld.LastIndexOf(':'))).TrimRight([']']);
+    for var j := 0 to Pred(lModule.RecordCount) do
+      if lModule.Records[j].Signature = 'ENCH' then begin
+        var lCandidate := lModule.Records[j].LoadOrderFormID.ToString;
+        if not lOld.Contains(lCandidate) then begin
+          lOtherFormID := lCandidate;
+          Break;
+        end;
+      end;
+    if lOtherFormID = '' then
+      raise Exception.Create('no other ENCH in ' + lModule.FileName);
     var lConvert := xeContext.Settings.ConvertIntFormID;
     xeContext.Settings.ConvertIntFormID := True;
     try
-      TestHost.TestCheckMenusTyped := IntToStr(StrToInt('$' + lFormID));
+      TestHost.TestCheckMenusTyped := IntToStr(StrToInt('$' + lOtherFormID));
       TestHost.TestCheckMenusSeen := '';
       vstViewFocusedNode := lRow;
       vstView.FocusedColumn := Succ(lColumn);
@@ -3468,8 +3480,8 @@ procedure TxeTestFormHelper.TestCheckMenusRunTimer(Sender: TObject);
     finally
       xeContext.Settings.ConvertIntFormID := lConvert;
     end;
-    TestHost.TestCheckMenusLines.Add('edit' + #9 + lRecord.Name + #9 + lOld + #9 + TestHost.TestCheckMenusTyped + #9 +
-      TestHost.TestCheckMenusSeen + #9 + lElement.EditValue);
+    TestHost.TestCheckMenusLines.Add('edit' + #9 + BoolToStr(lIsEdit, True) + #9 + lRecord.Name + #9 + lOld + #9 + lOtherFormID + #9 +
+      TestHost.TestCheckMenusTyped + #9 + TestHost.TestCheckMenusSeen + #9 + lElement.EditValue);
   end;
 
 begin
@@ -3483,7 +3495,7 @@ begin
            CaptureSheet(tbsARMOSpreadsheet, 'sheetarmo');
            CaptureSheet(tbsAMMOSpreadsheet, 'sheetammo');
          end;
-      3: if tbsWEAPSpreadsheet.TabVisible and xeContext.Settings.EditAllowed then
+      3: if xeContext.GameDefObj.IsOblivion then
            EditFormIDValue;
     else
       TestCheckMenusWrite;
@@ -3524,10 +3536,16 @@ end;
 
 procedure TxeTestFormHelper.TestCheckMenusWrite;
 begin
-  var lTmp := xeTestSwitches.CheckMenusFile + '.partial';
-  TestHost.TestCheckMenusLines.Insert(0, '# xEdit check menus probe: ' + xeApplicationTitle);
-  TestHost.TestCheckMenusLines.SaveToFile(lTmp, TEncoding.UTF8);
-  MoveFileEx(PChar(lTmp), PChar(xeTestSwitches.CheckMenusFile), MOVEFILE_REPLACE_EXISTING);
+  try
+    var lTmp := xeTestSwitches.CheckMenusFile + '.partial';
+    TestHost.TestCheckMenusLines.Insert(0, '# xEdit check menus probe: ' + xeApplicationTitle);
+    TestHost.TestCheckMenusLines.Add('# checkResult = ' + IntToStr(CheckResult));
+    TestHost.TestCheckMenusLines.SaveToFile(lTmp, TEncoding.UTF8);
+    if not MoveFileEx(PChar(lTmp), PChar(xeTestSwitches.CheckMenusFile), MOVEFILE_REPLACE_EXISTING) then
+      RaiseLastOSError;
+  except
+    CheckResult := 2;
+  end;
   FreeAndNil(TestHost.TestCheckMenusLines);
   tmrShutdown.Enabled := True;
 end;
