@@ -8099,6 +8099,8 @@ begin
 end;
 
 function wbReadStoredLeveled(const aRecord: IwbMainRecord): TwbStoredLeveledRecord;
+const
+  cLeveledPairMinSize = 18;
 var
   lData  : IwbDataContainer;
   lEntry : TwbSignature;
@@ -8146,28 +8148,33 @@ begin
       SkipPad(lSize);
     end else if lSub = 'DELE' then
       Result.Deleted := True
-    else if lIsList then
+    else if lIsList then begin
       if ((lSub = 'DATA') and (lSize = 4)) or ((lSub = 'NNAM') and (lSize = 1)) then
         Continue
       else if (lSub = 'INDX') and (lSize = 4) then begin
         Result.Entries := nil;
-        for var i: Cardinal := 1 to PCardinal(lPayload)^ do begin
+        var lCount := PCardinal(lPayload)^;
+        if lCount > (NativeUInt(lEnd) - NativeUInt(lPtr)) div cLeveledPairMinSize then
+          Exit;
+        SetLength(Result.Entries, lCount);
+        for var i := 0 to Pred(Integer(lCount)) do begin
           if not TryNext(lSub, lPayload, lSize) or (lSub <> lEntry) then begin
             Result.Entries := nil;
             Exit;
           end;
-          var lKey := wbStoredKey(lPayload, lSize);
+          Result.Entries[i] := wbStoredKey(lPayload, lSize);
           SkipPad(lSize);
           if not TryNext(lSub, lPayload, lSize) or (lSub <> 'INTV') or (lSize <> 2) then begin
             Result.Entries := nil;
             Exit;
           end;
-          Result.Entries := Result.Entries + [lKey];
         end;
       end else begin
         Result.Entries := nil;
         lDone := True;
       end;
+    end else
+      SkipPad(lSize);
   if lIsList and not lDone and (lPtr <> lEnd) then
     Result.Entries := nil;
 end;
