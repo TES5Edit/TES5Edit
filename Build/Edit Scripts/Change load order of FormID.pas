@@ -8,10 +8,21 @@ unit UserScript;
 var
   NewLoadOrder: Cardinal;
 
+function RefusedForMorrowind: Boolean;
+begin
+  Result := wbGameMode = gmTES3;
+  if Result then
+    AddMessage('This script does not work for Morrowind: a Morrowind record''s FormID is derived from the record and can not be set');
+end;
+
 function Initialize: integer;
 var
   s: string;
 begin
+  if RefusedForMorrowind then begin
+    Result := 1;
+    Exit;
+  end;
   // set this to predefined value if you don't want the script to prompt you
   NewLoadOrder := -1;
   
@@ -32,6 +43,10 @@ var
   OldFormID, NewFormID: Cardinal;
   m: IInterface;
 begin
+  if RefusedForMorrowind then begin
+    Result := 1;
+    Exit;
+  end;
   Result := 0;
   
   // file header doesn't have formid

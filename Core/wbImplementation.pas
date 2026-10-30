@@ -33,6 +33,13 @@ type
   private
     lgcLoading: TArray<string>;
   protected
+    function NameReferencesJudged(const aElement: IwbElement): Boolean; override; final;
+    function ViewNameKeyAt(const aElement: IwbElement; const aKey: TwbFormID; const aValue: string;
+                           out aSelected: IwbMainRecord): TwbNameKeyState; override; final;
+    function NameKeyIdentity(const aElement: IwbElement; const aKey: TwbFormID; out aSelected: IwbMainRecord;
+                             out aIdentity: string): TwbNameTarget; override; final;
+    function NameFileKey(const aElement: IwbElement; const aLoadOrderFormID: TwbFormID; out aKey: TwbFormID): Boolean; override; final;
+  protected
     lgcDenseRecords : TArray<Pointer>;
     lgcFreeIDs      : TArray<Cardinal>;
     lgcFreeCount    : Integer;
@@ -321,6 +328,8 @@ type
 
     function GetValue: string; virtual;
     function GetSummary: string; virtual;
+    function GetSummaryAndLink(var aLinksTo: IwbElement; aIntoField: Boolean): string; virtual;
+    function ReportValueMasters(const aValueDef: IwbValueDef; aMasters: TwbFilesSet): Boolean; virtual;
     function GetCheck: string; virtual;
     function GetSortKey(aExtended: Boolean): string;
     function GetSortKeyCached(aExtended: Boolean): string; virtual;
@@ -821,6 +830,12 @@ type
     function FindFormID(aFormID: TwbFormID; var Index: Integer; aNewMasters: Boolean): Boolean;
     function RecordRunAt(const aFormID: TwbFormID; out aCount: Integer): Integer;
     function IndexOfRecordAt(const aRecord: IwbMainRecord; const aFormID: TwbFormID): Integer;
+    function InsideNameScopeOwn: Boolean;
+    function NameReferencesJudgedInternal: Boolean;
+    function SelectAtNameKey(const aKey: TwbFormID; out aCorrupt: Boolean): IwbMainRecord;
+    class function CurrentIdentityIs(const aRecord: IwbMainRecord; const aLowerValue: string): Boolean; static;
+    function HoldsCurrentIdentityAtNameKey(const aKey: TwbFormID; const aLowerValue: string): Boolean;
+    function ViewNameKeyInternal(const aKey: TwbFormID; const aValue: string; out aSelected: IwbMainRecord): TwbNameKeyState;
     function FindInjectedID(const aFormID: TwbFormID; var Index: Integer): Boolean;
     function GetMasterRecordByFormID(aFormID: TwbFormID; aAllowInjected, aNewMasters: Boolean): IwbMainRecord;
 
@@ -1094,6 +1109,7 @@ type
     function GetDataPrefixSize: Integer; virtual;
 
     function GetResolvedValueDef: IwbValueDef; override;
+    function ReportValueMasters(const aValueDef: IwbValueDef; aMasters: TwbFilesSet): Boolean; override; final;
 
     function ContentIsAllZero: Boolean; override; final;
 
@@ -1402,7 +1418,7 @@ type
 
     function GetPath: string; override; final;
     function GetValue: string; override; final;
-    function GetSummary: string; override; final;
+    function GetSummaryAndLink(var aLinksTo: IwbElement; aIntoField: Boolean): string; override; final;
     function GetSortKeyInternal(aExtended: Boolean): string; override; final;
     function GetSortPriority: Integer; override; final;
     function GetAdditionalElementCount: Integer; override; final;
@@ -1458,6 +1474,7 @@ type
     function ContextObj: TwbGameContext; override; final;
     function GetFormID: TwbFormID; inline;
     function GetFixedFormID: TwbFormID; inline;
+    function GetCurrentIdentity(out aIdentity: string; out aHasGrid: Boolean): Boolean;
     function ComputeFixedFormID(out aCacheable: Boolean): TwbFormID;
     function DoGetFixedFormID: TwbFormID;
     function GetLoadOrderFormID: TwbFormID; inline;
@@ -1710,7 +1727,7 @@ type
     procedure UpdateCountViaPath;
 
     function GetValue: string; override; final;
-    function GetSummary: string; override; final;
+    function GetSummaryAndLink(var aLinksTo: IwbElement; aIntoField: Boolean): string; override; final;
     function GetCheck: string; override; final;
     function GetSortKeyInternal(aExtended: Boolean): string; override; final;
     function GetIsEditable: Boolean; override; final;
@@ -1796,7 +1813,7 @@ type
 
     function GetCheck: string; override; final;
     function GetValue: string; override;
-    function GetSummary: string; override; final;
+    function GetSummaryAndLink(var aLinksTo: IwbElement; aIntoField: Boolean): string; override; final;
     function GetSortKeyInternal(aExtended: Boolean): string; override; final;
 
     function GetIsEditable: Boolean; override;
@@ -2213,7 +2230,7 @@ type
 
     function GetValue: string; override; final;
     function GetCheck: string; override; final;
-    function GetSummary: string; override; final;
+    function GetSummaryAndLink(var aLinksTo: IwbElement; aIntoField: Boolean): string; override; final;
     function GetName: string; override; final;
     function GetDef: IwbNamedDef; override; final;
     function GetElementType: TwbElementType; override; final;
@@ -2265,7 +2282,7 @@ type
     function Add(const aName: string; aSilent: Boolean): IwbElement; override; final;
 
     function GetValue: string; override; final;
-    function GetSummary: string; override; final;
+    function GetSummaryAndLink(var aLinksTo: IwbElement; aIntoField: Boolean): string; override; final;
     function GetSortKeyInternal(aExtended: Boolean): string; override; final;
     function GetCheck: string; override; final;
     function GetName: string; override; final;
@@ -7165,6 +7182,136 @@ begin
  Index := L;
 end;
 
+function TwbFile.InsideNameScopeOwn: Boolean;
+begin
+  if not (flLoadFinished and flFormIDsSorted) then
+    Exit(False);
+  if fsIsHardcoded in flStates then
+    Exit(True);
+  if (flLoadOrder < 0) or (Length(flMasters) < 1) or not (fsIsHardcoded in flMasters[0].FileStates) then
+    Exit(False);
+  for var i := 0 to High(flMasters) do begin
+    if fsIsDeltaPatch in flMasters[i].FileStates then
+      Exit(False);
+    for var j := 0 to Pred(i) do
+      if flMasters[j] = flMasters[i] then
+        Exit(False);
+  end;
+  Result := True;
+end;
+
+function TwbFile.NameReferencesJudgedInternal: Boolean;
+begin
+  if not InsideNameScopeOwn then
+    Exit(False);
+  var lMasters := GetAllMasters;
+  for var i := 0 to High(lMasters) do
+    if not (lMasters[i] as TObject as TwbFile).InsideNameScopeOwn then
+      Exit(False);
+  Result := True;
+end;
+
+function TwbFile.SelectAtNameKey(const aKey: TwbFormID; out aCorrupt: Boolean): IwbMainRecord;
+var
+  lCount, lFirst : Integer;
+  lOwn           : IwbMainRecord;
+  lBest          : TwbFile;
+  lBestRecord    : IwbMainRecord;
+begin
+  Result := nil;
+  aCorrupt := False;
+  lFirst := RecordRunAt(aKey, lCount);
+  if lCount >= 2 then begin
+    aCorrupt := True;
+    Exit;
+  end;
+  if lCount = 1 then
+    lOwn := flRecords[lFirst];
+  lBest := nil;
+  var lMasters := GetAllMasters;
+  for var i := 0 to High(lMasters) do begin
+    var lM := lMasters[i] as TObject as TwbFile;
+    lFirst := lM.RecordRunAt(aKey, lCount);
+    if lCount >= 2 then begin
+      aCorrupt := True;
+      Exit(nil);
+    end;
+    if (lCount = 1) and (not Assigned(lBest) or (lM.flLoadOrder > lBest.flLoadOrder) or
+       ((lM.flLoadOrder = lBest.flLoadOrder) and (lM.flSerial > lBest.flSerial))) then begin
+      lBest := lM;
+      lBestRecord := lM.flRecords[lFirst];
+    end;
+  end;
+  if Assigned(lOwn) then
+    Result := lOwn
+  else
+    Result := lBestRecord;
+end;
+
+class function TwbFile.CurrentIdentityIs(const aRecord: IwbMainRecord; const aLowerValue: string): Boolean;
+var
+  lIdentity : string;
+  lHasGrid  : Boolean;
+begin
+  Result := (aRecord as TObject as TwbMainRecord).GetCurrentIdentity(lIdentity, lHasGrid) and
+    (lIdentity.ToLowerInvariant = aLowerValue);
+end;
+
+function TwbFile.HoldsCurrentIdentityAtNameKey(const aKey: TwbFormID; const aLowerValue: string): Boolean;
+
+  function InFile(aFile: TwbFile): Boolean;
+  var
+    lCount : Integer;
+    lRun   : TArray<IwbMainRecord>;
+  begin
+    var lFirst := aFile.RecordRunAt(aKey, lCount);
+    SetLength(lRun, lCount);
+    for var i := 0 to Pred(lCount) do
+      lRun[i] := aFile.flRecords[lFirst + i];
+    for var lRecord in lRun do
+      if CurrentIdentityIs(lRecord, aLowerValue) then
+        Exit(True);
+    Result := False;
+  end;
+
+begin
+  if InFile(Self) then
+    Exit(True);
+  var lMasters := GetAllMasters;
+  for var i := 0 to High(lMasters) do
+    if InFile(lMasters[i] as TObject as TwbFile) then
+      Exit(True);
+  Result := False;
+end;
+
+function TwbFile.ViewNameKeyInternal(const aKey: TwbFormID; const aValue: string; out aSelected: IwbMainRecord): TwbNameKeyState;
+var
+  lCorrupt  : Boolean;
+  lSelected : IwbMainRecord;
+  lIdentity : string;
+  lHasGrid  : Boolean;
+begin
+  aSelected := nil;
+  var lLowerValue := aValue.ToLowerInvariant;
+  lSelected := SelectAtNameKey(aKey, lCorrupt);
+  if lCorrupt then
+    if HoldsCurrentIdentityAtNameKey(aKey, lLowerValue) then
+      Exit(nksCorrupt)
+    else
+      Exit(nksNone);
+  if not Assigned(lSelected) then
+    Exit(nksNone);
+  var lRecord := lSelected as TObject as TwbMainRecord;
+  if not lRecord.GetCurrentIdentity(lIdentity, lHasGrid) then
+    Exit(nksNone);
+  if lHasGrid and (lRecord.GetSignature = 'CELL') then
+    Exit(nksNone);
+  if lIdentity.ToLowerInvariant <> lLowerValue then
+    Exit(nksNone);
+  aSelected := lSelected;
+  Result := nksMatch;
+end;
+
 function TwbFile.RecordRunAt(const aFormID: TwbFormID; out aCount: Integer): Integer;
 begin
   aCount := 0;
@@ -9459,6 +9606,10 @@ begin
       var lInternal := lRecord as IwbMainRecordInternal;
       var lNew := lInternal.IdentityKey;
       if lNew <> lRecord.FixedFormID then begin
+        var lIdentity: string;
+        var lHasGrid: Boolean;
+        if not (lRecord as TObject as TwbMainRecord).GetCurrentIdentity(lIdentity, lHasGrid) then
+          Continue;
         lRecords := lRecords + [lInternal];
         lOldKeys := lOldKeys + [lRecord.FixedFormID];
         lNewKeys := lNewKeys + [lNew];
@@ -16346,8 +16497,33 @@ begin
   end;
 end;
 
+function TwbMainRecord.GetCurrentIdentity(out aIdentity: string; out aHasGrid: Boolean): Boolean;
+var
+  lSelfRef  : IwbContainerElementRef;
+  lSub      : IwbSubRecord;
+  lGrid     : TwbGridCell;
+  lEditorID : string;
+begin
+  var lRefHold: TRefGuard;
+  RefShortHold(lRefHold, Self);
+  aIdentity := '';
+  aHasGrid := False;
+  if not Assigned(mrDef) then
+    Exit(False);
+  lSelfRef := Self as IwbContainerElementRef;
+  if mrDef.ContainsKnownSubRecord[ksrGridCell] and
+     Supports(GetRecordBySignature(mrDef.KnownSubRecordSignatures[ksrGridCell]), IwbSubRecord, lSub) then
+    aHasGrid := mrDef.GetGridCell(lSub, lGrid);
+  var lHasEditorID := mrDef.ContainsKnownSubRecord[ksrEditorID] and
+    Supports(GetRecordBySignature(mrDef.KnownSubRecordSignatures[ksrEditorID]), IwbSubRecord, lSub) and
+    mrDef.TryGetEditorID(lSub, lEditorID);
+  Result := mrDef.IdentityFrom(aHasGrid, lGrid, lHasEditorID, lEditorID, aIdentity);
+end;
+
 procedure TwbMainRecord.ChangeFormSignature(const aSignature: TwbSignature);
 begin
+  if not (gcFormIDInRecordHeader in GameDefObj.Capabilities) then
+    raise Exception.Create(GetName + ': a Morrowind record''s key is derived from its signature, which can not be changed');
   MakeHeaderWriteable;
   mrStruct.mrsSignature := aSignature;
 end;
@@ -17433,7 +17609,7 @@ begin
     Result := 0;
 end;
 
-function TwbMainRecord.GetSummary: string;
+function TwbMainRecord.GetSummaryAndLink(var aLinksTo: IwbElement; aIntoField: Boolean): string;
 var
   Def    : IwbDef;
   lGuard : TRefGuard;
@@ -17450,8 +17626,15 @@ begin
   if Assigned(mrDef) then begin
     if wbParallelRefBuilds <> 0 then
       RefTouch(lGuard, Self);
-    eSummaryLinksTo := nil;
-    Result := mrDef.ToSummary(0, Self, eSummaryLinksTo);
+    if dfCanContainNameReference in mrDef.DefFlags then
+      Include(eStates, esSummaryOnDemand);
+    aLinksTo := nil;
+    try
+      Result := mrDef.ToSummary(0, Self, aLinksTo);
+    finally
+      if aIntoField and (esSummaryOnDemand in eStates) then
+        aLinksTo := nil;
+    end;
   end;
 end;
 
@@ -21785,6 +21968,8 @@ begin
   DoInit(False);
   if not Assigned(srValueDef) then
     Exit;
+  if dfCanContainNameReference in srValueDef.DefFlags then
+    Include(eStates, esLinksOnDemand);
   Result := srValueDef.LinksTo[dcDataBasePtr, dcDataEndPtr, Self];
 end;
 
@@ -21859,7 +22044,7 @@ begin
     Result := 0;
 end;
 
-function TwbSubRecord.GetSummary: string;
+function TwbSubRecord.GetSummaryAndLink(var aLinksTo: IwbElement; aIntoField: Boolean): string;
 var
   SelfRef : IwbContainerElementRef;
   Def     : IwbDef;
@@ -21881,8 +22066,15 @@ begin
   DoInit(True);
 
   if Assigned(srDef) then begin
-    eSummaryLinksTo := nil;
-    Result := srDef.ToSummary(0, Self, eSummaryLinksTo);
+    if dfCanContainNameReference in srDef.DefFlags then
+      Include(eStates, esSummaryOnDemand);
+    aLinksTo := nil;
+    try
+      Result := srDef.ToSummary(0, Self, aLinksTo);
+    finally
+      if aIntoField and (esSummaryOnDemand in eStates) then
+        aLinksTo := nil;
+    end;
   end;
 end;
 
@@ -22313,7 +22505,9 @@ begin
   BeginUpdate;
   try
     OldLinksTo := srValueDef.LinksTo[dcDataBasePtr, dcDataEndPtr, Self];
-    if (OldLinksTo <> aValue) and (not Assigned(OldLinksTo) or not OldLinksTo.Equals(aValue)) then begin
+    if (dfCanContainNameReference in srValueDef.DefFlags) and
+       Supports(Resolve(srValueDef, dcDataBasePtr, dcDataEndPtr, Self), IwbNameReferenceDef) or
+       (OldLinksTo <> aValue) and (not Assigned(OldLinksTo) or not OldLinksTo.Equals(aValue)) then begin
       if Assigned(srValueDef) then begin
         OldValue := GetNativeValue;
         srValueDef.LinksTo[GetDataBasePtr, dcDataEndPtr, Self] := aValue;
@@ -25724,11 +25918,15 @@ end;
 
 function TwbElement.GetLinksToCached: IwbElement;
 begin
+  if esLinksOnDemand in eStates then
+    Exit(InternalGetLinksTo);
   var lGeneration := ContextObj.GlobalGeneration;
   if eLinksToGeneration = lGeneration then
     Result := eCachedLinksTo
   else begin
     Result := InternalGetLinksTo;
+    if esLinksOnDemand in eStates then
+      Exit;
     eLinksToGeneration := lGeneration;
     eCachedLinksTo := Result;
   end;
@@ -25930,7 +26128,17 @@ end;
 
 function TwbElement.GetSummary: string;
 begin
+  Result := GetSummaryAndLink(eSummaryLinksTo, True);
+end;
+
+function TwbElement.GetSummaryAndLink(var aLinksTo: IwbElement; aIntoField: Boolean): string;
+begin
   Result := '';
+end;
+
+function TwbElement.ReportValueMasters(const aValueDef: IwbValueDef; aMasters: TwbFilesSet): Boolean;
+begin
+  Result := False;
 end;
 
 function TwbElement.GetSummaryLinksTo: IwbElement;
@@ -25943,24 +26151,30 @@ begin
 end;
 
 function TwbElement.GetSummaryLinksToCached: IwbElement;
+var
+  lLink : IwbElement;
 begin
-  Result := eSummaryLinksTo;
-  if Assigned(Result) then
-    Exit;
-
-  var lDef := GetDef;
-  if not Assigned(lDef) then
-    Exit;
-
-  Result := lDef.GetSummaryLinksTo(Self);
-  if Assigned(Result) then
-    Exit;
-
-  var lValueDef := GetResolvedValueDef;
-  if not Assigned(lValueDef) then
-    Exit;
-
-  Result := lValueDef.GetSummaryLinksTo(Self);
+  if esSummaryOnDemand in eStates then
+    GetSummaryAndLink(lLink, False)
+  else
+    lLink := eSummaryLinksTo;
+  if not Assigned(lLink) then begin
+    var lDef := GetDef;
+    if Assigned(lDef) then begin
+      if not (esSummaryOnDemand in eStates) and (dfCanContainNameReference in lDef.DefFlags) then begin
+        Include(eStates, esSummaryOnDemand);
+        GetSummaryAndLink(lLink, False);
+      end;
+      if not Assigned(lLink) then
+        lLink := lDef.GetSummaryLinksTo(Self);
+      if not Assigned(lLink) then begin
+        var lValueDef := GetResolvedValueDef;
+        if Assigned(lValueDef) then
+          lLink := lValueDef.GetSummaryLinksTo(Self);
+      end;
+    end;
+  end;
+  Result := lLink;
 end;
 
 function TwbElement.GetTreeBranch: Boolean;
@@ -26234,11 +26448,13 @@ begin
   if Assigned(ValueDef) and (dfDontAssign in ValueDef.DefFlags) then
     Exit;
 
-  Element := GetLinksTo;
-  if Assigned(Element) then begin
-    ReferenceFile := Element.ReferenceFile;
-    if Assigned(ReferenceFile) then
-      aMasters.Add(ReferenceFile);
+  if not ReportValueMasters(ValueDef, aMasters) then begin
+    Element := GetLinksTo;
+    if Assigned(Element) then begin
+      ReferenceFile := Element.ReferenceFile;
+      if Assigned(ReferenceFile) then
+        aMasters.Add(ReferenceFile);
+    end;
   end;
 
   eReportMastersGen := aMasters.Generation;
@@ -27185,7 +27401,7 @@ begin
   Result := arcSorted;
 end;
 
-function TwbSubRecordArray.GetSummary: string;
+function TwbSubRecordArray.GetSummaryAndLink(var aLinksTo: IwbElement; aIntoField: Boolean): string;
 var
   SelfRef : IwbContainerElementRef;
 var
@@ -27207,8 +27423,15 @@ begin
     Exit;
   DoInit(True);
 
-  eSummaryLinksTo := nil;
-  Result := arcDef.ToSummary(0, Self, eSummaryLinksTo);
+  if dfCanContainNameReference in arcDef.DefFlags then
+    Include(eStates, esSummaryOnDemand);
+  aLinksTo := nil;
+  try
+    Result := arcDef.ToSummary(0, Self, aLinksTo);
+  finally
+    if aIntoField and (esSummaryOnDemand in eStates) then
+      aLinksTo := nil;
+  end;
 end;
 
 function TwbSubRecordArray.GetValue: string;
@@ -27895,7 +28118,7 @@ begin
   end;
 end;
 
-function TwbSubRecordStruct.GetSummary: string;
+function TwbSubRecordStruct.GetSummaryAndLink(var aLinksTo: IwbElement; aIntoField: Boolean): string;
 var
   SelfRef    : IwbContainerElementRef;
   Def        : IwbDef;
@@ -27917,8 +28140,15 @@ begin
     Exit;
   DoInit(True);
 
-  eSummaryLinksTo := nil;
-  Result := RMD.ToSummary(0, Self, eSummaryLinksTo);
+  if dfCanContainNameReference in RMD.DefFlags then
+    Include(eStates, esSummaryOnDemand);
+  aLinksTo := nil;
+  try
+    Result := RMD.ToSummary(0, Self, aLinksTo);
+  finally
+    if aIntoField and (esSummaryOnDemand in eStates) then
+      aLinksTo := nil;
+  end;
 end;
 
 function TwbSubRecordStruct.GetValue: string;
@@ -30061,6 +30291,57 @@ begin
   inherited;
 end;
 
+function TwbLoadingGameContext.NameReferencesJudged(const aElement: IwbElement): Boolean;
+begin
+  var lFile := aElement._File;
+  Result := Assigned(lFile) and (lFile as TObject as TwbFile).NameReferencesJudgedInternal;
+end;
+
+function TwbLoadingGameContext.ViewNameKeyAt(const aElement: IwbElement; const aKey: TwbFormID; const aValue: string;
+  out aSelected: IwbMainRecord): TwbNameKeyState;
+begin
+  aSelected := nil;
+  Result := (aElement._File as TObject as TwbFile).ViewNameKeyInternal(aKey, aValue, aSelected);
+end;
+
+function TwbLoadingGameContext.NameKeyIdentity(const aElement: IwbElement; const aKey: TwbFormID;
+  out aSelected: IwbMainRecord; out aIdentity: string): TwbNameTarget;
+var
+  lCorrupt : Boolean;
+  lHasGrid : Boolean;
+begin
+  aSelected := nil;
+  aIdentity := '';
+  var lFile := aElement._File as TObject as TwbFile;
+  aSelected := lFile.SelectAtNameKey(aKey, lCorrupt);
+  if lCorrupt then
+    Exit(ntCorrupt);
+  if not Assigned(aSelected) then
+    Exit(ntNone);
+  var lRecord := aSelected as TObject as TwbMainRecord;
+  if not lRecord.GetCurrentIdentity(aIdentity, lHasGrid) then
+    Exit(ntNoIdentity);
+  if lHasGrid and (lRecord.GetSignature = 'CELL') then
+    Exit(ntExterior);
+  if aIdentity = '' then
+    Exit(ntEmpty);
+  Result := ntFound;
+end;
+
+function TwbLoadingGameContext.NameFileKey(const aElement: IwbElement; const aLoadOrderFormID: TwbFormID;
+  out aKey: TwbFormID): Boolean;
+var
+  lFileID : TwbFileID;
+begin
+  aKey := TwbFormID.Null;
+  var lFile := aElement._File as TObject as TwbFile;
+  Result := lFile.TryLoadOrderFileIDtoFileFileID(aLoadOrderFormID.FileID[SlotLayout], aElement.MastersUpdated, lFileID);
+  if Result then begin
+    aKey := aLoadOrderFormID;
+    aKey.FileID[SlotLayout] := lFileID;
+  end;
+end;
+
 procedure TwbLoadingGameContext.AllocateDenseIDs(const aRecords: TDynMainRecords);
 begin
   var lMark := gcStampCounter;
@@ -30858,6 +31139,11 @@ begin
   Result := lValueDef;}
 end;
 
+function TwbDataContainer.ReportValueMasters(const aValueDef: IwbValueDef; aMasters: TwbFilesSet): Boolean;
+begin
+  Result := Assigned(aValueDef) and aValueDef.ReportValueMasters(dcDataBasePtr, dcDataEndPtr, Self, aMasters);
+end;
+
 function TwbDataContainer.GetDataPrefixSize: Integer;
 begin
   Result := 0;
@@ -31414,6 +31700,8 @@ begin
   DoInit(False);
   if not Assigned(vbValueDef) then
     Exit;
+  if dfCanContainNameReference in vbValueDef.DefFlags then
+    Include(eStates, esLinksOnDemand);
   Result := vbValueDef.LinksTo[dcDataBasePtr, dcDataEndPtr, Self];
 end;
 
@@ -31449,7 +31737,7 @@ begin
   end;
 end;
 
-function TwbValueBase.GetSummary: string;
+function TwbValueBase.GetSummaryAndLink(var aLinksTo: IwbElement; aIntoField: Boolean): string;
 var
   SelfRef : IwbContainerElementRef;
 var
@@ -31467,8 +31755,15 @@ begin
   SelfRef := Self as IwbContainerElementRef;
   DoInit(True);
 
-  eSummaryLinksTo := nil;
-  Result := vbValueDef.ToSummary(0, GetDataBasePtr, dcDataEndPtr, Self, eSummaryLinksTo);
+  if dfCanContainNameReference in vbValueDef.DefFlags then
+    Include(eStates, esSummaryOnDemand);
+  aLinksTo := nil;
+  try
+    Result := vbValueDef.ToSummary(0, GetDataBasePtr, dcDataEndPtr, Self, aLinksTo);
+  finally
+    if aIntoField and (esSummaryOnDemand in eStates) then
+      aLinksTo := nil;
+  end;
 end;
 
 function TwbValueBase.GetValue: string;
@@ -31558,7 +31853,9 @@ begin
   BeginUpdate;
   try
     OldLinksTo := vbValueDef.LinksTo[dcDataBasePtr, dcDataEndPtr, Self];
-    if (OldLinksTo <> aValue) and (not Assigned(OldLinksTo) or not OldLinksTo.Equals(aValue)) then begin
+    if (dfCanContainNameReference in vbValueDef.DefFlags) and
+       Supports(Resolve(vbValueDef, dcDataBasePtr, dcDataEndPtr, Self), IwbNameReferenceDef) or
+       (OldLinksTo <> aValue) and (not Assigned(OldLinksTo) or not OldLinksTo.Equals(aValue)) then begin
       if Assigned(vbValueDef) then begin
         OldValue := GetNativeValue;
         vbValueDef.LinksTo[GetDataBasePtr, dcDataEndPtr, Self] := aValue;

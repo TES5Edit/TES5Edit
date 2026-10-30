@@ -26,10 +26,30 @@ begin
       UpdateReferences(ElementByIndex(e, i), ModLoadOrder);
 end;
 
+function RefusedForMorrowind: Boolean;
+begin
+  Result := wbGameMode = gmTES3;
+  if Result then
+    AddMessage('This script does not work for Morrowind: a Morrowind record''s FormID is derived from the record and can not be set');
+end;
+
+function Initialize: integer;
+begin
+  if RefusedForMorrowind then begin
+    Result := 1;
+    Exit;
+  end;
+  Result := 0;
+end;
+
 function Process(e: IInterface): integer;
 var
   i, fid: integer;
 begin
+  if RefusedForMorrowind then begin
+    Result := 1;
+    Exit;
+  end;
   // not an override
   if IsMaster(e) then
     Exit;

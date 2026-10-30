@@ -925,7 +925,7 @@ type
   protected
 
     function NewFileLoadOrder: Integer;
-    function CheckForErrorsLinear(const aElement: IwbElement; LastRecord: IwbMainRecord): IwbMainRecord;
+    function CheckForErrorsLinear(const aElement: IwbElement; LastRecord: IwbMainRecord; aRun: TwbCheckRun): IwbMainRecord;
     function CheckForErrors(const aIndent: Integer; const aElement: IwbElement): Boolean;
 
   public
@@ -2965,13 +2965,16 @@ begin
   end;
 end;
 
-function TfrmMain.CheckForErrorsLinear(const aElement: IwbElement; LastRecord: IwbMainRecord): IwbMainRecord;
+function TfrmMain.CheckForErrorsLinear(const aElement: IwbElement; LastRecord: IwbMainRecord; aRun: TwbCheckRun): IwbMainRecord;
 var
   Error                       : string;
   Container                   : IwbContainerElementRef;
   i                           : Integer;
 begin
   Error := aElement.Check;
+  var lNotice := aRun.NoticeFor(aElement);
+  if lNotice <> '' then
+    wbProgress(lNotice);
   if Error <> '' then begin
     Result := aElement.ContainingMainRecord;
     // first error in this record - show record's name
@@ -2989,7 +2992,7 @@ begin
 
   if Supports(aElement, IwbContainerElementRef, Container) then
     for i := 0 to Pred(Container.ElementCount) do
-      Result := CheckForErrorsLinear(Container.Elements[i], Result);
+      Result := CheckForErrorsLinear(Container.Elements[i], Result, aRun);
 
   if aElement.ElementType = etMainRecord then begin
     Inc(CheckedCount);
@@ -3102,23 +3105,28 @@ begin
     ErrorsCount := 0;
     CheckedCount := 0;
 
-    Nodes := vstNav.GetSortedSelection(True);
-    for i := Low(Nodes) to High(Nodes) do begin
-      NodeData := vstNav.GetNodeData(Nodes[i]);
-      if Assigned(NodeData) then begin
-        if Assigned(NodeData.Element) then begin
-          wbCurrentAction := 'Checking for Errors in ' + NodeData.Element.Name;
-          wbProgress(wbCurrentAction);
-          CheckForErrorsLinear(NodeData.Element, nil)
-        end;
-        if Assigned(NodeData.Container) and
-           not NodeData.Container.Equals(NodeData.Element)
-        then begin
-          wbCurrentAction := 'Checking for Errors in ' + NodeData.Container.Name;
-          wbProgress(wbCurrentAction);
-          CheckForErrorsLinear(NodeData.Container, nil)
+    var lRun := TwbCheckRun.Create;
+    try
+      Nodes := vstNav.GetSortedSelection(True);
+      for i := Low(Nodes) to High(Nodes) do begin
+        NodeData := vstNav.GetNodeData(Nodes[i]);
+        if Assigned(NodeData) then begin
+          if Assigned(NodeData.Element) then begin
+            wbCurrentAction := 'Checking for Errors in ' + NodeData.Element.Name;
+            wbProgress(wbCurrentAction);
+            CheckForErrorsLinear(NodeData.Element, nil, lRun)
+          end;
+          if Assigned(NodeData.Container) and
+             not NodeData.Container.Equals(NodeData.Element)
+          then begin
+            wbCurrentAction := 'Checking for Errors in ' + NodeData.Container.Name;
+            wbProgress(wbCurrentAction);
+            CheckForErrorsLinear(NodeData.Container, nil, lRun)
+          end;
         end;
       end;
+    finally
+      lRun.Free;
     end;
   end, True);
 end;
@@ -8901,7 +8909,7 @@ begin
         Exit;
       end;
 
-      if xeContext.Settings.ConvertIntFormID and Element.CanContainFormIDs then
+      if xeContext.Settings.ConvertIntFormID and wbHoldsFormIDText(Element) then
       begin
         var tmp: Integer;
         if not StartsText('0', EditValue) and not StartsText('0x', EditValue) then
@@ -18808,7 +18816,7 @@ begin
     Element := NodeDatas[Column].Element;
     if not Assigned(Element) then
       Exit;
-    if Element.CanContainFormIDs then begin
+    if wbHoldsFormIDText(Element) then begin
       Element := Element.LinksTo;
       if Supports(Element, IwbMainRecord, MainRecord) then begin
         CellText := MainRecord.EditorID;

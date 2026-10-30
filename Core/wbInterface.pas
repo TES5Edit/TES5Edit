@@ -546,14 +546,15 @@ type
     dfCanContainUnmappedFormID,
     dfIsReflection,
     dfUnmappedFormID,
-    dfAfterSetOnIDUpdate
+    dfAfterSetOnIDUpdate,
+    dfCanContainNameReference
   );
 
   TwbDefFlags = set of TwbDefFlag;
 
 const
   _DefFlagsInheritUp:TwbDefFlags   = [dfNoReport, dfExcludeFromBuildRef, dfDontSave, dfDontAssign, dfSummaryExcludeNULL, dfInternalEditOnly, dfUnmappedFormID, dfUseLoadOrder, dfIsRecordFlags];
-  _DefFlagsInheritDown:TwbDefFlags = [dfCanContainFormID, dfCanContainReflection, dfCanContainUnmappedFormID];
+  _DefFlagsInheritDown:TwbDefFlags = [dfCanContainFormID, dfCanContainReflection, dfCanContainUnmappedFormID, dfCanContainNameReference];
   _DefFlagsDontClone:TwbDefFlags   = [dfTemplate];
 
 var
@@ -963,7 +964,9 @@ type
     esReportedErrorReading,
     esReportedErrorUnusedData,
 
-    esInternalLoad
+    esInternalLoad,
+    esLinksOnDemand,
+    esSummaryOnDemand
   );
 
   TwbElementStates = set of TwbElementState;
@@ -2771,8 +2774,9 @@ type
   end;
 
   TwbMainRecordGetFormIDCallback = reference to function(const aMainRecord: IwbMainRecord; out aFormID: TwbFormID): Boolean;
-  TwbMainRecordIdentityCallback = reference to function(const aMainRecord: IwbMainRecord): string;
-  TwbMainRecordGetEditorIDCallback = reference to function(const aSubRecord: IwbSubRecord): string;
+  TwbMainRecordIdentityCallback = reference to function(aHasGrid: Boolean; const aGrid: TwbGridCell; aHasEditorID: Boolean;
+                                                        const aEditorID: string; out aIdentity: string): Boolean;
+  TwbMainRecordGetEditorIDCallback = reference to function(const aSubRecord: IwbSubRecord; out aEditorID: string): Boolean;
   TwbMainRecordSetEditorIDCallback = reference to procedure(const aSubRecord: IwbSubRecord; const aEditorID: string);
   TwbMainRecordGetGridCellCallback = reference to function(const aSubRecord: IwbSubRecord; out aGridCell: TwbGridCell): Boolean;
 
@@ -2811,9 +2815,12 @@ type
 
     function KnownSubRecordSignatures: PwbKnownSubRecordSignatures;
     function GetIdentity(const aMainRecord: IwbMainRecord): string;
+    function IdentityFrom(aHasGrid: Boolean; const aGrid: TwbGridCell; aHasEditorID: Boolean; const aEditorID: string;
+                          out aIdentity: string): Boolean;
     function SetIdentityCallback(const aCallback: TwbMainRecordIdentityCallback): IwbMainRecordDef;
 
     function GetEditorID(const aSubRecord: IwbSubRecord): string;
+    function TryGetEditorID(const aSubRecord: IwbSubRecord; out aEditorID: string): Boolean;
     procedure SetEditorID(const aSubRecord: IwbSubRecord; const aEditorID: string);
     function SetGetEditorIDCallback(const aCallback: TwbMainRecordGetEditorIDCallback): IwbMainRecordDef;
     function SetSetEditorIDCallback(const aCallback: TwbMainRecordSetEditorIDCallback): IwbMainRecordDef;
@@ -2931,6 +2938,7 @@ type
 
     function MastersUpdated(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aOld, aNew: TwbFileIDs; aOldCount, aNewCount: TwbSlotCounts): Boolean;
     procedure FindUsedMasters(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aMasters: PwbUsedMasters);
+    function ReportValueMasters(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aMasters: TwbFilesSet): Boolean;
     function CompareExchangeFormID(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aOldFormID: TwbFormID; aNewFormID: TwbFormID): Boolean;
 
     function GetElementMap: TDynCardinalArray;
@@ -3179,6 +3187,27 @@ type
 
     property StringSize: Integer
       read GetStringSize;
+  end;
+
+  TwbNameUnresolved = (nuError, nuDoorCell, nuTravelCell, nuPackageCell);
+
+  IwbNameReferenceDef = interface(IwbStringDef)
+    ['{DB70BDC9-3E71-4322-B0CB-DE636ED674E1}']
+    function GetAllowedSignatures: TwbSignatures;
+    function GetSentinels: TArray<string>;
+    function GetEmptyIsError: Boolean;
+    function GetUnresolved: TwbNameUnresolved;
+    function IsAllowedSignature(const aSignature: TwbSignature): Boolean;
+    function IsSentinel(const aValue: string): Boolean;
+
+    property AllowedSignatures: TwbSignatures
+      read GetAllowedSignatures;
+    property Sentinels: TArray<string>
+      read GetSentinels;
+    property EmptyIsError: Boolean
+      read GetEmptyIsError;
+    property Unresolved: TwbNameUnresolved
+      read GetUnresolved;
   end;
 
   IwbLenStringDef = interface(IwbBaseStringDef)
@@ -4329,6 +4358,19 @@ type
     Failed          : Boolean;
   end;
 
+  TwbCheckRun = class
+  private
+    crNoticed: TList<IwbFile>;
+  public
+    constructor Create;
+    destructor Destroy; override;
+    function NoticeFor(const aElement: IwbElement): string;
+  end;
+
+  TwbNameKeyState = (nksNone, nksMatch, nksCorrupt);
+
+  TwbNameTarget = (ntNone, ntCorrupt, ntNoIdentity, ntExterior, ntEmpty, ntFound);
+
   TwbGameContext = class(TInterfacedObject, IwbGameContext)
   protected
     gcRenameQueue    : TStringList;
@@ -4380,6 +4422,14 @@ type
     function CreateSkipList: TStringList;
     function CreateLEncodingList: TStringList;
     function CreateNameList: TStringList;
+    function NameReferencesJudged(const aElement: IwbElement): Boolean; virtual; abstract;
+    function ViewNameKeyAt(const aElement: IwbElement; const aKey: TwbFormID; const aValue: string;
+                           out aSelected: IwbMainRecord): TwbNameKeyState; virtual; abstract;
+    function ViewNameKey(const aElement: IwbElement; aFormIDBase, aNameBase: Byte; const aValue: string;
+                         out aSelected: IwbMainRecord): TwbNameKeyState;
+    function NameKeyIdentity(const aElement: IwbElement; const aKey: TwbFormID; out aSelected: IwbMainRecord;
+                             out aIdentity: string): TwbNameTarget; virtual; abstract;
+    function NameFileKey(const aElement: IwbElement; const aLoadOrderFormID: TwbFormID; out aKey: TwbFormID): Boolean; virtual; abstract;
   public
     Settings: TwbGameContextSettings;
 
@@ -4731,6 +4781,44 @@ function wbStringForward(const aSignature : TwbSignature;           // When the 
                                aPriority  : TwbConflictPriority = cpNormal;
                                aRequired  : Boolean = False)
                                           : IwbSubRecordWithBaseStringDef; overload;
+
+function wbNameReference(const aSignature    : TwbSignature;
+                         const aName         : string;
+                         const aAllowed      : array of TwbSignature;
+                         const aSentinels    : array of string;
+                               aSize         : Integer = 0;
+                               aEmptyIsError : Boolean = False;
+                               aUnresolved   : TwbNameUnresolved = nuError;
+                               aPriority     : TwbConflictPriority = cpNormal;
+                               aRequired     : Boolean = False)
+                                             : IwbSubRecordWithBaseStringDef; overload;
+
+function wbNameReference(const aSignature    : TwbSignature;
+                         const aName         : string;
+                         const aAllowed      : array of TwbSignature;
+                               aSize         : Integer = 0;
+                               aPriority     : TwbConflictPriority = cpNormal;
+                               aRequired     : Boolean = False)
+                                             : IwbSubRecordWithBaseStringDef; overload;
+
+function wbNameReference(const aName         : string;
+                         const aAllowed      : array of TwbSignature;
+                         const aSentinels    : array of string;
+                               aSize         : Integer = 0;
+                               aEmptyIsError : Boolean = False;
+                               aUnresolved   : TwbNameUnresolved = nuError;
+                               aPriority     : TwbConflictPriority = cpNormal;
+                               aRequired     : Boolean = False)
+                                             : IwbNameReferenceDef; overload;
+
+function wbNameReference(const aName         : string;
+                         const aAllowed      : array of TwbSignature;
+                               aSize         : Integer = 0;
+                               aPriority     : TwbConflictPriority = cpNormal;
+                               aRequired     : Boolean = False)
+                                             : IwbNameReferenceDef; overload;
+
+function wbHoldsFormIDText(const aElement: IwbElement): Boolean;
 
 function wbStringT(const aSignature : TwbSignature;
                    const aName      : string = 'Unknown';
@@ -7735,6 +7823,45 @@ begin
   Result := AtomicIncrement(gcStampCounter);
 end;
 
+function TwbGameContext.ViewNameKey(const aElement: IwbElement; aFormIDBase, aNameBase: Byte; const aValue: string;
+  out aSelected: IwbMainRecord): TwbNameKeyState;
+var
+  lKey : TwbFormID;
+begin
+  aSelected := nil;
+  if not FindIdentity(aFormIDBase, aNameBase, aValue, lKey) then
+    Exit(nksNone);
+  Result := ViewNameKeyAt(aElement, lKey, aValue, aSelected);
+end;
+
+constructor TwbCheckRun.Create;
+begin
+  inherited;
+  crNoticed := TList<IwbFile>.Create;
+end;
+
+destructor TwbCheckRun.Destroy;
+begin
+  crNoticed.Free;
+  inherited;
+end;
+
+function TwbCheckRun.NoticeFor(const aElement: IwbElement): string;
+begin
+  Result := '';
+  if not Supports(aElement.ValueDef, IwbNameReferenceDef) then
+    Exit;
+  var lFile := aElement._File;
+  if not Assigned(lFile) or (crNoticed.IndexOf(lFile) >= 0) then
+    Exit;
+  var lContext := aElement.ContextObj;
+  if not Assigned(lContext) or lContext.NameReferencesJudged(aElement) then
+    Exit;
+  crNoticed.Add(lFile);
+  Result := Format('NAME references in %s are not checked: it is not in a load order starting at %s with each master once ' +
+    'and none a delta patch', [lFile.FileName, lContext.GameDefObj.GameExeName]);
+end;
+
 function TwbGameContext.ExpandFileName(const aFileName: string): string;
 begin
   if (ExtractFilePath(aFileName) = '') and not SameText(aFileName, gcGameDefObj.GameExeName) then
@@ -8631,9 +8758,12 @@ type
 
     function KnownSubRecordSignatures: PwbKnownSubRecordSignatures;
     function GetIdentity(const aMainRecord: IwbMainRecord): string;
+    function IdentityFrom(aHasGrid: Boolean; const aGrid: TwbGridCell; aHasEditorID: Boolean; const aEditorID: string;
+                          out aIdentity: string): Boolean;
     function SetIdentityCallback(const aCallback: TwbMainRecordIdentityCallback): IwbMainRecordDef;
 
     function GetEditorID(const aSubRecord: IwbSubRecord): string;
+    function TryGetEditorID(const aSubRecord: IwbSubRecord; out aEditorID: string): Boolean;
     procedure SetEditorID(const aSubRecord: IwbSubRecord; const aEditorID: string);
     function SetGetEditorIDCallback(const aCallback: TwbMainRecordGetEditorIDCallback): IwbMainRecordDef;
     function SetSetEditorIDCallback(const aCallback: TwbMainRecordSetEditorIDCallback): IwbMainRecordDef;
@@ -9097,6 +9227,7 @@ type
 
     function MastersUpdated(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aOld, aNew: TwbFileIDs; aOldCount, aNewCount: TwbSlotCounts): Boolean; virtual;
     procedure FindUsedMasters(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aMasters: PwbUsedMasters); virtual;
+    function ReportValueMasters(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aMasters: TwbFilesSet): Boolean; virtual;
     function CompareExchangeFormID(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aOldFormID: TwbFormID; aNewFormID: TwbFormID): Boolean; virtual;
   end;
 
@@ -9170,6 +9301,10 @@ type
     function SetToDefault(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Boolean; override; final;
     function GetIsVariableSizeInternal: Boolean; override;
     function GetSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer; override;
+    function ReportValueMasters(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aMasters: TwbFilesSet): Boolean; override;
+
+    {---IwbDef---}
+    function Assign(const aTarget: IwbElement; aIndex: Integer; const aSource: IwbElement; aOnlySK: Boolean): IwbElement; override;
 
     {---IwbResolvableDef---}
     function NeedsElementToResolve: Boolean; virtual;
@@ -9280,9 +9415,10 @@ type
                  const aName       : string;
                        aSize       : Integer;
                        aTerminator : Boolean;
-                       aForward    : Boolean = False); virtual;
-    procedure AfterClone(const aSource: TwbDef); override; final;
+                       aForward    : Boolean = False); overload; virtual;
+    procedure AfterClone(const aSource: TwbDef); override;
 
+    function ValueLength(aBasePtr, aEndPtr: Pointer): NativeUInt; inline;
     function ToStringNative(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aTransformType: TwbStringTransformType): string; virtual;
     function ToStringTransform(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aTransformType: TwbStringTransformType): string;
 
@@ -9294,13 +9430,13 @@ type
     {---IwbDef---}
     function GetDefType: TwbDefType; override;
     function GetDefTypeName: string; override;
-    function CanAssign(const aElement: IwbElement; aIndex: Integer; const aDef: IwbDef): Boolean; override; final;
+    function CanAssign(const aElement: IwbElement; aIndex: Integer; const aDef: IwbDef): Boolean; override;
 
     {---IwbValueDef---}
     function ToString(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string; override; final;
     function ToSummary(aDepth: Integer; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; var aLinksTo: IwbElement): string; override; final;
     function ToSortKey(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aExtended: Boolean): string; override;
-    function Check(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string; override; final;
+    function Check(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string; override;
     function GetSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer; override;
     function GetDefaultSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer; override;
     function GetIsVariableSizeInternal: Boolean; override; final;
@@ -9347,6 +9483,76 @@ type
     procedure FindUsedMasters(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aMasters: PwbUsedMasters); override; final;
     function SetToDefault(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Boolean; override; final;
   public
+    procedure AfterConstruction; override; final;
+  end;
+
+  TwbNameVerdict = (nvNotJudged, nvUndecodable, nvEmpty, nvSentinel, nvLink, nvWrongType, nvAmbiguous, nvNotFound);
+
+  TwbNameKeyView = record
+    Base, NameBase : Byte;
+    Key            : TwbFormID;
+    State          : TwbNameKeyState;
+    Hit            : IwbMainRecord;
+    Allowed        : Boolean;
+  end;
+
+  TwbNameKeyViews = TArray<TwbNameKeyView>;
+
+  TwbNameReferenceDef = class(TwbStringDef, IwbNameReferenceDef)
+  protected
+    nrdAllowed      : TwbSignatures;
+    nrdSentinels    : TArray<string>;
+    nrdEmptyIsError : Boolean;
+    nrdUnresolved   : TwbNameUnresolved;
+
+    constructor Create(aPriority   : TwbConflictPriority;
+                       aRequired   : Boolean;
+                 const aName       : string;
+                       aSize       : Integer;
+                       aTerminator : Boolean;
+                       aForward    : Boolean = False); overload; override;
+    procedure AfterClone(const aSource: TwbDef); override; final;
+
+    function Judged(const aElement: IwbElement): Boolean;
+    function TryReadValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; out aValue: string): Boolean;
+    procedure ViewValue(const aElement: IwbElement; const aValue: string; out aViews: TwbNameKeyViews);
+    function VerdictOf(const aViews: TwbNameKeyViews; out aTarget: IwbMainRecord): TwbNameVerdict;
+    function ResolveValue(const aElement: IwbElement; const aValue: string; out aTarget: IwbMainRecord): TwbNameVerdict;
+    function Resolve(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; out aTarget: IwbMainRecord): TwbNameVerdict;
+    function TargetWrite(const aElement: IwbElement; const aKey: TwbFormID; const aTargetName: string;
+      aWrongTypeLinks: Boolean; out aIdentity: string): string;
+    function AllowedText: string;
+
+    {---IwbDef---}
+    function CanAssign(const aElement: IwbElement; aIndex: Integer; const aDef: IwbDef): Boolean; override; final;
+    function Assign(const aTarget: IwbElement; aIndex: Integer; const aSource: IwbElement; aOnlySK: Boolean): IwbElement; override; final;
+
+    {---IwbValueDef---}
+    function GetLinksTo(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): IwbElement; override; final;
+    procedure SetLinksTo(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aValue: IwbElement); override; final;
+    function Check(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string; override; final;
+    procedure BuildRef(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement); override; final;
+    function MastersUpdated(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aOld, aNew: TwbFileIDs; aOldCount, aNewCount: TwbSlotCounts): Boolean; override; final;
+    procedure FindUsedMasters(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aMasters: PwbUsedMasters); override; final;
+    function ReportValueMasters(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aMasters: TwbFilesSet): Boolean; override; final;
+    function CompareExchangeFormID(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aOldFormID: TwbFormID; aNewFormID: TwbFormID): Boolean; override; final;
+
+    {---IwbNameReferenceDef---}
+    function GetAllowedSignatures: TwbSignatures;
+    function GetSentinels: TArray<string>;
+    function GetEmptyIsError: Boolean;
+    function GetUnresolved: TwbNameUnresolved;
+    function IsAllowedSignature(const aSignature: TwbSignature): Boolean;
+    function IsSentinel(const aValue: string): Boolean;
+  public
+    constructor Create(aPriority     : TwbConflictPriority;
+                       aRequired     : Boolean;
+                 const aName         : string;
+                       aSize         : Integer;
+                 const aAllowed      : array of TwbSignature;
+                 const aSentinels    : array of string;
+                       aEmptyIsError : Boolean;
+                       aUnresolved   : TwbNameUnresolved); overload;
     procedure AfterConstruction; override; final;
   end;
 
@@ -10569,6 +10775,60 @@ function wbStringForward(const aSignature : TwbSignature;           // When the 
                                           : IwbSubRecordWithBaseStringDef; overload;
 begin
   Result := wbSubRecord(aSignature, aName, wbStringForward('', aSize, aPriority, aRequired), aPriority, aRequired) as IwbSubRecordWithBaseStringDef;
+end;
+
+function wbNameReference(const aSignature    : TwbSignature;
+                         const aName         : string;
+                         const aAllowed      : array of TwbSignature;
+                         const aSentinels    : array of string;
+                               aSize         : Integer = 0;
+                               aEmptyIsError : Boolean = False;
+                               aUnresolved   : TwbNameUnresolved = nuError;
+                               aPriority     : TwbConflictPriority = cpNormal;
+                               aRequired     : Boolean = False)
+                                             : IwbSubRecordWithBaseStringDef; overload;
+begin
+  Result := wbSubRecord(aSignature, aName, wbNameReference('', aAllowed, aSentinels, aSize, aEmptyIsError, aUnresolved, aPriority),
+    aPriority, aRequired) as IwbSubRecordWithBaseStringDef;
+end;
+
+function wbNameReference(const aSignature    : TwbSignature;
+                         const aName         : string;
+                         const aAllowed      : array of TwbSignature;
+                               aSize         : Integer = 0;
+                               aPriority     : TwbConflictPriority = cpNormal;
+                               aRequired     : Boolean = False)
+                                             : IwbSubRecordWithBaseStringDef; overload;
+begin
+  Result := wbNameReference(aSignature, aName, aAllowed, [], aSize, False, nuError, aPriority, aRequired);
+end;
+
+function wbNameReference(const aName         : string;
+                         const aAllowed      : array of TwbSignature;
+                         const aSentinels    : array of string;
+                               aSize         : Integer = 0;
+                               aEmptyIsError : Boolean = False;
+                               aUnresolved   : TwbNameUnresolved = nuError;
+                               aPriority     : TwbConflictPriority = cpNormal;
+                               aRequired     : Boolean = False)
+                                             : IwbNameReferenceDef; overload;
+begin
+  Result := TwbNameReferenceDef.Create(aPriority, aRequired, aName, aSize, aAllowed, aSentinels, aEmptyIsError, aUnresolved);
+end;
+
+function wbNameReference(const aName         : string;
+                         const aAllowed      : array of TwbSignature;
+                               aSize         : Integer = 0;
+                               aPriority     : TwbConflictPriority = cpNormal;
+                               aRequired     : Boolean = False)
+                                             : IwbNameReferenceDef; overload;
+begin
+  Result := wbNameReference(aName, aAllowed, [], aSize, False, nuError, aPriority, aRequired);
+end;
+
+function wbHoldsFormIDText(const aElement: IwbElement): Boolean;
+begin
+  Result := aElement.CanContainFormIDs and not Supports(aElement.ValueDef, IwbNameReferenceDef);
 end;
 
 function wbStringT(const aSignature : TwbSignature;
@@ -13548,10 +13808,16 @@ end;
 
 function TwbMainRecordDef.GetEditorID(const aSubRecord: IwbSubRecord): string;
 begin
+  if not TryGetEditorID(aSubRecord, Result) then
+    Result := '';
+end;
+
+function TwbMainRecordDef.TryGetEditorID(const aSubRecord: IwbSubRecord; out aEditorID: string): Boolean;
+begin
   if Assigned(recGetEditorIDCallback) then
-    Result := recGetEditorIDCallback(aSubRecord)
-  else
-    Result := aSubRecord.EditValue;
+    Exit(recGetEditorIDCallback(aSubRecord, aEditorID));
+  aEditorID := aSubRecord.EditValue;
+  Result := True;
 end;
 
 function TwbMainRecordDef.GetFormID(const aMainRecord: IwbMainRecord; out aFormID: TwbFormID): Boolean;
@@ -13635,12 +13901,24 @@ begin
   end;
 end;
 
-function TwbMainRecordDef.GetIdentity(const aMainRecord: IwbMainRecord): string;
+function TwbMainRecordDef.IdentityFrom(aHasGrid: Boolean; const aGrid: TwbGridCell; aHasEditorID: Boolean; const aEditorID: string;
+  out aIdentity: string): Boolean;
 begin
   if Assigned(recIdentityCallback) then
-    Result := recIdentityCallback(aMainRecord)
-  else
-    Result := aMainRecord.EditorID;
+    Exit(recIdentityCallback(aHasGrid, aGrid, aHasEditorID, aEditorID, aIdentity));
+  aIdentity := aEditorID;
+  Result := aHasEditorID;
+end;
+
+function TwbMainRecordDef.GetIdentity(const aMainRecord: IwbMainRecord): string;
+var
+  lGrid : TwbGridCell;
+begin
+  if not Assigned(recIdentityCallback) then
+    Exit(aMainRecord.EditorID);
+  var lHasGrid := aMainRecord.GetGridCell(lGrid);
+  if not recIdentityCallback(lHasGrid, lGrid, True, aMainRecord.EditorID, Result) then
+    Result := '';
 end;
 
 function TwbMainRecordDef.GetIsReference: Boolean;
@@ -18999,36 +19277,41 @@ begin
     ndToStr(Result, aBasePtr, aEndPtr, aElement, ctToStr);
 end;
 
+function TwbStringDef.ValueLength(aBasePtr, aEndPtr: Pointer): NativeUInt;
+begin
+  Result := NativeUInt(aEndPtr) - NativeUInt(aBasePtr);
+  if (Result > 0) and ndTerminator then
+    if PByte(aBasePtr)[Pred(Result)] = wbTerminator then
+      Dec(Result);
+
+  if sdSize > 0 then begin
+    if Result > Cardinal(sdSize) then
+      Result := sdSize;
+  end;
+
+  if sdForward then begin
+    var lLen: NativeUInt := 0;
+    while lLen < Result do begin
+      if PByte(aBasePtr)[lLen] = 0 then
+        Break;
+      Inc(lLen);
+    end;
+    Result := lLen;
+  end else
+    while (Result > 0) and (PByte(aBasePtr)[Pred(Result)] = 0) do
+      Dec(Result);
+end;
+
 function TwbStringDef.ToStringNative(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aTransformType: TwbStringTransformType): string;
 var
-  lLen, Len  : NativeUInt;
+  Len        : NativeUInt;
   b          : TBytes;
   i          : Integer;
   s          : string;
   MainRecord : IwbMainRecord;
 begin
   Result := '';
-  Len := NativeUInt(aEndPtr) - NativeUInt(aBasePtr);
-  if (Len > 0) and ndTerminator then
-    if PByte(aBasePtr)[Pred(Len)] = wbTerminator then
-      Dec(Len);
-
-  if sdSize > 0 then begin
-    if Len > Cardinal(sdSize) then
-      Len := sdSize;
-  end;
-
-  if sdForward then begin
-    lLen := 0;
-    while lLen < Len do begin
-      if PByte(aBasePtr)[lLen] = 0 then
-        Break;
-      Inc(lLen);
-    end;
-    Len := lLen;
-  end else
-    while (Len > 0) and (PByte(aBasePtr)[Pred(Len)] = 0) do
-      Dec(Len);
+  Len := ValueLength(aBasePtr, aEndPtr);
 
   if Len > 0 then begin
     b := BytesOf(aBasePtr, Len);
@@ -22155,6 +22438,11 @@ begin
   {can be overriden}
 end;
 
+function TwbValueDef.ReportValueMasters(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aMasters: TwbFilesSet): Boolean;
+begin
+  Result := False;
+end;
+
 procedure TwbValueDef.FromEditValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aValue: string);
 begin
   raise Exception.Create(GetName + ' is not editable.');
@@ -23347,6 +23635,25 @@ begin
     LinksTo[aBasePtr, aEndPtr, aElement] := aValue;
 end;
 
+function TwbResolvableDef.ReportValueMasters(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aMasters: TwbFilesSet): Boolean;
+begin
+  Result := False;
+  if dfCanContainNameReference in defFlags then begin
+    var lResolved := ResolveDef(aBasePtr, aEndPtr, aElement);
+    Result := Assigned(lResolved) and lResolved.ReportValueMasters(aBasePtr, aEndPtr, aElement, aMasters);
+  end;
+end;
+
+function TwbResolvableDef.Assign(const aTarget: IwbElement; aIndex: Integer; const aSource: IwbElement; aOnlySK: Boolean): IwbElement;
+begin
+  if dfCanContainNameReference in defFlags then begin
+    var lResolved := aTarget.ResolvedValueDef;
+    if Supports(lResolved, IwbNameReferenceDef) then
+      Exit(lResolved.Assign(aTarget, aIndex, aSource, aOnlySK));
+  end;
+  Result := inherited Assign(aTarget, aIndex, aSource, aOnlySK);
+end;
+
 function TwbResolvableDef.SetToDefault(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Boolean;
 var
   ValueDef: IwbValueDef;
@@ -24157,6 +24464,410 @@ begin
 end;
 
 { TwbStringMgefCodeDef }
+
+constructor TwbNameReferenceDef.Create(aPriority: TwbConflictPriority; aRequired: Boolean; const aName: string; aSize: Integer;
+  aTerminator, aForward: Boolean);
+begin
+  inherited Create(aPriority, aRequired, aName, aSize, aTerminator, True);
+end;
+
+constructor TwbNameReferenceDef.Create(aPriority: TwbConflictPriority; aRequired: Boolean; const aName: string; aSize: Integer;
+  const aAllowed: array of TwbSignature; const aSentinels: array of string; aEmptyIsError: Boolean; aUnresolved: TwbNameUnresolved);
+begin
+  Create(aPriority, aRequired, aName, aSize, False, True);
+  SetLength(nrdAllowed, Length(aAllowed));
+  for var i := 0 to High(aAllowed) do
+    nrdAllowed[i] := aAllowed[i];
+  TArray.Sort<TwbSignature>(nrdAllowed, TComparer<TwbSignature>.Construct(
+    function(const L, R: TwbSignature): Integer
+    begin
+      var lL := PCardinal(@L)^;
+      var lR := PCardinal(@R)^;
+      if lL < lR then
+        Result := -1
+      else if lL > lR then
+        Result := 1
+      else
+        Result := 0;
+    end));
+  for var i := 1 to High(nrdAllowed) do
+    Assert(PCardinal(@nrdAllowed[i])^ <> PCardinal(@nrdAllowed[Pred(i)])^);
+  SetLength(nrdSentinels, Length(aSentinels));
+  for var i := 0 to High(aSentinels) do begin
+    Assert(aSentinels[i] <> '');
+    nrdSentinels[i] := aSentinels[i].ToLowerInvariant;
+    for var j := 0 to Pred(i) do
+      Assert(nrdSentinels[j] <> nrdSentinels[i]);
+  end;
+  nrdEmptyIsError := aEmptyIsError;
+  nrdUnresolved := aUnresolved;
+end;
+
+procedure TwbNameReferenceDef.AfterClone(const aSource: TwbDef);
+begin
+  inherited;
+  with aSource as TwbNameReferenceDef do begin
+    Self.nrdAllowed := Copy(nrdAllowed);
+    Self.nrdSentinels := Copy(nrdSentinels);
+    Self.nrdEmptyIsError := nrdEmptyIsError;
+    Self.nrdUnresolved := nrdUnresolved;
+  end;
+end;
+
+procedure TwbNameReferenceDef.AfterConstruction;
+begin
+  inherited;
+  Include(defFlags, dfCanContainFormID);
+  Include(defFlags, dfCanContainNameReference);
+end;
+
+function TwbNameReferenceDef.Judged(const aElement: IwbElement): Boolean;
+begin
+  Result := Assigned(aElement) and Assigned(aElement.ContextObj) and aElement.ContextObj.NameReferencesJudged(aElement);
+end;
+
+function TwbNameReferenceDef.TryReadValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; out aValue: string): Boolean;
+begin
+  aValue := '';
+  var lLen := ValueLength(aBasePtr, aEndPtr);
+  if lLen = 0 then
+    Exit(True);
+  try
+    aValue := bsdGetEncoding(aElement).GetString(BytesOf(aBasePtr, lLen));
+    Result := True;
+  except
+    Result := False;
+  end;
+end;
+
+procedure TwbNameReferenceDef.ViewValue(const aElement: IwbElement; const aValue: string; out aViews: TwbNameKeyViews);
+var
+  lRecordDef : PwbMainRecordDef;
+  lBases     : set of Byte;
+  lView      : TwbNameKeyView;
+begin
+  aViews := nil;
+  var lContext := aElement.ContextObj;
+  var lGameDef := lContext.GameDefObj;
+  lBases := [];
+  for var lSignature in nrdAllowed do begin
+    if not lGameDef.FindRecordDef(lSignature, lRecordDef) then
+      Continue;
+    var lDef := lRecordDef^ as TwbMainRecordDef;
+    var lBase := lDef.recFormIDBase;
+    if (lBase = 0) or (lBase in lBases) then
+      Continue;
+    Include(lBases, lBase);
+    lView := Default(TwbNameKeyView);
+    lView.Base := lBase;
+    lView.NameBase := lDef.GetFormIDNameBase;
+    if not lContext.FindIdentity(lBase, lView.NameBase, aValue, lView.Key) then
+      Continue;
+    lView.State := lContext.ViewNameKeyAt(aElement, lView.Key, aValue, lView.Hit);
+    lView.Allowed := (lView.State = nksMatch) and IsAllowedSignature(lView.Hit.Signature);
+    aViews := aViews + [lView];
+  end;
+end;
+
+function TwbNameReferenceDef.VerdictOf(const aViews: TwbNameKeyViews; out aTarget: IwbMainRecord): TwbNameVerdict;
+var
+  lCandidates, lWrongs: Integer;
+begin
+  aTarget := nil;
+  lCandidates := 0;
+  lWrongs := 0;
+  for var lView in aViews do
+    if lView.State = nksCorrupt then
+      Exit(nvAmbiguous);
+  for var lView in aViews do
+    if lView.State = nksMatch then
+      if lView.Allowed then begin
+        if lCandidates = 0 then
+          aTarget := lView.Hit;
+        Inc(lCandidates);
+      end else
+        Inc(lWrongs);
+  if lCandidates = 1 then
+    Exit(nvLink);
+  aTarget := nil;
+  if lCandidates > 1 then
+    Exit(nvAmbiguous);
+  if lWrongs > 1 then
+    Exit(nvAmbiguous);
+  if lWrongs = 1 then begin
+    for var lView in aViews do
+      if (lView.State = nksMatch) and not lView.Allowed then
+        aTarget := lView.Hit;
+    Exit(nvWrongType);
+  end;
+  Result := nvNotFound;
+end;
+
+function TwbNameReferenceDef.ResolveValue(const aElement: IwbElement; const aValue: string; out aTarget: IwbMainRecord): TwbNameVerdict;
+var
+  lViews: TwbNameKeyViews;
+begin
+  aTarget := nil;
+  if aValue = '' then
+    Exit(nvEmpty);
+  if IsSentinel(aValue) then
+    Exit(nvSentinel);
+  ViewValue(aElement, aValue, lViews);
+  Result := VerdictOf(lViews, aTarget);
+end;
+
+function TwbNameReferenceDef.Resolve(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; out aTarget: IwbMainRecord): TwbNameVerdict;
+begin
+  aTarget := nil;
+  if not Judged(aElement) then
+    Exit(nvNotJudged);
+  var lValue: string;
+  if not TryReadValue(aBasePtr, aEndPtr, aElement, lValue) then
+    Exit(nvUndecodable);
+  Result := ResolveValue(aElement, lValue, aTarget);
+end;
+
+function TwbNameReferenceDef.TargetWrite(const aElement: IwbElement; const aKey: TwbFormID; const aTargetName: string;
+  aWrongTypeLinks: Boolean; out aIdentity: string): string;
+var
+  lSelected, lHit : IwbMainRecord;
+  lBytes          : TBytes;
+begin
+  aIdentity := '';
+  case aElement.ContextObj.NameKeyIdentity(aElement, aKey, lSelected, aIdentity) of
+    ntNone:       Exit('the file and its masters hold no version of ' + aTargetName);
+    ntCorrupt:    Exit('its key is held twice in this file''s view');
+    ntNoIdentity: Exit(aTargetName + ' has no identity');
+    ntExterior:   Exit('an exterior cell can not be named');
+    ntEmpty:      Exit(aTargetName + ' has an empty identity');
+  end;
+  var lEncoding := bsdGetEncoding(aElement);
+  try
+    lBytes := lEncoding.GetBytes(aIdentity);
+    if lEncoding.GetString(lBytes) <> aIdentity then
+      Exit('"' + aIdentity + '" can not be stored in this field''s encoding');
+  except
+    on E: Exception do
+      Exit('"' + aIdentity + '" can not be encoded: ' + E.Message);
+  end;
+  for var lByte in lBytes do
+    if lByte = 0 then
+      Exit('"' + aIdentity + '" encodes to a zero byte');
+  if (sdSize > 0) and (Length(lBytes) > sdSize) then
+    Exit('"' + aIdentity + '" is longer than the field');
+  var lVerdict := ResolveValue(aElement, aIdentity, lHit);
+  if not (Assigned(lHit) and lHit.Equals(lSelected) and
+          ((lVerdict = nvLink) or (aWrongTypeLinks and (lVerdict = nvWrongType)))) then
+    Exit('"' + aIdentity + '" would not resolve to ' + aTargetName);
+  Result := '';
+end;
+
+function TwbNameReferenceDef.AllowedText: string;
+begin
+  var lNames := TStringList.Create;
+  try
+    for var lSignature in nrdAllowed do
+      lNames.Add(string(lSignature));
+    lNames.Sort;
+    Result := String.Join(', ', lNames.ToStringArray);
+  finally
+    lNames.Free;
+  end;
+end;
+
+function TwbNameReferenceDef.CanAssign(const aElement: IwbElement; aIndex: Integer; const aDef: IwbDef): Boolean;
+var
+  lRecordDef : IwbMainRecordDef;
+begin
+  if dfDontAssign in defFlags then
+    Exit(False);
+  if Supports(aDef, IwbMainRecordDef, lRecordDef) then
+    Exit(IsAllowedSignature(lRecordDef.DefaultSignature));
+  Result := inherited CanAssign(aElement, aIndex, aDef);
+end;
+
+function TwbNameReferenceDef.Assign(const aTarget: IwbElement; aIndex: Integer; const aSource: IwbElement; aOnlySK: Boolean): IwbElement;
+var
+  lRecord : IwbMainRecord;
+begin
+  if Supports(aSource, IwbMainRecord, lRecord) then begin
+    aTarget.LinksTo := lRecord;
+    Exit(nil);
+  end;
+  Result := inherited Assign(aTarget, aIndex, aSource, aOnlySK);
+end;
+
+function TwbNameReferenceDef.GetLinksTo(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): IwbElement;
+var
+  lTarget : IwbMainRecord;
+begin
+  if Resolve(aBasePtr, aEndPtr, aElement, lTarget) in [nvLink, nvWrongType] then
+    Result := lTarget
+  else
+    Result := nil;
+end;
+
+procedure TwbNameReferenceDef.SetLinksTo(aBasePtr, aEndPtr: Pointer; const aElement, aValue: IwbElement);
+var
+  lTarget   : IwbMainRecord;
+  lIdentity : string;
+  lReason   : string;
+begin
+  if defFlags * [dfNoZeroTerminator, dfStringTrim] <> [] then
+    raise Exception.Create(aElement.Name + ': a NAME reference does not support dfNoZeroTerminator or dfStringTrim');
+  if not Assigned(aValue) then begin
+    FromStringNative(aBasePtr, aEndPtr, aElement, '', ttFromNativeValue);
+    Exit;
+  end;
+  if not Supports(aValue, IwbMainRecord, lTarget) then
+    raise Exception.Create(aElement.Name + ' can only link to a record');
+  var lContext := aElement.ContextObj;
+  if not Judged(aElement) then
+    lReason := 'references in this file are not judged'
+  else if (lTarget.ContextObj <> lContext) or not lContext.NameReferencesJudged(lTarget) then
+    lReason := 'it is not in a file whose NAME references are judged'
+  else
+    lReason := TargetWrite(aElement, lTarget.FixedFormID, lTarget.Name, False, lIdentity);
+  if lReason <> '' then
+    raise Exception.Create(aElement.Name + ' can not link to ' + lTarget.Name + ': ' + lReason);
+  FromStringNative(aBasePtr, aEndPtr, aElement, lIdentity, ttFromNativeValue);
+end;
+
+function TwbNameReferenceDef.Check(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string;
+var
+  lValue  : string;
+  lTarget : IwbMainRecord;
+begin
+  Result := inherited Check(aBasePtr, aEndPtr, aElement);
+  if (Result <> '') or wbDisableFormIDCheck or not Judged(aElement) then
+    Exit;
+  if not TryReadValue(aBasePtr, aEndPtr, aElement, lValue) then
+    Exit;
+  case ResolveValue(aElement, lValue, lTarget) of
+    nvEmpty:
+      if nrdEmptyIsError then
+        Result := 'is empty';
+    nvWrongType:
+      Result := Format('"%s" names a %s, expected one of %s', [lValue, string(lTarget.Signature), AllowedText]);
+    nvAmbiguous:
+      Result := Format('"%s" is ambiguous', [lValue]);
+    nvNotFound:
+      Result := Format('"%s" not found in %s or its masters', [lValue, aElement._File.FileName]);
+  end;
+end;
+
+procedure TwbNameReferenceDef.BuildRef(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement);
+begin
+end;
+
+function TwbNameReferenceDef.MastersUpdated(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aOld, aNew: TwbFileIDs;
+  aOldCount, aNewCount: TwbSlotCounts): Boolean;
+begin
+  Result := False;
+end;
+
+procedure TwbNameReferenceDef.FindUsedMasters(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aMasters: PwbUsedMasters);
+begin
+end;
+
+function TwbNameReferenceDef.ReportValueMasters(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aMasters: TwbFilesSet): Boolean;
+begin
+  Result := Judged(aElement);
+end;
+
+function TwbNameReferenceDef.CompareExchangeFormID(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aOldFormID, aNewFormID: TwbFormID): Boolean;
+var
+  lViews    : TwbNameKeyViews;
+  lOld      : Integer;
+  lIdentity : string;
+  lOldKey   : TwbFormID;
+  lNewKey   : TwbFormID;
+begin
+  Result := False;
+  if defFlags * [dfNoZeroTerminator, dfStringTrim] <> [] then
+    Exit;
+  if aOldFormID = aNewFormID then
+    Exit;
+  if not Judged(aElement) then
+    Exit;
+  var lValue: string;
+  if not TryReadValue(aBasePtr, aEndPtr, aElement, lValue) then
+    Exit;
+  if (lValue = '') or IsSentinel(lValue) then
+    Exit;
+  var lContext := aElement.ContextObj;
+  if not lContext.NameFileKey(aElement, aOldFormID, lOldKey) then
+    Exit;
+  ViewValue(aElement, lValue, lViews);
+  lOld := -1;
+  for var i := 0 to High(lViews) do
+    if lViews[i].Key = lOldKey then
+      lOld := i;
+  if lOld < 0 then
+    Exit;
+  for var lView in lViews do
+    if lView.State = nksCorrupt then
+      Exit;
+  var lOldCandidate := (lViews[lOld].State = nksMatch) and lViews[lOld].Allowed;
+  for var i := 0 to High(lViews) do
+    if (i <> lOld) and (lViews[i].State = nksMatch) and (lViews[i].Allowed or not lOldCandidate) then
+      Exit;
+  if not aNewFormID.IsNull then
+    if not lContext.NameFileKey(aElement, aNewFormID, lNewKey) or
+       (TargetWrite(aElement, lNewKey, '', True, lIdentity) <> '') then
+      Exit;
+  FromStringNative(aBasePtr, aEndPtr, aElement, lIdentity, ttFromNativeValue);
+  Result := True;
+end;
+
+function TwbNameReferenceDef.GetAllowedSignatures: TwbSignatures;
+begin
+  Result := Copy(nrdAllowed);
+end;
+
+function TwbNameReferenceDef.GetSentinels: TArray<string>;
+begin
+  Result := Copy(nrdSentinels);
+end;
+
+function TwbNameReferenceDef.GetEmptyIsError: Boolean;
+begin
+  Result := nrdEmptyIsError;
+end;
+
+function TwbNameReferenceDef.GetUnresolved: TwbNameUnresolved;
+begin
+  Result := nrdUnresolved;
+end;
+
+function TwbNameReferenceDef.IsAllowedSignature(const aSignature: TwbSignature): Boolean;
+begin
+  var lKey := PCardinal(@aSignature)^;
+  var L := 0;
+  var H := High(nrdAllowed);
+  while L <= H do begin
+    var I := (L + H) shr 1;
+    var lAt := PCardinal(@nrdAllowed[I])^;
+    if lAt = lKey then
+      Exit(True);
+    if lAt < lKey then
+      L := Succ(I)
+    else
+      H := Pred(I);
+  end;
+  Result := False;
+end;
+
+function TwbNameReferenceDef.IsSentinel(const aValue: string): Boolean;
+begin
+  if (aValue = '') or (Length(nrdSentinels) = 0) then
+    Exit(False);
+  var lValue := aValue.ToLowerInvariant;
+  for var lSentinel in nrdSentinels do
+    if lSentinel = lValue then
+      Exit(True);
+  Result := False;
+end;
 
 procedure TwbStringMgefCodeDef.AfterConstruction;
 begin

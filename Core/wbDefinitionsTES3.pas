@@ -1138,12 +1138,15 @@ begin
       var GridCell: TwbGridCell;
       Result := aMainRecord.GetGridCell(GridCell) and wbGridCellToFormID(wbCellGridFormIDBase, GridCell, aFormID);
     end)
-    .SetIdentityCallback(function(const aMainRecord: IwbMainRecord): string begin
-      var GridCell: TwbGridCell;
-      if aMainRecord.GetGridCell(GridCell) then
-        Result := '<Exterior>' + GridCell.SortKey
+    .SetIdentityCallback(function(aHasGrid: Boolean; const aGrid: TwbGridCell; aHasEditorID: Boolean; const aEditorID: string;
+      out aIdentity: string): Boolean begin
+      Result := True;
+      if aHasGrid then
+        aIdentity := '<Exterior>' + aGrid.SortKey
+      else if aHasEditorID then
+        aIdentity := aEditorID
       else
-        Result := aMainRecord.EditorID;
+        Result := False;
     end)
     .SetAfterLoad(wbCELLAfterLoad);
 
@@ -1706,11 +1709,11 @@ begin
       var GridCell: TwbGridCell;
       Result := aMainRecord.GetGridCell(GridCell) and wbGridCellToFormID(wbLandGridFormIDBase, GridCell, aFormID);
     end)
-    .SetIdentityCallback(function(const aMainRecord: IwbMainRecord): string begin
-      Result := '';
-      var GridCell: TwbGridCell;
-      if aMainRecord.GetGridCell(GridCell) then
-        Result := GridCell.SortKey;
+    .SetIdentityCallback(function(aHasGrid: Boolean; const aGrid: TwbGridCell; aHasEditorID: Boolean; const aEditorID: string;
+      out aIdentity: string): Boolean begin
+      Result := aHasGrid;
+      if Result then
+        aIdentity := aGrid.SortKey;
     end);
 
   RegisterRecordDef(LEVC, 'Leveled Creature',
@@ -1726,7 +1729,7 @@ begin
     wbInteger(INDX, 'Entry Count', itU32).IncludeFlag(dfSkipImplicitEdit),
     wbRArrayS('Leveled Creature Entries',
       wbRStructSK([1], 'Leveled Creature Entry', [
-        wbString(CNAM, 'Creature'), //[CREA]
+        wbNameReference(CNAM, 'Creature', [CREA, NPC_, LEVC]),
         wbInteger(INTV, 'Level', itU16)
       ]).SetSummaryKey([1,0])
         .SetSummaryMemberPrefixSuffix(1, '[Level: ', ']')
@@ -1751,7 +1754,7 @@ begin
     wbInteger(INDX, 'Entry Count', itU32).IncludeFlag(dfSkipImplicitEdit),
     wbRArrayS('Leveled Item Entries',
       wbRStructSK([1], 'Leveled Item Entry', [
-        wbString(INAM, 'Item'), //[ALCH, APPA, ARMO, BOOK, CLOT, INGR, LEVI, LIGH, LOCK, MISC, PROB, REPA, WEAP]
+        wbNameReference(INAM, 'Item', [ALCH, APPA, ARMO, BOOK, CLOT, INGR, LEVI, LIGH, LOCK, MISC, PROB, REPA, WEAP]),
         wbInteger(INTV, 'Player Level', itU16)
       ]).SetSummaryKey([1,0])
         .SetSummaryMemberPrefixSuffix(1, '[Level: ', ']')
@@ -2041,12 +2044,15 @@ begin
       var GridCell: TwbGridCell;
       Result := aMainRecord.GetGridCell(GridCell) and wbGridCellToFormID(wbPathgridGridFormIDBase, GridCell, aFormID);
     end)
-    .SetIdentityCallback(function(const aMainRecord: IwbMainRecord): string begin
-      var GridCell: TwbGridCell;
-      if aMainRecord.GetGridCell(GridCell) then
-        Result := '<Exterior>' + GridCell.SortKey
+    .SetIdentityCallback(function(aHasGrid: Boolean; const aGrid: TwbGridCell; aHasEditorID: Boolean; const aEditorID: string;
+      out aIdentity: string): Boolean begin
+      Result := True;
+      if aHasGrid then
+        aIdentity := '<Exterior>' + aGrid.SortKey
+      else if aHasEditorID then
+        aIdentity := aEditorID
       else
-        Result := aMainRecord.EditorID;
+        Result := False;
     end);
 
   RegisterRecordDef(PROB, 'Probe',
@@ -2254,8 +2260,11 @@ begin
     wbByteArray(SCDT, 'Compiled Script'),
     wbStringScript(SCTX, 'Script Source').SetRequired
   ]).SetFormIDBase($30)
-    .SetGetEditorIDCallback(function (const aSubRecord: IwbSubRecord): string begin
-      Result := aSubRecord.ElementEditValues['Name'];
+    .SetGetEditorIDCallback(function (const aSubRecord: IwbSubRecord; out aEditorID: string): Boolean begin
+      var lName := aSubRecord.ElementByName['Name'];
+      Result := Assigned(lName);
+      if Result then
+        aEditorID := lName.EditValue;
     end)
     .SetSetEditorIDCallback(procedure (const aSubRecord: IwbSubRecord; const aEditorID: string) begin
       aSubRecord.ElementEditValues['Name'] := aEditorID;
