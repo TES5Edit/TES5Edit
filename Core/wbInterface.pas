@@ -7849,7 +7849,9 @@ end;
 function TwbCheckRun.NoticeFor(const aElement: IwbElement): string;
 begin
   Result := '';
-  if not Supports(aElement.ValueDef, IwbNameReferenceDef) then
+  var lValueDef := aElement.ValueDef;
+  if not Assigned(lValueDef) or not (dfCanContainNameReference in lValueDef.DefFlags) or
+     not Supports(aElement.ResolvedValueDef, IwbNameReferenceDef) then
     Exit;
   var lFile := aElement._File;
   if not Assigned(lFile) or (crNoticed.IndexOf(lFile) >= 0) then
@@ -10828,7 +10830,7 @@ end;
 
 function wbHoldsFormIDText(const aElement: IwbElement): Boolean;
 begin
-  Result := aElement.CanContainFormIDs and not Supports(aElement.ValueDef, IwbNameReferenceDef);
+  Result := aElement.CanContainFormIDs and not Supports(aElement.ResolvedValueDef, IwbNameReferenceDef);
 end;
 
 function wbStringT(const aSignature : TwbSignature;
