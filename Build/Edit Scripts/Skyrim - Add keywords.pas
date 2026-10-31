@@ -32,10 +32,12 @@ begin
     Exit;
 
   // get existing keywords list or add a new
-  kwda := ElementBySignature(e, 'KWDA');
-  if not Assigned(kwda) then
-    kwda := Add(e, 'KWDA', True);
-    
+  kwda := ElementByPath(e, 'Keywords\KWDA');
+  if not Assigned(kwda) then begin
+    Add(e, 'Keywords', True);
+    kwda := ElementByPath(e, 'Keywords\KWDA');
+  end;
+
   // no keywords subrecord (it must exist) - terminate script
   if not Assigned(kwda) then begin
     AddMessage('No keywords subrecord in ' + Name(e));
@@ -74,9 +76,9 @@ begin
   end;
   
   // update KSIZ keywords count
-  if not ElementExists(e, 'KSIZ') then
-    Add(e, 'KSIZ', True);
-  SetElementNativeValues(e, 'KSIZ', ElementCount(kwda));
+  if not ElementExists(e, 'Keywords\KSIZ') then
+    Add(ElementByPath(e, 'Keywords'), 'KSIZ', True);
+  SetElementNativeValues(e, 'Keywords\KSIZ', ElementCount(kwda));
   
   AddMessage('Processed: ' + Name(e));
 

@@ -42,7 +42,8 @@ begin
   ElementAssign(Add(r, 'FULL', True), LowInteger, ElementByPath(e, 'FULL'), False);
   ElementAssign(Add(r, 'DESC', True), LowInteger, ElementByPath(e, 'DESC'), False);
   ElementAssign(Add(r, 'OBND', True), LowInteger, ElementByPath(e, 'OBND'), False);
-  ElementAssign(Add(r, 'KWDA', True), LowInteger, ElementByPath(e, 'KWDA'), False);
+  Add(r, 'Keywords', True);
+  ElementAssign(ElementByPath(r, 'Keywords\KWDA'), LowInteger, ElementByPath(e, 'Keywords\KWDA'), False);
   ElementAssign(Add(r, 'Effects', True), LowInteger, ElementByPath(e, 'Effects'), False);
   
   if bReplace = 1 then begin

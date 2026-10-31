@@ -41,6 +41,40 @@ begin
   raise Exception.Create(aElement.Path + ': Does not support editing');
 end;
 
+function IsKeywordsMember(const aName: string): Boolean;
+begin
+  Result := (aName = 'KWDA') or (aName = 'KSIZ');
+end;
+
+function KeywordsStruct(const aContainer: IwbContainerElementRef): IwbContainerElementRef;
+begin
+  Result := nil;
+  var lElement := aContainer.ElementByName['Keywords'];
+  if Assigned(lElement) and (lElement.ElementType = etSubRecordStruct) then
+    Supports(lElement, IwbContainerElementRef, Result);
+end;
+
+function DefinesKeywordsStruct(const aMainRecord: IwbMainRecord): Boolean;
+begin
+  Result := False;
+  var lDef := aMainRecord.Def;
+  if Assigned(lDef) then
+    for var i := 0 to Pred(lDef.MemberCount) do
+      if (lDef.Members[i].DefType = dtSubRecordStruct) and (lDef.Members[i].Name = 'Keywords') then
+        Exit(True);
+end;
+
+function KeywordsPath(const aContainer: IwbContainerElementRef; const aPath: string): string;
+begin
+  Result := aPath;
+  var lFirst := aPath;
+  var i := Pos('\', aPath);
+  if i > 0 then
+    lFirst := Copy(aPath, 1, Pred(i));
+  if IsKeywordsMember(lFirst) and Assigned(KeywordsStruct(aContainer)) then
+    Result := 'Keywords\' + aPath;
+end;
+
 
 { IwbContainer }
 
@@ -48,8 +82,20 @@ procedure IwbContainer_Add(var Value: Variant; Args: TJvInterpreterArgs);
 var
   Container: IwbContainerElementRef;
 begin
-  if Supports(IInterface(Args.Values[0]), IwbContainerElementRef, Container) then
-    Value := Container.Add(Args.Values[1], Args.Values[2]);
+  if Supports(IInterface(Args.Values[0]), IwbContainerElementRef, Container) then begin
+    var lName: string := Args.Values[1];
+    var lMainRecord: IwbMainRecord;
+    if IsKeywordsMember(lName) and Supports(Container, IwbMainRecord, lMainRecord) then begin
+      var lKeywords := KeywordsStruct(Container);
+      if not Assigned(lKeywords) and DefinesKeywordsStruct(lMainRecord) then
+        Supports(Container.Add('Keywords', Args.Values[2]), IwbContainerElementRef, lKeywords);
+      if Assigned(lKeywords) then begin
+        Value := lKeywords.Add(lName, Args.Values[2]);
+        Exit;
+      end;
+    end;
+    Value := Container.Add(lName, Args.Values[2]);
+  end;
 end;
 
 procedure IwbContainer_AddElement(var Value: Variant; Args: TJvInterpreterArgs);
@@ -102,7 +148,7 @@ var
   Container: IwbContainerElementRef;
 begin
   if Supports(IInterface(Args.Values[0]), IwbContainerElementRef, Container) then
-    Value := Container.ElementByPath[Args.Values[1]];
+    Value := Container.ElementByPath[KeywordsPath(Container, Args.Values[1])];
 end;
 
 procedure IwbContainer_ElementBySignature(var Value: Variant; Args: TJvInterpreterArgs);
@@ -111,8 +157,14 @@ var
   Signature: TwbSignature;
 begin
   if Supports(IInterface(Args.Values[0]), IwbContainerElementRef, Container) then begin
-    Signature := StrToSignature(Args.Values[1]);
-    Value := Container.ElementBySignature[Signature];
+    var lName: string := Args.Values[1];
+    var lPath := KeywordsPath(Container, lName);
+    if lPath <> lName then
+      Value := Container.ElementByPath[lPath]
+    else begin
+      Signature := StrToSignature(lName);
+      Value := Container.ElementBySignature[Signature];
+    end;
   end;
 end;
 
@@ -131,7 +183,7 @@ var
 begin
   Value := False;
   if Supports(IInterface(Args.Values[0]), IwbContainerElementRef, Container) then
-    Value := Container.ElementExists[string(Args.Values[1])];
+    Value := Container.ElementExists[KeywordsPath(Container, Args.Values[1])];
 end;
 
 procedure IwbContainer_GetElementEditValues(var Value: Variant; Args: TJvInterpreterArgs);
@@ -140,7 +192,7 @@ var
 begin
   Value := '';
   if Supports(IInterface(Args.Values[0]), IwbContainerElementRef, Container) then
-    Value := Container.ElementEditValues[Args.Values[1]];
+    Value := Container.ElementEditValues[KeywordsPath(Container, Args.Values[1])];
 end;
 
 procedure IwbContainer_GetElementNativeValues(var Value: Variant; Args: TJvInterpreterArgs);
@@ -148,7 +200,7 @@ var
   Container: IwbContainerElementRef;
 begin
   if Supports(IInterface(Args.Values[0]), IwbContainerElementRef, Container) then
-    Value := Container.ElementNativeValues[Args.Values[1]];
+    Value := Container.ElementNativeValues[KeywordsPath(Container, Args.Values[1])];
 end;
 
 procedure IwbContainer_GetElementValues(var Value: Variant; Args: TJvInterpreterArgs);
@@ -157,7 +209,7 @@ var
 begin
   Value := '';
   if Supports(IInterface(Args.Values[0]), IwbContainerElementRef, Container) then
-    Value := Container.ElementValues[Args.Values[1]];
+    Value := Container.ElementValues[KeywordsPath(Container, Args.Values[1])];
 end;
 
 procedure IwbContainer_IndexOf(var Value: Variant; Args: TJvInterpreterArgs);
@@ -264,8 +316,9 @@ begin
       var lContainer: IwbContainerElementRef;
       if Supports(IInterface(Args.Values[0]), IwbContainerElementRef, lContainer) then
       begin
+        var lPath := KeywordsPath(lContainer, Args.Values[1]);
         var lElement: IwbElement;
-        if Supports(lContainer.ElementByPath[Args.Values[1]], IwbElement, lElement) then begin
+        if Supports(lContainer.ElementByPath[lPath], IwbElement, lElement) then begin
           if not (wbAllowUnsafeScripts or lElement.IsEditable) then
             raise Exception.Create(lElement.Path + ': Does not support editing')
           else
@@ -273,7 +326,7 @@ begin
         end else begin
           var lParent: IwbContainerElementRef;
           var lName: string;
-          if MemberTarget(lContainer, Args.Values[1], lParent, lName) then
+          if MemberTarget(lContainer, lPath, lParent, lName) then
             lParent.ElementEditValues[lName] := String(Args.Values[2]);
         end;
       end;
@@ -291,8 +344,9 @@ begin
       var lContainer: IwbContainerElementRef;
       if Supports(IInterface(Args.Values[0]), IwbContainerElementRef, lContainer) then
       begin
+        var lPath := KeywordsPath(lContainer, Args.Values[1]);
         var lElement: IwbElement;
-        if Supports(lContainer.ElementByPath[Args.Values[1]], IwbElement, lElement) then begin
+        if Supports(lContainer.ElementByPath[lPath], IwbElement, lElement) then begin
           if not (wbAllowUnsafeScripts or lElement.IsEditable) then
             raise Exception.Create(lElement.Path + ': Does not support editing')
           else
@@ -300,7 +354,7 @@ begin
         end else begin
           var lParent: IwbContainerElementRef;
           var lName: string;
-          if MemberTarget(lContainer, Args.Values[1], lParent, lName) then
+          if MemberTarget(lContainer, lPath, lParent, lName) then
             lParent.ElementNativeValues[lName] := Args.Values[2];
         end;
       end;
