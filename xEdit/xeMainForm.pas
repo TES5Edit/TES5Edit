@@ -15300,7 +15300,7 @@ var
 
     Supports(MainRecord, IwbContainerElementRef, CER1);
 
-    if not Supports(MainRecord.ElementBySignature['KWDA'], IwbContainerElementRef, Keywords) then
+    if not Supports(MainRecord.ElementByPath['Keywords\KWDA'], IwbContainerElementRef, Keywords) then
       Exit;
 
     for i := 0 to Pred(Keywords.ElementCount) do

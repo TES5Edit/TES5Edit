@@ -3389,6 +3389,7 @@ procedure TxeTestFormHelper.TestCheckMenusRunTimer(Sender: TObject);
     var lTree := aTab.Controls[0] as TVirtualEditTree;
     TestHost.TestCheckMenusTyped := '';
     TestHost.TestCheckMenusSeen := '';
+    TestHost.TestCheckMenusKeywords := '';
     TestHost.TestCheckMenusAnswer.Enabled := True;
     try
       pgMain.ActivePage := aTab;
@@ -3396,6 +3397,7 @@ procedure TxeTestFormHelper.TestCheckMenusRunTimer(Sender: TObject);
       TestHost.TestCheckMenusAnswer.Enabled := False;
     end;
     TestHost.TestCheckMenusLines.Add(aName + 'dialogs' + #9 + TestHost.TestCheckMenusSeen);
+    TestHost.TestCheckMenusLines.Add(aName + 'keywords' + #9 + TestHost.TestCheckMenusKeywords);
 
     var Cells := function(aNode: PVirtualNode): string
     begin
@@ -3522,8 +3524,18 @@ begin
     TestHost.TestCheckMenusSeen := TestHost.TestCheckMenusSeen + ' ' + lForm.ClassName;
     if lForm is TfrmFileSelect then begin
       var lList := TfrmFileSelect(lForm).CheckListBox1;
-      for var j := 0 to Pred(lList.Count) do
-        lList.Checked[j] := True;
+      if lForm.Caption = 'Select Keywords to filter on' then begin
+        var lTicked := 0;
+        for var j := 0 to Pred(lList.Count) do begin
+          var lName := lList.Items[j];
+          lList.Checked[j] := (Pos(' [', lName) > 0) and (Pos(',' + Copy(lName, 1, Pred(Pos(' [', lName))) + ',', ',' + xeTestSwitches.CheckMenusKeywords + ',') > 0);
+          if lList.Checked[j] then
+            Inc(lTicked);
+        end;
+        TestHost.TestCheckMenusKeywords := IntToStr(lList.Count) + #9 + IntToStr(lTicked);
+      end else
+        for var j := 0 to Pred(lList.Count) do
+          lList.Checked[j] := True;
     end;
     if TestHost.TestCheckMenusTyped <> '' then
       for var j := 0 to Pred(lForm.ComponentCount) do

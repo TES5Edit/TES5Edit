@@ -77,6 +77,7 @@ type
     TestCheckMenusAnswer     : TTimer;
     TestCheckMenusTyped      : string;
     TestCheckMenusSeen       : string;
+    TestCheckMenusKeywords   : string;
     TestFormIDSearchTimer    : TTimer;
     TestFormIDSearchTarget   : IwbMainRecord;
     TestFormIDSearchStart    : UInt64;
@@ -247,6 +248,7 @@ type
     CheckMenusFile        : string;
     CheckMenusModule      : string;
     CheckMenusRecord      : string;
+    CheckMenusKeywords    : string;
     FormIDSearch          : Boolean;
     FormIDSearchFile      : string;
     FormIDSearchModule    : string;
@@ -468,6 +470,7 @@ begin
     end;
     if not wbFindCmdLineParam('testcheckmenusrecord', CheckMenusRecord) then
       CheckMenusRecord := 'LEVI';
+    wbFindCmdLineParam('testcheckmenuskeywords', CheckMenusKeywords);
     CheckMenus := True;
     xeAutoLoad := True;
     xeAutoExit := True;
