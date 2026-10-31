@@ -291,7 +291,7 @@ begin
     if not wbTryGetContainerWithValidMainRecord(aElement, Container, MainRecord) then
       Exit;
 
-    if Assigned(MainRecord.ElementBySignature['FLTV']) then
+    if Assigned(MainRecord.ElementBySignature['FLTV']) and Assigned(MainRecord.ElementBySignature['FNAM']) then
       if MainRecord.ElementBySignature['FNAM'].Value = 'Short' then //Only occurs on shorts.
         if (MainRecord.ElementBySignature['FLTV'].NativeValue = Single(-92233720368547758.1)) or
            (MainRecord.ElementBySignature['FLTV'].NativeValue = 0.04) or
