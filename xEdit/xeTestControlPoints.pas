@@ -3526,23 +3526,30 @@ procedure TxeTestFormHelper.TestCheckMenusRunTimer(Sender: TObject);
       lField.SetValue(vstView, TValue.From<TColumnIndex>(aColumn));
     end;
 
+    function SortedNames(const aNames: TArray<string>): string;
+    begin
+      var lNames := Copy(aNames);
+      TArray.Sort<string>(lNames);
+      Result := string.Join(',', lNames);
+    end;
+
     function Names(const aRecords: array of IwbMainRecord): string;
     begin
-      Result := '';
+      var lNames: TArray<string> := nil;
       for var lRecord in aRecords do
-        Result := Result + ',' + lRecord.EditorID;
-      Result := Copy(Result, 2, MaxInt);
+        lNames := lNames + [lRecord.EditorID];
+      Result := SortedNames(lNames);
     end;
 
     function ActiveNames: string;
     var
       lRecord : IwbMainRecord;
     begin
-      Result := '';
+      var lNames: TArray<string> := nil;
       for var i := Low(ActiveRecords) to High(ActiveRecords) do
         if Supports(ActiveRecords[i].Element, IwbMainRecord, lRecord) then
-          Result := Result + ',' + lRecord.EditorID;
-      Result := Copy(Result, 2, MaxInt);
+          lNames := lNames + [lRecord.EditorID];
+      Result := SortedNames(lNames);
     end;
 
     procedure CompareRow(const aLabel: string; const aFirst, aSecond: IwbMainRecord);
@@ -3603,7 +3610,8 @@ procedure TxeTestFormHelper.TestCheckMenusRunTimer(Sender: TObject);
         vstView.UpdateHotTrack;
         var lHot := vstView.HotTrack;
         vstViewClick(nil);
-        TestHost.TestCheckMenusLines.Add('hottrack' + #9 + BoolToStr(lDown, True) + #9 + BoolToStr(lHot, True) + #9 + RaceOf(lFirst).EditorID + #9 + ActiveNames);
+        TestHost.TestCheckMenusLines.Add('hottrack' + #9 + BoolToStr(lDown, True) + #9 + BoolToStr(lHot, True) + #9 + RaceOf(lFirst).EditorID + #9 +
+          lFirst.EditorID + #9 + ActiveNames);
       finally
         SetControl(False);
         SetHotColumn(NoColumn);
