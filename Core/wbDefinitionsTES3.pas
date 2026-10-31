@@ -272,34 +272,6 @@ begin
     aValue := '+' + aValue;
 end;
 
-procedure wbForwardForReal(const aElement: IwbElement);
-var
-  Container : IwbContainer;
-  Element   : IwbElement;
-begin
-  if aElement.ContextObj.BeginInternalEdit then try
-    if Length(aElement.Value) > 0 then begin
-      Container := aElement.Container;
-      Element := Container.ElementbyName['Target'];
-      if not Assigned(Element) then
-        Element := Container.ElementbyName['Sound'];
-        if not Assigned(Element) then
-          Exit;
-
-        var i := 1;
-        while i <= Length(aElement.Value) do begin
-          if aElement.Value[i] = AnsiChar(#0) then
-            Break;
-          Inc(i);
-        end;
-        var s := Copy(aElement.Value, 0, i);
-        Element.NativeValue := s;
-     end;
-  finally
-    wbEndInternalEdit;
-  end;
-end;
-
 function wbFRMRToString(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 begin
   Result := '';
@@ -687,8 +659,8 @@ begin
           {25} 'Weapon',
           {26} 'Tail'
           ])),
-        wbString(BNAM, 'Male'), //[BODY]
-        wbString(CNAM, 'Female') //[BODY]
+        wbNameReference(BNAM, 'Male', [BODY]),
+        wbNameReference(CNAM, 'Female', [BODY])
       ]).SetSummaryKey([0,1,2])
         .SetSummaryMemberPrefixSuffix(0, 'Part: ', ',')
         .SetSummaryMemberPrefixSuffix(1, 'Male: ', ',')
@@ -759,7 +731,7 @@ end;
 
 function TwbGameDefTES3.wbEnchantment: IwbRecordMemberDef;
 begin
-  Result := wbString(ENAM, 'Enchantment');
+  Result := wbNameReference(ENAM, 'Enchantment', [ENCH]);
 end;
 
 function wbFullName: IwbRecordMemberDef;
@@ -778,7 +750,7 @@ begin
     wbRArray('Inventory',
       wbStruct(NPCO, 'Item Entry', [
         wbInteger('Count', itU32),
-        wbString('Item', 32) //[ALCH, APPA, ARMO, BOOK, CLOT, INGR, LEVI, LIGH, LOCK, MISC, PROB, REPA, WEAP]
+        wbNameReference('Item', [ALCH, APPA, ARMO, BOOK, CLOT, INGR, LEVI, LIGH, LOCK, MISC, PROB, REPA, WEAP], [], 32, True)
       ]).SetSummaryKeyOnValue([1,0])
         .SetSummaryPrefixSuffixOnValue(0, 'x', '}')
         .SetSummaryPrefixSuffixOnValue(1, '{', '')
@@ -820,7 +792,7 @@ begin
           wbStruct(AI_F, 'Follow', [
             wbVec3('Position'),
             wbInteger('Duration In Hours', itU16),
-            wbStringForward('Target', 32).SetAfterLoad(wbForwardForReal), //[CREA, NPC_]
+            wbNameReference('Target', [CREA, NPC_], 32),
             wbInteger('Reset', itU16, wbBoolEnum).SetDefaultNativeValue(1)
           ]).SetRequired,
           wbString(CNDT, 'Follow To Cell') //[CELL]
@@ -829,13 +801,13 @@ begin
           wbStruct(AI_E, 'Escort', [
             wbVec3('Position'),
             wbInteger('Duration In Hours', itU16),
-            wbStringForward('Target', 32).SetAfterLoad(wbForwardForReal), //[CREA, NPC_]
+            wbNameReference('Target', [CREA, NPC_], 32),
             wbInteger('Reset', itU16, wbBoolEnum).SetDefaultNativeValue(1)
           ]).SetRequired,
           wbString(CNDT, 'Escort To Cell') //[CELL]
         ]),
         wbStruct(AI_A, 'Activate', [
-          wbStringForward('Target', 32).SetAfterLoad(wbForwardForReal), //[ACTI, ALCH, APPA, ARMO, BODY, BOOK, CLOT, CONT, CREA, DOOR, ENCH, INGR, LIGH, LEVC, LEVI, LOCK, MISC, NPC_, PROB, REPA, SPEL, STAT, WEAP]
+          wbNameReference('Target', [ACTI, ALCH, APPA, ARMO, BODY, BOOK, CLOT, CONT, CREA, DOOR, INGR, LIGH, LEVC, LEVI, LOCK, MISC, NPC_, PROB, REPA, STAT, WEAP], 32),
           wbInteger('Reset', itU8, wbBoolEnum).SetDefaultNativeValue(1)
         ])
       ]));
@@ -843,14 +815,14 @@ end;
 
 function wbScript: IwbRecordMemberDef;
 begin
-  Result := wbString(SCRI, 'Script');
+  Result := wbNameReference(SCRI, 'Script', [SCPT]);
 end;
 
 function wbSpells: IwbRecordMemberDef;
 begin
   Result :=
     wbRArrayS('Spells',
-      wbString(NPCS, 'Spell', 32) //[SPEL]
+      wbNameReference(NPCS, 'Spell', [SPEL], [], 32, True)
     );
 end;
 
@@ -1009,7 +981,7 @@ begin
     wbEditorID,
     wbDeleted,
     wbModel.SetRequired,
-    wbString(FNAM, 'Skin Race')  //[RACE]
+    wbNameReference(FNAM, 'Skin Race', [RACE])
       .SetDefaultNativeValue('Argonian')
       .SetRequired,
     wbStruct(BYDT, 'Data', [
@@ -1104,7 +1076,7 @@ begin
         .SetDontShow(wbCellInteriorDontShow)
     ]).SetRequired,
     wbInteger(INTV, 'Water Height', itS32, nil, cpIgnore).SetDontShow(wbCellExteriorDontShow),
-    wbString(RGNN, 'Region'),  //[REGN]
+    wbNameReference(RGNN, 'Region', [REGN]),
     wbByteColors(NAM5, 'Region Map Color').SetDontShow(wbCellInteriorDontShow),
     wbFloat(WHGT, 'Water Height').SetDontShow(wbCellExteriorDontShow),
     wbStruct(AMBI, 'Ambience', [
@@ -1224,7 +1196,7 @@ begin
     wbEditorID,
     wbDeleted,
     wbModel.SetRequired,
-    wbString(CNAM, 'Sound Generator Creature'), //[CREA]
+    wbNameReference(CNAM, 'Sound Generator Creature', [CREA]),
     wbFullName,
     wbScript, //[SCPT]
     wbStruct(NPDT, 'Data', [
@@ -1307,8 +1279,8 @@ begin
     wbModel,
     wbFullName,
     wbScript, //[SCPT]
-    wbString(SNAM, 'Open Sound'), //[SOUN]
-    wbString(ANAM, 'Close Sound') //[SOUN]
+    wbNameReference(SNAM, 'Open Sound', [SOUN]),
+    wbNameReference(ANAM, 'Close Sound', [SOUN])
   ]).SetFormIDBase($40);
 
   RegisterRecordDef(ENCH, 'Enchantment',
@@ -1365,7 +1337,7 @@ begin
     ]).SetRequired,
     wbRArrayS('Relations',
       wbRStructSK([0], 'Relation', [
-        wbString(ANAM, 'Faction'), //[FACT]
+        wbNameReference(ANAM, 'Faction', [FACT]),
         wbInteger(INTV, 'Reaction', itS32)
       ]).SetToStr(wbFactionReactionToStr))
   ]).SetFormIDBase($1C);
@@ -1407,12 +1379,12 @@ begin
       wbInteger('Player Faction Rank', itS8).SetDefaultNativeValue(-1),
       wbUnused(1)
     ]).SetRequired,
-    wbString(ONAM, 'Speaker'), //[NPC_]
-    wbString(RNAM, 'Speaker Race'), //[RACE]
-    wbString(CNAM, 'Speaker Class'), //[CLAS]
-    wbString(FNAM, 'Speaker Faction'), //[FACT]
+    wbNameReference(ONAM, 'Speaker', [NPC_, CREA]),
+    wbNameReference(RNAM, 'Speaker Race', [RACE]),
+    wbNameReference(CNAM, 'Speaker Class', [CLAS]),
+    wbNameReference(FNAM, 'Speaker Faction', [FACT], ['FFFF']),
     wbString(ANAM, 'Speaker Cell'), //[CELL]
-    wbString(DNAM, 'Player Faction'), //[FACT]
+    wbNameReference(DNAM, 'Player Faction', [FACT]),
     wbString(SNAM, 'Sound Filename'),
     wbString(NAME, 'Response'),
     wbDeleted,
@@ -1786,7 +1758,7 @@ begin
         ])).IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse)
     ]).SetRequired,
     wbScript, //[SCPT]
-    wbString(SNAM, 'Looping Sound') //[SOUN]
+    wbNameReference(SNAM, 'Looping Sound', [SOUN])
   ]).SetFormIDBase($40);
 
   RegisterRecordDef(LOCK, 'Lockpick',
@@ -1848,14 +1820,14 @@ begin
     ]).SetRequired,
     wbString(ITEX, 'Effect Texture Filename'),
     wbString(PTEX, 'Particle Texture Filename'),
-    wbString(BSND, 'Bolt Sound'), //[SOUN]
-    wbString(CSND, 'Cast Sound'), //[SOUN]
-    wbString(HSND, 'Hit Sound'), //[SOUN]
-    wbString(ASND, 'Area Sound'), //[SOUN]
-    wbString(CVFX, 'Casting Visual'), //[STAT]
-    wbString(BVFX, 'Bolt Visual'), //[WEAP]
-    wbString(HVFX, 'Hit Visual'), //[STAT]
-    wbString(AVFX, 'Area Visual'), //[STAT]
+    wbNameReference(BSND, 'Bolt Sound', [SOUN]),
+    wbNameReference(CSND, 'Cast Sound', [SOUN]),
+    wbNameReference(HSND, 'Hit Sound', [SOUN]),
+    wbNameReference(ASND, 'Area Sound', [SOUN]),
+    wbNameReference(CVFX, 'Casting Visual', [STAT]),
+    wbNameReference(BVFX, 'Bolt Visual', [WEAP]),
+    wbNameReference(HVFX, 'Hit Visual', [STAT]),
+    wbNameReference(AVFX, 'Area Visual', [STAT]),
     wbDescription
   ]).SetFormIDBase($02);
 
@@ -1887,17 +1859,17 @@ begin
     wbDeleted,
     wbModel,
     wbFullName,
-    wbString(RNAM, 'Race') //[RACE]
+    wbNameReference(RNAM, 'Race', [RACE], [], 0, True)
       .SetDefaultEditValue('Argonian')
       .SetRequired,
-    wbString(CNAM, 'Class') //[CLAS]
+    wbNameReference(CNAM, 'Class', [CLAS], [], 0, True)
       .SetDefaultEditValue('Acrobat')
       .SetRequired,
-    wbString(ANAM, 'Faction').SetRequired, //[FACT]
-    wbString(BNAM, 'Head Body Part') //[BODY]
+    wbNameReference(ANAM, 'Faction', [FACT]).SetRequired,
+    wbNameReference(BNAM, 'Head Body Part', [BODY])
       .SetDefaultEditValue('b_n_argonian_m_head_02')
       .SetRequired,
-    wbString(KNAM, 'Hair Body Part') //[BODY]
+    wbNameReference(KNAM, 'Hair Body Part', [BODY])
       .SetDefaultEditValue('b_n_argonian_m_hair01')
       .SetRequired,
     wbScript, //[SCPT]
@@ -2143,17 +2115,17 @@ begin
     wbInteger(FRMR, 'Object Index', itU32, wbFRMRToString, nil, cpIgnore, True)
       .SetRequired
       .IncludeFlag(dfInternalEditOnly),
-    wbString(NAME, 'Base Object'), //[ACTI, ALCH, APPA, ARMO, BODY, BOOK, CLOT, CONT, CREA, DOOR, INGR, LEVC, LOCK, MISC, NPC_, PROB, REPA, STAT, WEAP]
+    wbNameReference(NAME, 'Base Object', [ACTI, ALCH, APPA, ARMO, BODY, BOOK, CLOT, CONT, CREA, DOOR, INGR, LEVC, LEVI, LIGH, LOCK, MISC, NPC_, PROB, REPA, STAT, WEAP], [], 0, True),
     wbInteger(UNAM, 'Reference Blocked', itU8, wbEnum(['True'])),
     wbFloat(XSCL, 'Scale', cpNormal, False, 1, 2),
     wbRStructSK([], 'Owner Data', [
-      wbString(ANAM, 'Owner'), //[NPC_]
-      wbString(BNAM, 'Global Variable'), //[GLOB]
-      wbString(CNAM, 'Faction Owner'), //[FACT]
+      wbNameReference(ANAM, 'Owner', [NPC_]),
+      wbNameReference(BNAM, 'Global Variable', [GLOB]),
+      wbNameReference(CNAM, 'Faction Owner', [FACT]),
       wbInteger(INDX, 'Faction Rank', itU32)
     ]).SetUnordered,
     wbFloat(XCHG, 'Enchantment Charge', cpNormal, False, 1, 0),
-    wbString(XSOL, 'Soul'), //[CREA]
+    wbNameReference(XSOL, 'Soul', [CREA]),
     wbInteger(INTV, 'Health', itU32),
     wbInteger(NAM9, 'Count', itU32),
     wbRStructSK([], 'Teleport Data', [
@@ -2162,8 +2134,8 @@ begin
     ]),
     wbRStructSK([], 'Lock Data', [
       wbInteger(FLTV, 'Lock Level', itU32).SetRequired,
-      wbString(KNAM, 'Key'), //[MISC]
-      wbString(TNAM, 'Trap') //[ENCH]
+      wbNameReference(KNAM, 'Key', [MISC]),
+      wbNameReference(TNAM, 'Trap', [SPEL])
     ]).SetUnordered,
     wbDeleted,
     wbVec3PosRot(DATA, 'Reference Data')
@@ -2196,11 +2168,11 @@ begin
       wbInteger('Blizzard', itU8)
     ]).SetOptionalFrom(8)
       .SetRequired,
-    wbString(BNAM, 'Sleep Creature'), //[LEVC]
+    wbNameReference(BNAM, 'Sleep Creature', [LEVC]),
     wbByteColors(CNAM, 'Region Map Color').SetRequired,
     wbRArray('Region Sounds',
       wbStruct(SNAM, 'Region Sound', [
-        wbStringForward('Sound', 32).SetAfterLoad(wbForwardForReal), //[SOUN]
+        wbNameReference('Sound', [SOUN], 32),
         wbInteger('Chance', itU8).SetDefaultNativeValue(50)
       ]).SetSummaryKeyOnValue([0,1])
         .SetSummaryPrefixSuffixOnValue(0, 'Sound: ', ',')
@@ -2348,8 +2320,8 @@ begin
       {7} 'Land'
       ])).SetDefaultNativeValue(7)
          .SetRequired,
-    wbString(CNAM, 'Creature'), //[CREA]
-    wbString(SNAM, 'Sound')
+    wbNameReference(CNAM, 'Creature', [CREA]),
+    wbNameReference(SNAM, 'Sound', [SOUN])
       .SetDefaultNativeValue('Body Fall Medium')
       .SetRequired, //[SOUN]
     wbDeleted
@@ -2398,7 +2370,7 @@ begin
   RegisterRecordDef(SSCR, 'Start Script', @wbKnownSubRecordSignaturesSSCR, [
     wbDeleted,
     wbStringForward(DATA, 'Numerical ID').SetRequired,
-    wbString(NAME, 'Script').SetRequired //[SCPT]
+    wbNameReference(NAME, 'Script', [SCPT], [], 0, True).SetRequired
   ]).SetFormIDBase($3F)
     .SetAfterLoad(wbDeletedAfterLoad);
 

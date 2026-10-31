@@ -3486,6 +3486,134 @@ procedure TxeTestFormHelper.TestCheckMenusRunTimer(Sender: TObject);
       TestHost.TestCheckMenusTyped + #9 + TestHost.TestCheckMenusSeen + #9 + lElement.EditValue);
   end;
 
+  procedure NameLinkReaders;
+
+    function RaceOf(const aRecord: IwbMainRecord): IwbMainRecord;
+    begin
+      Result := nil;
+      var lRace := aRecord.ElementBySignature['RNAM'];
+      if Assigned(lRace) then
+        Supports(lRace.LinksTo, IwbMainRecord, Result);
+    end;
+
+    function RaceRow(aColumn: Integer): PVirtualNode;
+    begin
+      Result := nil;
+      for var lNode in vstView.Nodes(False) do begin
+        var lCells := ViewCells(lNode);
+        if Assigned(lCells) and Assigned(lCells[aColumn].Element) and lCells[aColumn].Element.Name.StartsWith('RNAM') then
+          Exit(lNode);
+      end;
+    end;
+
+    procedure SetControl(aDown: Boolean);
+    var
+      lKeys : TKeyboardState;
+    begin
+      GetKeyboardState(lKeys);
+      if aDown then
+        lKeys[VK_CONTROL] := $80
+      else
+        lKeys[VK_CONTROL] := 0;
+      SetKeyboardState(lKeys);
+    end;
+
+    procedure SetHotColumn(aColumn: TColumnIndex);
+    begin
+      var lField := TRttiContext.Create.GetType(TBaseVirtualTree).GetField('FCurrentHotColumn');
+      if not Assigned(lField) then
+        raise Exception.Create('no FCurrentHotColumn');
+      lField.SetValue(vstView, TValue.From<TColumnIndex>(aColumn));
+    end;
+
+    function Names(const aRecords: array of IwbMainRecord): string;
+    begin
+      Result := '';
+      for var lRecord in aRecords do
+        Result := Result + ',' + lRecord.EditorID;
+      Result := Copy(Result, 2, MaxInt);
+    end;
+
+    function ActiveNames: string;
+    var
+      lRecord : IwbMainRecord;
+    begin
+      Result := '';
+      for var i := Low(ActiveRecords) to High(ActiveRecords) do
+        if Supports(ActiveRecords[i].Element, IwbMainRecord, lRecord) then
+          Result := Result + ',' + lRecord.EditorID;
+      Result := Copy(Result, 2, MaxInt);
+    end;
+
+    procedure CompareRow(const aLabel: string; const aFirst, aSecond: IwbMainRecord);
+    begin
+      DoSetActiveRecord(TDynMainRecords.Create(aFirst, aSecond));
+      var lRow := RaceRow(0);
+      if not Assigned(lRow) then
+        raise Exception.Create('no race row comparing ' + aFirst.Name + ' and ' + aSecond.Name);
+      vstViewFocusedNode := lRow;
+      vstView.FocusedColumn := 1;
+      var lEdit := xeContext.Settings.EditAllowed;
+      try
+        xeContext.Settings.EditAllowed := True;
+        pmuViewPopup(nil);
+      finally
+        xeContext.Settings.EditAllowed := lEdit;
+      end;
+      var lOffered := mniViewCompareReferencedRow.Visible;
+      var lAfter := '';
+      if lOffered then begin
+        mniViewCompareReferencedRowClick(nil);
+        lAfter := ActiveNames;
+      end;
+      TestHost.TestCheckMenusLines.Add('compareref' + #9 + aLabel + #9 + BoolToStr(lOffered, True) + #9 + Names([RaceOf(aFirst), RaceOf(aSecond)]) + #9 + lAfter);
+    end;
+
+  begin
+    var lModule := Module;
+    var lFirst, lOther, lSame: IwbMainRecord;
+    for var j := 0 to Pred(lModule.RecordCount) do begin
+      var lRecord := lModule.Records[j];
+      if (lRecord.Signature <> 'NPC_') or not Assigned(RaceOf(lRecord)) then
+        Continue;
+      if not Assigned(lFirst) then
+        lFirst := lRecord
+      else if not Assigned(lOther) and not RaceOf(lRecord).Equals(RaceOf(lFirst)) then
+        lOther := lRecord
+      else if not Assigned(lSame) and RaceOf(lRecord).Equals(RaceOf(lFirst)) then
+        lSame := lRecord;
+      if Assigned(lOther) and Assigned(lSame) then
+        Break;
+    end;
+    if not (Assigned(lFirst) and Assigned(lOther) and Assigned(lSame)) then begin
+      TestHost.TestCheckMenusLines.Add('namelinks' + #9 + 'no three NPC_ with races in ' + lModule.FileName);
+      Exit;
+    end;
+
+    for var lDown := False to True do begin
+      DoSetActiveRecord(IwbMainRecord(nil));
+      DoSetActiveRecord(lFirst, True);
+      var lRow := RaceRow(0);
+      if not Assigned(lRow) then
+        raise Exception.Create('no race row for ' + lFirst.Name);
+      SetControl(lDown);
+      try
+        vstView.HotNode := lRow;
+        SetHotColumn(1);
+        vstView.UpdateHotTrack;
+        var lHot := vstView.HotTrack;
+        vstViewClick(nil);
+        TestHost.TestCheckMenusLines.Add('hottrack' + #9 + BoolToStr(lDown, True) + #9 + BoolToStr(lHot, True) + #9 + RaceOf(lFirst).EditorID + #9 + ActiveNames);
+      finally
+        SetControl(False);
+        SetHotColumn(NoColumn);
+        vstView.HotNode := nil;
+      end;
+    end;
+    CompareRow('distinct', lFirst, lOther);
+    CompareRow('same', lFirst, lSame);
+  end;
+
 begin
   TestHost.TestCheckMenusTimer.Enabled := False;
   try
@@ -3498,7 +3626,9 @@ begin
            CaptureSheet(tbsAMMOSpreadsheet, 'sheetammo');
          end;
       3: if xeContext.GameDefObj.IsOblivion then
-           EditFormIDValue;
+           EditFormIDValue
+         else if xeContext.GameDefObj.IsMorrowind then
+           NameLinkReaders;
     else
       TestCheckMenusWrite;
       Exit;
