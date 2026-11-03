@@ -1264,7 +1264,7 @@ begin
     wbStruct(DATA, 'Data', [
       wbInteger('Dialog Type', itU8, wbDialogTypeEnum),
       wbUnused(3)
-    ]).SetRequired,
+    ]).SetRequired.IncludeFlag(dfFastAssign),
     wbDeleted
   ]).SetFormIDBase($80)
     .SetSummaryKey([1]);
@@ -1934,7 +1934,7 @@ begin
           wbUnused(3),
           wbInteger('Gold', itU32)
         ])
-    ]).SetRequired,
+    ]).SetRequired.IncludeFlag(dfFastAssign),
     wbInteger(FLAG, 'Flags', itU32,
       wbFlags(wbSparseFlags([
       0, 'Female',

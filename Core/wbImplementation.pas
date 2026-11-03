@@ -21691,6 +21691,25 @@ begin
   SelfRef := Self as IwbContainerElementRef;
   DoInit(True);
 
+  if (aIndex = wbAssignThis) and not aOnlySK and Assigned(srDef) and (dfFastAssign in srDef.DefFlags) and not (srsIsArray in srStates) and
+     GameDefObj.IsMorrowind and Assigned(aElement) and srDef.Equals(aElement.Def) then begin
+    var lDataContainer: IwbDataContainer;
+    if Supports(aElement, IwbDataContainer, lDataContainer) then begin
+      SetModified(True);
+      InvalidateStorage;
+      ReleaseElements;
+      dcDataStorage := nil;
+      dcDataBasePtr := @EmptyPtr;
+      dcDataEndPtr := @EmptyPtr;
+      Exclude(dcFlags, dcfStorageInvalid);
+      var lSize := lDataContainer.DataSize;
+      RequestStorageChange(p, q, lSize);
+      Move(lDataContainer.DataBasePtr^, dcDataBasePtr^, lSize);
+      DoReset(True);
+      Exit(Self);
+    end;
+  end;
+
   if Assigned(srValueDef) then begin
 
     case srValueDef.DefType of
