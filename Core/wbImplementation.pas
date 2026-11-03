@@ -840,6 +840,8 @@ type
     function SelectAtNameKey(const aKey: TwbFormID; out aCorrupt: Boolean): IwbMainRecord;
     function SelectInMastersAtNameKey(const aKey: TwbFormID; out aCorrupt: Boolean): IwbMainRecord;
     function NameProviderAtKey(const aKey: TwbFormID): IwbFile;
+    function OwnMasterAtKey(const aKey: TwbFormID): IwbFile;
+    function OwnProvider: IwbFile;
     class function CurrentIdentityIs(const aRecord: IwbMainRecord; const aLowerValue: string): Boolean; static;
     function HoldsCurrentIdentityAtNameKey(const aKey: TwbFormID; const aLowerValue: string): Boolean;
     function ViewNameKeyInternal(const aKey: TwbFormID; const aValue: string; out aSelected: IwbMainRecord): TwbNameKeyState;
@@ -7277,20 +7279,35 @@ begin
 end;
 
 function TwbFile.NameProviderAtKey(const aKey: TwbFormID): IwbFile;
-var
-  lCorrupt : Boolean;
 begin
   if fsIsHardcoded in flStates then
     Exit(nil);
   if not (fsIsCompareLoad in flStates) then
     Exit(Self);
-  var lOverridden := SelectInMastersAtNameKey(aKey, lCorrupt);
-  if Assigned(lOverridden) then
-    Exit((lOverridden._File as TObject as TwbFile).NameProviderAtKey(aKey));
+  Result := OwnMasterAtKey(aKey);
+end;
+
+function TwbFile.OwnProvider: IwbFile;
+begin
+  if fsIsHardcoded in flStates then
+    Exit(nil);
+  if not (fsIsCompareLoad in flStates) then
+    Exit(Self);
   Result := nil;
   if (fsIsDeltaPatch in flStates) and Assigned(flCompareToFile) and
      ([fsIsHardcoded, fsIsCompareLoad] * flCompareToFile.FileStates = []) then
     Result := flCompareToFile;
+end;
+
+function TwbFile.OwnMasterAtKey(const aKey: TwbFormID): IwbFile;
+var
+  lCorrupt : Boolean;
+begin
+  var lOverridden := SelectInMastersAtNameKey(aKey, lCorrupt);
+  if Assigned(lOverridden) then
+    Result := (lOverridden._File as TObject as TwbFile).NameProviderAtKey(aKey)
+  else
+    Result := OwnProvider;
 end;
 
 class function TwbFile.CurrentIdentityIs(const aRecord: IwbMainRecord; const aLowerValue: string): Boolean;
@@ -19820,12 +19837,29 @@ end;
 
 procedure TwbMainRecord.ReportRequiredMasters(aMasters: TwbFilesSet; aAsNew: Boolean; Recursive: Boolean = True; Initial: Boolean = false);
 begin
+  var lFile := GetFile;
+  if Assigned(lFile) and GameDefObj.IsMorrowind and (lFile as TObject as TwbFile).NameReferencesJudgedInternal then begin
+    if GetSignature <> GameDefObj.HeaderSignature then begin
+      var lOwnMaster: IwbFile := nil;
+      if aAsNew then begin
+        if fsIsGameMaster in lFile.FileStates then
+          lOwnMaster := lFile;
+      end else if Assigned(mrDef) and mrDef.IsKeyedByIdentity then
+        lOwnMaster := (lFile as TObject as TwbFile).OwnMasterAtKey(GetFixedFormID)
+      else
+        lOwnMaster := (lFile as TObject as TwbFile).OwnProvider;
+      if Assigned(lOwnMaster) then
+        aMasters.Add(lOwnMaster);
+    end;
+    inherited;
+    Exit;
+  end;
+
   if    ((eReportMastersGen and $7FFFFFFF) = aMasters.Generation)
     and ((not Recursive) or ((eReportMastersGen and $80000000) <> 0))
   then
     Exit;
 
-  var lFile := GetFile;
   if Assigned(lFile) and ([fsIsHardcoded, fsIsGameMaster] * lFile.FileStates <> []) then begin
     aMasters.Add(lFile);
     Exit;

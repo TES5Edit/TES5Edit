@@ -2817,6 +2817,7 @@ type
 
     function GetGridFormIDBase: Byte;
     function SetGridFormIDBase(aBase: Byte): IwbMainRecordDef;
+    function IsKeyedByIdentity: Boolean;
 
     function GetFormID(const aMainRecord: IwbMainRecord; out aFormID: TwbFormID): Boolean;
     function SetGetFormIDCallback(const aCallback: TwbMainRecordGetFormIDCallback): IwbMainRecordDef;
@@ -9112,6 +9113,7 @@ type
 
     function GetGridFormIDBase: Byte;
     function SetGridFormIDBase(aBase: Byte): IwbMainRecordDef;
+    function IsKeyedByIdentity: Boolean;
 
     function GetFormID(const aMainRecord: IwbMainRecord; out aFormID: TwbFormID): Boolean;
     function SetGetFormIDCallback(const aCallback: TwbMainRecordGetFormIDCallback): IwbMainRecordDef;
@@ -14242,6 +14244,11 @@ end;
 function TwbMainRecordDef.GetGridFormIDBase: Byte;
 begin
   Result := recGridFormIDBase;
+end;
+
+function TwbMainRecordDef.IsKeyedByIdentity: Boolean;
+begin
+  Result := recFormIDBase > 0;
 end;
 
 procedure TwbGameDef.ComputeIdentityKeyCapacity;
