@@ -821,10 +821,6 @@ type
 
     FocusedColumnOverride : Integer;
 
-    EditInfoCacheLGeneration: Integer;
-    EditInfoCache: TArray<string>;
-    EditInfoCacheID: Pointer;
-
     vstNavInitChildrenGeneration: UInt64;
     vstNavLastCollapsedChildrenCleanup: UInt64;
     vstNavLastChangeNode: Pointer;
@@ -12732,7 +12728,6 @@ begin
     wbRequireCtrlForDblClick := cbRequireCtrlForDblClick.Checked;
     if ShowFlagEnumValue <> cbShowFlagEnumValue.Checked then begin
       ShowFlagEnumValue := cbShowFlagEnumValue.Checked;
-      EditInfoCacheID := nil;
       vstView.Invalidate;
       vstSpreadSheetWeapon.Invalidate;
       vstSpreadSheetArmor.Invalidate;
@@ -16467,6 +16462,7 @@ type
 
 procedure TfrmMain.vstCreateEditor(const aElement: IwbElement; out EditLink: IVTEditLink);
 var
+  lEditInfo                   : TArray<string>;
   {$IFNDEF LiteVersion}
   i                           : Integer;
   TextLink                    : TcxTextEditLink;
@@ -16477,12 +16473,6 @@ var
   CheckComboLink              : TwbCheckComboEditLink;
   {$ENDIF}
 begin
-  if EditInfoCacheLGeneration <> xeContext.LocalizationHandler.Generation then begin
-    EditInfoCacheID := nil;
-    EditInfoCache := nil;
-    EditInfoCacheLGeneration := xeContext.LocalizationHandler.Generation;
-  end;
-
   case aElement.EditType of
   {$IFNDEF LiteVersion}
     etDefault: begin
@@ -16492,22 +16482,19 @@ begin
     etComboBox: begin
       ComboLink := TcxComboEditLink.Create;
       EditLink := ComboLink;
-      if aElement.ElementID <> EditInfoCacheID then begin
-        EditInfoCacheID := aElement.ElementID;
-        EditInfoCache := ViewEditInfo(aElement);
-      end;
+      lEditInfo := ViewEditInfo(aElement);
       with ComboLink.Properties do begin
         with Items do begin
           BeginUpdate;
           try
             Clear;
-            AddStrings(EditInfoCache);
+            AddStrings(lEditInfo);
           finally
             EndUpdate;
           end;
         end;
         if LookupItems.Count > 1000 then
-          {Bound to be a FormID list, they are guaranteed to be sorted already}
+          {FormID and NAME lists of this size arrive sorted}
           TStringListPrivateHacker(LookupItems).FSorted := True
         else
           Sorted := True;
@@ -16517,18 +16504,15 @@ begin
     etCheckComboBox: begin
       CheckComboLink := TcxCheckComboEditLink.Create;
       EditLink := CheckComboLink;
-      if aElement.ElementID <> EditInfoCacheID then begin
-        EditInfoCacheID := aElement.ElementID;
-        EditInfoCache := ViewEditInfo(aElement);
-      end;
+      lEditInfo := ViewEditInfo(aElement);
 
       with CheckComboLink.Properties do begin
         with Items do begin
           Clear;
-          for i := Low(EditInfoCache) to High(EditInfoCache) do
-            AddCheckItem(EditInfoCache[i]);
+          for i := Low(lEditInfo) to High(lEditInfo) do
+            AddCheckItem(lEditInfo[i]);
         end;
-        DropDownRows := Length(EditInfoCache);
+        DropDownRows := Length(lEditInfo);
         if DropDownRows > 32 then
           DropDownRows := 32;
         Delimiter := ', ';
@@ -16540,15 +16524,12 @@ begin
     etComboBox: begin
       ComboLink := TwbComboEditLink.Create(Self);
       EditLink := ComboLink;
-      if aElement.ElementID <> EditInfoCacheID then begin
-        EditInfoCacheID := aElement.ElementID;
-        EditInfoCache := ViewEditInfo(aElement);
-      end;
+      lEditInfo := ViewEditInfo(aElement);
       with ComboLink.PickList do begin
         BeginUpdate;
         try
           Clear;
-          AddStrings(EditInfoCache);
+          AddStrings(lEditInfo);
         finally
           EndUpdate;
         end;
@@ -16557,15 +16538,12 @@ begin
     etCheckComboBox: begin
       CheckComboLink := TwbCheckComboEditLink.Create;
       EditLink := CheckComboLink;
-      if aElement.ElementID <> EditInfoCacheID then begin
-        EditInfoCacheID := aElement.ElementID;
-        EditInfoCache := ViewEditInfo(aElement);
-      end;
+      lEditInfo := ViewEditInfo(aElement);
       with CheckComboLink.PickList do begin
         BeginUpdate;
         try
           Clear;
-          AddStrings(EditInfoCache);
+          AddStrings(lEditInfo);
         finally
           EndUpdate;
         end;

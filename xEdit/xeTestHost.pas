@@ -21,6 +21,8 @@ uses
   Vcl.Forms,
   Vcl.Graphics,
 
+  VirtualTrees,
+  VirtualTrees.BaseTree,
   VirtualTrees.Types,
 
   Winapi.Windows,
@@ -78,6 +80,13 @@ type
     TestCheckMenusTyped      : string;
     TestCheckMenusSeen       : string;
     TestCheckMenusKeywords   : string;
+    TestCheckMenusMemo       : string;
+    TestCheckMenusPickOld    : TVSTNewTextEvent;
+    TestCheckMenusPickCalls  : Integer;
+    TestCheckMenusPickText   : string;
+    TestCheckMenusPickShown  : string;
+    TestCheckMenusPickLink   : IVTEditLink;
+    TestCheckMenusPickEditor : HWND;
     TestFormIDSearchTimer    : TTimer;
     TestFormIDSearchTarget   : IwbMainRecord;
     TestFormIDSearchStart    : UInt64;
@@ -249,6 +258,8 @@ type
     CheckMenusModule      : string;
     CheckMenusRecord      : string;
     CheckMenusKeywords    : string;
+    CheckMenusPick        : Boolean;
+    CheckMenusPickCost    : string;
     FormIDSearch          : Boolean;
     FormIDSearchFile      : string;
     FormIDSearchModule    : string;
@@ -471,6 +482,8 @@ begin
     if not wbFindCmdLineParam('testcheckmenusrecord', CheckMenusRecord) then
       CheckMenusRecord := 'LEVI';
     wbFindCmdLineParam('testcheckmenuskeywords', CheckMenusKeywords);
+    CheckMenusPick := FindCmdLineSwitch('testcheckmenuspick');
+    wbFindCmdLineParam('testcheckmenuspickcost', CheckMenusPickCost);
     CheckMenus := True;
     xeAutoLoad := True;
     xeAutoExit := True;

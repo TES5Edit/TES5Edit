@@ -154,6 +154,16 @@ type
     procedure TestCheckMenusRunTimer(Sender: TObject);
     procedure TestCheckMenusAnswerTimer(Sender: TObject);
     procedure TestCheckMenusWrite;
+    procedure TestCheckMenusPickNewText(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; NewText: string);
+    procedure TestCheckMenusPick;
+    procedure TestCheckMenusPickControls;
+    procedure TestCheckMenusPickCostRun;
+    function TestPickOpen(const aElement: IwbElement; aEdit: Boolean = True): TObject;
+    function TestPickList(aLink: TObject): TArray<string>;
+    function TestPickShown(aLink: TObject): string;
+    procedure TestPickKey(aKey: Word);
+    procedure TestPickChars(const aText: string);
+    procedure TestPickPump;
     procedure DoTestFormIDSearch;
     procedure TestFormIDSearchRunTimer(Sender: TObject);
     procedure TestFormIDSearchWrite(const aBody: string);
@@ -225,6 +235,9 @@ uses
   Winapi.WinInet,
 
 {$IFNDEF LiteVersion}
+  cxCheckComboBox,
+  cxDropDownEdit,
+  cxTextEdit,
   cxVTEditors,
 {$ENDIF}
 
@@ -234,6 +247,7 @@ uses
 
   JsonDataObjects,
 
+  VirtualTrees.EditLink,
   VTEditors,
 
   wbBetterStringList,
@@ -3637,6 +3651,13 @@ begin
            EditFormIDValue
          else if xeContext.GameDefObj.IsMorrowind then
            NameLinkReaders;
+      4: if xeTestSwitches.CheckMenusPick then
+           if xeContext.GameDefObj.IsMorrowind then
+             TestCheckMenusPick
+           else
+             TestCheckMenusPickControls;
+      5: if xeTestSwitches.CheckMenusPickCost <> '' then
+           TestCheckMenusPickCostRun;
     else
       TestCheckMenusWrite;
       Exit;
@@ -3679,6 +3700,15 @@ begin
       for var j := 0 to Pred(lForm.ComponentCount) do
         if lForm.Components[j] is TEdit then
           TEdit(lForm.Components[j]).Text := TestHost.TestCheckMenusTyped;
+    if (TestHost.TestCheckMenusMemo <> '') and (lForm is TfrmViewElements) then begin
+      var lPage := TfrmViewElements(lForm).pcView.ActivePage;
+      if Assigned(lPage) then
+        for var c := 0 to Pred(lPage.ControlCount) do
+          if (lPage.Controls[c] is TMemo) and not TMemo(lPage.Controls[c]).ReadOnly then begin
+            TMemo(lPage.Controls[c]).Text := TestHost.TestCheckMenusMemo;
+            TMemo(lPage.Controls[c]).Modified := True;
+          end;
+    end;
     lForm.ModalResult := mrOk;
     Exit;
   end;
@@ -3698,6 +3728,921 @@ begin
   end;
   FreeAndNil(TestHost.TestCheckMenusLines);
   tmrShutdown.Enabled := True;
+end;
+
+type
+  TPickLinkCracker = class(TCustomEditLink);
+
+function PickEditorHandle(aLink: TObject): HWND;
+begin
+  Result := 0;
+  if aLink is TStringEditLink then
+    Result := TStringEditLink(aLink).Edit.Handle
+  else if aLink is TCustomEditLink then
+    Result := TPickLinkCracker(aLink).EditControl.Handle;
+end;
+
+function PickWindowText(aLink: TObject): string;
+var
+  lText : array[0..1023] of Char;
+begin
+  Result := '<unread>';
+  var lWnd: HWND := 0;
+  if aLink is TStringEditLink then
+    lWnd := TStringEditLink(aLink).Edit.Handle
+  else if aLink is TCustomEditLink then begin
+    var lControl := TPickLinkCracker(aLink).EditControl;
+{$IFNDEF LiteVersion}
+    if lControl is TcxCustomTextEdit then
+      Exit(TcxCustomTextEdit(lControl).EditingText);
+{$ENDIF}
+    lWnd := lControl.Handle;
+  end;
+  if lWnd <> 0 then
+    SetString(Result, lText, GetWindowText(lWnd, lText, Length(lText)));
+end;
+
+function PickFocusWindow(aEditor: HWND): HWND;
+begin
+  Result := GetFocus;
+  if Result = 0 then
+    raise Exception.Create('no window has the focus');
+  if (aEditor <> 0) and IsWindow(aEditor) and IsWindowVisible(aEditor) and (Result <> aEditor) and not IsChild(aEditor, Result) then
+    raise Exception.Create('the focus is outside the editor');
+end;
+
+procedure TxeTestFormHelper.TestPickPump;
+begin
+  for var i := 1 to 4 do begin
+    Application.ProcessMessages;
+    Sleep(5);
+  end;
+end;
+
+procedure TxeTestFormHelper.TestPickKey(aKey: Word);
+begin
+  var lWnd := PickFocusWindow(TestHost.TestCheckMenusPickEditor);
+  PostMessage(lWnd, WM_KEYDOWN, aKey, 1);
+  PostMessage(lWnd, WM_KEYUP, aKey, LPARAM($C0000001));
+  TestPickPump;
+end;
+
+procedure TxeTestFormHelper.TestPickChars(const aText: string);
+begin
+  for var lChar in aText do begin
+    PostMessage(PickFocusWindow(TestHost.TestCheckMenusPickEditor), WM_CHAR, Ord(lChar), 1);
+    TestPickPump;
+  end;
+end;
+
+function TxeTestFormHelper.TestPickOpen(const aElement: IwbElement; aEdit: Boolean): TObject;
+begin
+  Result := nil;
+  TestHost.TestCheckMenusPickLink := nil;
+  TestHost.TestCheckMenusPickEditor := 0;
+  var lRecord := aElement.ContainingMainRecord;
+  DoSetActiveRecord(IwbMainRecord(nil));
+  DoSetActiveRecord(lRecord, True);
+  TestPickPump;
+  var lColumn := -1;
+  for var c := Low(ActiveRecords) to High(ActiveRecords) do
+    if lRecord.Equals(ActiveRecords[c].Element) then
+      lColumn := c;
+  if lColumn < 0 then
+    raise Exception.Create('no View column for ' + lRecord.Name);
+  var lRow: PVirtualNode := nil;
+  for var lNode in vstView.Nodes(False) do begin
+    var lCells := ViewCells(lNode);
+    if Assigned(lCells) and Assigned(lCells[lColumn].Element) and (lCells[lColumn].Element.ElementID = aElement.ElementID) then begin
+      lRow := lNode;
+      Break;
+    end;
+  end;
+  if not Assigned(lRow) then
+    raise Exception.Create('no View row for ' + aElement.Path);
+  vstView.FullyVisible[lRow] := True;
+  vstView.ScrollIntoView(lRow, False);
+  vstViewFocusedNode := lRow;
+  vstView.FocusedColumn := Succ(lColumn);
+  if not aEdit then
+    Exit;
+  if not vstView.EditNode(lRow, Succ(lColumn)) then
+    raise Exception.Create('the View refused to edit ' + aElement.Path);
+  TestPickPump;
+  var lLink := TBaseVirtualTree(vstView).EditLink;
+  if not Assigned(lLink) then
+    raise Exception.Create('no editor for ' + aElement.Path);
+  TestHost.TestCheckMenusPickLink := lLink;
+  Result := lLink as TObject;
+  TestHost.TestCheckMenusPickEditor := PickEditorHandle(Result);
+end;
+
+function TxeTestFormHelper.TestPickList(aLink: TObject): TArray<string>;
+begin
+  Result := nil;
+{$IFNDEF LiteVersion}
+  if aLink is TcxComboEditLink then
+    Exit(TcxComboEditLink(aLink).Properties.Items.ToStringArray);
+  if aLink is TcxCheckComboEditLink then begin
+    var lItems := TcxCheckComboEditLink(aLink).Properties.Items;
+    for var i := 0 to Pred(lItems.Count) do
+      Result := Result + [lItems[i].Description];
+    Exit;
+  end;
+{$ENDIF}
+  if aLink is TComboEditLink then
+    Result := TComboEditLink(aLink).PickList.ToStringArray;
+end;
+
+function TxeTestFormHelper.TestPickShown(aLink: TObject): string;
+begin
+  if aLink is TStringEditLink then
+    Result := TStringEditLink(aLink).Edit.Text
+  else
+    Result := TPickLinkCracker(aLink).GetEditText;
+end;
+
+procedure TxeTestFormHelper.TestCheckMenusPickNewText(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; NewText: string);
+begin
+  Inc(TestHost.TestCheckMenusPickCalls);
+  TestHost.TestCheckMenusPickText := NewText;
+  TestHost.TestCheckMenusPickShown := '<no editor>';
+  if Assigned(Sender.EditLink) then
+    TestHost.TestCheckMenusPickShown := PickWindowText(Sender.EditLink as TObject);
+  if Assigned(TestHost.TestCheckMenusPickOld) then
+    TestHost.TestCheckMenusPickOld(Sender, Node, Column, NewText);
+end;
+
+procedure TxeTestFormHelper.TestCheckMenusPick;
+const
+  cReset = 'xedit_reset_value';
+  cStart = 'xedit_start';
+  cAny   = #0;
+  c32    = 'xedit_pick_identity_of_32_bytes_';
+var
+  lModule      : IwbFile;
+  lItem, lTwin : IwbElement;
+  lAnam        : IwbElement;
+  lAnamTwin    : IwbElement;
+  lCp          : TEncoding;
+
+  procedure Line(const aName, aVerdict, aDetail: string);
+  begin
+    TestHost.TestCheckMenusLines.Add('pick' + #9 + aName + #9 + aVerdict + #9 + aDetail);
+  end;
+
+  function Rec(const aSig, aId: string): IwbMainRecord;
+  begin
+    for var j := 0 to Pred(lModule.RecordCount) do
+      if (string(lModule.Records[j].Signature) = aSig) and (lModule.Records[j].EditorID = aId) then
+        Exit(lModule.Records[j]);
+    raise Exception.Create('no ' + aSig + ' ' + aId + ' in ' + lModule.FileName);
+  end;
+
+  function FindLeaf(const aElement: IwbElement; const aSig: string; aInside: Boolean): IwbElement;
+  var
+    lCont : IwbContainerElementRef;
+    lHas  : IwbHasSignature;
+  begin
+    Result := nil;
+    aInside := aInside or (Supports(aElement, IwbHasSignature, lHas) and (string(lHas.Signature) = aSig));
+    if aInside and Supports(aElement.ValueDef, IwbNameReferenceDef) then
+      Exit(aElement);
+    if Supports(aElement, IwbContainerElementRef, lCont) then
+      for var i := 0 to Pred(lCont.ElementCount) do begin
+        Result := FindLeaf(lCont.Elements[i], aSig, aInside);
+        if Assigned(Result) then
+          Exit;
+      end;
+  end;
+
+  function Leaf(const aSig, aId, aField: string): IwbElement;
+  begin
+    Result := FindLeaf(Rec(aSig, aId), aField, False);
+    if not Assigned(Result) then
+      raise Exception.Create('no ' + aField + ' leaf in ' + aSig + ' ' + aId);
+  end;
+
+  function Raw(const aElement: IwbElement): string;
+  var
+    lData : IwbDataContainer;
+  begin
+    Result := '';
+    if not Supports(aElement, IwbDataContainer, lData) then
+      raise Exception.Create('no data container behind ' + aElement.Path);
+    for var i := 0 to Pred(lData.DataSize) do
+      Result := Result + IntToHex(PByte(PByte(lData.DataBasePtr) + i)^, 2);
+  end;
+
+  function Written(const aTwin: IwbElement; const aText: string): string;
+  begin
+    aTwin.EditValue := cReset;
+    aTwin.EditValue := aText;
+    Result := Raw(aTwin);
+  end;
+
+  function Oracle(const aText: string; aSize: Integer): string;
+  begin
+    var lBytes := lCp.GetBytes(aText);
+    if aSize > 0 then begin
+      var lLength := Length(lBytes);
+      SetLength(lBytes, aSize);
+      for var i := lLength to Pred(aSize) do
+        lBytes[i] := 0;
+    end else
+      lBytes := lBytes + [0];
+    Result := '';
+    for var lByte in lBytes do
+      Result := Result + IntToHex(lByte, 2);
+  end;
+
+  function Linked(const aElement: IwbElement): string;
+  var
+    lTarget : IwbMainRecord;
+  begin
+    Result := '-';
+    if Supports(aElement.LinksTo, IwbMainRecord, lTarget) then
+      Result := string(lTarget.Signature) + ':' + lTarget.EditorID;
+  end;
+
+  function Has(const aList: TArray<string>; const aEntry: string): Boolean;
+  begin
+    Result := False;
+    for var lEntry in aList do
+      if lEntry = aEntry then
+        Exit(True);
+  end;
+
+  procedure Path(const aName: string; const aLeaf, aTwin: IwbElement; aSize: Integer; aExpect: Char; const aDrivenWant, aWant, aLink: string;
+    const aDrive: TFunc<TObject, string>);
+  begin
+    aLeaf.EditValue := cStart;
+    var lBefore := Raw(aLeaf);
+    TestHost.TestCheckMenusPickCalls := 0;
+    TestHost.TestCheckMenusPickText := '';
+    TestHost.TestCheckMenusPickShown := '';
+    TestHost.TestCheckMenusSeen := '';
+    var lDriven := '';
+    var lError := '';
+    var lSkipped := False;
+    try
+      lDriven := aDrive(TestPickOpen(aLeaf));
+      TestPickPump;
+    except
+      on E: ENotSupportedException do begin
+        lSkipped := True;
+        lError := E.Message;
+      end;
+      on E: Exception do
+        lError := E.ClassName + ': ' + E.Message;
+    end;
+    var lStillEditing := vstView.IsEditing;
+    if lStillEditing then begin
+      vstView.CancelEditNode;
+      TestPickPump;
+    end;
+    TestHost.TestCheckMenusPickLink := nil;
+    TestHost.TestCheckMenusPickEditor := 0;
+    var lAfter := Raw(aLeaf);
+    var lCommitted := TestHost.TestCheckMenusPickCalls = 1;
+    var lNothing := (TestHost.TestCheckMenusPickCalls = 0) and (lAfter = lBefore);
+    var lWriter := '';
+    var lOracle := '';
+    if lCommitted then begin
+      lWriter := Written(aTwin, TestHost.TestCheckMenusPickText);
+      lOracle := Oracle(TestHost.TestCheckMenusPickText, aSize);
+    end;
+    var lValue := aLeaf.EditValue;
+    var lLinked := Linked(aLeaf);
+    var lHeld := lCommitted and (TestHost.TestCheckMenusPickText = TestHost.TestCheckMenusPickShown) and (lAfter = lWriter) and (lAfter = lOracle) and
+      not lValue.Contains('[');
+    var lOk := (lError = '') and not lStillEditing and ((aDrivenWant = cAny) or (lDriven = aDrivenWant));
+    case aExpect of
+      'n': lOk := lOk and lNothing;
+      'c': lOk := lOk and lHeld and ((aWant = cAny) or (TestHost.TestCheckMenusPickText = aWant));
+      'e': lOk := lOk and (lNothing or (lHeld and ((aWant = cAny) or (TestHost.TestCheckMenusPickText = aWant))));
+    end;
+    if aLink = '=' then
+      lOk := lOk and lCommitted and (Copy(lLinked, Pos(':', lLinked) + 1, MaxInt) = TestHost.TestCheckMenusPickText)
+    else if aLink <> '' then
+      lOk := lOk and (lLinked = aLink);
+    var lBytes := 'OTHER';
+    if lNothing then
+      lBytes := 'unchanged'
+    else if lCommitted and (lAfter = lWriter) and (lAfter = lOracle) then
+      lBytes := 'the writer''s and the oracle''s'
+    else if lCommitted and (lAfter = lWriter) then
+      lBytes := 'the writer''s, NOT the oracle''s ' + lOracle;
+    var lNote := lError;
+    if lStillEditing then
+      lNote := 'still editing; ' + lNote;
+    if TestHost.TestCheckMenusSeen <> '' then
+      lNote := TestHost.TestCheckMenusSeen + '; ' + lNote;
+    var lVerdict := BoolToStr(lOk, True);
+    if lSkipped then
+      lVerdict := 'Skipped';
+    Line(aName, lVerdict, Format('calls %d'#9'driven "%s"'#9'committed "%s"'#9'at commit "%s"'#9'value "%s"'#9'link %s'#9'bytes %s'#9'%s',
+      [TestHost.TestCheckMenusPickCalls, lDriven, TestHost.TestCheckMenusPickText, TestHost.TestCheckMenusPickShown, lValue, lLinked, lBytes,
+       lNote]));
+  end;
+
+  procedure ListSize(const aName: string; const aLeaf: IwbElement; aOver: Boolean);
+  begin
+    var lLink := TestPickOpen(aLeaf);
+    var lList := TestPickList(lLink);
+    var lClass := lLink.ClassName;
+    TestPickKey(VK_ESCAPE);
+    if vstView.IsEditing then
+      vstView.CancelEditNode;
+    TestHost.TestCheckMenusPickLink := nil;
+    TestHost.TestCheckMenusPickEditor := 0;
+    Line(aName, BoolToStr((aLeaf.EditType = etComboBox) and ((Length(lList) > 1000) = aOver) and not Has(lList, cStart), True),
+      Format('edit type %d'#9'editor %s'#9'%d entries', [Ord(aLeaf.EditType), lClass, Length(lList)]));
+  end;
+
+begin
+  lModule := nil;
+  for var lFile in Files do
+    if SameText(lFile.FileName, xeTestSwitches.CheckMenusModule) then
+      lModule := lFile;
+  if not Assigned(lModule) then
+    raise Exception.Create('no module ' + xeTestSwitches.CheckMenusModule);
+
+  var SelectAllText: TProc<TObject> := procedure(aLink: TObject)
+  begin
+    if aLink is TStringEditLink then begin
+      TStringEditLink(aLink).Edit.SelectAll;
+      Exit;
+    end;
+    var lControl := TPickLinkCracker(aLink).EditControl;
+{$IFNDEF LiteVersion}
+    if lControl is TcxComboBox then begin
+      TcxComboBox(lControl).SelectAll;
+      Exit;
+    end;
+{$ENDIF}
+    if lControl is Vcl.StdCtrls.TComboBox then
+      Vcl.StdCtrls.TComboBox(lControl).SelectAll;
+  end;
+
+  var Dropped: TFunc<TObject, Boolean> := function(aLink: TObject): Boolean
+  begin
+    Result := False;
+    if not (aLink is TCustomEditLink) then
+      Exit;
+    var lControl := TPickLinkCracker(aLink).EditControl;
+{$IFNDEF LiteVersion}
+    if lControl is TcxComboBox then
+      Exit(TcxComboBox(lControl).DroppedDown);
+{$ENDIF}
+    if lControl is Vcl.StdCtrls.TComboBox then
+      Result := Vcl.StdCtrls.TComboBox(lControl).DroppedDown;
+  end;
+
+  var OpenList: TProc<TObject> := procedure(aLink: TObject)
+  begin
+    if Dropped(aLink) then
+      raise Exception.Create('the list was already open');
+    TestPickKey(VK_F4);
+    if not Dropped(aLink) then
+      raise Exception.Create('F4 did not open the list');
+  end;
+
+  var MousePick: TFunc<TObject, string, string> := function(aLink: TObject; aIdentity: string): string
+  begin
+{$IFDEF LiteVersion}
+    if not (aLink is TCustomEditLink) or not (TPickLinkCracker(aLink).EditControl is Vcl.StdCtrls.TComboBox) then
+      raise Exception.Create('the editor is a ' + aLink.ClassName + ', not a combo box');
+    var lCombo := Vcl.StdCtrls.TComboBox(TPickLinkCracker(aLink).EditControl);
+    var lIndex := -1;
+    for var i := 0 to Pred(lCombo.Items.Count) do
+      if lCombo.Items[i] = aIdentity then
+        lIndex := i;
+    if lIndex < 0 then
+      raise Exception.Create('the list does not hold ' + aIdentity);
+    var lInfo: TComboBoxInfo;
+    lInfo.cbSize := SizeOf(lInfo);
+    if not GetComboBoxInfo(lCombo.Handle, lInfo) then
+      RaiseLastOSError;
+    if lCombo.DroppedDown then
+      raise Exception.Create('the list was already open');
+    var lX := (lInfo.rcButton.Left + lInfo.rcButton.Right) div 2;
+    var lY := (lInfo.rcButton.Top + lInfo.rcButton.Bottom) div 2;
+    PostMessage(lCombo.Handle, WM_LBUTTONDOWN, MK_LBUTTON, MakeLParam(lX, lY));
+    PostMessage(lCombo.Handle, WM_LBUTTONUP, 0, MakeLParam(lX, lY));
+    TestPickPump;
+    if not lCombo.DroppedDown then
+      raise Exception.Create('a click on the button did not open the list');
+    SendMessage(lInfo.hwndList, LB_SETTOPINDEX, lIndex, 0);
+    var lRect: TRect;
+    if SendMessage(lInfo.hwndList, LB_GETITEMRECT, lIndex, LPARAM(@lRect)) = LB_ERR then
+      raise Exception.Create('no item rectangle for ' + aIdentity);
+    lX := (lRect.Left + lRect.Right) div 2;
+    lY := (lRect.Top + lRect.Bottom) div 2;
+    PostMessage(lInfo.hwndList, WM_MOUSEMOVE, 0, MakeLParam(lX, lY));
+    PostMessage(lInfo.hwndList, WM_LBUTTONDOWN, MK_LBUTTON, MakeLParam(lX, lY));
+    PostMessage(lInfo.hwndList, WM_LBUTTONUP, 0, MakeLParam(lX, lY));
+    TestPickPump;
+    if lCombo.DroppedDown then
+      raise Exception.Create('the list stayed open after the click on its entry');
+    if (lCombo.ItemIndex <> lIndex) or (lCombo.Text <> aIdentity) then
+      raise Exception.Create(Format('the click selected entry %d "%s", not %d', [lCombo.ItemIndex, lCombo.Text, lIndex]));
+    TestHost.TestCheckMenusSeen := 'the button opened the list, the click selected the entry and closed it';
+    Result := lCombo.Text;
+{$ELSE}
+    raise ENotSupportedException.Create('no mouse route is driven in the DevExpress build');
+{$ENDIF}
+  end;
+
+  var lEdit := xeContext.Settings.EditAllowed;
+  xeContext.Settings.EditAllowed := True;
+  TestHost.TestCheckMenusPickOld := vstView.OnNewText;
+  vstView.OnNewText := TestCheckMenusPickNewText;
+  lCp := TEncoding.GetEncoding(1252);
+  try
+    lItem := Leaf('CONT', 'xedit_pick_c', 'NPCO');
+    lTwin := Leaf('CONT', 'xedit_pick_twin', 'NPCO');
+    lAnam := Leaf('FACT', 'xedit_pick_fa', 'ANAM');
+    lAnamTwin := Leaf('FACT', 'xedit_pick_ftwin', 'ANAM');
+
+    ListSize('npco: a combo box over 1,000 entries', lItem, True);
+    ListSize('fact anam: a combo box under 1,000 entries', lAnam, False);
+
+    Path('unchanged edit', lItem, lTwin, 32, 'n', cStart, cAny, '',
+      function(aLink: TObject): string begin Result := TestPickShown(aLink); TestPickKey(VK_RETURN); end);
+    Path('typed, then Esc', lItem, lTwin, 32, 'n', 'abc', cAny, '',
+      function(aLink: TObject): string begin SelectAllText(aLink); TestPickChars('abc'); Result := TestPickShown(aLink); TestPickKey(VK_ESCAPE); end);
+    Path('typed, then cancel', lItem, lTwin, 32, 'n', 'abc', cAny, '',
+      function(aLink: TObject): string begin SelectAllText(aLink); TestPickChars('abc'); Result := TestPickShown(aLink); vstView.CancelEditNode; end);
+    Path('typed naming nothing, then Enter', lItem, lTwin, 32, 'c', 'xedit_typed_none', 'xedit_typed_none', '-',
+      function(aLink: TObject): string begin SelectAllText(aLink); TestPickChars('xedit_typed_none'); Result := TestPickShown(aLink); TestPickKey(VK_RETURN); end);
+    Path('typed, then Tab', lItem, lTwin, 32, 'e', 'xedit_tab_none', 'xedit_tab_none', '',
+      function(aLink: TObject): string
+      begin
+        SelectAllText(aLink);
+        TestPickChars('xedit_tab_none');
+        Result := TestPickShown(aLink);
+        TestPickKey(VK_TAB);
+        if vstView.IsEditing then begin
+          if PickWindowText(aLink) <> Result then
+            raise Exception.Create('Tab changed the text to "' + PickWindowText(aLink) + '"');
+          TestHost.TestCheckMenusSeen := 'Tab kept the edit open, then Esc';
+          TestPickKey(VK_ESCAPE);
+        end else
+          TestHost.TestCheckMenusSeen := 'Tab ended the edit';
+      end);
+    Path('typed, then the focus moves to the nav tree', lItem, lTwin, 32, 'c', 'xedit_away_none', 'xedit_away_none', '-',
+      function(aLink: TObject): string begin SelectAllText(aLink); TestPickChars('xedit_away_none'); Result := TestPickShown(aLink); vstNav.SetFocus; end);
+    Path('typed with the list open, then Enter', lItem, lTwin, 32, 'c', cAny, cAny, '',
+      function(aLink: TObject): string
+      begin
+        SelectAllText(aLink);
+        OpenList(aLink);
+        TestPickChars('xedit_open_none');
+        if not Dropped(aLink) then
+          raise Exception.Create('the list closed while typing');
+        Result := TestPickShown(aLink);
+        TestPickKey(VK_RETURN);
+        if not vstView.IsEditing then
+          TestHost.TestCheckMenusSeen := 'the first Enter closed the list and committed'
+        else begin
+          if Dropped(aLink) then
+            raise Exception.Create('the first Enter did not close the list');
+          TestHost.TestCheckMenusSeen := 'the first Enter closed the list, the second committed';
+          Result := TestPickShown(aLink);
+          TestPickKey(VK_RETURN);
+        end;
+      end);
+    Path('text cleared, then Enter', lItem, lTwin, 32, 'c', '', '', '-',
+      function(aLink: TObject): string begin SelectAllText(aLink); TestPickChars(#8); Result := TestPickShown(aLink); TestPickKey(VK_RETURN); end);
+    Path('arrow keys, list closed', lItem, lTwin, 32, 'c', cAny, cAny, '=',
+      function(aLink: TObject): string
+      begin
+        if Dropped(aLink) then
+          raise Exception.Create('the list was open');
+        TestPickKey(VK_DOWN);
+        TestPickKey(VK_DOWN);
+        if Dropped(aLink) then
+          raise Exception.Create('the arrow keys opened the list');
+        Result := TestPickShown(aLink);
+        TestPickKey(VK_RETURN);
+      end);
+    Path('arrow keys, list open', lItem, lTwin, 32, 'c', cAny, cAny, '=',
+      function(aLink: TObject): string
+      begin
+        OpenList(aLink);
+        TestPickKey(VK_DOWN);
+        TestPickKey(VK_DOWN);
+        if not Dropped(aLink) then
+          raise Exception.Create('the list closed under the arrow keys');
+        Result := TestPickShown(aLink);
+        TestPickKey(VK_RETURN);
+        if not vstView.IsEditing then
+          TestHost.TestCheckMenusSeen := 'the first Enter closed the list and committed'
+        else begin
+          TestHost.TestCheckMenusSeen := 'the first Enter closed the list, the second committed';
+          Result := TestPickShown(aLink);
+          TestPickKey(VK_RETURN);
+        end;
+      end);
+    Path('a completion of a typed prefix', lItem, lTwin, 32, 'c', 'xedit_pick_target', 'xedit_pick_target', 'MISC:xedit_pick_target',
+      function(aLink: TObject): string begin SelectAllText(aLink); TestPickChars('xedit_pick_tar'); Result := TestPickShown(aLink); TestPickKey(VK_RETURN); end);
+    Path('the longest identity, typed', lItem, lTwin, 32, 'c', c32, c32, 'MISC:' + c32,
+      function(aLink: TObject): string begin SelectAllText(aLink); TestPickChars(c32); Result := TestPickShown(aLink); TestPickKey(VK_RETURN); end);
+    Path('33 bytes typed into a 32-byte field', lItem, lTwin, 32, 'c', c32 + 'x', c32 + 'x', '',
+      function(aLink: TObject): string begin SelectAllText(aLink); TestPickChars(c32 + 'x'); Result := TestPickShown(aLink); TestPickKey(VK_RETURN); end);
+    for var lPick in TArray<string>.Create('xedit_pick_target', c32, 'coop', 'co'#$00AD'op') do begin
+      var lThis := lPick;
+      Path('picked with the mouse: ' + lThis.Replace(#$00AD, '<SHY>'), lItem, lTwin, 32, 'c', lThis, lThis, 'MISC:' + lThis,
+        function(aLink: TObject): string begin Result := MousePick(aLink, lThis); TestPickKey(VK_RETURN); end);
+    end;
+    for var lPick in TArray<string>.Create('fcoop', 'fco'#$00AD'op') do begin
+      var lThis := lPick;
+      Path('fact anam, picked with the mouse: ' + lThis.Replace(#$00AD, '<SHY>'), lAnam, lAnamTwin, 0, 'c', lThis, lThis, 'FACT:' + lThis,
+        function(aLink: TObject): string begin Result := MousePick(aLink, lThis); TestPickKey(VK_RETURN); end);
+    end;
+    Path('fact anam, arrow keys', lAnam, lAnamTwin, 0, 'c', cAny, cAny, '=',
+      function(aLink: TObject): string begin TestPickKey(VK_DOWN); Result := TestPickShown(aLink); TestPickKey(VK_RETURN); end);
+
+    begin
+      var lRename := Rec('MISC', 'xedit_pick_rename');
+      var lLink := TestPickOpen(lItem);
+      var lFirst := TestPickList(lLink);
+      TestPickKey(VK_ESCAPE);
+      if vstView.IsEditing then
+        vstView.CancelEditNode;
+      lRename.EditorID := 'xedit_pick_renamed';
+      lLink := TestPickOpen(lItem);
+      var lSecond := TestPickList(lLink);
+      TestPickKey(VK_ESCAPE);
+      if vstView.IsEditing then
+        vstView.CancelEditNode;
+      TestHost.TestCheckMenusPickLink := nil;
+      TestHost.TestCheckMenusPickEditor := 0;
+      Line('a reopened list follows a renamed target', BoolToStr(Has(lFirst, 'xedit_pick_rename') and not Has(lFirst, 'xedit_pick_renamed') and
+        Has(lSecond, 'xedit_pick_renamed') and not Has(lSecond, 'xedit_pick_rename'), True), Format('%d entries, then %d', [Length(lFirst), Length(lSecond)]));
+    end;
+
+    Line('a NAME field is not FormID text, so ConvertIntFormID leaves it alone', BoolToStr(not wbHoldsFormIDText(lItem), True), '');
+
+    begin
+      lItem.EditValue := cStart;
+      TestPickOpen(lItem, False);
+      var lConvert := xeContext.Settings.ConvertIntFormID;
+      xeContext.Settings.ConvertIntFormID := True;
+      TestHost.TestCheckMenusTyped := '';
+      TestHost.TestCheckMenusSeen := '';
+      TestHost.TestCheckMenusMemo := '1234';
+      TestHost.TestCheckMenusAnswer.Enabled := True;
+      try
+        mniViewEditClick(nil);
+      finally
+        TestHost.TestCheckMenusAnswer.Enabled := False;
+        TestHost.TestCheckMenusMemo := '';
+        xeContext.Settings.ConvertIntFormID := lConvert;
+      end;
+      TestPickPump;
+      var lRaw := Raw(lItem);
+      Line('the Edit command''s element dialog stores 1234 as text', BoolToStr((lItem.EditValue = '1234') and (lRaw = Written(lTwin, '1234')) and
+        (lRaw = Oracle('1234', 32)) and TestHost.TestCheckMenusSeen.Contains('TfrmViewElements'), True),
+        Format('value "%s"'#9'dialogs%s', [lItem.EditValue, TestHost.TestCheckMenusSeen]));
+    end;
+  finally
+    lCp.Free;
+    vstView.OnNewText := TestHost.TestCheckMenusPickOld;
+    TestHost.TestCheckMenusPickOld := nil;
+    xeContext.Settings.EditAllowed := lEdit;
+  end;
+end;
+
+procedure TxeTestFormHelper.TestCheckMenusPickControls;
+const
+  cKinds : array[0..4] of string = ('formid', 'enum', 'string', 'other', 'flags');
+var
+  lModule  : IwbFile;
+  lFound   : array[0..4] of IwbElement;
+  lRecords : TArray<IwbMainRecord>;
+
+  function Kind(const aElement: IwbElement): Integer;
+  var
+    lInt : IwbIntegerDef;
+  begin
+    Result := -1;
+    if not aElement.IsEditable or aElement.Path.StartsWith('Record Header') then
+      Exit;
+    case aElement.EditType of
+      etCheckComboBox: Result := 4;
+      etComboBox: begin
+        var lValue := aElement.ResolvedValueDef;
+        if wbHoldsFormIDText(aElement) then
+          Result := 0
+        else if Supports(lValue, IwbIntegerDef, lInt) and Supports(lInt.Formater[aElement], IwbEnumDef) then
+          Result := 1
+        else if Supports(lValue, IwbStringDef) then
+          Result := 2
+        else
+          Result := 3;
+      end;
+    end;
+  end;
+
+  function Hash(const aList: TArray<string>): string;
+  begin
+    Result := Copy(THashSHA2.GetHashString(string.Join(#10, aList)), 1, 16);
+  end;
+
+  function OpenList(const aElement: IwbElement; out aClass: string): TArray<string>;
+  begin
+    var lLink := TestPickOpen(aElement);
+    Result := TestPickList(lLink);
+    aClass := lLink.ClassName;
+    TestPickKey(VK_ESCAPE);
+    if vstView.IsEditing then
+      vstView.CancelEditNode;
+    TestPickPump;
+  end;
+
+begin
+  lModule := nil;
+  for var lFile in Files do
+    if SameText(lFile.FileName, xeTestSwitches.CheckMenusModule) then
+      lModule := lFile;
+  if not Assigned(lModule) then
+    raise Exception.Create('no module ' + xeTestSwitches.CheckMenusModule);
+
+  var lSeenSignatures := TStringList.Create;
+  try
+    lSeenSignatures.Sorted := True;
+    for var j := 0 to Pred(lModule.RecordCount) do
+      if lSeenSignatures.IndexOf(string(lModule.Records[j].Signature)) < 0 then begin
+        lSeenSignatures.Add(string(lModule.Records[j].Signature));
+        lRecords := lRecords + [lModule.Records[j]];
+      end;
+  finally
+    lSeenSignatures.Free;
+  end;
+  for var lRecord in lRecords do begin
+    if Assigned(lFound[0]) and Assigned(lFound[1]) and Assigned(lFound[2]) and Assigned(lFound[3]) and Assigned(lFound[4]) then
+      Break;
+    DoSetActiveRecord(IwbMainRecord(nil));
+    DoSetActiveRecord(lRecord, True);
+    for var lNode in vstView.Nodes(False) do begin
+      var lCells := ViewCells(lNode);
+      if not Assigned(lCells) or not Assigned(lCells[0].Element) then
+        Continue;
+      var lKind := Kind(lCells[0].Element);
+      if (lKind >= 0) and not Assigned(lFound[lKind]) then
+        lFound[lKind] := lCells[0].Element;
+    end;
+  end;
+
+  for var k := Low(lFound) to High(lFound) do begin
+    if not Assigned(lFound[k]) then begin
+      TestHost.TestCheckMenusLines.Add('pickcontrol' + #9 + cKinds[k] + #9 + 'none found');
+      Continue;
+    end;
+    var lClass, lClassAgain: string;
+    var lFirst := OpenList(lFound[k], lClass);
+    var lAgain := OpenList(lFound[k], lClassAgain);
+    TestHost.TestCheckMenusLines.Add('pickcontrol' + #9 + cKinds[k] + #9 + lFound[k].ContainingMainRecord.EditorID + '\' + lFound[k].Path + #9 +
+      IntToStr(Ord(lFound[k].EditType)) + #9 + lClass + #9 + IntToStr(Length(lFirst)) + #9 + Hash(lFirst) + #9 + 'second open ' +
+      BoolToStr((Hash(lAgain) = Hash(lFirst)) and (lClassAgain = lClass), True));
+  end;
+
+  if Assigned(lFound[0]) then begin
+    var lOnce := ViewEditInfo(lFound[0]);
+    var lTwice := ViewEditInfo(lFound[0]);
+    TestHost.TestCheckMenusLines.Add('pickcache' + #9 + BoolToStr((Length(lOnce) > 0) and (Pointer(lOnce) = Pointer(lTwice)), True) + #9 +
+      IntToStr(Length(lOnce)));
+  end;
+
+  if Assigned(lFound[4]) and Assigned(lFound[0]) then begin
+    var lClass: string;
+    var lBefore := OpenList(lFound[4], lClass);
+    OpenList(lFound[0], lClass);
+    ShowFlagEnumValue := not ShowFlagEnumValue;
+    try
+      var lToggled := OpenList(lFound[4], lClass);
+      TestHost.TestCheckMenusLines.Add('pickcontrol' + #9 + 'flags-toggled' + #9 + lFound[4].ContainingMainRecord.EditorID + '\' + lFound[4].Path +
+        #9 + IntToStr(Ord(lFound[4].EditType)) + #9 + lClass + #9 + IntToStr(Length(lToggled)) + #9 + Hash(lToggled) + #9 + 'differs ' +
+        BoolToStr(Hash(lToggled) <> Hash(lBefore), True));
+    finally
+      ShowFlagEnumValue := not ShowFlagEnumValue;
+    end;
+  end;
+
+  if Assigned(lFound[4]) then begin
+    var lClass: string;
+    var lBefore := OpenList(lFound[4], lClass);
+    ShowFlagEnumValue := not ShowFlagEnumValue;
+    try
+      var lToggled := OpenList(lFound[4], lClass);
+      TestHost.TestCheckMenusLines.Add('pickfresh' + #9 + 'flags, the same element reopened after ShowFlagEnumValue changes' + #9 +
+        IntToStr(Length(lBefore)) + #9 + Hash(lBefore) + #9 + IntToStr(Length(lToggled)) + #9 + Hash(lToggled) + #9 + 'differs ' +
+        BoolToStr(Hash(lToggled) <> Hash(lBefore), True));
+    finally
+      ShowFlagEnumValue := not ShowFlagEnumValue;
+    end;
+  end;
+
+  if tbsWEAPSpreadsheet.TabVisible then begin
+    var lTree := tbsWEAPSpreadsheet.Controls[0] as TVirtualEditTree;
+    TestHost.TestCheckMenusTyped := '';
+    TestHost.TestCheckMenusSeen := '';
+    TestHost.TestCheckMenusAnswer.Enabled := True;
+    try
+      pgMain.ActivePage := tbsWEAPSpreadsheet;
+    finally
+      TestHost.TestCheckMenusAnswer.Enabled := False;
+    end;
+    TestPickPump;
+    var lRow: PVirtualNode := nil;
+    var lColumn: TColumnIndex := NoColumn;
+    var lCell: IwbElement := nil;
+    for var lNode in lTree.Nodes(False) do begin
+      var lDatas := PSpreadSheetNodeDatas(lTree.GetNodeData(lNode));
+      if not Assigned(lDatas) then
+        Continue;
+      for var c := lTree.Tag to Pred(lTree.Header.Columns.Count) do
+        if Assigned(lDatas[c].Element) and lDatas[c].Element.IsEditable and wbHoldsFormIDText(lDatas[c].Element) and
+           (lDatas[c].Element.EditType = etComboBox) then begin
+          lRow := lNode;
+          lColumn := c;
+          lCell := lDatas[c].Element;
+          Break;
+        end;
+      if Assigned(lRow) then
+        Break;
+    end;
+    if not Assigned(lRow) then
+      TestHost.TestCheckMenusLines.Add('picksheet' + #9 + 'False' + #9 + 'no editable FormID cell in the WEAP sheet')
+    else begin
+      var lOld := lTree.OnNewText;
+      lTree.OnNewText := TestCheckMenusPickNewText;
+      TestHost.TestCheckMenusPickOld := lOld;
+      TestHost.TestCheckMenusPickCalls := 0;
+      TestHost.TestCheckMenusPickText := '';
+      TestHost.TestCheckMenusPickShown := '';
+      var lBefore := lCell.EditValue;
+      var lError := '';
+      try
+        try
+          lTree.FocusedNode := lRow;
+          lTree.FocusedColumn := lColumn;
+          if not lTree.EditNode(lRow, lColumn) then
+            raise Exception.Create('the sheet refused to edit ' + lCell.Path);
+          TestPickPump;
+          TestHost.TestCheckMenusPickLink := TBaseVirtualTree(lTree).EditLink;
+          if not Assigned(TestHost.TestCheckMenusPickLink) then
+            raise Exception.Create('no editor for ' + lCell.Path);
+          TestHost.TestCheckMenusPickEditor := PickEditorHandle(TestHost.TestCheckMenusPickLink as TObject);
+          TestPickKey(VK_DOWN);
+          TestPickKey(VK_RETURN);
+        except
+          on E: Exception do
+            lError := E.ClassName + ': ' + E.Message;
+        end;
+        if lTree.IsEditing then
+          lTree.CancelEditNode;
+      finally
+        lTree.OnNewText := lOld;
+        TestHost.TestCheckMenusPickOld := nil;
+        TestHost.TestCheckMenusPickLink := nil;
+        TestHost.TestCheckMenusPickEditor := 0;
+      end;
+      var lAfter := lCell.EditValue;
+      TestHost.TestCheckMenusLines.Add('picksheet' + #9 + BoolToStr((lError = '') and (TestHost.TestCheckMenusPickCalls = 1) and
+        (TestHost.TestCheckMenusPickText = TestHost.TestCheckMenusPickShown) and (lAfter = TestHost.TestCheckMenusPickText) and (lAfter <> lBefore), True) +
+        #9 + Format('a WEAP sheet FormID cell, Down then Enter: calls %d, committed "%s", at commit "%s", before "%s", after "%s" %s',
+        [TestHost.TestCheckMenusPickCalls, TestHost.TestCheckMenusPickText, TestHost.TestCheckMenusPickShown, lBefore, lAfter, lError]));
+    end;
+    pgMain.ActivePage := tbsView;
+  end;
+end;
+
+procedure TxeTestFormHelper.TestCheckMenusPickCostRun;
+var
+  lModule : IwbFile;
+  lLeaf   : IwbElement;
+
+  function FindLeaf(const aElement: IwbElement; const aSig: string; aInside: Boolean): IwbElement;
+  var
+    lCont : IwbContainerElementRef;
+    lHas  : IwbHasSignature;
+  begin
+    Result := nil;
+    aInside := aInside or (Supports(aElement, IwbHasSignature, lHas) and (string(lHas.Signature) = aSig));
+    if aInside and (Supports(aElement.ValueDef, IwbNameReferenceDef) or (aElement.EditType = etComboBox)) then
+      Exit(aElement);
+    if Supports(aElement, IwbContainerElementRef, lCont) then
+      for var i := 0 to Pred(lCont.ElementCount) do begin
+        Result := FindLeaf(lCont.Elements[i], aSig, aInside);
+        if Assigned(Result) then
+          Exit;
+      end;
+  end;
+
+  function Median(aValues: TArray<Double>): Double;
+  begin
+    TArray.Sort<Double>(aValues);
+    Result := aValues[Length(aValues) div 2];
+  end;
+
+  function Joined(const aValues: TArray<Double>): string;
+  begin
+    Result := '';
+    for var lValue in aValues do
+      Result := Result + Format(' %.1f', [lValue]);
+  end;
+
+  function Allocated: Int64;
+  var
+    lState : TMemoryManagerState;
+  begin
+    GetMemoryManagerState(lState);
+    Result := Int64(lState.TotalAllocatedMediumBlockSize) + Int64(lState.TotalAllocatedLargeBlockSize);
+    for var i := Low(lState.SmallBlockTypeStates) to High(lState.SmallBlockTypeStates) do
+      Inc(Result, Int64(lState.SmallBlockTypeStates[i].AllocatedBlockCount) * lState.SmallBlockTypeStates[i].UseableBlockSize);
+  end;
+
+begin
+  var lParts := xeTestSwitches.CheckMenusPickCost.Split([',']);
+  if Length(lParts) < 2 then
+    raise Exception.Create('testcheckmenuspickcost takes <SIG>,<SUB>[,<rounds>]');
+  var lRounds := 5;
+  if Length(lParts) > 2 then
+    lRounds := StrToInt(lParts[2]);
+  lModule := nil;
+  for var lFile in Files do
+    if SameText(lFile.FileName, xeTestSwitches.CheckMenusModule) then
+      lModule := lFile;
+  if not Assigned(lModule) then
+    raise Exception.Create('no module ' + xeTestSwitches.CheckMenusModule);
+  for var j := 0 to Pred(lModule.RecordCount) do
+    if string(lModule.Records[j].Signature) = lParts[0] then begin
+      lLeaf := FindLeaf(lModule.Records[j], lParts[1], False);
+      if Assigned(lLeaf) then
+        Break;
+    end;
+  if not Assigned(lLeaf) then
+    raise Exception.Create('no ' + lParts[0] + ' with a combo-box leaf in ' + lParts[1] + ' in ' + lModule.FileName);
+
+  var lEdit := xeContext.Settings.EditAllowed;
+  xeContext.Settings.EditAllowed := True;
+  try
+    var lBuild, lCreate, lOpen, lSelect: TArray<Double>;
+    var lCount := 0;
+    TestPickOpen(lLeaf, False);
+    var lHeapControl := Allocated;
+    for var r := 1 to lRounds do begin
+      ViewEditInfo(lLeaf);
+      TestPickOpen(lLeaf, False);
+      TestPickPump;
+    end;
+    TestHost.TestCheckMenusLines.Add(Format('pickheapcontrol'#9'%s %s'#9'%d rounds, no editor opened'#9'heap grew %d bytes'#9'%d bytes a round',
+      [lParts[0], lParts[1], lRounds, Allocated - lHeapControl, (Allocated - lHeapControl) div lRounds]));
+    for var r := 1 to lRounds do begin
+      var lWatch := TStopwatch.StartNew;
+      var lCreated: IVTEditLink := nil;
+      vstCreateEditor(lLeaf, lCreated);
+      lCreate := lCreate + [lWatch.Elapsed.TotalMilliseconds];
+      lCreated := nil;
+    end;
+    TestPickOpen(lLeaf, False);
+    TestPickPump;
+    var lHeapBefore := Allocated;
+    for var r := 1 to lRounds do begin
+      var lWatch := TStopwatch.StartNew;
+      var lList := ViewEditInfo(lLeaf);
+      lBuild := lBuild + [lWatch.Elapsed.TotalMilliseconds];
+      lCount := Length(lList);
+      TestPickOpen(lLeaf, False);
+      lWatch := TStopwatch.StartNew;
+      if not vstView.EditNode(vstViewFocusedNode, vstView.FocusedColumn) then
+        raise Exception.Create('the View refused to edit ' + lLeaf.Path);
+      lOpen := lOpen + [lWatch.Elapsed.TotalMilliseconds];
+      var lLink := TBaseVirtualTree(vstView).EditLink;
+      if not Assigned(lLink) then
+        raise Exception.Create('no editor for ' + lLeaf.Path);
+      var lPick := '';
+      if Length(lList) > 0 then
+        lPick := lList[Length(lList) div 2];
+      lWatch := TStopwatch.StartNew;
+      TPickLinkCracker(lLink as TObject).SetEditText(lPick);
+      lSelect := lSelect + [lWatch.Elapsed.TotalMilliseconds];
+      vstView.CancelEditNode;
+      TestPickPump;
+    end;
+    TestPickPump;
+    var lHeapAfter := Allocated;
+    TestHost.TestCheckMenusLines.Add(Format('pickheap'#9'%s %s'#9'%d opens'#9'heap grew %d bytes'#9'%d bytes an open', [lParts[0], lParts[1], lRounds,
+      lHeapAfter - lHeapBefore, (lHeapAfter - lHeapBefore) div lRounds]));
+    TestHost.TestCheckMenusLines.Add(Format('pickcost'#9'%s %s'#9'candidates %d'#9'build median %.1f ms'#9'create median %.1f ms'#9'open median %.1f ms'#9'reselect median %.1f ms'#9'fill and first selection ~ %.1f ms'#9'build%s'#9'create%s'#9'open%s'#9'reselect%s',
+      [lParts[0], lParts[1], lCount, Median(lBuild), Median(lCreate), Median(lOpen), Median(lSelect), Median(lOpen) - Median(lCreate) - Median(lSelect),
+       Joined(lBuild), Joined(lCreate), Joined(lOpen), Joined(lSelect)]));
+  finally
+    xeContext.Settings.EditAllowed := lEdit;
+  end;
 end;
 
 procedure TxeTestFormHelper.DoTestFormIDSearch;

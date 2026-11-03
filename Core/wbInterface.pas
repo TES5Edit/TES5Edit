@@ -9695,8 +9695,8 @@ type
     procedure InitFromParentDoChildren; override; final;
 
     {---IwbValueDef---}
-    function GetEditType(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): TwbEditType; override; final;
-    function GetEditInfo(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): TwbStringArray; override; final;
+    function GetEditType(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): TwbEditType; override;
+    function GetEditInfo(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): TwbStringArray; override;
 
     {---IwbBaseStringDef---}
     function OverrideEncoding(aEncoding: TEncoding): IwbBaseStringDef;
@@ -9823,6 +9823,7 @@ type
     function VerdictOf(const aViews: TwbNameKeyViews; out aTarget: IwbMainRecord): TwbNameVerdict;
     function ResolveValue(const aElement: IwbElement; const aValue: string; out aTarget: IwbMainRecord): TwbNameVerdict;
     function Resolve(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; out aTarget: IwbMainRecord): TwbNameVerdict;
+    function TargetWritable: Boolean;
     function TargetWrite(const aElement: IwbElement; const aKey: TwbFormID; const aTargetName: string;
       aWrongTypeLinks: Boolean; out aIdentity: string): string;
     function AllowedText: string;
@@ -9836,6 +9837,8 @@ type
     procedure SetLinksTo(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aValue: IwbElement); override; final;
     function Check(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string; override; final;
     function CheckIn(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aRun: TwbCheckRun): string; override; final;
+    function GetEditType(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): TwbEditType; override; final;
+    function GetEditInfo(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): TwbStringArray; override; final;
     procedure BuildRef(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement); override; final;
     function MastersUpdated(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aOld, aNew: TwbFileIDs; aOldCount, aNewCount: TwbSlotCounts): Boolean; override; final;
     procedure FindUsedMasters(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aMasters: PwbUsedMasters); override; final;
@@ -24937,6 +24940,11 @@ begin
   Result := ResolveValue(aElement, lValue, aTarget);
 end;
 
+function TwbNameReferenceDef.TargetWritable: Boolean;
+begin
+  Result := defFlags * [dfNoZeroTerminator, dfStringTrim] = [];
+end;
+
 function TwbNameReferenceDef.TargetWrite(const aElement: IwbElement; const aKey: TwbFormID; const aTargetName: string;
   aWrongTypeLinks: Boolean; out aIdentity: string): string;
 var
@@ -25023,7 +25031,7 @@ var
   lIdentity : string;
   lReason   : string;
 begin
-  if defFlags * [dfNoZeroTerminator, dfStringTrim] <> [] then
+  if not TargetWritable then
     raise Exception.Create(aElement.Name + ': a NAME reference does not support dfNoZeroTerminator or dfStringTrim');
   if not Assigned(aValue) then begin
     FromStringNative(aBasePtr, aEndPtr, aElement, '', ttFromNativeValue);
@@ -25086,6 +25094,36 @@ begin
   end;
 end;
 
+function TwbNameReferenceDef.GetEditType(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): TwbEditType;
+begin
+  if TargetWritable and Judged(aElement) then
+    Result := etComboBox
+  else
+    Result := inherited GetEditType(aBasePtr, aEndPtr, aElement);
+end;
+
+function TwbNameReferenceDef.GetEditInfo(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): TwbStringArray;
+var
+  lIdentity : string;
+begin
+  if not (TargetWritable and Judged(aElement)) then
+    Exit(inherited GetEditInfo(aBasePtr, aEndPtr, aElement));
+  var lFile := aElement._File;
+  var lSeen := THashSet<Cardinal>.Create;
+  var lList := TStringList.Create;
+  try
+    for var lSignature in nrdAllowed do
+      for var lKey in lFile.ViewKeysOfSignature(lSignature) do
+        if lSeen.Add(lKey.ToCardinal) and (TargetWrite(aElement, lKey, '', False, lIdentity) = '') then
+          lList.Add(lIdentity);
+    lList.Sort;
+    Result := lList.ToStringArray;
+  finally
+    lList.Free;
+    lSeen.Free;
+  end;
+end;
+
 procedure TwbNameReferenceDef.BuildRef(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement);
 begin
 end;
@@ -25114,7 +25152,7 @@ var
   lNewKey   : TwbFormID;
 begin
   Result := False;
-  if defFlags * [dfNoZeroTerminator, dfStringTrim] <> [] then
+  if not TargetWritable then
     Exit;
   if aOldFormID = aNewFormID then
     Exit;
