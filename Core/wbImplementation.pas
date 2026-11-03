@@ -26922,13 +26922,13 @@ begin
       lGroupRecord.ReportRequiredMasters(aMasters, aAsNew);
   lContainer := GetContainer;
   while Assigned(lContainer) do begin
-    lContainer.ReportRequiredMasters(aMasters, aAsNew, False, True);
+    lContainer.ReportRequiredMasters(aMasters, False, False, True);
     if lContainer.ElementType = etGroupRecord then begin
       lMainRecord := (lContainer as IwbGroupRecord).ChildrenOf;
       if Assigned(lMainRecord) then begin
         if Assigned(aTarget) then
           lMainRecord := lMainRecord.HighestOverrideVisibleForFile[aTarget];
-        lMainRecord.ReportRequiredMasters(aMasters, aAsNew);
+        lMainRecord.ReportRequiredMasters(aMasters, False);
       end;
     end;
     lContainer := lContainer.Container;
