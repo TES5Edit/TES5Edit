@@ -1467,6 +1467,9 @@ type
     function IdentityKey: TwbFormID;
     procedure TakeIdentityKey(const aFile: IwbFileInternal);
     procedure UpdateIdentityKey;
+    procedure UpdateQualifiedChildKeys;
+    function QualifyIdentity(var aIdentity: string): Boolean;
+    function KeyIdentity: string;
     procedure RegisterWithIdentity(aNew: Boolean);
     function RefreshKnownSubRecord(const aSubRecord: IwbSubRecord): Boolean;
     procedure RefreshKnownSubRecords;
@@ -9915,6 +9918,9 @@ begin
   finally
     wbCancelUnlock;
   end;
+  for var i := Low(lRecords) to High(lRecords) do
+    if lMoves[i] then
+      (lRecords[i] as TObject as TwbMainRecord).UpdateQualifiedChildKeys;
 end;
 
 procedure TwbFile.IdentityKeyChanged(aClash: Boolean);
@@ -16185,7 +16191,7 @@ begin
   var lSitsAt := GetFixedFormID;
   var lLayout := ContextObj.SlotLayout;
 
-  if (GetSignature <> 'INFO') and Supports(GetFile, IwbFileInternal, lFile) then begin
+  if Supports(GetFile, IwbFileInternal, lFile) then begin
     var lNamed := lFile.OthersAtKey(Self, lSitsAt, 3, lOthers);
     if lOthers > 0 then begin
       var lNames := '';
@@ -16216,7 +16222,8 @@ begin
         Report(Format('its identity gives the key [%s], not the key it sits at [%s]',
           [lKey.ToDisplayString(lLayout), lSitsAt.ToDisplayString(lLayout)]));
     end else
-      Report(Format('its identity "%s" has no key yet, not the key it sits at [%s]', [lIdentity, lSitsAt.ToDisplayString(lLayout)]));
+      Report(Format('its identity "%s" has no key yet, not the key it sits at [%s]', [TwbGameContext.IdentityText(lIdentity),
+        lSitsAt.ToDisplayString(lLayout)]));
 end;
 
 function TwbMainRecord.CheckContents: string;
@@ -16707,7 +16714,7 @@ begin
     if not Assigned(mrDef) then
       Result := TwbFormID.Null
     else if not mrDef.GetFormID(Self, Result) then
-      Result := ContextObj.FormIDFromIdentity(mrDef.GetFormIDBase, mrDef.GetFormIDNameBase, mrDef.GetIdentity(Self));
+      Result := ContextObj.FormIDFromIdentity(mrDef.GetFormIDBase, mrDef.GetFormIDNameBase, KeyIdentity);
   end else
     Result := mrStruct.mrsFormID(True)^;
 end;
@@ -16860,7 +16867,7 @@ begin
   var lHasEditorID := mrDef.ContainsKnownSubRecord[ksrEditorID] and
     Supports(GetRecordBySignature(mrDef.KnownSubRecordSignatures[ksrEditorID]), IwbSubRecord, lSub) and
     mrDef.TryGetEditorID(lSub, lEditorID);
-  Result := mrDef.IdentityFrom(aHasGrid, aGrid, lHasEditorID, lEditorID, aIdentity);
+  Result := mrDef.IdentityFrom(aHasGrid, aGrid, lHasEditorID, lEditorID, aIdentity) and QualifyIdentity(aIdentity);
 end;
 
 function TwbMainRecord.GetCurrentIdentity(out aIdentity: string; out aHasGrid: Boolean): Boolean;
@@ -16868,6 +16875,32 @@ var
   lGrid : TwbGridCell;
 begin
   Result := GetCurrentIdentity(aIdentity, aHasGrid, lGrid);
+end;
+
+function TwbMainRecord.QualifyIdentity(var aIdentity: string): Boolean;
+const
+  cTopic: TwbSignature = 'DIAL';
+var
+  lGroup    : IwbGroupRecord;
+  lTopicDef : PwbMainRecordDef;
+  lTopic    : string;
+begin
+  Result := True;
+  if not (dfIdentityQualifiedByTopic in mrDef.DefFlags) then
+    Exit;
+  Result := Supports(GetContainer, IwbGroupRecord, lGroup) and (lGroup.GroupType = 7) and
+    GameDefObj.FindRecordDef(cTopic, lTopicDef) and
+    ContextObj.IdentityAtKey(lTopicDef^.GetFormIDBase, lTopicDef^.GetFormIDNameBase, TwbFormID.FromCardinal(lGroup.GroupLabel), lTopic);
+  if Result then
+    aIdentity := lTopic + #0 + aIdentity
+  else
+    aIdentity := '';
+end;
+
+function TwbMainRecord.KeyIdentity: string;
+begin
+  Result := mrDef.GetIdentity(Self);
+  QualifyIdentity(Result);
 end;
 
 function TwbMainRecord.IsExteriorAtKey(const aKey: TwbFormID): Boolean;
@@ -20446,6 +20479,19 @@ begin
     (lMaster as IwbMainRecordInternal).YouGotAMaster(Self);
 end;
 
+procedure TwbMainRecord.UpdateQualifiedChildKeys;
+var
+  lChild : IwbMainRecord;
+begin
+  var lGroup := GetChildGroup;
+  if not Assigned(lGroup) then
+    Exit;
+  for var i := 0 to Pred(lGroup.ElementCount) do
+    if Supports(lGroup.Elements[i], IwbMainRecord, lChild) and Assigned(lChild.Def) and
+       (dfIdentityQualifiedByTopic in lChild.Def.DefFlags) then
+      (lChild as TObject as TwbMainRecord).UpdateIdentityKey;
+end;
+
 procedure TwbMainRecord.UpdateIdentityKey;
 var
   lFile      : IwbFileInternal;
@@ -20473,7 +20519,7 @@ begin
     lFile.IdentityKeyChanged(True);
     if not Equals(lFile.RecordByFormID[lNew, False, True]) then
       wbProgress('<Error: %s [%s] can not take the identity "%s": %s holds it in %s; it keeps its previous identity>',
-        [string(GetSignature), lOld.ToDisplayString(lLayout), mrDef.GetIdentity(Self), lHolderName, lFile.Name]);
+        [string(GetSignature), lOld.ToDisplayString(lLayout), TwbGameContext.IdentityText(KeyIdentity), lHolderName, lFile.Name]);
     Exit;
   end;
 
@@ -20481,12 +20527,13 @@ begin
     lFile.IdentityKeyChanged(False);
     if not Equals(lFile.RecordByFormID[lNew, False, True]) then
       wbProgress('<Error: %s [%s] can not take the identity "%s": another record of %s wants it too; it keeps its previous identity>',
-        [string(GetSignature), lOld.ToDisplayString(lLayout), mrDef.GetIdentity(Self), lFile.Name]);
+        [string(GetSignature), lOld.ToDisplayString(lLayout), TwbGameContext.IdentityText(KeyIdentity), lFile.Name]);
     Exit;
   end;
 
   ReRegister(lFile, lNew, MoveGroupLabel);
   lFile.IdentityKeyChanged(False);
+  UpdateQualifiedChildKeys;
 end;
 
 procedure TwbMainRecord.RegisterWithIdentity(aNew: Boolean);
@@ -20502,9 +20549,11 @@ begin
     Supports(lEditorID.Value, IwbIntegerDef);
   if aNew and not lIndexed and not mrDef.GetFormID(Self, lFormID) then begin
     var lIdentity := mrDef.GetIdentity(Self);
-    if (lIdentity = '') or ContextObj.IsKnownIdentity(mrDef.GetFormIDNameBase, lIdentity) then
+    var lQualifier := '';
+    QualifyIdentity(lQualifier);
+    if (lIdentity = '') or ContextObj.IsKnownIdentity(mrDef.GetFormIDNameBase, lQualifier + lIdentity) then
       if ContextObj.BeginInternalEdit(True) then try
-        SetEditorID(ContextObj.UnusedIdentity(mrDef.GetFormIDNameBase, 'xEdit_' + GetSignature + '_'));
+        SetEditorID(ContextObj.UnusedIdentity(mrDef.GetFormIDNameBase, 'xEdit_' + GetSignature + '_', lQualifier));
       finally
         wbEndInternalEdit;
       end;

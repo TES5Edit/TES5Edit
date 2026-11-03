@@ -1554,7 +1554,8 @@ begin
       wbInteger(QSTR, 'Quest Restarted', itU8, wbBoolEnum).SetDefaultNativeValue(1)
     ]).SetUnordered,
     wbString(BNAM, 'Result')
-  ]).SetFormIDBase($90);
+  ]).SetFormIDBase($90)
+    .IncludeFlag(dfIdentityQualifiedByTopic);
 
   RegisterRecordDef(INGR, 'Ingredient',
     wbFlags(wbFlagsList([

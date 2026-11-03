@@ -507,6 +507,7 @@ type
     dfFastAssign,
     dfFloatSometimesBroken,
     dfHideText,
+    dfIdentityQualifiedByTopic,
     dfIncludeValueInDisplaySignature,
     dfIndexEditorID,
     dfInternalEditOnly,
@@ -4414,6 +4415,7 @@ type
     gcStampCounter         : Cardinal;
     gcConflictRulesGeneration : Cardinal;
     gcIdentities           : array[Byte] of TDictionary<string, Cardinal>;
+    gcIdentityAt           : array[Byte] of TList<string>;
     gcNextIDs              : array[Byte] of Cardinal;
     gcIdentitiesLock       : TLightweightMREW;
     gcUnusedIdentityCount  : Cardinal;
@@ -4464,8 +4466,10 @@ type
     function SlotLayout: TwbSlotLayout;
     function FormIDFromIdentity(aFormIDBase, aFormIDNameBase: Byte; aIdentity: string): TwbFormID;
     function FindIdentity(aFormIDBase, aFormIDNameBase: Byte; const aIdentity: string; out aFormID: TwbFormID): Boolean;
+    function IdentityAtKey(aFormIDBase, aFormIDNameBase: Byte; const aKey: TwbFormID; out aIdentity: string): Boolean;
     function IsKnownIdentity(aFormIDNameBase: Byte; const aIdentity: string): Boolean;
-    function UnusedIdentity(aFormIDNameBase: Byte; const aPrefix: string): string;
+    function UnusedIdentity(aFormIDNameBase: Byte; const aPrefix: string; const aQualifier: string = ''): string;
+    class function IdentityText(const aIdentity: string): string; static;
     function ExpandFileName(const aFileName: string): string;
     function FlagPluginsESM(const aReport: TProc<string>): Boolean;
     procedure CheckLeveledCycles(const aReport: TProc<string>);
@@ -7726,8 +7730,10 @@ begin
   gcRetiredSoundBanks := nil;
   FreeAndNil(gcLocalizationHandler);
   gcContainerHandler := nil;
-  for var i := Low(gcIdentities) to High(gcIdentities) do
+  for var i := Low(gcIdentities) to High(gcIdentities) do begin
     FreeAndNil(gcIdentities[i]);
+    FreeAndNil(gcIdentityAt[i]);
+  end;
   FreeAndNil(gcFilesMap);
   DetachFilesFromModules;
   FreeAndNil(gcModuleList);
@@ -7931,13 +7937,27 @@ begin
     if not (Assigned(lIdentities) and lIdentities.TryGetValue(aIdentity, i)) then begin
       i := gcNextIDs[aFormIDNameBase];
       if i >= gcGameDefObj.IdentityKeyCapacity(aFormIDNameBase) then
-        raise Exception.CreateFmt('"%s" can not be given a FormID: the identities of this session have filled the range of FormID base $%.2x', [aIdentity, aFormIDBase]);
+        raise Exception.CreateFmt('"%s" can not be given a FormID: the identities of this session have filled the range of FormID base $%.2x', [IdentityText(aIdentity), aFormIDBase]);
       if not Assigned(lIdentities) then begin
-        lIdentities := TDictionary<string, Cardinal>.Create;
+        var lNew := TList<string>.Create;
+        try
+          lIdentities := TDictionary<string, Cardinal>.Create;
+        except
+          lNew.Free;
+          raise;
+        end;
         gcIdentities[aFormIDNameBase] := lIdentities;
+        gcIdentityAt[aFormIDNameBase] := lNew;
+      end;
+      var lNames := gcIdentityAt[aFormIDNameBase];
+      lNames.Add(aIdentity);
+      try
+        lIdentities.Add(aIdentity, i);
+      except
+        lNames.Delete(Pred(lNames.Count));
+        raise;
       end;
       Inc(gcNextIDs[aFormIDNameBase]);
-      lIdentities.Add(aIdentity, i);
     end;
   finally
     gcIdentitiesLock.EndWrite;
@@ -7964,6 +7984,24 @@ begin
     aFormID := TwbFormID.Null;
 end;
 
+function TwbGameContext.IdentityAtKey(aFormIDBase, aFormIDNameBase: Byte; const aKey: TwbFormID; out aIdentity: string): Boolean;
+begin
+  aIdentity := '';
+  var lKey := aKey.ToCardinal;
+  var lStart := Cardinal(aFormIDBase) shl 16;
+  if (lKey < lStart) or (gcGameDefObj.IdentityNameBaseOf(aFormIDBase) <> aFormIDNameBase) then
+    Exit(False);
+  gcIdentitiesLock.BeginRead;
+  try
+    var lNames := gcIdentityAt[aFormIDNameBase];
+    Result := Assigned(lNames) and (lKey - lStart < Cardinal(lNames.Count));
+    if Result then
+      aIdentity := lNames[lKey - lStart];
+  finally
+    gcIdentitiesLock.EndRead;
+  end;
+end;
+
 function TwbGameContext.IsKnownIdentity(aFormIDNameBase: Byte; const aIdentity: string): Boolean;
 begin
   var lIdentity := aIdentity.ToLowerInvariant;
@@ -7976,12 +8014,17 @@ begin
   end;
 end;
 
-function TwbGameContext.UnusedIdentity(aFormIDNameBase: Byte; const aPrefix: string): string;
+function TwbGameContext.UnusedIdentity(aFormIDNameBase: Byte; const aPrefix: string; const aQualifier: string = ''): string;
 begin
   repeat
     Inc(gcUnusedIdentityCount);
     Result := aPrefix + IntToStr(gcUnusedIdentityCount);
-  until not IsKnownIdentity(aFormIDNameBase, Result);
+  until not IsKnownIdentity(aFormIDNameBase, aQualifier + Result);
+end;
+
+class function TwbGameContext.IdentityText(const aIdentity: string): string;
+begin
+  Result := aIdentity.Replace(#0, '\');
 end;
 
 function TwbGameContext.GetFileCount: Integer;
@@ -24963,14 +25006,14 @@ begin
   try
     lBytes := lEncoding.GetBytes(aIdentity);
     if lEncoding.GetString(lBytes) <> aIdentity then
-      Exit('"' + aIdentity + '" can not be stored in this field''s encoding');
+      Exit('"' + TwbGameContext.IdentityText(aIdentity) + '" can not be stored in this field''s encoding');
   except
     on E: Exception do
-      Exit('"' + aIdentity + '" can not be encoded: ' + E.Message);
+      Exit('"' + TwbGameContext.IdentityText(aIdentity) + '" can not be encoded: ' + E.Message);
   end;
   for var lByte in lBytes do
     if lByte = 0 then
-      Exit('"' + aIdentity + '" encodes to a zero byte');
+      Exit('"' + TwbGameContext.IdentityText(aIdentity) + '" encodes to a zero byte');
   if (sdSize > 0) and (Length(lBytes) > sdSize) then
     Exit('"' + aIdentity + '" is longer than the field');
   var lVerdict := ResolveValue(aElement, aIdentity, lHit);
