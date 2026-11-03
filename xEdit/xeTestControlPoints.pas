@@ -6130,6 +6130,18 @@ var
           IntToHex(lRecord.LoadOrderFormID.ToCardinal, 8) + #9 + 'flags=' + IntToHex(lRecord.Flags._Flags, 8) + #9 + lRecord.EditorID);
   end;
 
+  procedure AddNested(const aContainer: IwbContainer; const aSignature: TwbSignature; var aRecords: TArray<IwbMainRecord>);
+  var
+    lGroup  : IwbGroupRecord;
+    lRecord : IwbMainRecord;
+  begin
+    for var i := 0 to Pred(aContainer.ElementCount) do
+      if Supports(aContainer.Elements[i], IwbGroupRecord, lGroup) then
+        AddNested(lGroup, aSignature, aRecords)
+      else if Supports(aContainer.Elements[i], IwbMainRecord, lRecord) and (lRecord.Signature = aSignature) then
+        aRecords := aRecords + [lRecord];
+  end;
+
 var
   lMode     : string;
   lSource   : IwbFile;
@@ -6162,7 +6174,17 @@ begin
       end;
 
     lSpec := xeTestSwitches.CopyIntoRecords.Split([':']);
-    if (Length(lSpec) < 1) or (Length(lSpec[0]) <> 4) then
+    var lTopSig := '';
+    var lNestedSig := '';
+    if Length(lSpec) >= 1 then begin
+      lTopSig := lSpec[0];
+      var lSlash := Pos('/', lTopSig);
+      if lSlash > 0 then begin
+        lNestedSig := Copy(lTopSig, Succ(lSlash), MaxInt);
+        lTopSig := Copy(lTopSig, 1, Pred(lSlash));
+      end;
+    end;
+    if (Length(lTopSig) <> 4) or not (Length(lNestedSig) in [0, 4]) then
       raise Exception.Create('-testcopyintorecords needs a signature first: ' + xeTestSwitches.CopyIntoRecords);
     lSkip := 0;
     lCount := 1;
@@ -6170,19 +6192,26 @@ begin
       lSkip := StrToInt(lSpec[1]);
     if Length(lSpec) > 2 then
       lCount := StrToInt(lSpec[2]);
-    if not Supports(lSource.GroupBySignature[StrToSignature(lSpec[0])], IwbContainerElementRef, lGroup) then
-      raise Exception.Create('no ' + lSpec[0] + ' group in ' + lSource.FileName);
+    if not Supports(lSource.GroupBySignature[StrToSignature(lTopSig)], IwbContainerElementRef, lGroup) then
+      raise Exception.Create('no ' + lTopSig + ' group in ' + lSource.FileName);
+    var lCandidates: TArray<IwbMainRecord> := nil;
+    if lNestedSig <> '' then
+      AddNested(lGroup as IwbContainer, StrToSignature(lNestedSig), lCandidates)
+    else
+      for var i := 0 to Pred(lGroup.ElementCount) do
+        if Supports(lGroup.Elements[i], IwbMainRecord, lRecord) then
+          lCandidates := lCandidates + [lRecord];
     lSeen := 0;
-    for var i := 0 to Pred(lGroup.ElementCount) do
-      if Supports(lGroup.Elements[i], IwbMainRecord, lRecord) then begin
-        Inc(lSeen);
-        if lSeen <= lSkip then
-          Continue;
-        if Length(lElements) >= lCount then
-          Break;
-        lElements := lElements + [lRecord as IwbElement];
-        lLines.Add('selected' + #9 + IntToStr(High(lElements)) + #9 + lRecord.Name);
-      end;
+    for lRecord in lCandidates do begin
+      Inc(lSeen);
+      if lSeen <= lSkip then
+        Continue;
+      if Length(lElements) >= lCount then
+        Break;
+      lElements := lElements + [lRecord as IwbElement];
+      lLines.Add('selected' + #9 + IntToStr(High(lElements)) + #9 + lRecord.Name);
+    end;
+    lCandidates := nil;
     if Length(lElements) < lCount then
       raise Exception.Create(Format('%s has %d %s records after skipping %d, %d asked for',
         [lSource.FileName, Length(lElements), lSpec[0], lSkip, lCount]));

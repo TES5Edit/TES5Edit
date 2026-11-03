@@ -747,7 +747,7 @@ begin
        ((CopyIntoTargets = '') and (CopyIntoTemplate = '')) then begin
       ShowMessage('testcopyinto requires -testcopyinto:<filename> ' +
         '-testcopyintomode:<override|overwrite|deep|deepoverwrite|new|wrapper|spawn> -testcopyintosource:<module> ' +
-        '-testcopyintorecords:<signature>[:<skip>[:<count>]] -testcopyintoout:<folder> and -testcopyintotargets:<module>[,<module>] ' +
+        '-testcopyintorecords:<signature>[/<nested signature>][:<skip>[:<count>]] -testcopyintoout:<folder> and -testcopyintotargets:<module>[,<module>] ' +
         'or -testcopyintotemplate:<new file name> or both [-testcopyintoeditorid:<EditorID>] ' +
         '[-testcopyintoaffixes:<prefix to remove>|<suffix to remove>|<prefix to add>|<suffix to add>] ' +
         '[-testcopyintoanswers:<yes|no|yesall|noall|cancel>[,...]]');
