@@ -4565,6 +4565,11 @@ var
       Inc(Result, Int64(lState.SmallBlockTypeStates[i].AllocatedBlockCount) * lState.SmallBlockTypeStates[i].UseableBlockSize);
   end;
 
+  function EditorHandle: HWND;
+  begin
+    Result := PickEditorHandle(TBaseVirtualTree(vstView).EditLink as TObject);
+  end;
+
 begin
   var lParts := xeTestSwitches.CheckMenusPickCost.Split([',']);
   if Length(lParts) < 2 then
@@ -4631,12 +4636,31 @@ begin
       TPickLinkCracker(lLink as TObject).SetEditText(lPick);
       lSelect := lSelect + [lWatch.Elapsed.TotalMilliseconds];
       vstView.CancelEditNode;
+      lLink := nil;
       TestPickPump;
     end;
     TestPickPump;
     var lHeapAfter := Allocated;
     TestHost.TestCheckMenusLines.Add(Format('pickheap'#9'%s %s'#9'%d opens'#9'heap grew %d bytes'#9'%d bytes an open', [lParts[0], lParts[1], lRounds,
       lHeapAfter - lHeapBefore, (lHeapAfter - lHeapBefore) div lRounds]));
+    TestPickOpen(lLeaf, False);
+    TestPickPump;
+    var lHeapKeys := Allocated;
+    for var r := 1 to lRounds do begin
+      TestPickOpen(lLeaf, False);
+      if not vstView.EditNode(vstViewFocusedNode, vstView.FocusedColumn) then
+        raise Exception.Create('the View refused to edit ' + lLeaf.Path);
+      TestPickPump;
+      TestHost.TestCheckMenusPickEditor := EditorHandle;
+      TestPickKey(VK_ESCAPE);
+      TestHost.TestCheckMenusPickEditor := 0;
+      if vstView.IsEditing then
+        raise Exception.Create('Escape left the editor open on ' + lLeaf.Path);
+    end;
+    TestPickPump;
+    var lKeysGrew := Allocated - lHeapKeys;
+    TestHost.TestCheckMenusLines.Add(Format('pickkeyheap'#9'%s %s'#9'%d opens closed by Escape'#9'heap grew %d bytes'#9'%d bytes an open',
+      [lParts[0], lParts[1], lRounds, lKeysGrew, lKeysGrew div lRounds]));
     TestHost.TestCheckMenusLines.Add(Format('pickcost'#9'%s %s'#9'candidates %d'#9'build median %.1f ms'#9'create median %.1f ms'#9'open median %.1f ms'#9'reselect median %.1f ms'#9'fill and first selection ~ %.1f ms'#9'build%s'#9'create%s'#9'open%s'#9'reselect%s',
       [lParts[0], lParts[1], lCount, Median(lBuild), Median(lCreate), Median(lOpen), Median(lSelect), Median(lOpen) - Median(lCreate) - Median(lSelect),
        Joined(lBuild), Joined(lCreate), Joined(lOpen), Joined(lSelect)]));

@@ -16522,7 +16522,7 @@ begin
     end;
     {$ELSE}
     etComboBox: begin
-      ComboLink := TwbComboEditLink.Create(Self);
+      ComboLink := TwbComboEditLink.Create;
       EditLink := ComboLink;
       lEditInfo := ViewEditInfo(aElement);
       with ComboLink.PickList do begin
