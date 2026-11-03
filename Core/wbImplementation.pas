@@ -38,6 +38,8 @@ type
                            out aSelected: IwbMainRecord): TwbNameKeyState; override; final;
     function NameKeyIdentity(const aElement: IwbElement; const aKey: TwbFormID; out aSelected: IwbMainRecord;
                              out aIdentity: string): TwbNameTarget; override; final;
+    function NameProvider(const aRecord: IwbMainRecord): IwbFile; override; final;
+    function PathgridCell(const aElement: IwbElement; const aCellSignature: TwbSignature; out aCell: IwbMainRecord): Boolean; override; final;
     function NameFileKey(const aElement: IwbElement; const aLoadOrderFormID: TwbFormID; out aKey: TwbFormID): Boolean; override; final;
     function FileRecordsInStreamOrder(const aFile: IwbFile): TArray<IwbMainRecord>; override; final;
   protected
@@ -836,6 +838,8 @@ type
     function InsideNameScopeOwn: Boolean;
     function NameReferencesJudgedInternal: Boolean;
     function SelectAtNameKey(const aKey: TwbFormID; out aCorrupt: Boolean): IwbMainRecord;
+    function SelectInMastersAtNameKey(const aKey: TwbFormID; out aCorrupt: Boolean): IwbMainRecord;
+    function NameProviderAtKey(const aKey: TwbFormID): IwbFile;
     class function CurrentIdentityIs(const aRecord: IwbMainRecord; const aLowerValue: string): Boolean; static;
     function HoldsCurrentIdentityAtNameKey(const aKey: TwbFormID; const aLowerValue: string): Boolean;
     function ViewNameKeyInternal(const aKey: TwbFormID; const aValue: string; out aSelected: IwbMainRecord): TwbNameKeyState;
@@ -7237,19 +7241,24 @@ end;
 function TwbFile.SelectAtNameKey(const aKey: TwbFormID; out aCorrupt: Boolean): IwbMainRecord;
 var
   lCount, lFirst : Integer;
-  lOwn           : IwbMainRecord;
-  lBest          : TwbFile;
-  lBestRecord    : IwbMainRecord;
 begin
-  Result := nil;
-  aCorrupt := False;
   lFirst := RecordRunAt(aKey, lCount);
   if lCount >= 2 then begin
     aCorrupt := True;
-    Exit;
+    Exit(nil);
   end;
-  if lCount = 1 then
-    lOwn := flRecords[lFirst];
+  Result := SelectInMastersAtNameKey(aKey, aCorrupt);
+  if not aCorrupt and (lCount = 1) then
+    Result := flRecords[lFirst];
+end;
+
+function TwbFile.SelectInMastersAtNameKey(const aKey: TwbFormID; out aCorrupt: Boolean): IwbMainRecord;
+var
+  lCount, lFirst : Integer;
+  lBest          : TwbFile;
+begin
+  Result := nil;
+  aCorrupt := False;
   lBest := nil;
   var lMasters := GetAllMasters;
   for var i := 0 to High(lMasters) do begin
@@ -7262,13 +7271,26 @@ begin
     if (lCount = 1) and (not Assigned(lBest) or (lM.flLoadOrder > lBest.flLoadOrder) or
        ((lM.flLoadOrder = lBest.flLoadOrder) and (lM.flSerial > lBest.flSerial))) then begin
       lBest := lM;
-      lBestRecord := lM.flRecords[lFirst];
+      Result := lM.flRecords[lFirst];
     end;
   end;
-  if Assigned(lOwn) then
-    Result := lOwn
-  else
-    Result := lBestRecord;
+end;
+
+function TwbFile.NameProviderAtKey(const aKey: TwbFormID): IwbFile;
+var
+  lCorrupt : Boolean;
+begin
+  if fsIsHardcoded in flStates then
+    Exit(nil);
+  if not (fsIsCompareLoad in flStates) then
+    Exit(Self);
+  var lOverridden := SelectInMastersAtNameKey(aKey, lCorrupt);
+  if Assigned(lOverridden) then
+    Exit((lOverridden._File as TObject as TwbFile).NameProviderAtKey(aKey));
+  Result := nil;
+  if (fsIsDeltaPatch in flStates) and Assigned(flCompareToFile) and
+     ([fsIsHardcoded, fsIsCompareLoad] * flCompareToFile.FileStates = []) then
+    Result := flCompareToFile;
 end;
 
 class function TwbFile.CurrentIdentityIs(const aRecord: IwbMainRecord; const aLowerValue: string): Boolean;
@@ -30752,6 +30774,35 @@ begin
   if aIdentity = '' then
     Exit(ntEmpty);
   Result := ntFound;
+end;
+
+function TwbLoadingGameContext.NameProvider(const aRecord: IwbMainRecord): IwbFile;
+begin
+  Result := (aRecord._File as TObject as TwbFile).NameProviderAtKey(aRecord.FixedFormID);
+end;
+
+function TwbLoadingGameContext.PathgridCell(const aElement: IwbElement; const aCellSignature: TwbSignature;
+  out aCell: IwbMainRecord): Boolean;
+var
+  lIdentity : string;
+  lHasGrid  : Boolean;
+  lKey      : TwbFormID;
+  lCellDef  : PwbMainRecordDef;
+begin
+  aCell := nil;
+  var lPathgrid := aElement.ContainingMainRecord;
+  if not Assigned(lPathgrid) then
+    Exit(False);
+  var lRecord := lPathgrid as TObject as TwbMainRecord;
+  if not lRecord.GetCurrentIdentity(lIdentity, lHasGrid) or lHasGrid or (lIdentity = '') then
+    Exit(False);
+  if not FindIdentity(lRecord.mrDef.GetFormIDBase, lRecord.mrDef.GetFormIDNameBase, lIdentity, lKey) or
+     (lKey <> lRecord.GetFixedFormID) then
+    Exit(False);
+  if not GameDefObj.FindRecordDef(aCellSignature, lCellDef) or
+     not FindIdentity(lCellDef^.GetFormIDBase, lCellDef^.GetFormIDNameBase, lIdentity, lKey) then
+    Exit(False);
+  Result := ViewNameKeyAt(aElement, lKey, lIdentity, aCell) = nksMatch;
 end;
 
 function TwbLoadingGameContext.FileRecordsInStreamOrder(const aFile: IwbFile): TArray<IwbMainRecord>;

@@ -3200,6 +3200,10 @@ type
 
   TwbNameUnresolved = (nuError, nuDoorCell, nuTravelCell, nuPackageCell);
 
+  IwbNameValueDef = interface(IwbStringDef)
+    ['{851FF720-30CE-4CE2-B662-9C3D66CCD345}']
+  end;
+
   IwbNameReferenceDef = interface(IwbStringDef)
     ['{DB70BDC9-3E71-4322-B0CB-DE636ED674E1}']
     function GetAllowedSignatures: TwbSignatures;
@@ -4442,6 +4446,8 @@ type
                          out aSelected: IwbMainRecord): TwbNameKeyState;
     function NameKeyIdentity(const aElement: IwbElement; const aKey: TwbFormID; out aSelected: IwbMainRecord;
                              out aIdentity: string): TwbNameTarget; virtual; abstract;
+    function NameProvider(const aRecord: IwbMainRecord): IwbFile; virtual; abstract;
+    function PathgridCell(const aElement: IwbElement; const aCellSignature: TwbSignature; out aCell: IwbMainRecord): Boolean; virtual; abstract;
     function NameFileKey(const aElement: IwbElement; const aLoadOrderFormID: TwbFormID; out aKey: TwbFormID): Boolean; virtual; abstract;
     function FileRecordsInStreamOrder(const aFile: IwbFile): TArray<IwbMainRecord>; virtual; abstract;
   public
@@ -4834,6 +4840,14 @@ function wbNameReference(const aName         : string;
                                aPriority     : TwbConflictPriority = cpNormal;
                                aRequired     : Boolean = False)
                                              : IwbNameReferenceDef; overload;
+
+function wbPathgridName(const aSignature : TwbSignature;
+                        const aName      : string;
+                        const aCell      : TwbSignature;
+                              aSize      : Integer = 0;
+                              aPriority  : TwbConflictPriority = cpNormal;
+                              aRequired  : Boolean = False)
+                                         : IwbSubRecordWithBaseStringDef;
 
 function wbHoldsFormIDText(const aElement: IwbElement): Boolean;
 
@@ -9845,7 +9859,7 @@ type
 
   TwbNameKeyViews = TArray<TwbNameKeyView>;
 
-  TwbNameReferenceDef = class(TwbStringDef, IwbNameReferenceDef)
+  TwbNameReferenceDef = class(TwbStringDef, IwbNameReferenceDef, IwbNameValueDef)
   protected
     nrdAllowed      : TwbSignatures;
     nrdSentinels    : TArray<string>;
@@ -9904,6 +9918,23 @@ type
                  const aSentinels    : array of string;
                        aEmptyIsError : Boolean;
                        aUnresolved   : TwbNameUnresolved); overload;
+    procedure AfterConstruction; override; final;
+  end;
+
+  TwbPathgridNameDef = class(TwbStringDef, IwbNameValueDef)
+  protected
+    pndCell : TwbSignature;
+
+    procedure AfterClone(const aSource: TwbDef); override; final;
+
+    {---IwbValueDef---}
+    function ReportValueMasters(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aMasters: TwbFilesSet): Boolean; override; final;
+  public
+    constructor Create(aPriority : TwbConflictPriority;
+                       aRequired : Boolean;
+                 const aName     : string;
+                       aSize     : Integer;
+                 const aCell     : TwbSignature); overload;
     procedure AfterConstruction; override; final;
   end;
 
@@ -11177,9 +11208,21 @@ begin
   Result := wbNameReference(aName, aAllowed, [], aSize, False, nuError, aPriority, aRequired);
 end;
 
+function wbPathgridName(const aSignature : TwbSignature;
+                        const aName      : string;
+                        const aCell      : TwbSignature;
+                              aSize      : Integer = 0;
+                              aPriority  : TwbConflictPriority = cpNormal;
+                              aRequired  : Boolean = False)
+                                         : IwbSubRecordWithBaseStringDef;
+begin
+  Result := wbSubRecord(aSignature, aName, TwbPathgridNameDef.Create(aPriority, aRequired, '', aSize, aCell), aPriority, aRequired)
+    as IwbSubRecordWithBaseStringDef;
+end;
+
 function wbHoldsFormIDText(const aElement: IwbElement): Boolean;
 begin
-  Result := aElement.CanContainFormIDs and not Supports(aElement.ResolvedValueDef, IwbNameReferenceDef);
+  Result := aElement.CanContainFormIDs and not Supports(aElement.ResolvedValueDef, IwbNameValueDef);
 end;
 
 function wbStringT(const aSignature : TwbSignature;
@@ -25182,8 +25225,19 @@ begin
 end;
 
 function TwbNameReferenceDef.ReportValueMasters(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aMasters: TwbFilesSet): Boolean;
+var
+  lTarget : IwbMainRecord;
 begin
-  Result := Judged(aElement);
+  case Resolve(aBasePtr, aEndPtr, aElement, lTarget) of
+    nvNotJudged:
+      Exit(False);
+    nvLink, nvWrongType: begin
+      var lProvider := aElement.ContextObj.NameProvider(lTarget);
+      if Assigned(lProvider) then
+        aMasters.Add(lProvider);
+    end;
+  end;
+  Result := True;
 end;
 
 function TwbNameReferenceDef.CompareExchangeFormID(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aOldFormID, aNewFormID: TwbFormID): Boolean;
@@ -25278,6 +25332,40 @@ begin
     if lSentinel = lValue then
       Exit(True);
   Result := False;
+end;
+
+constructor TwbPathgridNameDef.Create(aPriority: TwbConflictPriority; aRequired: Boolean; const aName: string; aSize: Integer;
+  const aCell: TwbSignature);
+begin
+  Create(aPriority, aRequired, aName, aSize, False, True);
+  pndCell := aCell;
+end;
+
+procedure TwbPathgridNameDef.AfterClone(const aSource: TwbDef);
+begin
+  inherited;
+  pndCell := (aSource as TwbPathgridNameDef).pndCell;
+end;
+
+procedure TwbPathgridNameDef.AfterConstruction;
+begin
+  inherited;
+  Include(defFlags, dfCanContainFormID);
+end;
+
+function TwbPathgridNameDef.ReportValueMasters(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aMasters: TwbFilesSet): Boolean;
+var
+  lCell : IwbMainRecord;
+begin
+  var lContext := aElement.ContextObj;
+  if not (Assigned(lContext) and lContext.NameReferencesJudged(aElement)) then
+    Exit(False);
+  if lContext.PathgridCell(aElement, pndCell, lCell) then begin
+    var lProvider := lContext.NameProvider(lCell);
+    if Assigned(lProvider) then
+      aMasters.Add(lProvider);
+  end;
+  Result := True;
 end;
 
 procedure TwbStringMgefCodeDef.AfterConstruction;

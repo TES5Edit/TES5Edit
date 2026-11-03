@@ -1967,7 +1967,7 @@ begin
       wbInteger('Granularity', itU16).SetDefaultNativeValue(1024),
       wbInteger('Point Count', itU16)
     ]).SetRequired,
-    wbStringForward(NAME, 'Location ID', 0, cpIgnore).SetRequired,
+    wbPathgridName(NAME, 'Location ID', CELL, 0, cpIgnore).SetRequired,
     IfThen(DefineOptions.SimpleRecords,
       wbArray(PGRP, 'Points',
         wbByteArray('Point', 16)
