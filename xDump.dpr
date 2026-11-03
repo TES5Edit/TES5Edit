@@ -754,14 +754,14 @@ begin
 end;
 
 {==============================================================================}
-function CheckForErrors(const aIndent: Integer; const aElement: IwbElement): Boolean;
+function CheckForErrors(const aIndent: Integer; const aElement: IwbElement; const aRun: TwbCheckRun): Boolean;
 var
   Error                       : string;
   Container                   : IwbContainerElementRef;
   i                           : Integer;
   GroupRecord                 : IwbGroupRecord;
 begin
-  Error := aElement.Check;
+  Error := aElement.CheckIn(aRun);
   Result := Error <> '';
   if Result then
     WriteLn(StringOfChar(' ', aIndent * 2) + aElement.Name, ' -> ', Error);
@@ -782,7 +782,7 @@ begin
             Exit;
 
     for i := Pred(Container.ElementCount) downto 0 do
-      Result := CheckForErrors(aIndent + 1, Container.Elements[i]) or Result;
+      Result := CheckForErrors(aIndent + 1, Container.Elements[i], aRun) or Result;
   end;
 
   if Result and (Error = '') then
@@ -1536,9 +1536,14 @@ begin
 
       if HostToolMode in [tmDump] then begin
         FileIsSave := Assigned(_File) and Assigned(_File.SaveContextObj);
-        if FindCmdLineSwitch('check') and not wbReportMode then
-          CheckForErrors(0, _File)
-        else begin
+        if FindCmdLineSwitch('check') and not wbReportMode then begin
+          var lRun := TwbCheckRun.Create;
+          try
+            CheckForErrors(0, _File, lRun);
+          finally
+            lRun.Free;
+          end;
+        end else begin
           if DontWriteReport then
             ProgressLocked := True;
           WriteContainer(_File);

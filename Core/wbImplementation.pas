@@ -332,6 +332,7 @@ type
     function GetSummaryAndLink(var aLinksTo: IwbElement; aIntoField: Boolean): string; virtual;
     function ReportValueMasters(const aValueDef: IwbValueDef; aMasters: TwbFilesSet): Boolean; virtual;
     function GetCheck: string; virtual;
+    function CheckIn(const aRun: TwbCheckRun): string; virtual;
     function GetSortKey(aExtended: Boolean): string;
     function GetSortKeyCached(aExtended: Boolean): string; virtual;
     function GetDisplaySortKey(aExtended: Boolean): string;
@@ -838,6 +839,15 @@ type
     class function CurrentIdentityIs(const aRecord: IwbMainRecord; const aLowerValue: string): Boolean; static;
     function HoldsCurrentIdentityAtNameKey(const aKey: TwbFormID; const aLowerValue: string): Boolean;
     function ViewNameKeyInternal(const aKey: TwbFormID; const aValue: string; out aSelected: IwbMainRecord): TwbNameKeyState;
+    function ViewInSelectionOrder: TArray<TwbFile>;
+    function ViewKeysOfSignature(const aView: TArray<TwbFile>; const aSignature: TwbSignature): TArray<TwbFormID>; overload;
+    function ViewKeysOfSignature(const aSignature: TwbSignature): TArray<TwbFormID>; overload;
+    function SelectAtNameKeyIn(const aView: TArray<TwbFile>; const aKey: TwbFormID; out aCorrupt: Boolean): IwbMainRecord;
+    function ViewNamedRecord(const aView: TArray<TwbFile>; const aSignature: TwbSignature; const aIdentity: string; out aRecord: IwbMainRecord): Boolean;
+    function ExteriorDerivedName(const aView: TArray<TwbFile>; const aKey: TwbFormID; const aCell: IwbMainRecord; out aName: string): Boolean;
+    function WalkVisibleExteriorNames(const aVisit: TFunc<string, Boolean>): Boolean;
+    function IsVisibleExteriorName(const aValue: string): Boolean;
+    function VisibleExteriorNames: TArray<string>;
     function RecordsInStreamOrder: TArray<IwbMainRecord>;
     function FindInjectedID(const aFormID: TwbFormID; var Index: Integer): Boolean;
     function GetMasterRecordByFormID(aFormID: TwbFormID; aAllowInjected, aNewMasters: Boolean): IwbMainRecord;
@@ -1480,6 +1490,7 @@ type
     function GetFixedFormID: TwbFormID; inline;
     function GetCurrentIdentity(out aIdentity: string; out aHasGrid: Boolean; out aGrid: TwbGridCell): Boolean; overload;
     function GetCurrentIdentity(out aIdentity: string; out aHasGrid: Boolean): Boolean; overload;
+    function IsExteriorAtKey(const aKey: TwbFormID): Boolean;
     function CheckContents: string;
     function CheckOwnKey: string;
     function ComputeFixedFormID(out aCacheable: Boolean): TwbFormID;
@@ -1736,6 +1747,7 @@ type
     function GetValue: string; override; final;
     function GetSummaryAndLink(var aLinksTo: IwbElement; aIntoField: Boolean): string; override; final;
     function GetCheck: string; override; final;
+    function CheckIn(const aRun: TwbCheckRun): string; override; final;
     function GetSortKeyInternal(aExtended: Boolean): string; override; final;
     function GetIsEditable: Boolean; override; final;
     function GetValueDef: IwbValueDef; override; final;
@@ -1819,6 +1831,7 @@ type
     function GetDisplayName(aUseSuffix: Boolean): string; override; final;
 
     function GetCheck: string; override; final;
+    function CheckIn(const aRun: TwbCheckRun): string; override; final;
     function GetValue: string; override;
     function GetSummaryAndLink(var aLinksTo: IwbElement; aIntoField: Boolean): string; override; final;
     function GetSortKeyInternal(aExtended: Boolean): string; override; final;
@@ -7317,6 +7330,201 @@ begin
     Exit(nksNone);
   aSelected := lSelected;
   Result := nksMatch;
+end;
+
+function TwbFile.ViewInSelectionOrder: TArray<TwbFile>;
+begin
+  var lMasters := GetAllMasters;
+  SetLength(Result, Succ(Length(lMasters)));
+  Result[0] := Self;
+  for var i := 0 to High(lMasters) do
+    Result[Succ(i)] := lMasters[i] as TObject as TwbFile;
+  TArray.Sort<TwbFile>(Result, TComparer<TwbFile>.Construct(
+    function(const aLeft, aRight: TwbFile): Integer
+    begin
+      if aLeft.flLoadOrder <> aRight.flLoadOrder then
+        Result := aRight.flLoadOrder - aLeft.flLoadOrder
+      else if aLeft.flSerial > aRight.flSerial then
+        Result := -1
+      else if aLeft.flSerial < aRight.flSerial then
+        Result := 1
+      else
+        Result := 0;
+    end), 1, Length(lMasters));
+end;
+
+function TwbFile.ViewKeysOfSignature(const aView: TArray<TwbFile>; const aSignature: TwbSignature): TArray<TwbFormID>;
+var
+  lGroup  : IwbContainerElementRef;
+  lRecord : IwbMainRecord;
+begin
+  var lKeys: TList<TwbFormID> := nil;
+  var lSeen := TDictionary<Cardinal, Boolean>.Create;
+  try
+    lKeys := TList<TwbFormID>.Create;
+    for var lFile in aView do
+      if Supports(lFile.GetGroupBySignature(aSignature), IwbContainerElementRef, lGroup) then
+        for var i := 0 to Pred(lGroup.ElementCount) do
+          if Supports(lGroup.Elements[i], IwbMainRecord, lRecord) then begin
+            var lKey := lRecord.FixedFormID;
+            if lSeen.TryAdd(lKey.ToCardinal, True) then
+              lKeys.Add(lKey);
+          end;
+    Result := lKeys.ToArray;
+  finally
+    lKeys.Free;
+    lSeen.Free;
+  end;
+end;
+
+function TwbFile.ViewKeysOfSignature(const aSignature: TwbSignature): TArray<TwbFormID>;
+begin
+  Result := ViewKeysOfSignature(ViewInSelectionOrder, aSignature);
+end;
+
+function TwbFile.SelectAtNameKeyIn(const aView: TArray<TwbFile>; const aKey: TwbFormID; out aCorrupt: Boolean): IwbMainRecord;
+var
+  lCount, lFirst : Integer;
+  lOwn           : IwbMainRecord;
+  lBest          : TwbFile;
+  lBestRecord    : IwbMainRecord;
+begin
+  Result := nil;
+  aCorrupt := False;
+  lBest := nil;
+  for var i := 0 to High(aView) do begin
+    var lFile := aView[i];
+    lFirst := lFile.RecordRunAt(aKey, lCount);
+    if lCount >= 2 then begin
+      aCorrupt := True;
+      Exit;
+    end;
+    if lCount = 1 then
+      if i = 0 then
+        lOwn := lFile.flRecords[lFirst]
+      else if not Assigned(lBest) or (lFile.flLoadOrder > lBest.flLoadOrder) or
+         ((lFile.flLoadOrder = lBest.flLoadOrder) and (lFile.flSerial > lBest.flSerial)) then begin
+        lBest := lFile;
+        lBestRecord := lFile.flRecords[lFirst];
+      end;
+  end;
+  if Assigned(lOwn) then
+    Result := lOwn
+  else
+    Result := lBestRecord;
+end;
+
+function TwbFile.ViewNamedRecord(const aView: TArray<TwbFile>; const aSignature: TwbSignature; const aIdentity: string;
+  out aRecord: IwbMainRecord): Boolean;
+var
+  lRecordDef : PwbMainRecordDef;
+  lKey       : TwbFormID;
+  lCorrupt   : Boolean;
+  lIdentity  : string;
+  lHasGrid   : Boolean;
+begin
+  aRecord := nil;
+  Result := False;
+  if aIdentity = '' then
+    Exit;
+  if not flContextObj.GameDefObj.FindRecordDef(aSignature, lRecordDef) or
+     not flContextObj.FindIdentity(lRecordDef^.GetFormIDBase, lRecordDef^.GetFormIDNameBase, aIdentity, lKey) then
+    Exit;
+  var lSelected := SelectAtNameKeyIn(aView, lKey, lCorrupt);
+  if lCorrupt or not Assigned(lSelected) or (lSelected.Signature <> aSignature) or
+     not (lSelected as TObject as TwbMainRecord).GetCurrentIdentity(lIdentity, lHasGrid) or
+     (lIdentity.ToLowerInvariant <> aIdentity.ToLowerInvariant) then
+    Exit;
+  aRecord := lSelected;
+  Result := True;
+end;
+
+function TwbFile.ExteriorDerivedName(const aView: TArray<TwbFile>; const aKey: TwbFormID; const aCell: IwbMainRecord;
+  out aName: string): Boolean;
+
+  function ValueOf(const aRecord: IwbMainRecord; const aSignature: TwbSignature): string;
+  var
+    lSub : IwbRecord;
+  begin
+    lSub := aRecord.RecordBySignature[aSignature];
+    if Assigned(lSub) then
+      Result := lSub.EditValue
+    else
+      Result := '';
+  end;
+
+var
+  lSelected : IwbMainRecord;
+begin
+  Result := True;
+  aName := ValueOf(aCell, 'NAME');
+  if aName <> '' then
+    Exit;
+  var lRegion := '';
+  for var lFile in aView do begin
+    var lCount: Integer;
+    var lFirst := lFile.RecordRunAt(aKey, lCount);
+    if (lCount = 1) and (lFile.flRecords[lFirst] as TObject as TwbMainRecord).IsExteriorAtKey(aKey) then begin
+      var lRgnn := lFile.flRecords[lFirst].RecordBySignature['RGNN'];
+      if Assigned(lRgnn) then begin
+        lRegion := lRgnn.EditValue;
+        Break;
+      end;
+    end;
+  end;
+  if (lRegion <> '') and ViewNamedRecord(aView, 'REGN', lRegion, lSelected) then begin
+    aName := ValueOf(lSelected, 'FNAM');
+    if aName = '' then
+      aName := ValueOf(lSelected, 'NAME');
+    Exit;
+  end;
+  Result := ViewNamedRecord(aView, 'GMST', 'sDefaultCellname', lSelected);
+  if Result then begin
+    aName := ValueOf(lSelected, 'STRV');
+    Result := aName <> '';
+  end;
+end;
+
+function TwbFile.WalkVisibleExteriorNames(const aVisit: TFunc<string, Boolean>): Boolean;
+var
+  lCorrupt : Boolean;
+  lName    : string;
+begin
+  Result := False;
+  var lView := ViewInSelectionOrder;
+  for var lKey in ViewKeysOfSignature(lView, 'CELL') do begin
+    var lSelected := SelectAtNameKeyIn(lView, lKey, lCorrupt);
+    if lCorrupt or not Assigned(lSelected) or not (lSelected as TObject as TwbMainRecord).IsExteriorAtKey(lKey) then
+      Continue;
+    if ExteriorDerivedName(lView, lKey, lSelected, lName) and aVisit(lName.ToLowerInvariant) then
+      Exit(True);
+  end;
+end;
+
+function TwbFile.IsVisibleExteriorName(const aValue: string): Boolean;
+begin
+  var lLower := aValue.ToLowerInvariant;
+  Result := WalkVisibleExteriorNames(
+    function(aName: string): Boolean
+    begin
+      Result := aName = lLower;
+    end);
+end;
+
+function TwbFile.VisibleExteriorNames: TArray<string>;
+begin
+  var lSeen := THashSet<string>.Create;
+  try
+    WalkVisibleExteriorNames(
+      function(aName: string): Boolean
+      begin
+        lSeen.Add(aName);
+        Result := False;
+      end);
+    Result := lSeen.ToArray;
+  finally
+    lSeen.Free;
+  end;
 end;
 
 function TwbFile.RecordsInStreamOrder: TArray<IwbMainRecord>;
@@ -16662,6 +16870,23 @@ begin
   Result := GetCurrentIdentity(aIdentity, aHasGrid, lGrid);
 end;
 
+function TwbMainRecord.IsExteriorAtKey(const aKey: TwbFormID): Boolean;
+var
+  lIdentity : string;
+  lHasGrid  : Boolean;
+  lGrid     : TwbGridCell;
+  lKey      : TwbFormID;
+begin
+  if (GetSignature <> 'CELL') or not GetCurrentIdentity(lIdentity, lHasGrid, lGrid) or not lHasGrid then
+    Exit(False);
+  var lGridBase := mrDef.GetGridFormIDBase;
+  if not ((lGridBase > 0) and lGrid.ToGridKey(lGridBase, lKey)) and
+     not ContextObj.FindIdentity(mrDef.GetFormIDBase, mrDef.GetFormIDNameBase, lIdentity, lKey) then
+    Exit(False);
+  var lLayout := ContextObj.SlotLayout;
+  Result := lKey.ObjectID[lLayout] = aKey.ObjectID[lLayout];
+end;
+
 procedure TwbMainRecord.ChangeFormSignature(const aSignature: TwbSignature);
 begin
   if not (gcFormIDInRecordHeader in GameDefObj.Capabilities) then
@@ -21950,6 +22175,11 @@ begin
 end;
 
 function TwbSubRecord.GetCheck: string;
+begin
+  Result := CheckIn(nil);
+end;
+
+function TwbSubRecord.CheckIn(const aRun: TwbCheckRun): string;
 var
   SelfRef : IwbContainerElementRef;
 begin
@@ -21964,7 +22194,7 @@ begin
   DoInit(False);
 
   if Assigned(srValueDef) then
-    Result := srValueDef.Check(GetDataBasePtr, dcDataEndPtr, Self);
+    Result := srValueDef.CheckIn(GetDataBasePtr, dcDataEndPtr, Self, aRun);
   srDef.ToString(Result, Self, ctCheck);
 end;
 
@@ -25728,6 +25958,11 @@ end;
 function TwbElement.GetCheck: string;
 begin
   Result := '';
+end;
+
+function TwbElement.CheckIn(const aRun: TwbCheckRun): string;
+begin
+  Result := GetCheck;
 end;
 
 function TwbElement.GetCollapsed: TwbTriBool;
@@ -31732,12 +31967,17 @@ begin
 end;
 
 function TwbValueBase.GetCheck: string;
+begin
+  Result := CheckIn(nil);
+end;
+
+function TwbValueBase.CheckIn(const aRun: TwbCheckRun): string;
 var
   SelfRef : IwbContainerElementRef;
 begin
   SelfRef := Self as IwbContainerElementRef;
   DoInit(False);
-  Result := vbValueDef.Check(GetDataBasePtr, dcDataEndPtr, Self);
+  Result := vbValueDef.CheckIn(GetDataBasePtr, dcDataEndPtr, Self, aRun);
 end;
 
 function TwbValueBase.GetDataSize: Integer;

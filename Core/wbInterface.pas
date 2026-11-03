@@ -821,6 +821,7 @@ type
 
   IwbElement = interface;
   IwbTemplateElement = interface;
+  TwbCheckRun = class;
 
   IwbInterface = IInvokable;
 
@@ -1188,6 +1189,7 @@ type
     function GetValue: string;
     function GetSummary: string;
     function GetCheck: string;
+    function CheckIn(const aRun: TwbCheckRun): string;
     function GetSortKey(aExtended: Boolean): string;
     function GetDisplaySortKey(aExtended: Boolean): string;
     function GetRawDataAsString: string;
@@ -1928,6 +1930,10 @@ type
 
     function IsNewRecord(const aFileID: TwbFileID; aNew: Boolean): Boolean; overload;
     function IsNewRecord(const aFormID: TwbFormID; aNew: Boolean): Boolean; overload;
+
+    function IsVisibleExteriorName(const aValue: string): Boolean;
+    function VisibleExteriorNames: TArray<string>;
+    function ViewKeysOfSignature(const aSignature: TwbSignature): TArray<TwbFormID>;
 
     property FileName: string
       read GetFileName;
@@ -2918,6 +2924,7 @@ type
     function ToSummary(aDepth: Integer; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; var aLinksTo: IwbElement): string;
     function ToSortKey(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aExtended: Boolean): string;
     function Check(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string;
+    function CheckIn(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aRun: TwbCheckRun): string;
     function GetSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer;
     function GetDefaultSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer;
     function GetLinksTo(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): IwbElement;
@@ -4361,11 +4368,14 @@ type
 
   TwbCheckRun = class
   private
-    crNoticed: TList<IwbFile>;
+    crNoticed    : TList<IwbFile>;
+    crExterior   : TObjectDictionary<IwbFile, THashSet<string>>;
+    crCollecting : TList<IwbFile>;
   public
     constructor Create;
     destructor Destroy; override;
     function NoticeFor(const aElement: IwbElement): string;
+    function IsVisibleExteriorName(const aFile: IwbFile; const aValue: string): Boolean;
   end;
 
   TwbNameKeyState = (nksNone, nksMatch, nksCorrupt);
@@ -7841,12 +7851,41 @@ constructor TwbCheckRun.Create;
 begin
   inherited;
   crNoticed := TList<IwbFile>.Create;
+  crExterior := TObjectDictionary<IwbFile, THashSet<string>>.Create([doOwnsValues]);
+  crCollecting := TList<IwbFile>.Create;
 end;
 
 destructor TwbCheckRun.Destroy;
 begin
+  crCollecting.Free;
+  crExterior.Free;
   crNoticed.Free;
   inherited;
+end;
+
+function TwbCheckRun.IsVisibleExteriorName(const aFile: IwbFile; const aValue: string): Boolean;
+var
+  lSet : THashSet<string>;
+begin
+  if crExterior.TryGetValue(aFile, lSet) then
+    Exit(lSet.Contains(aValue.ToLowerInvariant));
+  if crCollecting.Contains(aFile) then
+    Exit(aFile.IsVisibleExteriorName(aValue));
+  crCollecting.Add(aFile);
+  try
+    lSet := THashSet<string>.Create;
+    try
+      for var lName in aFile.VisibleExteriorNames do
+        lSet.Add(lName);
+      crExterior.Add(aFile, lSet);
+    except
+      lSet.Free;
+      raise;
+    end;
+  finally
+    crCollecting.Remove(aFile);
+  end;
+  Result := lSet.Contains(aValue.ToLowerInvariant);
 end;
 
 function TwbCheckRun.NoticeFor(const aElement: IwbElement): string;
@@ -9458,6 +9497,7 @@ type
     function ToSummary(aDepth: Integer; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; var aLinksTo: IwbElement): string; virtual;
     function ToSortKey(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aExtended: Boolean): string; virtual;
     function Check(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string; virtual;
+    function CheckIn(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aRun: TwbCheckRun): string; virtual;
     function GetSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer; virtual; abstract;
     function GetDefaultSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer; virtual; abstract;
     function GetLinksTo(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): IwbElement; virtual;
@@ -9795,6 +9835,7 @@ type
     function GetLinksTo(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): IwbElement; override; final;
     procedure SetLinksTo(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aValue: IwbElement); override; final;
     function Check(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string; override; final;
+    function CheckIn(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aRun: TwbCheckRun): string; override; final;
     procedure BuildRef(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement); override; final;
     function MastersUpdated(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aOld, aNew: TwbFileIDs; aOldCount, aNewCount: TwbSlotCounts): Boolean; override; final;
     procedure FindUsedMasters(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aMasters: PwbUsedMasters); override; final;
@@ -22691,6 +22732,11 @@ begin
     ndToStr(Result, aBasePtr, aEndPtr, aElement, ctCheck);
 end;
 
+function TwbValueDef.CheckIn(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aRun: TwbCheckRun): string;
+begin
+  Result := Check(aBasePtr, aEndPtr, aElement);
+end;
+
 function TwbValueDef.CompareExchangeFormID(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aOldFormID, aNewFormID: TwbFormID): Boolean;
 begin
   {can be overriden}
@@ -24998,9 +25044,15 @@ begin
 end;
 
 function TwbNameReferenceDef.Check(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string;
+begin
+  Result := CheckIn(aBasePtr, aEndPtr, aElement, nil);
+end;
+
+function TwbNameReferenceDef.CheckIn(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aRun: TwbCheckRun): string;
 var
-  lValue  : string;
-  lTarget : IwbMainRecord;
+  lValue   : string;
+  lTarget  : IwbMainRecord;
+  lVisible : Boolean;
 begin
   Result := inherited Check(aBasePtr, aEndPtr, aElement);
   if (Result <> '') or wbDisableFormIDCheck or not Judged(aElement) then
@@ -25016,7 +25068,21 @@ begin
     nvAmbiguous:
       Result := Format('"%s" is ambiguous', [lValue]);
     nvNotFound:
-      Result := Format('"%s" not found in %s or its masters', [lValue, aElement._File.FileName]);
+      case nrdUnresolved of
+        nuError:
+          Result := Format('"%s" not found in %s or its masters', [lValue, aElement._File.FileName]);
+        nuDoorCell:
+          Result := Format('"%s" names no interior cell', [lValue]);
+        nuTravelCell: begin
+          if Assigned(aRun) then
+            lVisible := aRun.IsVisibleExteriorName(aElement._File, lValue)
+          else
+            lVisible := aElement._File.IsVisibleExteriorName(lValue);
+          if not lVisible then
+            Result := Format('"%s" names no cell', [lValue]);
+        end;
+        nuPackageCell: ;
+      end;
   end;
 end;
 

@@ -736,12 +736,12 @@ end;
 
 function wbFullName: IwbRecordMemberDef;
 begin
-  Result := wbString(FNAM, 'Name');
+  Result := wbStringForward(FNAM, 'Name');
 end;
 
 function wbIcon: IwbRecordMemberDef;
 begin
-  Result := wbString(ITEX, 'Icon Filename');
+  Result := wbStringForward(ITEX, 'Icon Filename');
 end;
 
 function TwbGameDefTES3.wbInventory: IwbRecordMemberDef;
@@ -759,7 +759,7 @@ end;
 
 function wbModel: IwbRecordMemberDef;
 begin
-  Result := wbString(MODL, 'Model').SetDefaultEditValue('Add Art File');
+  Result := wbStringForward(MODL, 'Model').SetDefaultEditValue('Add Art File');
 end;
 
 function TwbGameDefTES3.wbPackages: IwbRecordMemberDef;
@@ -795,7 +795,7 @@ begin
             wbNameReference('Target', [CREA, NPC_], 32),
             wbInteger('Reset', itU16, wbBoolEnum).SetDefaultNativeValue(1)
           ]).SetRequired,
-          wbString(CNDT, 'Follow To Cell') //[CELL]
+          wbNameReference(CNDT, 'Follow To Cell', [CELL], [], 0, False, nuPackageCell)
         ]),
         wbRStruct('Escort', [
           wbStruct(AI_E, 'Escort', [
@@ -804,7 +804,7 @@ begin
             wbNameReference('Target', [CREA, NPC_], 32),
             wbInteger('Reset', itU16, wbBoolEnum).SetDefaultNativeValue(1)
           ]).SetRequired,
-          wbString(CNDT, 'Escort To Cell') //[CELL]
+          wbNameReference(CNDT, 'Escort To Cell', [CELL], [], 0, False, nuPackageCell)
         ]),
         wbStruct(AI_A, 'Activate', [
           wbNameReference('Target', [ACTI, ALCH, APPA, ARMO, BODY, BOOK, CLOT, CONT, CREA, DOOR, INGR, LIGH, LEVC, LEVI, LOCK, MISC, NPC_, PROB, REPA, STAT, WEAP], 32),
@@ -832,7 +832,7 @@ begin
     wbRArray('Travel Services',
       wbRStruct('Travel Service', [
         wbVec3PosRot(DODT, 'Destination').SetRequired,
-        wbStringForward(DNAM, 'Cell', 64)
+        wbNameReference(DNAM, 'Cell', [CELL], [], 0, False, nuTravelCell)
       ]));
 end;
 
@@ -867,7 +867,7 @@ begin
     wbStruct(HEDR, 'Header', [
       wbFloat('Version', cpNormal, False, 1, 2).IncludeFlag(dfInternalEditOnly, not DefineOptions.AllowEditHEDRVersion),
       RecordFlags,
-      wbString('Author', 32),
+      wbStringForward('Author', 32),
       wbString('Description', 256),
       wbInteger('Number of Records', itU32)
     ]).SetRequired,
@@ -902,7 +902,7 @@ begin
     wbEditorID,
     wbDeleted,
     wbModel,
-    wbString(TEXT, 'Icon Filename'),
+    wbStringForward(TEXT, 'Icon Filename'),
     wbScript, //[SCPT]
     wbFullName,
     wbStruct(ALDT, 'Data', [
@@ -1049,7 +1049,7 @@ begin
     wbDeleted,
     wbEditorID,
     wbFullName,
-    wbString(TNAM, 'Constellation Filename'),
+    wbStringForward(TNAM, 'Constellation Filename'),
     wbDescription,
     wbSpells
   ]).SetFormIDBase($10);
@@ -1359,7 +1359,7 @@ begin
   RegisterRecordDef(GMST, 'Game Setting', [
     wbEditorID,
     wbRUnion('Value', [
-      wbString(STRV, 'String Value'),
+      wbStringForward(STRV, 'String Value'),
       wbInteger(INTV, 'Integer Value', itS32),
       wbFloat(FLTV, 'Float Value', cpNormal, False, 1, 4)
     ])
@@ -1369,8 +1369,8 @@ begin
 
   RegisterRecordDef(INFO, 'Dialog Response', @wbKnownSubRecordSignaturesINFO, [
     wbStringForward(INAM, 'Response ID').SetRequired,
-    wbString(PNAM, 'Previous Response ID').SetRequired,
-    wbString(NNAM, 'Next Response ID').SetRequired,
+    wbStringForward(PNAM, 'Previous Response ID').SetRequired,
+    wbStringForward(NNAM, 'Next Response ID').SetRequired,
     wbStruct(DATA, 'Data', [
       wbInteger('Dialog Type', itU32, wbDialogTypeEnum),
       wbInteger('Disposition/Index', itU32),
@@ -1383,9 +1383,9 @@ begin
     wbNameReference(RNAM, 'Speaker Race', [RACE]),
     wbNameReference(CNAM, 'Speaker Class', [CLAS]),
     wbNameReference(FNAM, 'Speaker Faction', [FACT], ['FFFF']),
-    wbString(ANAM, 'Speaker Cell'), //[CELL]
+    wbStringForward(ANAM, 'Speaker Cell'),
     wbNameReference(DNAM, 'Player Faction', [FACT]),
-    wbString(SNAM, 'Sound Filename'),
+    wbStringForward(SNAM, 'Sound Filename'),
     wbString(NAME, 'Response'),
     wbDeleted,
     wbRArray('Conditions',
@@ -1541,7 +1541,7 @@ begin
             52, 'Less Than',
             53, 'Less Than Or Equal To'
             ])),
-          wbString('Variable/Object')
+          wbStringForward('Variable/Object')
         ]),
         wbRUnion('Value', [
           wbInteger(INTV, 'Value', itS32),
@@ -1784,7 +1784,7 @@ begin
     wbDeleted,
     wbEditorID,
     wbInteger(INTV, 'Texture ID', itU32).SetRequired,
-    wbString(DATA, 'Texture Filename').SetRequired
+    wbStringForward(DATA, 'Texture Filename').SetRequired
   ]).SetFormIDBase($60)
     .SetSummaryKey([3]);
 
@@ -1818,8 +1818,8 @@ begin
       wbFloat('Speed Multiplier', cpNormal, False, 1, 2).SetDefaultNativeValue(1),
       wbFloat('Size Cap', cpNormal, False, 1, 2)
     ]).SetRequired,
-    wbString(ITEX, 'Effect Texture Filename'),
-    wbString(PTEX, 'Particle Texture Filename'),
+    wbStringForward(ITEX, 'Effect Texture Filename'),
+    wbStringForward(PTEX, 'Particle Texture Filename'),
     wbNameReference(BSND, 'Bolt Sound', [SOUN]),
     wbNameReference(CSND, 'Cast Sound', [SOUN]),
     wbNameReference(HSND, 'Hit Sound', [SOUN]),
@@ -2130,7 +2130,7 @@ begin
     wbInteger(NAM9, 'Count', itU32),
     wbRStructSK([], 'Teleport Data', [
       wbVec3PosRot(DODT),
-      wbString(DNAM, 'Cell') //[CELL]
+      wbNameReference(DNAM, 'Cell', [CELL], [], 0, False, nuDoorCell)
     ]),
     wbRStructSK([], 'Lock Data', [
       wbInteger(FLTV, 'Lock Level', itU32).SetRequired,
@@ -2331,7 +2331,7 @@ begin
   RegisterRecordDef(SOUN, 'Sound', @wbKnownSubRecordSignaturesNoFNAM, [
     wbEditorID,
     wbDeleted,
-    wbString(FNAM, 'Sound Filename').SetRequired,
+    wbStringForward(FNAM, 'Sound Filename').SetRequired,
     wbStruct(DATA, 'Data', [
       wbInteger('Volume', itU8, wbDiv(255, 2)).SetDefaultNativeValue(1),
       wbInteger('Minimum Range', itU8),

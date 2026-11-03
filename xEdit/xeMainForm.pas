@@ -2971,7 +2971,7 @@ var
   Container                   : IwbContainerElementRef;
   i                           : Integer;
 begin
-  Error := aElement.Check;
+  Error := aElement.CheckIn(aRun);
   var lNotice := aRun.NoticeFor(aElement);
   if lNotice <> '' then
     wbProgress(lNotice);
