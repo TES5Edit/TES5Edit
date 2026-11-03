@@ -15074,6 +15074,11 @@ var
                  and Supports(Group.Container, IwbGroupRecord, Group2) and (TwbSignature(Group2.GroupLabel) = 'QUST')) then
         BasePtr.mrsFlags(lFormIDInHeader).SetVisibleWhenDistant(True);
 
+    if Assigned(Group) and (aSignature = 'CELL') and not lFormIDInHeader then begin
+      IsInterior := (Group.GroupType = 0) and (TwbSignature(Group.GroupLabel) = 'CELL');
+      Exit;
+    end;
+
     if Assigned(Group) then
       if aSignature = 'CELL' then begin
         if Group.GroupType = 3 then
@@ -15157,8 +15162,13 @@ begin
           Assign(i, nil, False);
 
       if IsInterior then
-        if Supports(GetRecordBySignature('DATA'), IwbContainerElementRef, ContainerRef) then
-          ContainerRef.EditValue := '1';
+        if Supports(GetRecordBySignature('DATA'), IwbContainerElementRef, ContainerRef) then begin
+          var lFlags := ContainerRef.ElementByName['Flags'];
+          if Assigned(lFlags) then
+            lFlags.EditValue := '1'
+          else
+            ContainerRef.EditValue := '1';
+        end;
 
       if mrDef.IsReference then
         if Supports(lContainer, IwbGroupRecordInternal, Group) then begin
