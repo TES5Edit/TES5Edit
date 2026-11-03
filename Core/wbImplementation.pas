@@ -842,6 +842,8 @@ type
     function NameProviderAtKey(const aKey: TwbFormID): IwbFile;
     function OwnMasterAtKey(const aKey: TwbFormID): IwbFile;
     function OwnProvider: IwbFile;
+    function CopyRefusal(const aItem: IwbElement; aAsNew, aDeep: Boolean): string;
+    function AddCopyAlongPath(const aSource: IwbElement; aFlags: TwbCopyFlags; const aRules: TwbCopyRules): IwbElement;
     class function CurrentIdentityIs(const aRecord: IwbMainRecord; const aLowerValue: string): Boolean; static;
     function HoldsCurrentIdentityAtNameKey(const aKey: TwbFormID; const aLowerValue: string): Boolean;
     function ViewNameKeyInternal(const aKey: TwbFormID; const aValue: string; out aSelected: IwbMainRecord): TwbNameKeyState;
@@ -1499,6 +1501,8 @@ type
     function GetFixedFormID: TwbFormID; inline;
     function GetCurrentIdentity(out aIdentity: string; out aHasGrid: Boolean; out aGrid: TwbGridCell): Boolean; overload;
     function GetCurrentIdentity(out aIdentity: string; out aHasGrid: Boolean): Boolean; overload;
+    function KeyOfIdentity(const aIdentity: string; aHasGrid: Boolean; const aGrid: TwbGridCell; out aKey: TwbFormID): Boolean;
+    function IsIdentityBlocked: Boolean;
     function IsExteriorAtKey(const aKey: TwbFormID): Boolean;
     function CheckContents: string;
     function CheckOwnKey: string;
@@ -3491,6 +3495,160 @@ begin
 end;
 
 function TwbFile.AddCopy(const aSource: IwbElement; aFlags: TwbCopyFlags; const aRules: TwbCopyRules): IwbElement;
+begin
+  if flContextObj.GameDefObj.IsMorrowind then begin
+    var lRefusal := CopyRefusal(aSource, cfAsNew in aFlags, cfDeepCopy in aFlags);
+    if lRefusal <> '' then
+      raise Exception.Create(lRefusal);
+  end;
+  Result := AddCopyAlongPath(aSource, aFlags, aRules);
+end;
+
+function TwbFile.CopyRefusal(const aItem: IwbElement; aAsNew, aDeep: Boolean): string;
+const
+  cCellChildGroups = [6, 8, 9, 10];
+var
+  lDestJudged   : Boolean;
+  lLastSource   : TwbFile;
+  lSourceJudged : Boolean;
+
+  function InCellChildGroup(const aElement: IwbElement): string;
+  begin
+    Result := Format('%s can not be copied into "%s": a Morrowind cell''s child group can not be copied', [aElement.Name, GetFileName]);
+  end;
+
+  function OfRecord(const aRecord: IwbMainRecord; aNew: Boolean): string;
+
+    function Refused(const aWhy: string): string;
+    begin
+      Result := Format('%s can not be copied into "%s": %s', [aRecord.Name, GetFileName, aWhy]);
+    end;
+
+  var
+    lIdentity : string;
+    lHasGrid  : Boolean;
+    lCorrupt  : Boolean;
+    lCount    : Integer;
+  begin
+    Result := '';
+    var lRecord := aRecord as TObject as TwbMainRecord;
+    if lRecord.GetSignature = flContextObj.GameDefObj.HeaderSignature then
+      Exit;
+    var lRecordFile := aRecord._File;
+    if not Assigned(lRecordFile) then
+      Exit;
+    if Assigned(lRecord.mrDef) and not lRecord.mrDef.IsKeyedByIdentity then begin
+      if not aNew then
+        Result := Refused('a reference''s key is relative to its own file''s masters, so its copy would be another reference');
+      Exit;
+    end;
+    var lSource := lRecordFile as TObject as TwbFile;
+    if not aNew then begin
+      if lSource <> lLastSource then begin
+        lLastSource := lSource;
+        lSourceJudged := lSource.NameReferencesJudgedInternal;
+      end;
+      if not lSourceJudged then
+        Exit(Refused(Format('NAME references in "%s" are not judged, so its records need not form one chain', [lSource.GetFileName])));
+      if not lDestJudged then
+        Exit(Refused(Format('NAME references in "%s" are not judged, so its records need not form one chain', [GetFileName])));
+    end;
+    if not lRecord.GetCurrentIdentity(lIdentity, lHasGrid) then
+      Exit(Refused('it has no current identity'));
+    var lKey := lRecord.GetFixedFormID;
+    var lKeyText := lKey.ToDisplayString(flContextObj.SlotLayout);
+    if lRecord.IsIdentityBlocked then
+      Exit(Refused(Format('its current identity does not give the key it sits at [%s]', [lKeyText])));
+    if aNew then
+      Exit;
+    lSource.SelectAtNameKey(lKey, lCorrupt);
+    if lCorrupt then
+      Exit(Refused(Format('"%s" or one of its masters holds more than one record at its key [%s]', [lSource.GetFileName, lKeyText])));
+    SelectAtNameKey(lKey, lCorrupt);
+    if lCorrupt then
+      Exit(Refused(Format('"%s" or one of its masters holds more than one record at its key [%s]', [GetFileName, lKeyText])));
+    var lFirst := RecordRunAt(lKey, lCount);
+    if lCount > 0 then begin
+      var lHolder := flRecords[lFirst];
+      if (lHolder.Signature <> lRecord.GetSignature) or not CurrentIdentityIs(lHolder, lIdentity.ToLowerInvariant) then
+        Result := Refused(Format('"%s" holds %s at its key, which is no version of it', [GetFileName, lHolder.Name]));
+    end;
+  end;
+
+  function OfParent(const aParent: IwbMainRecord; aNew: Boolean): string;
+  begin
+    Result := OfRecord(aParent, aNew);
+    if (Result = '') and Assigned(aParent._File) then begin
+      var lWritten := aParent.HighestOverrideVisibleForFile[Self];
+      if not lWritten.Equals(aParent) then
+        Result := OfRecord(lWritten, aNew);
+    end;
+  end;
+
+  function OfGroup(const aGroup: IwbGroupRecord; aRequested: Boolean): string;
+  var
+    lGroupRef : IwbContainerElementRef;
+    lChild    : IwbMainRecord;
+    lSubGroup : IwbGroupRecord;
+  begin
+    Result := '';
+    if aRequested then begin
+      var lParent := aGroup.ChildrenOf;
+      if Assigned(lParent) then begin
+        Result := OfParent(lParent, aAsNew);
+        if Result <> '' then
+          Exit;
+      end;
+    end;
+    if aDeep then begin
+      lGroupRef := aGroup as IwbContainerElementRef;
+      for var i := 0 to Pred(lGroupRef.ElementCount) do begin
+        if Supports(lGroupRef.Elements[i], IwbMainRecord, lChild) then
+          Result := OfRecord(lChild, aAsNew)
+        else if Supports(lGroupRef.Elements[i], IwbGroupRecord, lSubGroup) then
+          Result := OfGroup(lSubGroup, False);
+        if Result <> '' then
+          Exit;
+      end;
+    end;
+    if aGroup.GroupType in cCellChildGroups then
+      Result := InCellChildGroup(aGroup);
+  end;
+
+var
+  lRecord : IwbMainRecord;
+  lGroup  : IwbGroupRecord;
+begin
+  Result := '';
+  lDestJudged := NameReferencesJudgedInternal;
+  lLastSource := nil;
+  lSourceJudged := False;
+  if Supports(aItem, IwbMainRecord, lRecord) then
+    Result := OfRecord(lRecord, aAsNew)
+  else if Supports(aItem, IwbGroupRecord, lGroup) then
+    Result := OfGroup(lGroup, True);
+  if Result <> '' then
+    Exit;
+
+  var lContainer := aItem.Container;
+  while Assigned(lContainer) do begin
+    if Supports(lContainer, IwbMainRecord, lRecord) then begin
+      Result := OfParent(lRecord, False);
+      lContainer := lRecord.Container;
+    end else begin
+      if Supports(lContainer, IwbGroupRecord, lGroup) then
+        if lGroup.GroupType in cCellChildGroups then
+          Exit(InCellChildGroup(aItem))
+        else if Assigned(lGroup.ChildrenOf) then
+          Result := OfParent(lGroup.ChildrenOf, False);
+      lContainer := lContainer.Container;
+    end;
+    if Result <> '' then
+      Exit;
+  end;
+end;
+
+function TwbFile.AddCopyAlongPath(const aSource: IwbElement; aFlags: TwbCopyFlags; const aRules: TwbCopyRules): IwbElement;
 var
   lSelfRef    : IwbFile;
   lMainRecord : IwbMainRecord;
@@ -3505,7 +3663,7 @@ begin
     if Assigned(lContainer) then begin
       if Supports(lContainer, IwbMainRecord, lMainRecord) then
         lContainer := lMainRecord.HighestOverrideVisibleForFile[lSelfRef];
-      lTarget := AddCopy(lContainer, [], aRules)
+      lTarget := AddCopyAlongPath(lContainer, [], aRules)
     end else begin
       Result := lSelfRef;
       Exit;
@@ -3614,8 +3772,10 @@ begin
       except
         on E: EAbort do
           raise;
-        on E: Exception do
+        on E: Exception do begin
+          aResult[j] := nil;
           wbProgress('Error while copying [%s]: [%s] %s', [aElements[j].FullPath, E.ClassName, E.Message]);
+        end;
       end;
   end else begin
     lMainRecord := nil;
@@ -16266,7 +16426,7 @@ begin
     Report(Format('grid %d, %d lies outside the grid keys'' range', [lGrid.x, lGrid.y]));
 
   if lHasIdentity then
-    if lInRange or ContextObj.FindIdentity(mrDef.GetFormIDBase, mrDef.GetFormIDNameBase, lIdentity, lKey) then begin
+    if KeyOfIdentity(lIdentity, lHasGrid, lGrid, lKey) then begin
       if lKey.ObjectID[lLayout] <> lSitsAt.ObjectID[lLayout] then
         Report(Format('its identity gives the key [%s], not the key it sits at [%s]',
           [lKey.ToDisplayString(lLayout), lSitsAt.ToDisplayString(lLayout)]));
@@ -16952,6 +17112,28 @@ begin
   QualifyIdentity(Result);
 end;
 
+function TwbMainRecord.KeyOfIdentity(const aIdentity: string; aHasGrid: Boolean; const aGrid: TwbGridCell; out aKey: TwbFormID): Boolean;
+begin
+  var lGridBase := mrDef.GetGridFormIDBase;
+  Result := (aHasGrid and (lGridBase > 0) and aGrid.ToGridKey(lGridBase, aKey)) or
+    ContextObj.FindIdentity(mrDef.GetFormIDBase, mrDef.GetFormIDNameBase, aIdentity, aKey);
+end;
+
+function TwbMainRecord.IsIdentityBlocked: Boolean;
+var
+  lIdentity : string;
+  lHasGrid  : Boolean;
+  lGrid     : TwbGridCell;
+  lKey      : TwbFormID;
+begin
+  if not GetCurrentIdentity(lIdentity, lHasGrid, lGrid) then
+    Exit(False);
+  if not KeyOfIdentity(lIdentity, lHasGrid, lGrid, lKey) then
+    Exit(True);
+  var lLayout := ContextObj.SlotLayout;
+  Result := lKey.ObjectID[lLayout] <> GetFixedFormID.ObjectID[lLayout];
+end;
+
 function TwbMainRecord.IsExteriorAtKey(const aKey: TwbFormID): Boolean;
 var
   lIdentity : string;
@@ -16961,9 +17143,7 @@ var
 begin
   if (GetSignature <> 'CELL') or not GetCurrentIdentity(lIdentity, lHasGrid, lGrid) or not lHasGrid then
     Exit(False);
-  var lGridBase := mrDef.GetGridFormIDBase;
-  if not ((lGridBase > 0) and lGrid.ToGridKey(lGridBase, lKey)) and
-     not ContextObj.FindIdentity(mrDef.GetFormIDBase, mrDef.GetFormIDNameBase, lIdentity, lKey) then
+  if not KeyOfIdentity(lIdentity, lHasGrid, lGrid, lKey) then
     Exit(False);
   var lLayout := ContextObj.SlotLayout;
   Result := lKey.ObjectID[lLayout] = aKey.ObjectID[lLayout];
@@ -26979,6 +27159,13 @@ var
   lGroupRecord : IwbGroupRecord;
   lContainer   : IwbContainer;
 begin
+  if Assigned(aTarget) and GameDefObj.IsMorrowind then begin
+    var lItem: IwbElement := Self;
+    if aDeepCopy and Supports(Self, IwbMainRecord, lMainRecord) and Assigned(lMainRecord.ChildGroup) then
+      lItem := lMainRecord.ChildGroup;
+    if (aTarget as TObject as TwbFile).CopyRefusal(lItem, aAsNew, True) <> '' then
+      Exit;
+  end;
   ReportRequiredMasters(aMasters, aAsNew);
   if aDeepCopy then
     if Supports(Self, IwbMainRecord, lMainRecord) and Supports(lMainRecord.ChildGroup, IwbGroupRecord, lGroupRecord) then
