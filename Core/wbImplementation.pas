@@ -25863,7 +25863,7 @@ function TwbElement.CopyInto(const aFile: IwbFile; aFlags: TwbCopyFlags; const a
 begin
   var lMasters := TwbFilesSet.Create;
   try
-    ReportRequiredMasters(lMasters, cfAsNew in aFlags);
+    ReportRequiredMastersForCopy(lMasters, cfAsNew in aFlags, cfDeepCopy in aFlags, aFile);
     AddRequiredMasters(lMasters, aFile);
 
     var lMainRecord: IwbMainRecord;
