@@ -375,6 +375,7 @@ type
     function ParsePump: Boolean;
     function ParseStateManifest: Boolean;
     function ParseToolMode: Boolean;
+    function ParseFilter: Boolean;
     function ParseEdit: Boolean;
     function ParseSaveContexts: Boolean;
     function Any: Boolean;
@@ -464,7 +465,6 @@ end;
 
 function TxeTestSwitches.ParseToolMode: Boolean;
 begin
-  Result := True;
   if wbFindCmdLineParam('testfilelists', FileLists) and (FileLists = '') then begin
     ShowMessage('testfilelists requires an output file, as -testfilelists:<filename>');
     Exit(False);
@@ -488,6 +488,7 @@ begin
     xeAutoLoad := True;
     xeAutoExit := True;
   end;
+  Result := not (xeToolMode in [tmEdit, tmView]) or ParseFilter;
 end;
 
 function TxeTestSwitches.ParseEdit: Boolean;
@@ -851,6 +852,13 @@ begin
     xeAutoLoad := True;
   end;
 
+end;
+
+function TxeTestSwitches.ParseFilter: Boolean;
+var
+  s : string;
+begin
+  Result := True;
   if wbFindCmdLineParam('testfilter', FilterFile) then begin
     wbFindCmdLineParam('testfilterpreset', FilterPreset);
     wbFindCmdLineParam('testfilterbyvalue', FilterByValue);
@@ -872,6 +880,7 @@ begin
     end;
     Filter := True;
     xeAutoLoad := True;
+    xeAutoExit := True;
   end;
 end;
 

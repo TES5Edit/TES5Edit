@@ -1568,6 +1568,7 @@ type
     procedure SetIsPersistent(aValue: Boolean);
     function GetIsDeleted: Boolean;
     procedure SetIsDeleted(aValue: Boolean);
+    function GetIsMarkedDeleted: Boolean;
     function GetIsPartialForm: Boolean;
     procedure SetIsPartialForm(aValue: Boolean);
     function GetCanBePartial: Boolean;
@@ -15100,6 +15101,8 @@ var
   Group1 : IwbGroupRecord;
   Group2 : IwbGroupRecord;
 begin
+  if IsEmbeddedReference then
+    Exit(False);
   Sig := GetSignature;
   Result :=
     (Sig = 'REFR') or
@@ -15872,7 +15875,7 @@ begin
           mrEditorID := mrDef.GetEditorID(CurrentRec)
         else if CurrentRec.Signature = mrDef.KnownSubRecordSignatures[ksrFullName] then
           mrFullName := CurrentRec.EditValue
-        else if (CurrentRec.Signature = mrDef.KnownSubRecordSignatures[ksrBaseRecord]) and mrDef.IsReference then begin
+        else if (CurrentRec.Signature = mrDef.KnownSubRecordSignatures[ksrBaseRecord]) and mrDef.IsReference and not mrDef.BaseRecordByName then begin
           mrBaseRecordID := TwbFormID.FromCardinal(CurrentRec.NativeValue);
           Include(mrStates, mrsBaseRecordChecked);
         end else if not (mrsGridCellChecked in mrStates) and (CurrentRec.Signature = mrDef.KnownSubRecordSignatures[ksrGridCell]) then begin
@@ -16270,6 +16273,12 @@ begin
   var lRefHold: TRefGuard;
   RefShortHold(lRefHold, Self);
   Result := nil;
+
+  if Assigned(mrDef) and mrDef.BaseRecordByName then begin
+    if Supports(GetRecordBySignature(mrDef.KnownSubRecordSignatures[ksrBaseRecord]), IwbContainerElementRef, NameRec) then
+      Supports(NameRec.LinksTo, IwbMainRecord, Result);
+    Exit;
+  end;
 
   _File := GetFile;
   if (mrsBaseRecordChecked in mrStates) and Assigned(_File) then
@@ -17669,6 +17678,11 @@ begin
   Result := GetFlags.IsLocalized;
 end;
 
+function TwbMainRecord.GetIsMarkedDeleted: Boolean;
+begin
+  Result := GetIsDeleted or (GameDefObj.IsMorrowind and Assigned(GetRecordBySignature('DELE')));
+end;
+
 function TwbMainRecord.GetIsInitiallyDisabled: Boolean;
 begin
   Result := GetFlags.IsInitiallyDisabled;
@@ -18874,7 +18888,7 @@ begin
   if lSignature = 'NAVM' then
     Result := uoSkipNavMesh
   // skip injected or bad refs (crashes after cleaning TES4 Battlehorn DLC)
-  else if GetIsInjected or (not Assigned(lBaseRecord)) then
+  else if GetIsInjected or IsEmbeddedReference or (not Assigned(lBaseRecord)) then
     Result := uoSkipOther
   // skip refs of TREEs with LOD in FNV
   else if GameDefObj.IsFalloutNV and (lBaseRecord.Signature = 'TREE') and lBaseRecord.Flags.HasLODtree then

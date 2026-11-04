@@ -20,6 +20,13 @@ const
 
 var
   slRefs: TStringList;
+
+function RefusedForMorrowind: Boolean;
+begin
+  Result := wbGameMode = gmTES3;
+  if Result then
+    AddMessage('This script does not work for Morrowind: its test for a significant reference does not know a door''s teleport data');
+end;
   
 
 function IsSpecial(e: IInterface): Boolean;
@@ -49,6 +56,10 @@ end;
 function Initialize: integer;
 begin
   slRefs := TwbFastStringList.Create;
+  if RefusedForMorrowind then begin
+    Result := 1;
+    Exit;
+  end;
 end;
 
 function Process(e: IInterface): integer;
@@ -58,6 +69,11 @@ var
   dup: IInterface;
   specialref, specialdup: Boolean;
 begin
+  if RefusedForMorrowind then begin
+    Result := 1;
+    Exit;
+  end;
+
   // clear unique refs list for each new CELL, purely for optimization
   if Signature(e) = 'CELL' then begin
     slRefs.Clear;

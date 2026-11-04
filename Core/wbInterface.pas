@@ -2295,6 +2295,7 @@ type
     procedure SetIsPersistent(aValue: Boolean);
     function GetIsDeleted: Boolean;
     procedure SetIsDeleted(aValue: Boolean);
+    function GetIsMarkedDeleted: Boolean;
     function GetIsPartialForm: Boolean;
     procedure SetIsPartialForm(aValue: Boolean);
     function GetCanBePartial: Boolean;
@@ -2455,6 +2456,8 @@ type
     property IsDeleted: Boolean
       read GetIsDeleted
       write SetIsDeleted;
+    property IsMarkedDeleted: Boolean
+      read GetIsMarkedDeleted;
     property IsPartialForm: Boolean
       read GetIsPartialForm
       write SetIsPartialForm;
@@ -2808,6 +2811,7 @@ type
     function GetBaseSignature(const aIndex: Integer): TwbSignature;
     function GetBaseSignatureCount: Integer;
     function IsValidBaseSignature(const aSignature: TwbSignature): Boolean;
+    function GetBaseRecordByName: Boolean;
 
     function GetReferenceSignature(const aIndex: Integer): TwbSignature;
     function GetReferenceSignatureCount: Integer;
@@ -2878,6 +2882,8 @@ type
       read GetBaseSignature;
     property BaseSignatureCount: Integer
       read GetBaseSignatureCount;
+    property BaseRecordByName: Boolean
+      read GetBaseRecordByName;
 
     property ReferenceSignatures[const aIndex: Integer]: TwbSignature
       read GetReferenceSignature;
@@ -3997,6 +4003,7 @@ type
     function RegisterRecordDef(const aSignature: TwbSignature; const aName: string; const aMembers: array of IwbRecordMemberDef; aPriority: TwbConflictPriority = cpNormal; aRequired: Boolean = False): IwbMainRecordDef; overload;
     function RegisterRefRecordDef(const aSignature: TwbSignature; const aName: string; const aRecordFlags: IwbIntegerDefFormater; const aMembers: array of IwbRecordMemberDef; aPriority: TwbConflictPriority = cpNormal; aRequired: Boolean = False): IwbMainRecordDef; overload;
     function RegisterRefRecordDef(const aSignature: TwbSignature; const aName: string; const aMembers: array of IwbRecordMemberDef; aPriority: TwbConflictPriority = cpNormal; aRequired: Boolean = False): IwbMainRecordDef; overload;
+    function RegisterRefRecordDef(const aSignature: TwbSignature; const aName: string; const aKnownSRs: PwbKnownSubRecordSignatures; const aMembers: array of IwbRecordMemberDef; aPriority: TwbConflictPriority = cpNormal; aRequired: Boolean = False): IwbMainRecordDef; overload;
     procedure ComputeIdentityKeyCapacity;
     procedure ComputeNameBasesTogether;
   public
@@ -9035,6 +9042,7 @@ type
     recQuickInitLimit     : Integer;
     recDefFlags           : TwbRecordDefFlags;
     recBaseRecordFormID   : IwbFormIDChecked;
+    recBaseRecordName     : IwbNameReferenceDef;
     recReferences         : TStringList;
     recGameDef            : TwbGameDef;
     recKnownSRs           : PwbKnownSubRecordSignatures;
@@ -9125,6 +9133,7 @@ type
     function GetBaseSignature(const aIndex: Integer): TwbSignature;
     function GetBaseSignatureCount: Integer;
     function IsValidBaseSignature(const aSignature: TwbSignature): Boolean;
+    function GetBaseRecordByName: Boolean;
 
     function GetReferenceSignature(const aIndex: Integer): TwbSignature;
     function GetReferenceSignatureCount: Integer;
@@ -11054,6 +11063,13 @@ function TwbGameDef.RegisterRefRecordDef(const aSignature: TwbSignature; const a
 begin
   Result := RegisterRefRecordDef(aSignature, aName, nil, aMembers, aPriority, aRequired);
 end;
+
+function TwbGameDef.RegisterRefRecordDef(const aSignature: TwbSignature; const aName: string; const aKnownSRs: PwbKnownSubRecordSignatures; const aMembers: array of IwbRecordMemberDef; aPriority: TwbConflictPriority; aRequired: Boolean): IwbMainRecordDef;
+begin
+  Result := RegisterRecordDef(aSignature, aName, aKnownSRs, nil, aMembers, aPriority, aRequired, True);
+  AddRefRecordDef(Result);
+end;
+
 procedure TwbGameDef.AddRefRecordDef(const aRecordDef: IwbMainRecordDef);
 begin
   gdRefRecordDefs.Add(aRecordDef);
@@ -13680,12 +13696,14 @@ begin
             var iDef : IwbIntegerDef;
             if not Supports(aMembers[lMemberIdx], IwbSubRecordDef, sRec) then
               Assert(False);
-            if not Supports(sRec.Value, IwbIntegerDef, iDef) then
-              Assert(False);
-            if iDef.FormaterCanChange then
-              Assert(False);
-            if not Supports(iDef.Formater[nil], IwbFormIDChecked, recBaseRecordFormID) then
-              Assert(False);
+            if not Supports(sRec.Value, IwbNameReferenceDef, recBaseRecordName) then begin
+              if not Supports(sRec.Value, IwbIntegerDef, iDef) then
+                Assert(False);
+              if iDef.FormaterCanChange then
+                Assert(False);
+              if not Supports(iDef.Formater[nil], IwbFormIDChecked, recBaseRecordFormID) then
+                Assert(False);
+            end;
           end;
         end;
         try
@@ -13700,7 +13718,7 @@ begin
   end;
   SetLength(recMembers, NewLength);
 
-  if aIsReference and not Assigned(recBaseRecordFormID) then
+  if aIsReference and not Assigned(recBaseRecordFormID) and not Assigned(recBaseRecordName) then
     raise Exception.Create('Reference MainRecord must have BaseRecordFormID');
 
   var lRecordFlags: IwbFlagsDef;
@@ -13809,6 +13827,8 @@ end;
 
 function TwbMainRecordDef.IsValidBaseSignature(const aSignature: TwbSignature): Boolean;
 begin
+  if Assigned(recBaseRecordName) then
+    Exit(recBaseRecordName.IsAllowedSignature(aSignature));
   Result := Assigned(recBaseRecordFormID) and recBaseRecordFormID.IsValid(aSignature);
 end;
 
@@ -14184,9 +14204,16 @@ begin
   FreeAndNil(recReferences);
 end;
 
+function TwbMainRecordDef.GetBaseRecordByName: Boolean;
+begin
+  Result := Assigned(recBaseRecordName);
+end;
+
 function TwbMainRecordDef.GetBaseSignature(const aIndex: Integer): TwbSignature;
 begin
-  if Assigned(recBaseRecordFormID) then
+  if Assigned(recBaseRecordName) then
+    Result := recBaseRecordName.AllowedSignatures[aIndex]
+  else if Assigned(recBaseRecordFormID) then
     Result := recBaseRecordFormID.Signatures[aIndex]
   else
     raise Exception.Create('Invalid index');
@@ -14194,7 +14221,9 @@ end;
 
 function TwbMainRecordDef.GetBaseSignatureCount: Integer;
 begin
-  if Assigned(recBaseRecordFormID) then
+  if Assigned(recBaseRecordName) then
+    Result := Length(recBaseRecordName.AllowedSignatures)
+  else if Assigned(recBaseRecordFormID) then
     Result := recBaseRecordFormID.SignatureCount
   else
     Result := 0;

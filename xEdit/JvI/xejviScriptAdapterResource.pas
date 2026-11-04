@@ -256,7 +256,7 @@ begin
 
   REFRs := wbGetSiblingRecords(MainRecord, wbStringToSignatures('REFR'), True);
   for i := Low(REFRs) to High(REFRs) do
-    if  not ((Opt and 1 <> 0) and REFRs[i].IsDeleted)
+    if  not ((Opt and 1 <> 0) and REFRs[i].IsMarkedDeleted)
     and not ((Opt and 2 <> 0) and REFRs[i].IsInitiallyDisabled)
     and not ((Opt and 4 <> 0) and REFRs[i].ElementExists['XESP'])
     then

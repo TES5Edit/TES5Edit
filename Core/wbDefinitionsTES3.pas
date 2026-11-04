@@ -2109,7 +2109,7 @@ begin
     wbDescription
   ]).SetFormIDBase($14);
 
-  RegisterRecordDef(REFR, 'Placed Object', @wbKnownSubRecordSignaturesREFR, [
+  RegisterRefRecordDef(REFR, 'Placed Object', @wbKnownSubRecordSignaturesREFR, [
     wbStruct(CNDT, 'New Cell Cell', [
       wbInteger('X', itS32),
       wbInteger('Y', itS32)

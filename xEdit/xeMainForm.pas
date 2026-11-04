@@ -11523,6 +11523,7 @@ var
   Signatures                  : TStringList;
   SignaturesCreated           : Boolean;
   BaseSignatures              : TStringList;
+  ReferencesInCells           : Boolean;
 
   TopLevelGroups              : TStringList;
 
@@ -11665,7 +11666,9 @@ begin
 
   SetLength(FileFiltered, Length(Files));
 
-  if FilterByPersistent and FilterPersistent and FilterUnnecessaryPersistent then
+  ReferencesInCells := gcReferencesEmbeddedInCell in xeContext.GameDefObj.Capabilities;
+
+  if FilterByPersistent and FilterPersistent and FilterUnnecessaryPersistent and not ReferencesInCells then
     BuildAllRef;
 
   if FilterBySignature then begin
@@ -11970,6 +11973,7 @@ begin
 
                     (FilterByPersistent and
                       (
+                        ReferencesInCells or
                         (MainRecord.IsPersistent <> FilterPersistent) or
                         (
                           FilterUnnecessaryPersistent and
