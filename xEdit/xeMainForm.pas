@@ -2862,8 +2862,10 @@ begin
                 sl.Clear;
                 var lMasters2 := TwbFilesSet.Create;
                 try
+                  var lReportRules := lOptions.Rules;
+                  lReportRules.EditorID := lOptions.EditorID;
                   for j := Low(Elements) to High(Elements) do
-                    Elements[j].ReportRequiredMastersForCopy(lMasters2, AsNew, DeepCopy, TargetFile);
+                    Elements[j].ReportRequiredMastersForCopy(lMasters2, AsNew, DeepCopy, TargetFile, lReportRules);
                   for var lFile in lMasters2 do
                     sl.AddObject(lFile.FileName, Pointer(lFile));
                 finally

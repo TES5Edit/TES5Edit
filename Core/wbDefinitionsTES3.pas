@@ -1555,7 +1555,8 @@ begin
     ]).SetUnordered,
     wbString(BNAM, 'Result')
   ]).SetFormIDBase($90)
-    .IncludeFlag(dfIdentityQualifiedByTopic);
+    .IncludeFlag(dfIdentityQualifiedByTopic)
+    .IncludeFlag(dfNoRequestedIdentity);
 
   RegisterRecordDef(INGR, 'Ingredient',
     wbFlags(wbFlagsList([
@@ -1787,7 +1788,8 @@ begin
     wbInteger(INTV, 'Texture ID', itU32).SetRequired,
     wbStringForward(DATA, 'Texture Filename').SetRequired
   ]).SetFormIDBase($60)
-    .SetSummaryKey([3]);
+    .SetSummaryKey([3])
+    .IncludeFlag(dfNoRequestedIdentity);
 
   RegisterRecordDef(MGEF, 'Magic Effect', @wbKnownSubRecordSignaturesINDX, [
     wbInteger(INDX, 'Effect', itU32, wbMagicEffectEnum),
@@ -1830,7 +1832,8 @@ begin
     wbNameReference(HVFX, 'Hit Visual', [STAT]),
     wbNameReference(AVFX, 'Area Visual', [STAT]),
     wbDescription
-  ]).SetFormIDBase($02);
+  ]).SetFormIDBase($02)
+    .IncludeFlag(dfNoRequestedIdentity);
 
   RegisterRecordDef(MISC, 'Misc. Item',
     wbFlags(wbFlagsList([
@@ -2016,7 +2019,8 @@ begin
         aIdentity := aEditorID
       else
         Result := False;
-    end);
+    end)
+    .IncludeFlag(dfNoRequestedIdentity);
 
   RegisterRecordDef(PROB, 'Probe',
     wbFlags(wbFlagsList([
@@ -2305,7 +2309,8 @@ begin
       ])
     ]).SetRequired,
     wbDescription
-  ]).SetFormIDBase($01);
+  ]).SetFormIDBase($01)
+    .IncludeFlag(dfNoRequestedIdentity);
 
   RegisterRecordDef(SNDG, 'Sound Generator', [
     wbEditorID,

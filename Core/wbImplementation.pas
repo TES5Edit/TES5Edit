@@ -39,6 +39,9 @@ type
     function NameKeyIdentity(const aElement: IwbElement; const aKey: TwbFormID; out aSelected: IwbMainRecord;
                              out aIdentity: string): TwbNameTarget; override; final;
     function NameProvider(const aRecord: IwbMainRecord): IwbFile; override; final;
+  public
+    function IdentityHolder(aFormIDNameBase: Byte; const aIdentity: string): IwbMainRecord; override; final;
+  protected
     function PathgridCell(const aElement: IwbElement; const aCellSignature: TwbSignature; out aCell: IwbMainRecord): Boolean; override; final;
     function NameFileKey(const aElement: IwbElement; const aLoadOrderFormID: TwbFormID; out aKey: TwbFormID): Boolean; override; final;
     function FileRecordsInStreamOrder(const aFile: IwbFile): TArray<IwbMainRecord>; override; final;
@@ -318,7 +321,8 @@ type
     procedure NotifyChangedInternal(aContainer: Pointer); virtual;
 
     procedure ReportRequiredMasters(aMasters: TwbFilesSet; aAsNew: Boolean; Recursive: Boolean = True; Initial: Boolean = false); virtual;
-    procedure ReportRequiredMastersForCopy(aMasters: TwbFilesSet; aAsNew, aDeepCopy: Boolean; const aTarget: IwbFile = nil);
+    procedure ReportRequiredMastersForCopy(aMasters: TwbFilesSet; aAsNew, aDeepCopy: Boolean; const aTarget: IwbFile = nil); overload;
+    procedure ReportRequiredMastersForCopy(aMasters: TwbFilesSet; aAsNew, aDeepCopy: Boolean; const aTarget: IwbFile; const aRules: TwbCopyRules); overload;
 
     function GetElementID: Pointer;
     function GetElementStates: TwbElementStates;
@@ -842,7 +846,7 @@ type
     function NameProviderAtKey(const aKey: TwbFormID): IwbFile;
     function OwnMasterAtKey(const aKey: TwbFormID): IwbFile;
     function OwnProvider: IwbFile;
-    function CopyRefusal(const aItem: IwbElement; aAsNew, aDeep: Boolean): string;
+    function CopyRefusal(const aItem: IwbElement; aAsNew, aDeep: Boolean; const aRules: TwbCopyRules): string;
     function AddCopyAlongPath(const aSource: IwbElement; aFlags: TwbCopyFlags; const aRules: TwbCopyRules): IwbElement;
     class function CurrentIdentityIs(const aRecord: IwbMainRecord; const aLowerValue: string): Boolean; static;
     function HoldsCurrentIdentityAtNameKey(const aKey: TwbFormID; const aLowerValue: string): Boolean;
@@ -1503,6 +1507,7 @@ type
     function GetCurrentIdentity(out aIdentity: string; out aHasGrid: Boolean): Boolean; overload;
     function KeyOfIdentity(const aIdentity: string; aHasGrid: Boolean; const aGrid: TwbGridCell; out aKey: TwbFormID): Boolean;
     function IsIdentityBlocked: Boolean;
+    function TakesRequestedIdentity(out aIdentity: string): Boolean;
     function IsExteriorAtKey(const aKey: TwbFormID): Boolean;
     function CheckContents: string;
     function CheckOwnKey: string;
@@ -3497,14 +3502,14 @@ end;
 function TwbFile.AddCopy(const aSource: IwbElement; aFlags: TwbCopyFlags; const aRules: TwbCopyRules): IwbElement;
 begin
   if flContextObj.GameDefObj.IsMorrowind then begin
-    var lRefusal := CopyRefusal(aSource, cfAsNew in aFlags, cfDeepCopy in aFlags);
+    var lRefusal := CopyRefusal(aSource, cfAsNew in aFlags, cfDeepCopy in aFlags, aRules);
     if lRefusal <> '' then
       raise Exception.Create(lRefusal);
   end;
   Result := AddCopyAlongPath(aSource, aFlags, aRules);
 end;
 
-function TwbFile.CopyRefusal(const aItem: IwbElement; aAsNew, aDeep: Boolean): string;
+function TwbFile.CopyRefusal(const aItem: IwbElement; aAsNew, aDeep: Boolean; const aRules: TwbCopyRules): string;
 const
   cCellChildGroups = [6, 8, 9, 10];
 var
@@ -3517,11 +3522,45 @@ var
     Result := Format('%s can not be copied into "%s": a Morrowind cell''s child group can not be copied', [aElement.Name, GetFileName]);
   end;
 
+  function RecordRefused(const aRecord: IwbMainRecord; const aWhy: string): string;
+  begin
+    Result := Format('%s can not be copied into "%s": %s', [aRecord.Name, GetFileName, aWhy]);
+  end;
+
+  function OfRequest(const aRecord: IwbMainRecord): string;
+  var
+    lRequested : string;
+    lIdentity  : string;
+  begin
+    Result := '';
+    if not aDeep or not Assigned(aRecord._File) then
+      Exit;
+    var lRecord := aRecord as TObject as TwbMainRecord;
+    if not lRecord.TakesRequestedIdentity(lIdentity) then
+      Exit;
+    lRequested := aRules.AppliedTo(aRecord.EditorID);
+    if (lRequested = '') or (lRequested.ToLowerInvariant = lIdentity.ToLowerInvariant) then
+      Exit;
+    var lWhy := lRecord.mrDef.IdentityStoreRefusal(Self, lRequested);
+    if lWhy <> '' then
+      Exit(RecordRefused(aRecord, lWhy));
+    var lNameBase := lRecord.mrDef.GetFormIDNameBase;
+    var lHolder := flContextObj.IdentityHolder(lNameBase, lRequested);
+    if Assigned(lHolder) then
+      Exit(RecordRefused(aRecord, Format('%s in "%s" holds the identity "%s"', [lHolder.Name, lHolder._File.FileName, lRequested])));
+    for var lOther in flContextObj.GameDefObj.NameBasesTogether(lNameBase) - [lNameBase] do begin
+      lHolder := flContextObj.IdentityHolder(lOther, lRequested);
+      if Assigned(lHolder) then
+        Exit(RecordRefused(aRecord, Format('%s in "%s" holds the identity "%s", and a field looks up both kinds of record by it',
+          [lHolder.Name, lHolder._File.FileName, lRequested])));
+    end;
+  end;
+
   function OfRecord(const aRecord: IwbMainRecord; aNew: Boolean): string;
 
     function Refused(const aWhy: string): string;
     begin
-      Result := Format('%s can not be copied into "%s": %s', [aRecord.Name, GetFileName, aWhy]);
+      Result := RecordRefused(aRecord, aWhy);
     end;
 
   var
@@ -3537,6 +3576,8 @@ var
     var lRecordFile := aRecord._File;
     if not Assigned(lRecordFile) then
       Exit;
+    if aRecord.IsDeleted then
+      Exit(Refused('its header marks it deleted, and its copy would lose the identity that keys it'));
     if Assigned(lRecord.mrDef) and not lRecord.mrDef.IsKeyedByIdentity then begin
       if not aNew then
         Result := Refused('a reference''s key is relative to its own file''s masters, so its copy would be another reference');
@@ -3603,9 +3644,11 @@ var
     if aDeep then begin
       lGroupRef := aGroup as IwbContainerElementRef;
       for var i := 0 to Pred(lGroupRef.ElementCount) do begin
-        if Supports(lGroupRef.Elements[i], IwbMainRecord, lChild) then
-          Result := OfRecord(lChild, aAsNew)
-        else if Supports(lGroupRef.Elements[i], IwbGroupRecord, lSubGroup) then
+        if Supports(lGroupRef.Elements[i], IwbMainRecord, lChild) then begin
+          Result := OfRecord(lChild, aAsNew);
+          if (Result = '') and aAsNew and not Assigned(lChild.ChildGroup) then
+            Result := OfRequest(lChild);
+        end else if Supports(lGroupRef.Elements[i], IwbGroupRecord, lSubGroup) then
           Result := OfGroup(lSubGroup, False);
         if Result <> '' then
           Exit;
@@ -3623,9 +3666,11 @@ begin
   lDestJudged := NameReferencesJudgedInternal;
   lLastSource := nil;
   lSourceJudged := False;
-  if Supports(aItem, IwbMainRecord, lRecord) then
-    Result := OfRecord(lRecord, aAsNew)
-  else if Supports(aItem, IwbGroupRecord, lGroup) then
+  if Supports(aItem, IwbMainRecord, lRecord) then begin
+    Result := OfRecord(lRecord, aAsNew);
+    if (Result = '') and aAsNew then
+      Result := OfRequest(lRecord);
+  end else if Supports(aItem, IwbGroupRecord, lGroup) then
     Result := OfGroup(lGroup, True);
   if Result <> '' then
     Exit;
@@ -3779,6 +3824,7 @@ begin
       end;
   end else begin
     lMainRecord := nil;
+    var lWriteEditorID := aOptions.Mode = cmNew;
     if aOptions.DeepCopy and Supports(aElements[0], IwbMainRecord, lMainRecord) and Assigned(lMainRecord.ChildGroup) then begin
       wbCurrentProgress := Format('[%s] into [%s]', [lMainRecord.ChildGroup.FullPath, lFile.FullPath]);
       wbProgress(aOptions.Operation + ' ' + wbCurrentProgress);
@@ -3791,7 +3837,13 @@ begin
     end else begin
       wbCurrentProgress := Format('[%s] into [%s]', [aElements[0].FullPath, lFile.FullPath]);
       wbProgress(aOptions.Operation + ' ' + wbCurrentProgress);
-      lCopiedElement := AddCopy(aElements[0], PathFlags, lCallbackOnly);
+      var lRecordRules := lCallbackOnly;
+      var lSourceIdentity: string;
+      if lWriteEditorID and flContextObj.GameDefObj.IsMorrowind and (aElements[0] as TObject as TwbMainRecord).TakesRequestedIdentity(lSourceIdentity) then begin
+        lRecordRules.EditorID := aOptions.EditorID;
+        lWriteEditorID := False;
+      end;
+      lCopiedElement := AddCopy(aElements[0], PathFlags, lRecordRules);
       wbProgress('');
       if Assigned(lCopiedElement) then begin
         if Assigned(aOptions.AfterCopy) then
@@ -3802,7 +3854,7 @@ begin
       if not Supports(lCopiedElement, IwbMainRecord, lMainRecord) then
         lMainRecord := nil;
     end;
-    if (aOptions.Mode = cmNew) and Assigned(lMainRecord) then
+    if lWriteEditorID and Assigned(lMainRecord) then
       lMainRecord.EditorID := aOptions.EditorID;
   end;
 end;
@@ -17119,6 +17171,13 @@ begin
     ContextObj.FindIdentity(mrDef.GetFormIDBase, mrDef.GetFormIDNameBase, aIdentity, aKey);
 end;
 
+function TwbMainRecord.TakesRequestedIdentity(out aIdentity: string): Boolean;
+var
+  lHasGrid : Boolean;
+begin
+  Result := GetCurrentIdentity(aIdentity, lHasGrid) and not (lHasGrid and (mrDef.GetGridFormIDBase > 0)) and not (dfNoRequestedIdentity in mrDef.DefFlags);
+end;
+
 function TwbMainRecord.IsIdentityBlocked: Boolean;
 var
   lIdentity : string;
@@ -20797,7 +20856,7 @@ begin
     var lIdentity := mrDef.GetIdentity(Self);
     var lQualifier := '';
     QualifyIdentity(lQualifier);
-    if (lIdentity = '') or ContextObj.IsKnownIdentity(mrDef.GetFormIDNameBase, lQualifier + lIdentity) then
+    if (lIdentity = '') or Assigned(ContextObj.IdentityHolder(mrDef.GetFormIDNameBase, lQualifier + lIdentity)) then
       if ContextObj.BeginInternalEdit(True) then try
         SetEditorID(ContextObj.UnusedIdentity(mrDef.GetFormIDNameBase, 'xEdit_' + GetSignature + '_', lQualifier));
       finally
@@ -23672,22 +23731,6 @@ begin
     Result.BuildRef;
 end;
 
-function RemovePrefix(const s, aPrefix: string): string;
-begin
-  if (s <> '') and (aPrefix <> '') and (Length(s) >= Length(aPrefix)) and SameText(Copy(s, 1, Length(aPrefix)), aPrefix) then
-    Result := Copy(s, Succ(Length(aPrefix)), High(Integer))
-  else
-    Result := s;
-end;
-
-function RemoveSuffix(const s, aSuffix: string): string;
-begin
-  if (s <> '') and (aSuffix <> '') and (Length(s) >= Length(aSuffix)) and SameText(Copy(s, Succ(Length(s) - Length(aSuffix)) , Length(aSuffix)), aSuffix) then
-    Result := Copy(s, 1, Length(s) - Length(aSuffix))
-  else
-    Result := s;
-end;
-
 procedure TwbGroupRecord.AddElement(const aElement: IwbElement);
 var
   DialGroup : IwbGroupRecord;
@@ -23816,12 +23859,9 @@ var
         if not (lResult.IsPartialForm or lResult.IsDeleted) then
           Result.Assign(wbAssignThis, aElement, False);
 
-        if not lResult.IsDeleted and (aSource.EditorID <> '') and ((cfAsNew in aFlags) or not lByIdentity) then begin
-          var lEditorID := aSource.EditorID;
-          lEditorID := RemovePrefix(lEditorID, aRules.PrefixRemove);
-          lEditorID := RemoveSuffix(lEditorID, aRules.SuffixRemove);
+        if not lResult.IsDeleted and ((aSource.EditorID <> '') or (aRules.EditorID <> '')) and ((cfAsNew in aFlags) or not lByIdentity) then begin
           if ContextObj.BeginInternalEdit(True) then try
-            lResult.EditorID := aRules.Prefix + lEditorID + aRules.Suffix;
+            lResult.EditorID := aRules.AppliedTo(aSource.EditorID);
           finally
             wbEndInternalEdit;
           end;
@@ -26106,7 +26146,7 @@ function TwbElement.CopyInto(const aFile: IwbFile; aFlags: TwbCopyFlags; const a
 begin
   var lMasters := TwbFilesSet.Create;
   try
-    ReportRequiredMastersForCopy(lMasters, cfAsNew in aFlags, cfDeepCopy in aFlags, aFile);
+    ReportRequiredMastersForCopy(lMasters, cfAsNew in aFlags, cfDeepCopy in aFlags, aFile, aRules);
     AddRequiredMasters(lMasters, aFile);
 
     var lMainRecord: IwbMainRecord;
@@ -27154,6 +27194,11 @@ begin
 end;
 
 procedure TwbElement.ReportRequiredMastersForCopy(aMasters: TwbFilesSet; aAsNew, aDeepCopy: Boolean; const aTarget: IwbFile = nil);
+begin
+  ReportRequiredMastersForCopy(aMasters, aAsNew, aDeepCopy, aTarget, wbNoCopyRules);
+end;
+
+procedure TwbElement.ReportRequiredMastersForCopy(aMasters: TwbFilesSet; aAsNew, aDeepCopy: Boolean; const aTarget: IwbFile; const aRules: TwbCopyRules);
 var
   lMainRecord  : IwbMainRecord;
   lGroupRecord : IwbGroupRecord;
@@ -27163,7 +27208,7 @@ begin
     var lItem: IwbElement := Self;
     if aDeepCopy and Supports(Self, IwbMainRecord, lMainRecord) and Assigned(lMainRecord.ChildGroup) then
       lItem := lMainRecord.ChildGroup;
-    if (aTarget as TObject as TwbFile).CopyRefusal(lItem, aAsNew, True) <> '' then
+    if (aTarget as TObject as TwbFile).CopyRefusal(lItem, aAsNew, True, aRules) <> '' then
       Exit;
   end;
   ReportRequiredMasters(aMasters, aAsNew);
@@ -30993,6 +31038,22 @@ function TwbLoadingGameContext.NameReferencesJudged(const aElement: IwbElement):
 begin
   var lFile := aElement._File;
   Result := Assigned(lFile) and (lFile as TObject as TwbFile).NameReferencesJudgedInternal;
+end;
+
+function TwbLoadingGameContext.IdentityHolder(aFormIDNameBase: Byte; const aIdentity: string): IwbMainRecord;
+var
+  lKey   : TwbFormID;
+  lCount : Integer;
+begin
+  Result := nil;
+  for var lBase := Low(Byte) to High(Byte) do
+    if (GameDefObj.IdentityNameBaseOf(lBase) = aFormIDNameBase) and FindIdentity(lBase, aFormIDNameBase, aIdentity, lKey) then
+      for var i := 0 to Pred(GetFileCount) do begin
+        var lFile := GetFile(i) as TObject as TwbFile;
+        var lFirst := lFile.RecordRunAt(lKey, lCount);
+        if lCount > 0 then
+          Exit(lFile.flRecords[lFirst]);
+      end;
 end;
 
 function TwbLoadingGameContext.ViewNameKeyAt(const aElement: IwbElement; const aKey: TwbFormID; const aValue: string;

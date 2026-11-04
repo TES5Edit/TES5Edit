@@ -519,6 +519,7 @@ type
     dfNoCopyAsOverride,
     dfNoMove,
     dfNoReport,
+    dfNoRequestedIdentity,
     dfNotAlignable,
     dfRemoveLastOnly,
     dfSkipImplicitEdit,
@@ -1176,7 +1177,9 @@ type
     SuffixRemove : string;
     Prefix       : string;
     Suffix       : string;
+    EditorID     : string;
     CanOverwrite : TwbCanOverwriteCallback;
+    function AppliedTo(const aEditorID: string): string;
   end;
 
   IwbElement = interface(IwbInterface)
@@ -1255,7 +1258,8 @@ type
     function GetSummaryLinksTo: IwbElement;
     function GetNoReach: Boolean;
     procedure ReportRequiredMasters(aMasters: TwbFilesSet; aAsNew: Boolean; recursive: Boolean = True; initial: Boolean = False);
-    procedure ReportRequiredMastersForCopy(aMasters: TwbFilesSet; aAsNew, aDeepCopy: Boolean; const aTarget: IwbFile = nil);
+    procedure ReportRequiredMastersForCopy(aMasters: TwbFilesSet; aAsNew, aDeepCopy: Boolean; const aTarget: IwbFile = nil); overload;
+    procedure ReportRequiredMastersForCopy(aMasters: TwbFilesSet; aAsNew, aDeepCopy: Boolean; const aTarget: IwbFile; const aRules: TwbCopyRules); overload;
     function AddIfMissing(const aElement: IwbElement; aFlags: TwbCopyFlags; const aRules: TwbCopyRules): IwbElement;
     procedure ResetConflict;
     procedure ResetReachable;
@@ -2818,6 +2822,7 @@ type
     function GetGridFormIDBase: Byte;
     function SetGridFormIDBase(aBase: Byte): IwbMainRecordDef;
     function IsKeyedByIdentity: Boolean;
+    function IdentityStoreRefusal(const aElement: IwbElement; const aValue: string): string;
 
     function GetFormID(const aMainRecord: IwbMainRecord; out aFormID: TwbFormID): Boolean;
     function SetGetFormIDCallback(const aCallback: TwbMainRecordGetFormIDCallback): IwbMainRecordDef;
@@ -3678,6 +3683,8 @@ type
     function ResolveFileHash(const aHash: Int64): string;
   end;
 
+  TwbNameBases = set of Byte;
+
   IwbGameDef = interface(IwbInterface)
     ['{A42F48ED-EAF9-4F5A-9CEE-13E73B96E2DF}']
     function GetGameMode: TwbGameMode;
@@ -3890,6 +3897,7 @@ type
     gdDefinedOptions   : TwbGameDefineOptions;
     gdIdentityKeyCapacity : array[Byte] of Cardinal;
     gdIdentityNameBaseOf  : array[Byte] of Byte;
+    gdNameBasesTogether   : array[Byte] of TwbNameBases;
     gdGameMode         : TwbGameMode;
     gdCapabilities     : TwbGameCapabilities;
     gdIdentity         : TwbGameIdentity;
@@ -3990,6 +3998,7 @@ type
     function RegisterRefRecordDef(const aSignature: TwbSignature; const aName: string; const aRecordFlags: IwbIntegerDefFormater; const aMembers: array of IwbRecordMemberDef; aPriority: TwbConflictPriority = cpNormal; aRequired: Boolean = False): IwbMainRecordDef; overload;
     function RegisterRefRecordDef(const aSignature: TwbSignature; const aName: string; const aMembers: array of IwbRecordMemberDef; aPriority: TwbConflictPriority = cpNormal; aRequired: Boolean = False): IwbMainRecordDef; overload;
     procedure ComputeIdentityKeyCapacity;
+    procedure ComputeNameBasesTogether;
   public
     DefineOptions: TwbGameDefineOptions;
 
@@ -4001,6 +4010,7 @@ type
     procedure EnsureDefined;
     function IdentityKeyCapacity(aFormIDNameBase: Byte): Cardinal;
     function IdentityNameBaseOf(aFormIDBase: Byte): Byte;
+    function NameBasesTogether(aFormIDNameBase: Byte): TwbNameBases;
     property DefinedOptions: TwbGameDefineOptions
       read gdDefinedOptions;
 
@@ -4476,6 +4486,7 @@ type
     function IdentityAtKey(aFormIDBase, aFormIDNameBase: Byte; const aKey: TwbFormID; out aIdentity: string): Boolean;
     function IsKnownIdentity(aFormIDNameBase: Byte; const aIdentity: string): Boolean;
     function UnusedIdentity(aFormIDNameBase: Byte; const aPrefix: string; const aQualifier: string = ''): string;
+    function IdentityHolder(aFormIDNameBase: Byte; const aIdentity: string): IwbMainRecord; virtual; abstract;
     class function IdentityText(const aIdentity: string): string; static;
     function ExpandFileName(const aFileName: string): string;
     function FlagPluginsESM(const aReport: TProc<string>): Boolean;
@@ -7305,6 +7316,7 @@ begin
     gdDefinedOptions := DefineOptions;
     Define;
     ComputeIdentityKeyCapacity;
+    ComputeNameBasesTogether;
     gdDefined := True;
   finally
     gdDefining := False;
@@ -7319,6 +7331,11 @@ end;
 function TwbGameDef.IdentityNameBaseOf(aFormIDBase: Byte): Byte;
 begin
   Result := gdIdentityNameBaseOf[aFormIDBase];
+end;
+
+function TwbGameDef.NameBasesTogether(aFormIDNameBase: Byte): TwbNameBases;
+begin
+  Result := gdNameBasesTogether[aFormIDNameBase];
 end;
 
 function wbCreateGameContext(const aGameDef: IwbGameDef): IwbGameContext;
@@ -8030,11 +8047,18 @@ begin
 end;
 
 function TwbGameContext.UnusedIdentity(aFormIDNameBase: Byte; const aPrefix: string; const aQualifier: string = ''): string;
+var
+  lNameBases : TwbNameBases;
+  lKnown     : Boolean;
 begin
+  lNameBases := gcGameDefObj.NameBasesTogether(aFormIDNameBase) + [aFormIDNameBase];
   repeat
     Inc(gcUnusedIdentityCount);
     Result := aPrefix + IntToStr(gcUnusedIdentityCount);
-  until not IsKnownIdentity(aFormIDNameBase, aQualifier + Result);
+    lKnown := False;
+    for var lNameBase in lNameBases do
+      lKnown := lKnown or IsKnownIdentity(lNameBase, aQualifier + Result);
+  until not lKnown;
 end;
 
 class function TwbGameContext.IdentityText(const aIdentity: string): string;
@@ -9114,6 +9138,7 @@ type
     function GetGridFormIDBase: Byte;
     function SetGridFormIDBase(aBase: Byte): IwbMainRecordDef;
     function IsKeyedByIdentity: Boolean;
+    function IdentityStoreRefusal(const aElement: IwbElement; const aValue: string): string;
 
     function GetFormID(const aMainRecord: IwbMainRecord; out aFormID: TwbFormID): Boolean;
     function SetGetFormIDCallback(const aCallback: TwbMainRecordGetFormIDCallback): IwbMainRecordDef;
@@ -9815,6 +9840,8 @@ type
     {---IwbStringDef---}
     function GetStringSize: Integer;
     function SetFormater(const aFormater: IwbStringDefFormater): IwbStringDef;
+  public
+    function StoreRefusal(const aElement: IwbElement; const aValue: string): string;
   end;
 
   TwbStringScriptDef = class(TwbStringDef)
@@ -14246,6 +14273,25 @@ begin
   Result := recGridFormIDBase;
 end;
 
+function TwbMainRecordDef.IdentityStoreRefusal(const aElement: IwbElement; const aValue: string): string;
+var
+  lSubRecord : IwbSubRecordDef;
+  lStruct    : IwbStructDef;
+  lString    : IwbStringDef;
+begin
+  Result := '';
+  if not Supports(GetKnownSubRecordMember(ksrEditorID), IwbSubRecordDef, lSubRecord) then
+    Exit;
+  if Supports(lSubRecord.Value, IwbStructDef, lStruct) then begin
+    for var i := 0 to Pred(lStruct.MemberCount) do
+      if Supports(lStruct.Members[i], IwbStringDef, lString) then
+        Break;
+  end else
+    Supports(lSubRecord.Value, IwbStringDef, lString);
+  if Assigned(lString) then
+    Result := (lString as TObject as TwbStringDef).StoreRefusal(aElement, aValue);
+end;
+
 function TwbMainRecordDef.IsKeyedByIdentity: Boolean;
 begin
   Result := recFormIDBase > 0;
@@ -14287,6 +14333,57 @@ begin
     if (gdIdentityKeyCapacity[lNameBase] = 0) or (lCap < gdIdentityKeyCapacity[lNameBase]) then
       gdIdentityKeyCapacity[lNameBase] := lCap;
   end;
+end;
+
+procedure TwbGameDef.ComputeNameBasesTogether;
+
+  procedure Note(const aReference: IwbNameReferenceDef);
+  var
+    lRecordDef : PwbMainRecordDef;
+    lBases     : TwbNameBases;
+  begin
+    lBases := [];
+    for var lSignature in aReference.AllowedSignatures do
+      if FindRecordDef(lSignature, lRecordDef) and ((lRecordDef^ as TObject as TwbMainRecordDef).recFormIDBase > 0) then
+        Include(lBases, lRecordDef^.GetFormIDNameBase);
+    for var lBase in lBases do
+      gdNameBasesTogether[lBase] := gdNameBasesTogether[lBase] + lBases;
+  end;
+
+  procedure Walk(const aDef: IwbDef);
+  var
+    lReference   : IwbNameReferenceDef;
+    lSubRecord   : IwbSubRecordDef;
+    lRecord      : IwbRecordDef;
+    lRecordArray : IwbSubRecordArrayDef;
+    lUnion       : IwbUnionDef;
+    lStruct      : IwbStructDef;
+    lArray       : IwbArrayDef;
+  begin
+    if Supports(aDef, IwbNameReferenceDef, lReference) then
+      Note(lReference)
+    else if Supports(aDef, IwbSubRecordDef, lSubRecord) then
+      Walk(lSubRecord.Value)
+    else if Supports(aDef, IwbRecordDef, lRecord) then
+      for var i := 0 to Pred(lRecord.MemberCount) do
+        Walk(lRecord.Members[i])
+    else if Supports(aDef, IwbSubRecordArrayDef, lRecordArray) then
+      Walk(lRecordArray.Element)
+    else if Supports(aDef, IwbUnionDef, lUnion) then
+      for var i := 0 to Pred(lUnion.MemberCount) do
+        Walk(lUnion.Members[i])
+    else if Supports(aDef, IwbStructDef, lStruct) then
+      for var i := 0 to Pred(lStruct.MemberCount) do
+        Walk(lStruct.Members[i])
+    else if Supports(aDef, IwbArrayDef, lArray) then
+      Walk(lArray.Element);
+  end;
+
+begin
+  if gcFormIDInRecordHeader in gdCapabilities then
+    Exit;
+  for var lEntry in gdRecordDefs do
+    Walk(lEntry.rdeDef);
 end;
 
 function TwbMainRecordDef.GetGridCell(const aSubRecord: IwbSubRecord; out aGridCell: TwbGridCell): Boolean;
@@ -19562,6 +19659,27 @@ end;
 function TwbStringDef.GetStringSize: Integer;
 begin
   Result := sdSize;
+end;
+
+function TwbStringDef.StoreRefusal(const aElement: IwbElement; const aValue: string): string;
+var
+  lBytes : TBytes;
+begin
+  Result := '';
+  var lEncoding := bsdGetEncoding(aElement);
+  try
+    lBytes := lEncoding.GetBytes(aValue);
+    if lEncoding.GetString(lBytes) <> aValue then
+      Exit('"' + TwbGameContext.IdentityText(aValue) + '" can not be stored in this field''s encoding');
+  except
+    on E: Exception do
+      Exit('"' + TwbGameContext.IdentityText(aValue) + '" can not be encoded: ' + E.Message);
+  end;
+  for var lByte in lBytes do
+    if lByte = 0 then
+      Exit('"' + TwbGameContext.IdentityText(aValue) + '" encodes to a zero byte');
+  if (sdSize > 0) and (Length(lBytes) > sdSize) then
+    Result := '"' + TwbGameContext.IdentityText(aValue) + '" is longer than the field';
 end;
 
 procedure TwbStringDef.PrepareSave(const aDataContainer: IwbDataContainer);
@@ -25042,7 +25160,6 @@ function TwbNameReferenceDef.TargetWrite(const aElement: IwbElement; const aKey:
   aWrongTypeLinks: Boolean; out aIdentity: string): string;
 var
   lSelected, lHit : IwbMainRecord;
-  lBytes          : TBytes;
 begin
   aIdentity := '';
   case aElement.ContextObj.NameKeyIdentity(aElement, aKey, lSelected, aIdentity) of
@@ -25052,25 +25169,13 @@ begin
     ntExterior:   Exit('an exterior cell can not be named');
     ntEmpty:      Exit(aTargetName + ' has an empty identity');
   end;
-  var lEncoding := bsdGetEncoding(aElement);
-  try
-    lBytes := lEncoding.GetBytes(aIdentity);
-    if lEncoding.GetString(lBytes) <> aIdentity then
-      Exit('"' + TwbGameContext.IdentityText(aIdentity) + '" can not be stored in this field''s encoding');
-  except
-    on E: Exception do
-      Exit('"' + TwbGameContext.IdentityText(aIdentity) + '" can not be encoded: ' + E.Message);
-  end;
-  for var lByte in lBytes do
-    if lByte = 0 then
-      Exit('"' + TwbGameContext.IdentityText(aIdentity) + '" encodes to a zero byte');
-  if (sdSize > 0) and (Length(lBytes) > sdSize) then
-    Exit('"' + aIdentity + '" is longer than the field');
+  Result := StoreRefusal(aElement, aIdentity);
+  if Result <> '' then
+    Exit;
   var lVerdict := ResolveValue(aElement, aIdentity, lHit);
   if not (Assigned(lHit) and lHit.Equals(lSelected) and
           ((lVerdict = nvLink) or (aWrongTypeLinks and (lVerdict = nvWrongType)))) then
     Exit('"' + aIdentity + '" would not resolve to ' + aTargetName);
-  Result := '';
 end;
 
 function TwbNameReferenceDef.AllowedText: string;
@@ -27030,6 +27135,32 @@ begin
 end;
 
 { TwbCopyOptions }
+
+function TwbCopyRules.AppliedTo(const aEditorID: string): string;
+
+  function RemovePrefix(const s, aPrefix: string): string;
+  begin
+    if (s <> '') and (aPrefix <> '') and (Length(s) >= Length(aPrefix)) and SameText(Copy(s, 1, Length(aPrefix)), aPrefix) then
+      Result := Copy(s, Succ(Length(aPrefix)), High(Integer))
+    else
+      Result := s;
+  end;
+
+  function RemoveSuffix(const s, aSuffix: string): string;
+  begin
+    if (s <> '') and (aSuffix <> '') and (Length(s) >= Length(aSuffix)) and SameText(Copy(s, Succ(Length(s) - Length(aSuffix)) , Length(aSuffix)), aSuffix) then
+      Result := Copy(s, 1, Length(s) - Length(aSuffix))
+    else
+      Result := s;
+  end;
+
+begin
+  if EditorID <> '' then
+    Exit(EditorID);
+  if aEditorID = '' then
+    Exit('');
+  Result := Prefix + RemoveSuffix(RemovePrefix(aEditorID, PrefixRemove), SuffixRemove) + Suffix;
+end;
 
 class function TwbCopyOptions.IsMultiple(const aElements: TDynElements): Boolean;
 begin
