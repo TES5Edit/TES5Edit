@@ -867,6 +867,9 @@ type
     procedure AddNewFileWithDialog;
 
     procedure BuildAllRef;
+  public
+    lblReferencedByNote : TLabel;
+  protected
     procedure ResetAllTags;
 
     procedure UpdatePnlCancelPosition;
@@ -1217,6 +1220,9 @@ type
     procedure ApplyReferencedByFilter;
     procedure ApplyReferencedByAlphaSort;
     procedure PopulateReferencedByListData(aMaster: IwbMainRecord);
+    function ReferencedByNote: string;
+    function ShowReferencedByNote: Boolean;
+    procedure BuildHardcodedReferences;
     procedure ClearReferencedByListData;
     procedure UpdateReferencedByTabCaption;
   protected
@@ -7591,6 +7597,45 @@ begin
   end;
 end;
 
+function TfrmMain.ReferencedByNote: string;
+begin
+  Result := xeContext.NameReferencesStop;
+  var lOutside := xeContext.NameReferencesOutside;
+  if lOutside <> '' then begin
+    if Result <> '' then
+      Result := Result + '; ';
+    Result := Result + 'NAME references build no entries in ' + lOutside;
+  end;
+  if Result <> '' then
+    Result := 'This list may be incomplete: ' + Result;
+end;
+
+function TfrmMain.ShowReferencedByNote: Boolean;
+begin
+  var lNote := ReferencedByNote;
+  Result := lNote <> '';
+  if Result and not Assigned(lblReferencedByNote) then begin
+    lblReferencedByNote := TLabel.Create(Self);
+    lblReferencedByNote.Parent := tbsReferencedBy;
+    lblReferencedByNote.Align := alTop;
+    lblReferencedByNote.WordWrap := True;
+    lblReferencedByNote.ShowAccelChar := False;
+  end;
+  if Assigned(lblReferencedByNote) then begin
+    lblReferencedByNote.Caption := lNote;
+    lblReferencedByNote.Visible := Result;
+  end;
+end;
+
+procedure TfrmMain.BuildHardcodedReferences;
+begin
+  if not xeContext.GameDefObj.IsMorrowind then
+    Exit;
+  for var lFile in xeContext.Files do
+    if (fsIsHardcoded in lFile.FileStates) and lFile.ReferenceBuildOffered then
+      lFile.BuildRef;
+end;
+
 procedure TfrmMain.PopulateReferencedByListData(aMaster: IwbMainRecord);
 var
   i : Integer;
@@ -8467,13 +8512,14 @@ begin
     Modules := xeContext.ModuleList.ModulesByLoadOrder(False).FilteredByFlag(mfHasFile);
     for i := Low(Modules) to High(Modules) do begin
       _File := Modules[i]._File;
-      if not (csRefsBuild in _File.ContainerStates) then begin
+      if _File.ReferenceBuildOffered then begin
         wbCurrentAction := 'Building reference information for ' + _File.Name;
         wbProgress(wbCurrentAction);
         DoProcessMessages;
         _File.BuildRef;
       end;
     end;
+    BuildHardcodedReferences;
     for i := Low(Modules) to High(Modules) do begin
       _File := Modules[i]._File;
       _File.ResetReachable;
@@ -8498,10 +8544,11 @@ begin
       begin
         Result := Assigned(a.miFile);
         if Result then
-          Result := not (csRefsBuild in a._File.ContainerStates);
+          Result := a._File.ReferenceBuildOffered;
       end);
 
     if Length(AllModules) < 1 then begin
+      BuildHardcodedReferences;
       ShowMessage('There are no files without reference information');
       Exit;
     end;
@@ -8529,6 +8576,7 @@ begin
         DoProcessMessages;
         _File.BuildRef;
       end;
+      BuildHardcodedReferences;
     end, True);
 
   finally
@@ -14650,7 +14698,8 @@ begin
         vstView.ScrollIntoView(vstView.FocusedColumn, False);
     end;
 
-    tbsReferencedBy.TabVisible := xeContext.LoaderDone and (lvReferencedBy.Items.Count > 0);
+    var lNoted := xeContext.LoaderDone and ShowReferencedByNote;
+    tbsReferencedBy.TabVisible := xeContext.LoaderDone and ((lvReferencedBy.Items.Count > 0) or lNoted);
     UpdateReferencedByTabCaption;
   finally
     lvReferencedBy.Items.EndUpdate;
@@ -15087,7 +15136,8 @@ begin
       lvReferencedBy.Tag := 0;
 
     var lCurrentPage := pgMain.ActivePage;
-    tbsReferencedBy.TabVisible := xeContext.LoaderDone and (lvReferencedBy.Tag > 0);
+    var lNoted := xeContext.LoaderDone and ShowReferencedByNote;
+    tbsReferencedBy.TabVisible := xeContext.LoaderDone and ((lvReferencedBy.Tag > 0) or lNoted);
     if lCurrentPage = tbsReferencedBy then
       pgMain.ActivePage := tbsReferencedBy;
     UpdateReferencedByTabCaption;

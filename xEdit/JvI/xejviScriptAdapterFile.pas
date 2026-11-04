@@ -77,6 +77,42 @@ begin
     end;
 end;
 
+procedure IwbFile_IsDeltaPatch(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  _File: IwbFile;
+begin
+  Value := False;
+  if Supports(IInterface(Args.Values[0]), IwbFile, _File) then
+    Value := _File.IsDeltaPatch;
+end;
+
+procedure IwbFile_NameReferencesJudged(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  _File: IwbFile;
+begin
+  Value := False;
+  if Supports(IInterface(Args.Values[0]), IwbFile, _File) then
+    Value := _File.NameReferencesJudged;
+end;
+
+procedure IwbFile_HoldsCorruptKey(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  _File: IwbFile;
+begin
+  Value := False;
+  if Supports(IInterface(Args.Values[0]), IwbFile, _File) then
+    Value := _File.HoldsCorruptKey;
+end;
+
+procedure IwbFile_ReferencesComplete(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  _File: IwbFile;
+begin
+  Value := False;
+  if Supports(IInterface(Args.Values[0]), IwbFile, _File) then
+    Value := _File.ReferencesComplete;
+end;
+
 procedure IwbFile_CanBeLight(var Value: Variant; Args: TJvInterpreterArgs);
 var
   _File: IwbFile;
@@ -408,6 +444,10 @@ begin
     AddFunction(cUnit, 'AddMasters', IwbFile_AddMasters, 2, [varEmpty, varEmpty], varEmpty);
     AddFunction(cUnit, 'AddMastersIfMissing', IwbFile_AddMastersIfMissing, -1, [varEmpty, varString], varEmpty);
     AddFunction(cUnit, 'CanBeESL', IwbFile_CanBeLight, 1, [varEmpty], varEmpty);
+    AddFunction(cUnit, 'IsDeltaPatch', IwbFile_IsDeltaPatch, 1, [varEmpty], varEmpty);
+    AddFunction(cUnit, 'NameReferencesJudged', IwbFile_NameReferencesJudged, 1, [varEmpty], varEmpty);
+    AddFunction(cUnit, 'HoldsCorruptKey', IwbFile_HoldsCorruptKey, 1, [varEmpty], varEmpty);
+    AddFunction(cUnit, 'ReferencesComplete', IwbFile_ReferencesComplete, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'CanBeLight', IwbFile_CanBeLight, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'CanBeMedium', IwbFile_CanBeMedium, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'CanBeSmall', IwbFile_CanBeLight, 1, [varEmpty], varEmpty);

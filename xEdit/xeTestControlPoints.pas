@@ -3340,6 +3340,24 @@ procedure TxeTestFormHelper.TestCheckMenusRunTimer(Sender: TObject);
       TestHost.TestCheckMenusLines.Add('menu' + #9 + aStage + #9 + lItem.Name + #9 + BoolToStr(lItem.Visible, True));
   end;
 
+  procedure RefByView(const aStage: string; const aRecord: IwbMainRecord);
+  begin
+    DoSetActiveRecord(IwbMainRecord(nil));
+    DoSetActiveRecord(aRecord);
+    Application.ProcessMessages;
+    var lFirst := '';
+    var lCount := 0;
+    if tbsReferencedBy.TabVisible then begin
+      pgMain.ActivePage := tbsReferencedBy;
+      pgMainChange(pgMain);
+      Application.ProcessMessages;
+      lCount := lvReferencedBy.Items.Count;
+      if Assigned(lblReferencedByNote) and lblReferencedByNote.Visible then
+        lFirst := lblReferencedByNote.Caption;
+    end;
+    TestHost.TestCheckMenusLines.Add('refby' + #9 + aStage + #9 + BoolToStr(tbsReferencedBy.TabVisible, True) + #9 + IntToStr(lCount) + #9 + IntToStr(aRecord.MasterOrSelf.ReferencedByCount) + #9 + lFirst);
+  end;
+
   procedure RunChecks;
   begin
     var lModule := Module;
@@ -3356,6 +3374,23 @@ procedure TxeTestFormHelper.TestCheckMenusRunTimer(Sender: TObject);
     Menus('module');
     Select(lRecord);
     Menus('record');
+    if FindCmdLineSwitch('testcheckmenusrefby') then begin
+      RefByView('unbuilt', lRecord);
+      var lOffered := 0;
+      for var lFile in xeContext.Files do
+        if lFile.ReferenceBuildOffered then
+          Inc(lOffered);
+      TestHost.TestCheckMenusLines.Add('refby-offered' + #9 + 'unbuilt' + #9 + IntToStr(lOffered));
+      for var lFile in xeContext.Files do
+        lFile.BuildRef;
+      lOffered := 0;
+      for var lFile in xeContext.Files do
+        if lFile.ReferenceBuildOffered then
+          Inc(lOffered);
+      TestHost.TestCheckMenusLines.Add('refby-offered' + #9 + 'built' + #9 + IntToStr(lOffered));
+      RefByView('built', lRecord);
+      pgMain.ActivePage := tbsMessages;
+    end;
     var lAllow := wbManualCleaningAllow;
     var lHide := wbManualCleaningHide;
     try

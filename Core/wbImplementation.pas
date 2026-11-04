@@ -51,10 +51,15 @@ type
     lgcFreeCount    : Integer;
     lgcNextDenseID  : Cardinal;
     lgcLiveIDs      : Integer;
+    lgcNameReferrers : TObject;
     class var lgcIDLock: TObject;
     class constructor CreateIDLock;
     class destructor DestroyIDLock;
     function TakeDenseID(aRecord: Pointer): Cardinal;
+    procedure AddNameReferrer(const aValue: string; aRecord: Pointer);
+    function HasNameIndex: Boolean;
+    procedure ReResolveNameTexts(const aTexts: TArray<string>);
+    procedure ReResolveNameKeys(aFormIDBase, aNameBase: Byte; const aKeys: array of TwbFormID);
     procedure ReturnDenseID(aID: Cardinal);
     procedure SaveFailed(const aText: string; const aAlert: TwbSaveMessageProc);
     function RenameSaved(const aFrom, aTo: string; const aAlert: TwbSaveMessageProc): Boolean;
@@ -376,6 +381,7 @@ type
     function GetSortOrder: Integer;
     procedure BuildRef; virtual;
     procedure AddReferencedFromID(const aFormID: TwbFormID); virtual;
+    procedure AddReferencedName(const aValue: string); virtual;
     function CompareExchangeFormID(aOldFormID: TwbFormID; aNewFormID: TwbFormID): Boolean; virtual;
     function GetIsEditable: Boolean; virtual;
     function GetIsRemovable: Boolean; virtual;
@@ -800,6 +806,10 @@ type
     flCachedEditInfos        : TwbCachedEditInfos;
     flGeneration             : Integer;
     flSerial                 : Cardinal;
+    flRefsCurrent            : Boolean;
+    flNameEdgesStale         : Boolean;
+    flCorruptKey             : Boolean;
+    flCorruptKeyKnown        : Boolean;
 
     flEncoding               : TEncoding;
     flEncodingTrans          : TEncoding;
@@ -842,6 +852,18 @@ type
     function InsideNameScopeOwn: Boolean;
     function NameReferencesJudgedInternal: Boolean;
     function SelectAtNameKey(const aKey: TwbFormID; out aCorrupt: Boolean): IwbMainRecord;
+    function NameEdgeTarget(const aKey: TwbFormID; aAdd: Boolean; const aReferrer: IwbMainRecord = nil): IwbMainRecord;
+    function BuildOrLoadRefInner(aOnlyLoad: Boolean): TwbBuildOrLoadRefResult;
+    function IsDeltaPatch: Boolean;
+    function NameReferencesJudged: Boolean;
+    function HoldsCorruptKey: Boolean;
+    function ReferencesComplete: Boolean;
+    function ReferenceBuildOffered: Boolean;
+    function NameViewBefore(out aStale: TArray<TwbFile>): TArray<TwbFile>;
+    procedure NameViewFailed(const aFiles: TArray<TwbFile>);
+    procedure NameViewAfter(const aComplete, aStale: TArray<TwbFile>);
+    procedure RebuildAllNameEdges;
+    function NameEdgesBuiltAny: Boolean;
     function SelectInMastersAtNameKey(const aKey: TwbFormID; out aCorrupt: Boolean): IwbMainRecord;
     function NameProviderAtKey(const aKey: TwbFormID): IwbFile;
     function OwnMasterAtKey(const aKey: TwbFormID): IwbFile;
@@ -1434,6 +1456,7 @@ type
     procedure FillOrderBySort;
     procedure BuildRef; override; final;
     procedure AddReferencedFromID(const aFormID: TwbFormID); override; final;
+    procedure AddReferencedName(const aValue: string); override; final;
     procedure ResetConflict; override; final;
     procedure ResetReachable; override; final;
 
@@ -1481,6 +1504,12 @@ type
     procedure UpdateIdentityKey;
     procedure UpdateQualifiedChildKeys;
     function QualifyIdentity(var aIdentity: string): Boolean;
+    function IdentityUntouched: Boolean;
+    function ReleaseNameEdges: Boolean;
+    function ChainHoldsReferrer(const aReferrer: IwbMainRecord): Boolean;
+    procedure RebuildNameEdges;
+    procedure NameKeysChanged(const aKeys: array of TwbFormID);
+    procedure UpdateIdentityKeyInner;
     function KeyIdentity: string;
     procedure RegisterWithIdentity(aNew: Boolean);
     function RefreshKnownSubRecord(const aSubRecord: IwbSubRecord): Boolean;
@@ -2682,6 +2711,7 @@ begin
   Assert(not Assigned(flRecordProcessing), '[AddMainRecord] Assigned(flRecordProcessing)');
   Assert(Length(flRecordFormIDs) < 1, '[AddMainRecord] Length(flRecordFormIDs) >= 1');
 
+  flCorruptKeyKnown := False;
   FormID := aRecord.FixedFormID;
 
   if not FormID.IsNull then begin
@@ -5433,6 +5463,8 @@ var
 begin;
   NotAllAdded := False;
 
+  var lNameStale: TArray<TwbFile>;
+  var lNameComplete := NameViewBefore(lNameStale);
   lMasters := TStringList.Create;
   flOldMasters := Copy(flMasters);
   wbCancelLock;
@@ -5457,6 +5489,8 @@ begin;
         MoveOwnSlot;
         SetModified(True);
         IncGeneration;
+        NameViewFailed(lNameComplete);
+        NameViewFailed(lNameStale);
       end;
       raise;
     end;
@@ -5464,6 +5498,13 @@ begin;
     MoveOwnSlot;
     SetModified(True);
     IncGeneration;
+
+    if (Length(flOldMasters) <> Length(flMasters)) and (flContextObj as TwbLoadingGameContext).HasNameIndex then
+      if NotAllAdded then begin
+        NameViewFailed(lNameComplete);
+        NameViewFailed(lNameStale);
+      end else
+        NameViewAfter(lNameComplete, lNameStale);
 
     if NotAllAdded then
       raise Exception.Create('Only ' + (Length(flMasters) - Length(flOldMasters)).ToString + ' of ' + lMasters.Count.ToString + ' masters could be added. Master list now contains ' + Length(flMasters).ToString + ' entries and is full.');
@@ -6310,6 +6351,114 @@ end;
 
 
 function TwbFile.BuildOrLoadRef(aOnlyLoad: Boolean): TwbBuildOrLoadRefResult;
+begin
+  var lWasCurrent := flRefsCurrent;
+  var lForce := flNameEdgesStale;
+  flRefsCurrent := False;
+  Result := BuildOrLoadRefInner(aOnlyLoad);
+  if Result = blrNone then
+    flRefsCurrent := lWasCurrent
+  else begin
+    if lForce then
+      RebuildAllNameEdges;
+    flNameEdgesStale := flContextObj.GameDefObj.IsMorrowind and HoldsCorruptKey;
+    flRefsCurrent := True;
+  end;
+end;
+
+function TwbFile.IsDeltaPatch: Boolean;
+begin
+  Result := fsIsDeltaPatch in flStates;
+end;
+
+function TwbFile.NameReferencesJudged: Boolean;
+begin
+  Result := not flContextObj.GameDefObj.IsMorrowind or NameReferencesJudgedInternal;
+end;
+
+function TwbFile.HoldsCorruptKey: Boolean;
+begin
+  if flCorruptKeyKnown then
+    Exit(flCorruptKey);
+  Result := False;
+  for var i := 1 to High(flRecords) do
+    if Assigned(flRecords[i]) and Assigned(flRecords[Pred(i)]) and (flRecords[i].FixedFormID = flRecords[Pred(i)].FixedFormID) then begin
+      Result := True;
+      Break;
+    end;
+  flCorruptKey := Result;
+  flCorruptKeyKnown := flFormIDsSorted;
+end;
+
+function TwbFile.ReferencesComplete: Boolean;
+begin
+  Result := (fsIsDeltaPatch in flStates) or (flRefsCurrent and not flNameEdgesStale and not HoldsCorruptKey);
+end;
+
+function TwbFile.ReferenceBuildOffered: Boolean;
+begin
+  if flContextObj.GameDefObj.IsMorrowind then
+    Result := not ReferencesComplete and not HoldsCorruptKey
+  else
+    Result := not (csRefsBuild in cntStates);
+end;
+
+function TwbFile.NameViewBefore(out aStale: TArray<TwbFile>): TArray<TwbFile>;
+begin
+  Result := nil;
+  aStale := nil;
+  if not flContextObj.GameDefObj.IsMorrowind then
+    Exit;
+  for var lFileIntf in flContextObj.Files do begin
+    var lFile := lFileIntf as TObject as TwbFile;
+    var lReaches := lFile = Self;
+    if not lReaches then
+      for var lMaster in lFile.GetAllMasters do
+        if lMaster.Equals(Self) then
+          lReaches := True;
+    if lReaches and not (fsIsDeltaPatch in lFile.flStates) then
+      if lFile.ReferencesComplete then
+        Result := Result + [lFile]
+      else if lFile.NameEdgesBuiltAny then
+        aStale := aStale + [lFile];
+  end;
+end;
+
+procedure TwbFile.NameViewFailed(const aFiles: TArray<TwbFile>);
+begin
+  for var lFile in aFiles do begin
+    lFile.flRefsCurrent := False;
+    lFile.flNameEdgesStale := True;
+  end;
+end;
+
+procedure TwbFile.NameViewAfter(const aComplete, aStale: TArray<TwbFile>);
+begin
+  NameViewFailed(aStale);
+  NameViewFailed(aComplete);
+  for var lFile in aComplete do begin
+    lFile.RebuildAllNameEdges;
+    lFile.flNameEdgesStale := lFile.HoldsCorruptKey;
+    lFile.flRefsCurrent := True;
+  end;
+end;
+
+procedure TwbFile.RebuildAllNameEdges;
+begin
+  for var lRecord in flRecords do
+    if Assigned(lRecord) then
+      (lRecord as TObject as TwbMainRecord).RebuildNameEdges;
+end;
+
+function TwbFile.NameEdgesBuiltAny: Boolean;
+begin
+  for var lRecord in flRecords do
+    if Assigned(lRecord) and (csRefsBuild in (lRecord as TObject as TwbMainRecord).cntStates) then
+      Exit(True);
+  Result := False;
+end;
+
+function TwbFile.BuildOrLoadRefInner(aOnlyLoad: Boolean): TwbBuildOrLoadRefResult;
 var
   CacheFileName : string;
   FileStream    : TFileStream;
@@ -6786,7 +6935,7 @@ begin
   if fsIsDeltaPatch in flStates then
     Exit;
 
-  if (csRefsBuild in cntStates) and (cntRefsBuildAt >= eGeneration) then
+  if (csRefsBuild in cntStates) and (cntRefsBuildAt >= eGeneration) and not flNameEdgesStale then
     Exit;
   BuildOrLoadRef(False);
 end;
@@ -7467,6 +7616,23 @@ begin
     Result := flRecords[lFirst];
 end;
 
+function TwbFile.NameEdgeTarget(const aKey: TwbFormID; aAdd: Boolean; const aReferrer: IwbMainRecord): IwbMainRecord;
+var
+  lCorrupt : Boolean;
+  lCount   : Integer;
+begin
+  if aAdd then
+    Exit(SelectAtNameKey(aKey, lCorrupt));
+  Result := nil;
+  for var lFileIntf in flContextObj.Files do begin
+    var lFile := lFileIntf as TObject as TwbFile;
+    var lFirst := lFile.RecordRunAt(aKey, lCount);
+    for var i := lFirst to Pred(lFirst + lCount) do
+      if (lFile.flRecords[i] as TObject as TwbMainRecord).ChainHoldsReferrer(aReferrer) then
+        Exit(lFile.flRecords[i]);
+  end;
+end;
+
 function TwbFile.SelectInMastersAtNameKey(const aKey: TwbFormID; out aCorrupt: Boolean): IwbMainRecord;
 var
   lCount, lFirst : Integer;
@@ -7567,22 +7733,23 @@ var
   lHasGrid  : Boolean;
 begin
   aSelected := nil;
-  var lLowerValue := aValue.ToLowerInvariant;
   lSelected := SelectAtNameKey(aKey, lCorrupt);
   if lCorrupt then
-    if HoldsCurrentIdentityAtNameKey(aKey, lLowerValue) then
+    if HoldsCurrentIdentityAtNameKey(aKey, aValue.ToLowerInvariant) then
       Exit(nksCorrupt)
     else
       Exit(nksNone);
   if not Assigned(lSelected) then
     Exit(nksNone);
   var lRecord := lSelected as TObject as TwbMainRecord;
-  if not lRecord.GetCurrentIdentity(lIdentity, lHasGrid) then
-    Exit(nksNone);
-  if lHasGrid and (lRecord.GetSignature = 'CELL') then
-    Exit(nksNone);
-  if lIdentity.ToLowerInvariant <> lLowerValue then
-    Exit(nksNone);
+  if not lRecord.IdentityUntouched then begin
+    if not lRecord.GetCurrentIdentity(lIdentity, lHasGrid) then
+      Exit(nksNone);
+    if lHasGrid and (lRecord.GetSignature = 'CELL') then
+      Exit(nksNone);
+    if lIdentity.ToLowerInvariant <> aValue.ToLowerInvariant then
+      Exit(nksNone);
+  end;
   aSelected := lSelected;
   Result := nksMatch;
 end;
@@ -10107,6 +10274,7 @@ var
   lMoves   : array of Boolean;
   lHolders : Integer;
   lChanged : Boolean;
+  lReleased : TArray<TwbMainRecord>;
 begin
   flIdentityClash := False;
   if gcFormIDInRecordHeader in flContextObj.GameDefObj.Capabilities then
@@ -10160,8 +10328,11 @@ begin
   wbCancelLock;
   try
     for var i := Low(lRecords) to High(lRecords) do
-      if lMoves[i] then
+      if lMoves[i] then begin
+        if (lRecords[i] as TObject as TwbMainRecord).ReleaseNameEdges then
+          lReleased := lReleased + [lRecords[i] as TObject as TwbMainRecord];
         lRecords[i].LeaveFileIndex(lSelf);
+      end;
     for var i := Low(lRecords) to High(lRecords) do
       if lMoves[i] then
         lRecords[i].TakeIdentityKey(lSelf)
@@ -10173,6 +10344,10 @@ begin
   for var i := Low(lRecords) to High(lRecords) do
     if lMoves[i] then
       (lRecords[i] as TObject as TwbMainRecord).UpdateQualifiedChildKeys;
+  for var lRecord in lReleased do
+    lRecord.RebuildNameEdges;
+  for var i := Low(lRecords) to High(lRecords) do
+    (lRecords[i] as TObject as TwbMainRecord).NameKeysChanged([lOldKeys[i], lNewKeys[i]]);
 end;
 
 procedure TwbFile.IdentityKeyChanged(aClash: Boolean);
@@ -10226,6 +10401,7 @@ begin
   if not Assigned(aRecord) then
     Exit;
 
+  flCorruptKeyKnown := False;
   var lFormID := aRecord.FormID;
 
   if not lFormID.IsNull then begin
@@ -14307,6 +14483,12 @@ begin
   mrTmpRefFormIDs.TryAdd(aFormID, wbNothing);
 end;
 
+procedure TwbMainRecord.AddReferencedName(const aValue: string);
+begin
+  Assert(mrsBuildingRef in mrStates);
+  TwbLoadingGameContext(mrContextObj).AddNameReferrer(aValue, Self);
+end;
+
 function TwbMainRecord.AssignInternal(aIndex: Integer; const aElement: IwbElement; aOnlySK: Boolean): IwbElement;
 var
   MainRecord    : IwbMainRecord;
@@ -14679,6 +14861,7 @@ var
 
   SelfIntf      : IwbMainRecord;
   lComplex      : Boolean;
+  lNames        : Boolean;
 
   procedure ProcessRef(const aFormID: TwbFormID; aAdd: Boolean);
   begin
@@ -14686,7 +14869,13 @@ var
     var MainRecord: IwbMainRecord := nil;
     var lLayout := ContextObj.SlotLayout;
 
-    if lComplex then begin
+    if lNames then begin
+      if not Assigned(_File) then begin
+        _File := GetFile;
+        SelfIntf := Self as IwbMainRecord;
+      end;
+      MainRecord := (_File as TObject as TwbFile).NameEdgeTarget(aFormID, aAdd, SelfIntf);
+    end else if lComplex then begin
 
       var lFileID := aFormID.FileID[lLayout];
       var lFileIndex: Integer;
@@ -14793,6 +14982,7 @@ var
 begin
   Result := False;
   lComplex := gcComplexFileFileID in GameDefObj.Capabilities;
+  lNames := GameDefObj.IsMorrowind;
 
   if Assigned(mrDef) then begin
     if dfExcludeFromBuildRef in mrDef.DefFlags then
@@ -15513,6 +15703,7 @@ begin
     if Assigned(mrDef) and mrDef.CanBePartial then
       GetFlagsPtr.SetPartialForm(False);
     GetFlagsPtr.SetCompressed(False);
+    NameKeysChanged([mrFixedFormID]);
 
     if Supports(Self.GetContainer, IwbGroupRecord, GroupRecord) then
       if ContextObj.Settings.CreateContainedIn and (GroupRecord.GroupType in [1, 4..10]) then
@@ -16169,7 +16360,7 @@ begin
   var lFormID := GetFixedFormID;
   MarkMaster(lFormID);
 
-  if (csRefsBuild in cntStates) and (cntRefsBuildAt >= eGeneration) then begin
+  if (csRefsBuild in cntStates) and (cntRefsBuildAt >= eGeneration) and not GameDefObj.IsMorrowind then begin
 
     for var lReferenceIdx := High(mrReferences) downto Low(mrReferences) do begin
       lFormID := mrReferences[lReferenceIdx];
@@ -16925,6 +17116,15 @@ begin
   var _File := GetFile;
   if not Assigned(_File) then
     Exit;
+  if GameDefObj.IsMorrowind then begin
+    for var FormID in mrReferences do begin
+      var lTarget := (_File as TObject as TwbFile).NameEdgeTarget(FormID, True);
+      if Assigned(lTarget) and not _File.Equals(lTarget._File) then
+        Inc(Result);
+    end;
+    Exit;
+  end;
+
   var MasterCount := _File.MasterCount[GetMastersUpdated];
   if MasterCount < 1 then
     Exit;
@@ -17145,6 +17345,49 @@ var
   lGrid : TwbGridCell;
 begin
   Result := GetCurrentIdentity(aIdentity, aHasGrid, lGrid);
+end;
+
+function TwbMainRecord.ReleaseNameEdges: Boolean;
+begin
+  Result := (csRefsBuild in cntStates) and not (mrsNoUpdateRefs in mrStates) and TwbLoadingGameContext(mrContextObj).HasNameIndex;
+  if Result then
+    DoBuildRef(True);
+end;
+
+function TwbMainRecord.ChainHoldsReferrer(const aReferrer: IwbMainRecord): Boolean;
+var
+  i : Integer;
+begin
+  if Assigned(mrMaster) then
+    Exit((IwbMainRecord(mrMaster) as TObject as TwbMainRecord).ChainHoldsReferrer(aReferrer));
+  if mrReferencedByUnsorted then
+    SortReferencedBy;
+  Result := FindReferencedBy(aReferrer, i);
+end;
+
+procedure TwbMainRecord.RebuildNameEdges;
+var
+  KAR : IwbKeepAliveRoot;
+begin
+  if (mrsNoUpdateRefs in mrStates) or not Assigned(mrDef) then
+    Exit;
+  if not wbSpeedOverMemory then
+    KAR := wbCreateKeepAliveRoot;
+  DoBuildRef(False);
+end;
+
+procedure TwbMainRecord.NameKeysChanged(const aKeys: array of TwbFormID);
+begin
+  if Assigned(mrDef) and mrDef.IsKeyedByIdentity and TwbLoadingGameContext(mrContextObj).HasNameIndex then
+    TwbLoadingGameContext(mrContextObj).ReResolveNameKeys(mrDef.GetFormIDBase, mrDef.GetFormIDNameBase, aKeys);
+end;
+
+function TwbMainRecord.IdentityUntouched: Boolean;
+begin
+  var lRefHold: TRefGuard;
+  RefShortHold(lRefHold, Self);
+  Result := Assigned(mrDef) and not (csInit in cntStates) and (eStates * [esModified, esInternalModified] = []) and
+    not mrDef.ContainsKnownSubRecord[ksrGridCell] and not (dfIdentityQualifiedByTopic in mrDef.DefFlags);
 end;
 
 function TwbMainRecord.QualifyIdentity(var aIdentity: string): Boolean;
@@ -18159,7 +18402,10 @@ begin
     Exit;
   var _File := GetFile;
   if Assigned(_File) then
-    Result := _File.RecordByFormID[mrReferences[aIndex], True, GetMastersUpdated];
+    if GameDefObj.IsMorrowind then
+      Result := (_File as TObject as TwbFile).NameEdgeTarget(mrReferences[aIndex], True)
+    else
+      Result := _File.RecordByFormID[mrReferences[aIndex], True, GetMastersUpdated];
 end;
 
 function TwbMainRecord.GetReferencesCount: Integer;
@@ -19863,6 +20109,9 @@ var
 begin
   wbCancelLock;
   try
+    var lNameKey := mrFixedFormID;
+    var lNameDef := mrDef;
+    var lNameContext := TwbLoadingGameContext(mrContextObj);
     DoBuildRef(True);
 
     var lGroup := GetChildGroup;
@@ -19901,6 +20150,8 @@ begin
 
     if Assigned(_File) then
       _File.IdentityKeyChanged(False);
+    if Assigned(lNameDef) and lNameDef.IsKeyedByIdentity and lNameContext.HasNameIndex then
+      lNameContext.ReResolveNameKeys(lNameDef.GetFormIDBase, lNameDef.GetFormIDNameBase, [lNameKey]);
   finally
     wbCancelUnlock;
   end;
@@ -20812,6 +21063,14 @@ begin
 end;
 
 procedure TwbMainRecord.UpdateIdentityKey;
+begin
+  var lOld := mrFixedFormID;
+  UpdateIdentityKeyInner;
+  if not lOld.IsNull and not (mrsRegisterLater in mrStates) and TwbLoadingGameContext(mrContextObj).HasNameIndex then
+    NameKeysChanged([lOld, IdentityKey]);
+end;
+
+procedure TwbMainRecord.UpdateIdentityKeyInner;
 var
   lFile      : IwbFileInternal;
   lHolder    : IwbMainRecord;
@@ -20850,9 +21109,12 @@ begin
     Exit;
   end;
 
+  var lReleased := ReleaseNameEdges;
   ReRegister(lFile, lNew, MoveGroupLabel);
   lFile.IdentityKeyChanged(False);
   UpdateQualifiedChildKeys;
+  if lReleased then
+    RebuildNameEdges;
 end;
 
 procedure TwbMainRecord.RegisterWithIdentity(aNew: Boolean);
@@ -20893,6 +21155,7 @@ begin
         raise;
       end;
       TakeChainFromLaterRoot(lFile);
+      NameKeysChanged([GetFixedFormID]);
     finally
       wbCancelUnlock;
     end;
@@ -25777,6 +26040,12 @@ procedure TwbElement.AddReferencedFromID(const aFormID: TwbFormID);
 begin
   if Assigned(eContainer) then
     IwbElement(eContainer).AddReferencedFromID(aFormID);
+end;
+
+procedure TwbElement.AddReferencedName(const aValue: string);
+begin
+  if Assigned(eContainer) then
+    IwbElement(eContainer).AddReferencedName(aValue);
 end;
 
 procedure TwbElement.AfterConstruction;
@@ -31042,6 +31311,7 @@ begin
     lgcFreeIDs := nil;
     lgcFreeCount := 0;
     lgcLiveIDs := 0;
+    FreeAndNil(lgcNameReferrers);
   finally
     TMonitor.Exit(lgcIDLock);
   end;
@@ -31157,6 +31427,128 @@ begin
     for var lRecord in aRecords do
       if Assigned(lRecord) then
         (lRecord as IwbMainRecordInternal).TakeDenseIDFrom(Self, lMark);
+  finally
+    TMonitor.Exit(lgcIDLock);
+  end;
+end;
+
+type
+  TwbNameReferrers = class
+  public
+    Items : TArray<Cardinal>;
+    Count : Integer;
+    procedure Add(aID: Cardinal);
+  end;
+  TwbNameReferrerIndex = TObjectDictionary<string, TwbNameReferrers>;
+
+procedure TwbNameReferrers.Add(aID: Cardinal);
+var
+  L, H, I : Integer;
+begin
+  L := Count;
+  if (Count > 0) and (Items[Pred(Count)] >= aID) then begin
+    L := 0;
+    H := Pred(Count);
+    while L <= H do begin
+      I := (L + H) shr 1;
+      if Items[I] = aID then
+        Exit;
+      if Items[I] < aID then
+        L := Succ(I)
+      else
+        H := Pred(I);
+    end;
+  end;
+  if Count = Length(Items) then
+    if Count = 0 then
+      SetLength(Items, 2)
+    else
+      SetLength(Items, 2 * Count);
+  if L < Count then
+    Move(Items[L], Items[Succ(L)], SizeOf(Cardinal) * (Count - L));
+  Items[L] := aID;
+  Inc(Count);
+end;
+
+function TwbLoadingGameContext.HasNameIndex: Boolean;
+begin
+  Result := Assigned(lgcNameReferrers);
+end;
+
+procedure TwbLoadingGameContext.ReResolveNameKeys(aFormIDBase, aNameBase: Byte; const aKeys: array of TwbFormID);
+var
+  lTexts : TArray<string>;
+  lText  : string;
+begin
+  if not Assigned(lgcNameReferrers) then
+    Exit;
+  for var lKey in aKeys do
+    if IdentityAtKey(aFormIDBase, aNameBase, lKey, lText) then
+      lTexts := lTexts + [lText];
+  ReResolveNameTexts(lTexts);
+end;
+
+procedure TwbLoadingGameContext.ReResolveNameTexts(const aTexts: TArray<string>);
+var
+  lReferrers : TwbNameReferrers;
+  lRecords   : TList<IwbMainRecord>;
+begin
+  lRecords := TList<IwbMainRecord>.Create;
+  try
+    var lSeen := TDictionary<Cardinal, Boolean>.Create;
+    try
+      TMonitor.Enter(lgcIDLock);
+      try
+        for var lText in aTexts do
+          if TwbNameReferrerIndex(lgcNameReferrers).TryGetValue(lText.ToLowerInvariant, lReferrers) then
+            for var i := 0 to Pred(lReferrers.Count) do begin
+              var lID := lReferrers.Items[i];
+              if lSeen.TryAdd(lID, True) and Assigned(lgcDenseRecords[lID]) then
+                lRecords.Add(TwbMainRecord(lgcDenseRecords[lID]) as IwbMainRecord);
+            end;
+      finally
+        TMonitor.Exit(lgcIDLock);
+      end;
+    finally
+      lSeen.Free;
+    end;
+    var lNext := 0;
+    try
+      while lNext < lRecords.Count do begin
+        var lRecord := lRecords[lNext] as TObject as TwbMainRecord;
+        if csRefsBuild in lRecord.cntStates then
+          lRecord.RebuildNameEdges;
+        Inc(lNext);
+      end;
+    except
+      for var i := lNext to Pred(lRecords.Count) do
+        (lRecords[i]._File as TObject as TwbFile).NameViewFailed([lRecords[i]._File as TObject as TwbFile]);
+      raise;
+    end;
+  finally
+    lRecords.Free;
+  end;
+end;
+
+procedure TwbLoadingGameContext.AddNameReferrer(const aValue: string; aRecord: Pointer);
+var
+  lReferrers : TwbNameReferrers;
+begin
+  var lRecord := TwbMainRecord(aRecord);
+  var lKey := aValue.ToLowerInvariant;
+  var lMark := gcStampCounter;
+  TMonitor.Enter(lgcIDLock);
+  try
+    if lRecord.mrDenseID = 0 then
+      lRecord.TakeDenseIDFrom(Self, lMark);
+    if not Assigned(lgcNameReferrers) then
+      lgcNameReferrers := TwbNameReferrerIndex.Create([doOwnsValues]);
+    var lIndex := TwbNameReferrerIndex(lgcNameReferrers);
+    if not lIndex.TryGetValue(lKey, lReferrers) then begin
+      lReferrers := TwbNameReferrers.Create;
+      lIndex.Add(lKey, lReferrers);
+    end;
+    lReferrers.Add(lRecord.mrDenseID);
   finally
     TMonitor.Exit(lgcIDLock);
   end;

@@ -1250,6 +1250,7 @@ type
     procedure MergeStorage(var aBasePtr: Pointer; aEndPtr: Pointer);
     procedure InformStorage(var aBasePtr: Pointer; aEndPtr: Pointer);
     procedure AddReferencedFromID(const aFormID: TwbFormID);
+    procedure AddReferencedName(const aValue: string);
     function CanContainFormIDs: Boolean;
     function ContainsReflection: Boolean;
     function ContainsUnmappedFormID: Boolean;
@@ -1844,6 +1845,11 @@ type
     function GetCRC32: TwbCRC32;
     procedure BuildReachable;
     function BuildOrLoadRef(aOnlyLoad: Boolean): TwbBuildOrLoadRefResult;
+    function IsDeltaPatch: Boolean;
+    function NameReferencesJudged: Boolean;
+    function HoldsCorruptKey: Boolean;
+    function ReferencesComplete: Boolean;
+    function ReferenceBuildOffered: Boolean;
 
     function LoadOrderFormIDtoFileFormID(const aFormID: TwbFormID; aNew: Boolean): TwbFormID;
     function FileFormIDtoLoadOrderFormID(const aFormID: TwbFormID; aNew: Boolean): TwbFormID;
@@ -4491,6 +4497,8 @@ type
     function FormIDFromIdentity(aFormIDBase, aFormIDNameBase: Byte; aIdentity: string): TwbFormID;
     function FindIdentity(aFormIDBase, aFormIDNameBase: Byte; const aIdentity: string; out aFormID: TwbFormID): Boolean;
     function IdentityAtKey(aFormIDBase, aFormIDNameBase: Byte; const aKey: TwbFormID; out aIdentity: string): Boolean;
+    function NameReferencesStop: string;
+    function NameReferencesOutside: string;
     function IsKnownIdentity(aFormIDNameBase: Byte; const aIdentity: string): Boolean;
     function UnusedIdentity(aFormIDNameBase: Byte; const aPrefix: string; const aQualifier: string = ''): string;
     function IdentityHolder(aFormIDNameBase: Byte; const aIdentity: string): IwbMainRecord; virtual; abstract;
@@ -7879,6 +7887,42 @@ end;
 function TwbGameContext.NextStamp: Cardinal;
 begin
   Result := AtomicIncrement(gcStampCounter);
+end;
+
+function TwbGameContext.NameReferencesStop: string;
+var
+  lIncomplete, lCorrupt : string;
+begin
+  Result := '';
+  if not GameDefObj.IsMorrowind then
+    Exit;
+  for var lFile in Files do begin
+    if lFile.IsDeltaPatch or not lFile.NameReferencesJudged then
+      Continue;
+    if lFile.HoldsCorruptKey then
+      lCorrupt := lCorrupt + ', ' + lFile.FileName
+    else if not lFile.ReferencesComplete then
+      lIncomplete := lIncomplete + ', ' + lFile.FileName;
+  end;
+  if lIncomplete <> '' then
+    Result := 'references are not complete and current in ' + lIncomplete.Substring(2);
+  if lCorrupt <> '' then begin
+    if Result <> '' then
+      Result := Result + '; ';
+    Result := Result + 'two or more records share a key in ' + lCorrupt.Substring(2);
+  end;
+end;
+
+function TwbGameContext.NameReferencesOutside: string;
+begin
+  Result := '';
+  if not GameDefObj.IsMorrowind then
+    Exit;
+  for var lFile in Files do
+    if not lFile.IsDeltaPatch and not lFile.NameReferencesJudged then
+      Result := Result + ', ' + lFile.FileName;
+  if Result <> '' then
+    Result := Result.Substring(2);
 end;
 
 function TwbGameContext.ViewNameKey(const aElement: IwbElement; aFormIDBase, aNameBase: Byte; const aValue: string;
@@ -25352,7 +25396,17 @@ begin
 end;
 
 procedure TwbNameReferenceDef.BuildRef(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement);
+var
+  lValue  : string;
+  lTarget : IwbMainRecord;
 begin
+  if (dfExcludeFromBuildRef in defFlags) or not Judged(aElement) or not TryReadValue(aBasePtr, aEndPtr, aElement, lValue) then
+    Exit;
+  if lValue = '' then
+    Exit;
+  aElement.AddReferencedName(lValue);
+  if ResolveValue(aElement, lValue, lTarget) in [nvLink, nvWrongType] then
+    aElement.AddReferencedFromID(lTarget.FixedFormID);
 end;
 
 function TwbNameReferenceDef.MastersUpdated(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aOld, aNew: TwbFileIDs;
