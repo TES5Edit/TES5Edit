@@ -3577,7 +3577,7 @@ var
     if not Assigned(lRecordFile) then
       Exit;
     if aRecord.IsDeleted then
-      Exit(Refused('its header marks it deleted, and its copy would lose the identity that keys it'));
+      Exit(Refused('its header marks it deleted, and its copy would lose what keys it'));
     if Assigned(lRecord.mrDef) and not lRecord.mrDef.IsKeyedByIdentity then begin
       if not aNew then
         Result := Refused('a reference''s key is relative to its own file''s masters, so its copy would be another reference');
