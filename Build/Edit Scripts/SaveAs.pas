@@ -52,17 +52,24 @@ end;
 //===========================================================================
 procedure SavePlugin(aFile: IInterface; aFileName: string; aReset: Boolean);
 var
+  ms: TMemoryStream;
   fs: TFileStream;
   fdate: Integer;
 begin
   if FileExists(aFileName) then
     fdate := FileAge(aFileName);
 
-  fs := TFileStream.Create(aFileName, fmCreate);
+  ms := TMemoryStream.Create;
   try
-    FileWriteToStream(aFile, fs, aReset);
+    FileWriteToStream(aFile, ms, aReset);
+    fs := TFileStream.Create(aFileName, fmCreate);
+    try
+      fs.CopyFrom(ms, 0);
+    finally
+      fs.Free;
+    end;
   finally
-    fs.Free;
+    ms.Free;
   end;
 
   // restore original file date for games that use it for load order sorting
