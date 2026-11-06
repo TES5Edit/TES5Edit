@@ -1777,6 +1777,7 @@ type
     Key       : TwbFormID;
     Field     : Integer;
     Always    : Boolean;
+    Before    : string;
     Rewritten : string;
     Skipped   : string;
   end;
@@ -1784,6 +1785,23 @@ type
   TwbNameChangeDerivation = record
     Stable : TArray<string>;
     Cells  : TArray<TwbNameChangeDerivedCell>;
+  end;
+
+  TwbNameChangeCellPair = record
+    Before : string;
+    After  : string;
+  end;
+
+  TwbNameChangeFilter = record
+    Rec  : IwbMainRecord;
+    Path : string;
+    Text : string;
+  end;
+
+  TwbNameChangeFilterMove = record
+    Filter    : Integer;
+    Names     : TwbNameChangeCellPair;
+    WasPrefix : Boolean;
   end;
 
   TwbNameChangeField = record
@@ -1818,13 +1836,12 @@ type
     AfterAllowed : Boolean;
   end;
 
-  TwbNameChangeReportKind = (ncpScriptText, ncpResultText, ncpNotScanned, ncpCondition, ncpGameSetting, ncpCellFilter);
+  TwbNameChangeReportKind = (ncpScriptText, ncpResultText, ncpNotScanned, ncpCondition, ncpGameSetting);
 
   TwbNameChangeReport = record
-    Kind   : TwbNameChangeReportKind;
-    Rec    : IwbMainRecord;
-    Path   : string;
-    Before : Boolean;
+    Kind : TwbNameChangeReportKind;
+    Rec  : IwbMainRecord;
+    Path : string;
   end;
 
   TwbNameChangePlan = record
@@ -1845,15 +1862,20 @@ type
     Derivations   : TArray<TwbNameChangeDerivation>;
     Values        : TArray<TwbNameChangeValue>;
     Reports       : TArray<TwbNameChangeReport>;
+    Filters       : TArray<TwbNameChangeFilter>;
     function FaultOf(aField: Integer): TwbNameChangeFault;
     function OutcomeToBe(aField: Integer): TwbNameChangeOutcome;
     function VerdictAfter(aValue: Integer; out aTarget: IwbMainRecord): TwbNameVerdict;
     function ReportBefore(aValue: Integer): string;
     function ReportAfter(aValue: Integer): string;
+    function CellNameAfter(const aCell: TwbNameChangeDerivedCell): string;
     function DerivedAfter(aValue: Integer): Boolean;
     function ValueChanges(aValue: Integer): Boolean;
     function ChangedValues: TArray<Integer>;
+    function CellPairs: TArray<TwbNameChangeCellPair>;
+    function FilterMoves: TArray<TwbNameChangeFilterMove>;
     function AnyFailed: Boolean;
+    class function FilterPrefixes(const aName, aFilter: string): Boolean; static;
   end;
 
   TwbReferenceReplacement = record
@@ -27582,6 +27604,14 @@ begin
   Result := lValue.Def.VerdictReport(lVerdict, lTarget, lText, lValue.FileName, DerivedAfter(aValue));
 end;
 
+function TwbNameChangePlan.CellNameAfter(const aCell: TwbNameChangeDerivedCell): string;
+begin
+  if aCell.Always or ((aCell.Field >= 0) and (OutcomeToBe(aCell.Field) = ncoUpdated)) then
+    Result := aCell.Rewritten
+  else
+    Result := aCell.Skipped;
+end;
+
 function TwbNameChangePlan.DerivedAfter(aValue: Integer): Boolean;
 begin
   var lValue := Values[aValue];
@@ -27591,13 +27621,9 @@ begin
   for var lName in Derivations[lValue.Derivation].Stable do
     if lName = lText then
       Exit(True);
-  for var lCell in Derivations[lValue.Derivation].Cells do begin
-    var lName := lCell.Skipped;
-    if lCell.Always or ((lCell.Field >= 0) and (OutcomeToBe(lCell.Field) = ncoUpdated)) then
-      lName := lCell.Rewritten;
-    if lName = lText then
+  for var lCell in Derivations[lValue.Derivation].Cells do
+    if CellNameAfter(lCell).ToLowerInvariant = lText then
       Exit(True);
-  end;
   Result := False;
 end;
 
@@ -27623,6 +27649,49 @@ begin
   finally
     lChanged.Free;
   end;
+end;
+
+function TwbNameChangePlan.CellPairs: TArray<TwbNameChangeCellPair>;
+begin
+  Result := nil;
+  for var lDerivation in Derivations do
+    for var lCell in lDerivation.Cells do begin
+      var lPair := Default(TwbNameChangeCellPair);
+      lPair.Before := lCell.Before;
+      lPair.After := CellNameAfter(lCell);
+      var lNew := lPair.Before <> lPair.After;
+      for var lSeen in Result do
+        lNew := lNew and ((lSeen.Before <> lPair.Before) or (lSeen.After <> lPair.After));
+      if lNew then
+        Result := Result + [lPair];
+    end;
+end;
+
+function TwbNameChangePlan.FilterMoves: TArray<TwbNameChangeFilterMove>;
+begin
+  var lPairs := CellPairs;
+  var lMoves := TList<TwbNameChangeFilterMove>.Create;
+  try
+    for var i := 0 to High(Filters) do
+      for var lPair in lPairs do begin
+        var lWas := FilterPrefixes(lPair.Before, Filters[i].Text);
+        if lWas <> FilterPrefixes(lPair.After, Filters[i].Text) then begin
+          var lMove := Default(TwbNameChangeFilterMove);
+          lMove.Filter := i;
+          lMove.Names := lPair;
+          lMove.WasPrefix := lWas;
+          lMoves.Add(lMove);
+        end;
+      end;
+    Result := lMoves.ToArray;
+  finally
+    lMoves.Free;
+  end;
+end;
+
+class function TwbNameChangePlan.FilterPrefixes(const aName, aFilter: string): Boolean;
+begin
+  Result := LowerCase(Copy(aName, 1, Length(aFilter))) = LowerCase(aFilter);
 end;
 
 function TwbNameChangePlan.AnyFailed: Boolean;
