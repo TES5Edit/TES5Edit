@@ -3340,6 +3340,25 @@ procedure TxeTestFormHelper.TestCheckMenusRunTimer(Sender: TObject);
       TestHost.TestCheckMenusLines.Add('menu' + #9 + aStage + #9 + lItem.Name + #9 + BoolToStr(lItem.Visible, True));
   end;
 
+  procedure EditMenus(const aStage: string);
+  begin
+    pmuNavPopup(nil);
+    for var lItem in TArray<TMenuItem>.Create(mniNavCreateMergedPatch, mniNavCopyIdle, mniNavCellChildNotVWD, mniNavCellChildVWD) do
+      TestHost.TestCheckMenusLines.Add('editmenu' + #9 + aStage + #9 + lItem.Name + #9 + BoolToStr(lItem.Visible, True));
+  end;
+
+  procedure RefByMenus(const aStage: string);
+  begin
+    pgMain.ActivePage := tbsReferencedBy;
+    pgMainChange(pgMain);
+    Application.ProcessMessages;
+    lvReferencedBy.SelectAll;
+    pmuRefByPopup(nil);
+    for var lItem in TArray<TMenuItem>.Create(mniRefByCopyOverrideInto, mniRefByCopyDisabledOverrideInto, mniRefByVWD, mniRefByNotVWD) do
+      TestHost.TestCheckMenusLines.Add('refbymenu' + #9 + aStage + #9 + IntToStr(lvReferencedBy.SelCount) + #9 + lItem.Name + #9 +
+        BoolToStr(lItem.Visible, True));
+  end;
+
   procedure RefByView(const aStage: string; const aRecord: IwbMainRecord);
   begin
     DoSetActiveRecord(IwbMainRecord(nil));
@@ -3374,6 +3393,23 @@ procedure TxeTestFormHelper.TestCheckMenusRunTimer(Sender: TObject);
     Menus('module');
     Select(lRecord);
     Menus('record');
+    if FindCmdLineSwitch('testcheckmenusedit') then begin
+      Select(lModule);
+      EditMenus('module');
+      Select(lRecord);
+      EditMenus('record');
+      var lReference: IwbMainRecord := nil;
+      for var j := 0 to Pred(lModule.RecordCount) do
+        if lModule.Records[j].Signature = 'REFR' then begin
+          lReference := lModule.Records[j];
+          Break;
+        end;
+      if not Assigned(lReference) then
+        raise Exception.Create('no REFR in ' + lModule.FileName);
+      Select(lReference);
+      EditMenus('reference');
+      Select(lRecord);
+    end;
     if FindCmdLineSwitch('testcheckmenusrefby') then begin
       RefByView('unbuilt', lRecord);
       var lOffered := 0;
@@ -3389,6 +3425,8 @@ procedure TxeTestFormHelper.TestCheckMenusRunTimer(Sender: TObject);
           Inc(lOffered);
       TestHost.TestCheckMenusLines.Add('refby-offered' + #9 + 'built' + #9 + IntToStr(lOffered));
       RefByView('built', lRecord);
+      if FindCmdLineSwitch('testcheckmenusedit') then
+        RefByMenus('built');
       pgMain.ActivePage := tbsMessages;
     end;
     var lAllow := wbManualCleaningAllow;

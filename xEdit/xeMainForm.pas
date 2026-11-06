@@ -13381,7 +13381,7 @@ begin
   mniNavCopyAsSpawnRateOverride.Visible :=
     mniNavCopyAsWrapper.Visible;
 
-  mniNavCopyIdle.Visible := (lGameDef.GameMode <= gmFNV) and lEditCommands and not mniNavAddMasters.Visible;
+  mniNavCopyIdle.Visible := (lGameDef.GameMode in [gmTES4..gmFNV]) and lEditCommands and not mniNavAddMasters.Visible;
 
   mniNavCleanupInjected.Visible :=
     mniNavCopyAsOverride.Visible and
@@ -13435,7 +13435,7 @@ begin
 
   mniNavCellChildPers.Visible := False;
   mniNavCellChildTemp.Visible := False;
-  mniNavCellChildNotVWD.Visible := lEditCommands and SelectionIncludesOnlyREFR(NoNodes);
+  mniNavCellChildNotVWD.Visible := lEditCommands and not lGameDef.IsMorrowind and SelectionIncludesOnlyREFR(NoNodes);
   mniNavCellChildVWD.Visible := mniNavCellChildNotVWD.Visible;
   if mniNavCellChildNotVWD.Visible then begin
     mniNavCellChildNotVWD.Checked := SelectionIncludesAnyNotVWD(NoNodes);
@@ -13475,7 +13475,8 @@ begin
     mniNavLogAnalyzer.Add(MenuItem);
   end;
 
-  mniNavCreateMergedPatch.Visible := not xeContext.Settings.TranslationMode and xeContext.Settings.EditAllowed;
+  mniNavCreateMergedPatch.Visible := not xeContext.Settings.TranslationMode and xeContext.Settings.EditAllowed and
+    not lGameDef.IsMorrowind;
 end;
 
 procedure TfrmMain.pmuRefByPopup(Sender: TObject);
@@ -13498,7 +13499,7 @@ begin
   mniRefByDeepCopyOverrideIntoWithOverwriting.Visible := mniRefByDeepCopyOverrideInto.Visible;
 
   mniRefByCopyAsNewInto.Visible := mniRefByCopyOverrideInto.Visible and not ByRefSelectionIncludesNonCopyNewRecords(Selected);
-  mniRefByCopyDisabledOverrideInto.Visible := mniRefByCopyOverrideInto.Visible;
+  mniRefByCopyDisabledOverrideInto.Visible := mniRefByCopyOverrideInto.Visible and not xeContext.GameDefObj.IsMorrowind;
   mniRefByRemove.Visible := mniRefByCopyOverrideInto.Visible;
   mniRefByMarkModified.Visible := mniRefByCopyOverrideInto.Visible;
 
@@ -13533,6 +13534,9 @@ begin
   end;
 
   mniRefByApplyScript.Visible := Length(Selected) > 0;
+
+  if xeContext.GameDefObj.IsMorrowind then
+    Exit;
 
   AnyVWD    := False;
   AnyNotVWD := False;
