@@ -21692,6 +21692,8 @@ end;
 
 procedure TwbMainRecord.SetIsInitiallyDisabled(aValue: Boolean);
 begin
+  if IsEmbeddedReference then
+    raise Exception.Create(GetName + ': a Morrowind reference has no initially disabled state');
   if aValue <> GetIsInitiallyDisabled then begin
     MakeHeaderWriteable;
     GetFlagsPtr.SetInitiallyDisabled(aValue);
@@ -21799,6 +21801,8 @@ procedure TwbMainRecord.SetIsVisibleWhenDistant(aValue: Boolean);
 var
   NeedUpdate: Boolean;
 begin
+  if IsEmbeddedReference then
+    raise Exception.Create(GetName + ': a Morrowind reference has no visible when distant state');
   if aValue <> GetIsVisibleWhenDistant then begin
     NeedUpdate := CheckChildOfCell;
     MakeHeaderWriteable;
