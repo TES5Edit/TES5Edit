@@ -32124,7 +32124,10 @@ begin
       if wbIsModule(lTo, GameDefObj.GameExeName) then try
         wbSetLastWriteTimeUtc(lTo, lOldTime);
       except
-        SaveFailed('Could not set last modified time of "' + lTo + '".', aAlert);
+        try
+          SaveFailed('Could not set last modified time of "' + lTo + '".', aAlert);
+        except
+        end;
       end;
 
   Result := True;
