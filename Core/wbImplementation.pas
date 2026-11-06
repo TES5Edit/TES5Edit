@@ -12365,6 +12365,7 @@ var
   lMovedRef  : TDictionary<Pointer, TBytes>;
   lWritten   : TList<TwbRecordStreamEntry>;
   lCount     : Cardinal;
+  lPlaced    : Cardinal;
 
   procedure Add(const aRecord: IwbMainRecord; var aList: TArray<TwbStreamOrder>);
   var
@@ -12433,6 +12434,7 @@ var
       if lMovedRef.TryGetValue(Pointer(lOrder.soRecord), lMarker) then
         WriteMarker(lMarker);
       WriteRecord(lOrder.soRecord);
+      Inc(lPlaced);
     end;
   end;
 
@@ -12472,6 +12474,20 @@ var
     aStream.Position := lStart + SizeOf(TwbSignature);
     aStream.WriteBuffer(lDataSize, SizeOf(lDataSize));
     aStream.Position := lEnd;
+  end;
+
+  function ReferencesIn(const aContainer: IwbContainer): Cardinal;
+  var
+    lRecord : IwbMainRecord;
+    lGroup  : IwbGroupRecord;
+  begin
+    Result := 0;
+    for var i := 0 to Pred(aContainer.ElementCount) do
+      if Supports(aContainer.Elements[i], IwbMainRecord, lRecord) then begin
+        if lRecord.Signature = 'REFR' then
+          Inc(Result);
+      end else if Supports(aContainer.Elements[i], IwbGroupRecord, lGroup) then
+        Inc(Result, ReferencesIn(lGroup));
   end;
 
 var
@@ -12516,6 +12532,7 @@ begin
       Exit;
     cntElements[0].WriteToStream(aStream, aResetModified);
     lCount := 0;
+    lPlaced := 0;
 
     for var i := 1 to High(cntElements) do
       if Supports(cntElements[i], IwbGroupRecord, lGroup) then begin
@@ -12541,6 +12558,10 @@ begin
 
     if Succ(lCount) <> GetCountedRecordCount then
       raise Exception.CreateFmt('File %s: %d records were written, the file holds %d', [GetFileName, lCount, Pred(GetCountedRecordCount)]);
+
+    var lHeld := ReferencesIn(Self);
+    if lPlaced <> lHeld then
+      raise Exception.CreateFmt('File %s: %d references were written in their cells, the file holds %d', [GetFileName, lPlaced, lHeld]);
 
     flRecordStream := lWritten.ToArray;
   finally
