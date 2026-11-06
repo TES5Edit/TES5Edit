@@ -24,8 +24,11 @@ uses
   System.SysUtils,
   System.TypInfo,
 
-  wbImplementation,
-  wbInterface;
+  wbInterface,
+  wbConflict,
+  xeMainForm,
+  xejviScriptArguments,
+  xejviScriptAdapterContainer;
 
 const
   cUnit = 'Dummy';
@@ -52,6 +55,25 @@ begin
   end;
 end;
 
+function TryHiddenState(const aElement: IwbElement; aState: TwbElementState; out aValue: Boolean): Boolean;
+var
+  lContainer : IwbContainer;
+begin
+  aValue := False;
+  Result := aState in [esHidden, esParentHidden, esParentHiddenChecked];
+  if Result then
+    case aState of
+      esHidden:
+        aValue := frmMain.ConflictView.Hidden.Contains(aElement);
+      esParentHidden: begin
+        lContainer := aElement.Container;
+        aValue := Assigned(lContainer) and frmMain.ConflictView.Hidden.IsHidden(lContainer);
+      end;
+    else
+      aValue := True;
+    end;
+end;
+
 
 { IwbElement }
 
@@ -61,8 +83,10 @@ var
 begin
   Element2 := nil;
   if Supports(IInterface(Args.Values[0]), IwbElement, Element) then
-    if (V2O(Args.Values[2]) = nil) or Supports(IInterface(Args.Values[2]), IwbElement, Element2) then
+    if (V2O(Args.Values[2]) = nil) or Supports(IInterface(Args.Values[2]), IwbElement, Element2) then begin
+      RequireEditable(Element);
       Value := Element.Assign(Args.Values[1], Element2, Args.Values[3]);
+    end;
 end;
 
 procedure IwbElement_AssignTemplateByIndex(var Value: Variant; Args: TJvInterpreterArgs);
@@ -179,13 +203,20 @@ procedure IwbElement_ClearElementState(var Value: Variant; Args: TJvInterpreterA
 var
   Element : IwbElement;
   eState  : TwbElementState;
+  Was     : Boolean;
 begin
   Value := '';
   if Supports(IInterface(Args.Values[0]), IwbElement, Element) then begin
     try
       eState := IntToEsState(Args.Values[1]);
-      Value := eState in Element.ElementStates;
-      Element.SetElementState(eState, True);
+      if TryHiddenState(Element, eState, Was) then begin
+        Value := Was;
+        if eState = esHidden then
+          frmMain.ConflictView.Hidden.Show(Element);
+      end else begin
+        Value := eState in Element.ElementStates;
+        Element.SetElementState(eState, True);
+      end;
     except
 
     end;
@@ -367,12 +398,15 @@ procedure IwbElement_GetElementState(var Value: Variant; Args: TJvInterpreterArg
 var
   Element : IwbElement;
   eState  : TwbElementState;
+  Current : Boolean;
 begin
   Value := '';
   if Supports(IInterface(Args.Values[0]), IwbElement, Element) then begin
     try
       eState := IntToEsState(Args.Values[1]);
-      Value := eState in Element.ElementStates;
+      if not TryHiddenState(Element, eState, Current) then
+        Current := eState in Element.ElementStates;
+      Value := Current;
     except
 
     end;
@@ -503,8 +537,10 @@ procedure IwbElement_Remove(var Value: Variant; Args: TJvInterpreterArgs);
 var
   Element: IwbElement;
 begin
-  if Supports(IInterface(Args.Values[0]), IwbElement, Element) then
+  if Supports(IInterface(Args.Values[0]), IwbElement, Element) then begin
+    RequireEditable(Element);
     Element.Remove;
+  end;
 end;
 
 procedure IwbElement_ReportRequiredMasters(var Value: Variant; Args: TJvInterpreterArgs);
@@ -512,7 +548,7 @@ var
   Element: IwbElement;
 begin
   if Supports(IInterface(Args.Values[0]), IwbElement, Element) then begin
-    var lStrings := TStrings(V2O(Args.Values[1]));
+    var lStrings := TStrings(ObjectArgument(Args.Values[1], TStrings, 1));
     var lMasters := TwbFilesSet.Create;
     try
       Element.ReportRequiredMasters(lMasters, Args.Values[2], Args.Values[3]);
@@ -545,13 +581,20 @@ procedure IwbElement_SetElementState(var Value: Variant; Args: TJvInterpreterArg
 var
   Element : IwbElement;
   eState  : TwbElementState;
+  Was     : Boolean;
 begin
   Value := '';
   if Supports(IInterface(Args.Values[0]), IwbElement, Element) then begin
     try
       eState := IntToEsState(Args.Values[1]);
-      Value := eState in Element.ElementStates;
-      Element.SetElementState(eState);
+      if TryHiddenState(Element, eState, Was) then begin
+        Value := Was;
+        if eState = esHidden then
+          frmMain.ConflictView.Hidden.Hide(Element);
+      end else begin
+        Value := eState in Element.ElementStates;
+        Element.SetElementState(eState);
+      end;
     except
 
     end;
@@ -579,8 +622,10 @@ procedure IwbElement_SetToDefault(var Value: Variant; Args: TJvInterpreterArgs);
 var
   Element: IwbElement;
 begin
-  if Supports(IInterface(Args.Values[0]), IwbElement, Element) then
+  if Supports(IInterface(Args.Values[0]), IwbElement, Element) then begin
+    RequireEditable(Element);
     Element.SetToDefault;
+  end;
 end;
 
 procedure IwbElement_ShortName(var Value: Variant; Args: TJvInterpreterArgs);
@@ -629,6 +674,15 @@ begin
   end;
 end;
 
+function CopyFlags(aAsNew, aDeepCopy: Boolean): TwbCopyFlags;
+begin
+  Result := [];
+  if aAsNew then
+    Include(Result, cfAsNew);
+  if aDeepCopy then
+    Include(Result, cfDeepCopy);
+end;
+
 procedure _wbCopyElementToFile(var Value: Variant; Args: TJvInterpreterArgs);
 var
   Element: IwbElement;
@@ -636,27 +690,38 @@ var
 begin
   if Supports(IInterface(Args.Values[0]), IwbElement, Element) then
     if Supports(IInterface(Args.Values[1]), IwbFile, _File) then
-      Value := wbCopyElementToFile(Element, _File, Args.Values[2], Args.Values[3], '', '', '', '', False);
+      Value := _File.AddCopy(Element, CopyFlags(Args.Values[2], Args.Values[3]), wbNoCopyRules);
 end;
 
 procedure _wbCopyElementToFileWithPrefix(var Value: Variant; Args: TJvInterpreterArgs);
 var
   Element: IwbElement;
   _File: IwbFile;
+  Rules: TwbCopyRules;
 begin
   if Supports(IInterface(Args.Values[0]), IwbElement, Element) then
-    if Supports(IInterface(Args.Values[1]), IwbFile, _File) then
-      Value := wbCopyElementToFile(Element, _File, Args.Values[2], Args.Values[3], Args.Values[4], '', Args.Values[5], Args.Values[6], False);
+    if Supports(IInterface(Args.Values[1]), IwbFile, _File) then begin
+      Rules.PrefixRemove := Args.Values[4];
+      Rules.Prefix := Args.Values[5];
+      Rules.Suffix := Args.Values[6];
+      Value := _File.AddCopy(Element, CopyFlags(Args.Values[2], Args.Values[3]), Rules);
+    end;
 end;
 
 procedure _wbCopyElementToFileWithPrefixAndSuffix(var Value: Variant; Args: TJvInterpreterArgs);
 var
   Element: IwbElement;
   _File: IwbFile;
+  Rules: TwbCopyRules;
 begin
   if Supports(IInterface(Args.Values[0]), IwbElement, Element) then
-    if Supports(IInterface(Args.Values[1]), IwbFile, _File) then
-      Value := wbCopyElementToFile(Element, _File, Args.Values[2], Args.Values[3], Args.Values[4], Args.Values[5], Args.Values[6], Args.Values[7], False);
+    if Supports(IInterface(Args.Values[1]), IwbFile, _File) then begin
+      Rules.PrefixRemove := Args.Values[4];
+      Rules.SuffixRemove := Args.Values[5];
+      Rules.Prefix := Args.Values[6];
+      Rules.Suffix := Args.Values[7];
+      Value := _File.AddCopy(Element, CopyFlags(Args.Values[2], Args.Values[3]), Rules);
+    end;
 end;
 
 procedure _wbCopyElementToRecord(var Value: Variant; Args: TJvInterpreterArgs);
@@ -666,7 +731,7 @@ var
 begin
   if Supports(IInterface(Args.Values[0]), IwbElement, Element) then
     if Supports(IInterface(Args.Values[1]), IwbMainRecord, MainRecord) then
-      Value := wbCopyElementToRecord(Element, MainRecord, Args.Values[2], Args.Values[3]);
+      Value := MainRecord.AddCopy(Element, CopyFlags(Args.Values[2], Args.Values[3]));
 end;
 
 

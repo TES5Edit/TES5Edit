@@ -13,6 +13,8 @@ unit xeModGroupEditForm;
 interface
 
 uses
+  VirtualTrees.BaseTree,
+  VirtualTrees.Types,
   System.Classes,
 
   Vcl.Controls,
@@ -55,7 +57,7 @@ type
     ModGroup : PwbModGroup;
 
     procedure AllowCancel;
-    function ShowModal: Integer; override;
+    function ShowModal: Integer; override; final;
   end;
 
   PModGroupItemNodeData = ^TModGroupNodeData;
@@ -84,6 +86,7 @@ uses
   wbInterface,
   wbLoadOrder,
 
+  xeInit,
   xeMainForm,
   xeModuleSelectForm;
 
@@ -247,7 +250,7 @@ begin
   while Assigned(Node) do begin
     NodeData := vstModGroupItems.GetNodeData(Node);
     with NodeData.mgindModGroupItem do
-      if Assigned(mgiModule) then
+      if Assigned(mgiModule) and mgiModule.IsValid then
         if aExclude then
           Exclude(mgiModule.miFlags, mfEphemeralModGroupTagged)
         else
@@ -476,7 +479,7 @@ begin
         vstModGroupItems.Selected[vstModGroupItems.FocusedNode] := True;
       end else begin
         with TfrmModuleSelect.Create(Self) do try
-          AllModules := wbModulesByLoadOrder.FilteredByFlag(mfValid);
+          AllModules := xeContext.ModuleList.ModulesByLoadOrder(False).FilteredByFlag(mfValid);
           SelectFlag := mfTagged;
           FilterFlag := mfEphemeralModGroupTagged;
           AllModules.IncludeAll(mfEphemeralModGroupTagged);

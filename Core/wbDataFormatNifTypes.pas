@@ -89,6 +89,7 @@ function wbBSShaderType(const aName, aDefaultValue: string; const aEvents: array
 function wbBSShaderFlags(const aName, aDefaultValue: string; const aEvents: array of const): TdfDef;
 function wbBSShaderFlags2(const aName, aDefaultValue: string; const aEvents: array of const): TdfDef;
 function wbBSLightingShaderPropertyShaderType(const aName, aDefaultValue: string; const aEvents: array of const): TdfDef;
+function wbBSLightingShaderPropertyPBRFeatures(const aName, aDefaultValue: string; const aEvents: array of const): TdfDef;
 function wbEffectShaderControlledVariable(const aName, aDefaultValue: string; const aEvents: array of const): TdfDef;
 function wbEffectShaderControlledColor(const aName, aDefaultValue: string; const aEvents: array of const): TdfDef;
 function wbLightingShaderControlledVariable(const aName, aDefaultValue: string; const aEvents: array of const): TdfDef;
@@ -1073,16 +1074,16 @@ end;
 function wbBSLightingShaderPropertyShaderType(const aName, aDefaultValue: string; const aEvents: array of const): TdfDef;
 begin
   Result := dfEnum(aName, dtU32, [
-    0, 'Default',
-    1, 'Environment Map',
-    2, 'Glow Shader',
-    3, 'Parallax',
-    4, 'Facegen',
-    5, 'Skin Tint',
-    6, 'Hair Tint',
-    7, 'Parallax Occ',
-    8, 'Multitexture Landscape',
-    9, 'LOD Landscape',
+    0,  'Default',
+    1,  'Environment Map',
+    2,  'Glow Shader',
+    3,  'Parallax',
+    4,  'Facegen',
+    5,  'Skin Tint',
+    6,  'Hair Tint',
+    7,  'Parallax Occ',
+    8,  'Multitexture Landscape',
+    9,  'LOD Landscape',
     10, 'Snow',
     11, 'MultiLayer Parallax',
     12, 'Tree Anim',
@@ -1093,7 +1094,23 @@ begin
     17, 'Cloud',
     18, 'LOD Landscape Noise',
     19, 'Multitexture Landscape LOD Blend',
-    20, 'FO4 Dismemberment'
+    20, 'FO4 Dismemberment',
+    21, 'PBR',
+    22, 'PBR Landscape'
+  ], aDefaultValue, aEvents);
+end;
+
+function wbBSLightingShaderPropertyPBRFeatures(const aName, aDefaultValue: string; const aEvents: array of const): TdfDef;
+begin
+  Result := dfFlags(aName, dtU32, [
+    0, 'Subsurface',
+    1, 'Two Layer',
+    2, 'Colored Coat',
+    3, 'Interlayer Parallax',
+    4, 'Coat Normal',
+    5, 'Fuzz',
+    6, 'Hair Marschner',
+    7, 'Glint'
   ], aDefaultValue, aEvents);
 end;
 

@@ -13,6 +13,7 @@ unit xeRichEditForm;
 interface
 
 uses
+  VirtualTrees.Types,
   System.Classes,
 
   Vcl.ComCtrls,
@@ -61,7 +62,7 @@ type
       var Allowed: Boolean);
     procedure splTOCMoved(Sender: TObject);
   protected
-    procedure UpdateActions; override;
+    procedure UpdateActions; override; final;
   private
     NeedRebuildTOC : Boolean;
     NeedToggleTOC : Boolean;

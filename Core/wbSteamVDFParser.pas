@@ -23,7 +23,7 @@ type
     ParentNode: TSteamVDFNode;
   public
     constructor Create;
-    destructor Destroy; override;
+    destructor Destroy; override; final;
     property Name: string read FName write FName;
     property Value: string read FValue write FValue;
     property Children: TObjectList<TSteamVDFNode> read FChildren;
@@ -39,7 +39,7 @@ type
     procedure ParseNode(const Lines: TStringList; var Index: Integer; ParentNode: TSteamVDFNode);
   public
     constructor Create;
-    destructor Destroy; override;
+    destructor Destroy; override; final;
     procedure LoadFromFile(const FileName: string);
     function FindNodeByPath(const KeyPath: string): TSteamVDFNode;
     function GetValueByPath(const KeyPath: string): string;

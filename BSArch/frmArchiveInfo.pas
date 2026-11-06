@@ -17,13 +17,10 @@ uses
   Vcl.Forms,
   Vcl.Menus,
 
-  VirtualTrees;
-  {
+  VirtualTrees,
   VirtualTrees.AncestorVCL,
   VirtualTrees.BaseAncestorVCL,
-  VirtualTrees.BaseTree,
-  VirtualTrees.Types,
-  }
+  VirtualTrees.BaseTree;
 
 type
   TFormArchiveInfo = class(TForm)
@@ -64,7 +61,9 @@ uses
   Vcl.ClipBrd,
   Vcl.Dialogs,
 
-  Winapi.Windows;
+  Winapi.Windows,
+
+  VirtualTrees.Types;
 
 //============================================================================
 procedure TFormArchiveInfo.mniSaveAsClick(Sender: TObject);

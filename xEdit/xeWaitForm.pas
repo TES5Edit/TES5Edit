@@ -69,7 +69,7 @@ type
                              aCanCancel   : Boolean;
                              aShowDelay   : Integer;
                              aUpdateDelay : Integer); reintroduce;
-    destructor Destroy; override;
+    destructor Destroy; override; final;
   end;
 
   TwbProgress = class(TInterfacedObject, IwbProgress)
@@ -90,7 +90,7 @@ type
     procedure UpdateStatus(aPosition: Integer; const aStatus: string);
   public
     constructor Create(aWait: TfrmWait; const aCaption, aStatus: string; aMax: Integer);
-    destructor Destroy; override;
+    destructor Destroy; override; final;
   end;
 
 implementation

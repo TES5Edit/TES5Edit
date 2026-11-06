@@ -28,7 +28,7 @@ type
   TCheckListBox = class(Vcl.CheckLst.TCheckListbox)
   protected
     procedure DrawItem(Index: Integer; Rect: TRect; State: TOwnerDrawState);
-      override;
+      override; final;
   end;
 
   TfrmFileSelect = class(TForm)

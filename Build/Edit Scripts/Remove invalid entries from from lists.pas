@@ -64,8 +64,8 @@ begin
     SanitizeList(ElementByName(e, 'Head Parts'), '');
   end;
   
-  if ElementExists(e, 'KWDA') then
-    SanitizeList(ElementBySignature(e, 'KWDA'), '');
+  if ElementExists(e, 'Keywords\KWDA') then
+    SanitizeList(ElementByPath(e, 'Keywords\KWDA'), '');
   
   if ElementExists(e, 'VMAD') then begin
     entries := ElementByPath(e, 'VMAD\Scripts');

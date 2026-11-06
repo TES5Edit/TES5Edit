@@ -8,7 +8,7 @@
         <Platform Condition="'$(Platform)'==''">Win64</Platform>
         <ProjectGuid>{B6CEA87D-C0BE-41A6-AA6E-05E30F0DA602}</ProjectGuid>
         <ProjectName Condition="'$(ProjectName)'==''">Sniff</ProjectName>
-        <ProjectVersion>20.3</ProjectVersion>
+        <ProjectVersion>20.5</ProjectVersion>
         <TargetedPlatforms>3</TargetedPlatforms>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Config)'=='Base' or '$(Base)'!=''">

@@ -7,33 +7,7 @@ uses
 
   wbInterface;
 
-type
-  IwbSoundBankArray = interface(IInterface)
-  ['{5FEF18BF-C357-4B8A-9DBB-6F6D58923F89}']
-    function TryLookupGUID(const aNodeType : TwbWwiseNodeType;
-                           const aGUID     : TGUID;
-                             var aName     : string;
-                             var aFilename : string)
-                                           : Boolean;
-
-    function TryLookupDisplay(const aNodeType   : TwbWwiseNodeType;
-                              const aDisplayStr : string;
-                                var aGUID       : TGUID)
-                                                : Boolean;
-
-    procedure GetChildStrings(const aParentGUID: TGUID;
-                              const aChildType: TwbWwiseNodeType;
-                                var aList: TStringList);
-
-    procedure GetStrings(const aNodeType : TwbWwiseNodeType;
-                         const aMasters  : TStringList;
-                           var aList     : TStringList);
-  end;
-
-var
-  wbSoundBankCache: IwbSoundBankArray;
-
-procedure wbBuildSoundBankCache(const aLoadOrder: TStringList);
+procedure wbBuildSoundBankCache(const aContext: TwbGameContext; const aLoadOrder: TStringList);
 
 implementation
 
@@ -48,14 +22,14 @@ uses
   wbHash;
 
 type
-  TwbSoundBankArray = class;
+  TwbWwiseSoundBankCache = class;
 
   TwbWwiseObject = class
   public
     FGUID: TGUID;
     FName: string;
     FParent: TwbWwiseObject;
-    FRoot: TwbSoundBankArray;
+    FRoot: TwbWwiseSoundBankCache;
 
     function DisplayName: string; virtual;
   end;
@@ -68,7 +42,7 @@ type
   TwbIncludedAuxBuss = class(TwbWwiseObject) end;
 
   TwbGroupMember = class(TwbWwiseObject)
-    function DisplayName: string; override;
+    function DisplayName: string; override; final;
   end;
 
   TwbSwitch = class(TwbGroupMember) end;
@@ -116,36 +90,16 @@ type
     BankFilename: string;
   end;
 
-  TwbSoundBankArray = class(TInterfacedObject, IwbSoundBankArray)
+  TwbWwiseSoundBankCache = class(TwbSoundBankCache)
   strict private
-    {---IwbSoundBankArray---}
-    function TryLookupDisplay(const aNodeType   : TwbWwiseNodeType;
-                              const aDisplayStr : string;
-                                var aGUID       : TGUID)
-                                                : Boolean;
-
-    function TryLookupGUID(const aNodeType : TwbWwiseNodeType;
-                           const aGUID     : TGUID;
-                             var aName     : string;
-                             var aFilename : string)
-                                           : Boolean;
-
-    procedure GetChildStrings(const aParentGUID: TGUID;
-                              const aChildType: TwbWwiseNodeType;
-                                var aList: TStringList);
-
-    procedure GetStrings(const aNodeType : TwbWwiseNodeType;
-                         const aMasters  : TStringList;
-                           var aList     : TStringList);
-
-
-    {---TwbSoundBankArray---}
+    {---TwbWwiseSoundBankCache---}
     var FComboBoxMap: TDictionary<string, TDictionary<TwbWwiseNodeType, TStringList>>;
     var FDisplayMap: TDictionary<TwbWwiseNodeType, TDictionary<string, TGUID>>;
     var FGuidMap: TDictionary<TwbWwiseNodeType, TDictionary<TGUID, TwbWwiseObject>>;
     var FSoundBanks: TArray<TwbSoundBank>;
     var FOwned: TObjectDictionary<TwbWwiseObject, Boolean>;
     var FPending: TList<TwbPendingNode>;
+    var FContainerHandler: IwbContainerHandler;
 
     procedure BuildIndexFile(const aFileName, aModuleName: string);
     procedure BuildIndexFiles(const aFileNames: TStringList; const aModuleName: string = '');
@@ -153,20 +107,40 @@ type
     procedure IndexNode(const aNodeType: TwbWwiseNodeType; const aObject: TwbWwiseObject; const aBankFileName: string);
 
   public
-    {---TwbSoundBankArray---}
-    constructor Create; overload;
-    constructor Create(const aLoadOrder: TStringList); overload;
+    {---TwbSoundBankCache---}
+    function TryLookupDisplay(const aNodeType   : TwbWwiseNodeType;
+                              const aDisplayStr : string;
+                                var aGUID       : TGUID)
+                                                : Boolean; override; final;
 
-    destructor Destroy; override;
+    function TryLookupGUID(const aNodeType : TwbWwiseNodeType;
+                           const aGUID     : TGUID;
+                             var aName     : string;
+                             var aFilename : string)
+                                           : Boolean; override; final;
+
+    procedure GetChildStrings(const aParentGUID: TGUID;
+                              const aChildType: TwbWwiseNodeType;
+                                var aList: TStringList); override; final;
+
+    procedure GetStrings(const aNodeType : TwbWwiseNodeType;
+                         const aMasters  : TStringList;
+                           var aList     : TStringList); override; final;
+
+    {---TwbWwiseSoundBankCache---}
+    constructor Create; overload;
+    constructor Create(const aContainerHandler: IwbContainerHandler; const aLoadOrder: TStringList); overload;
+
+    destructor Destroy; override; final;
 
     procedure BuildIndex(const aLoadOrder: TStringList);
 
     procedure RegisterNode(const aNodeType: TwbWwiseNodeType; const aObject: TwbWwiseObject; const aBankFileName: string);
   end;
 
-procedure wbBuildSoundBankCache(const aLoadOrder: TStringList);
+procedure wbBuildSoundBankCache(const aContext: TwbGameContext; const aLoadOrder: TStringList);
 begin
-  wbSoundBankCache := TwbSoundBankArray.Create(aLoadOrder);
+  aContext.SoundBankCache := TwbWwiseSoundBankCache.Create(aContext.ContainerHandler, aLoadOrder);
 end;
 
 { TwbSwitchGroup }
@@ -508,9 +482,9 @@ begin
 end;
 
 
-{ TwbSoundBankArray }
+{ TwbWwiseSoundBankCache }
 
-procedure TwbSoundBankArray.BuildIndex(const aLoadOrder: TStringList);
+procedure TwbWwiseSoundBankCache.BuildIndex(const aLoadOrder: TStringList);
 begin
   BuildIndexFile('sound\soundbanks\soundbanksinfo.json', 'Starfield.esm');
 
@@ -581,9 +555,9 @@ begin
   Result := lMaxDepth <= cMaxDepth;
 end;
 
-procedure TwbSoundBankArray.BuildIndexFile(const aFileName, aModuleName: string);
+procedure TwbWwiseSoundBankCache.BuildIndexFile(const aFileName, aModuleName: string);
 begin
-  var lFile := wbContainerHandler.OpenResourceData('', aFileName);
+  var lFile := FContainerHandler.OpenResourceData('', aFileName);
 
   if Length(lFile) > 0 then
   begin
@@ -624,7 +598,7 @@ begin
   end;
 end;
 
-procedure TwbSoundBankArray.BuildIndexFiles(const aFileNames: TStringList; const aModuleName: string = '');
+procedure TwbWwiseSoundBankCache.BuildIndexFiles(const aFileNames: TStringList; const aModuleName: string = '');
 begin
   var lByHash := TDictionary<UInt32, string>.Create;
   try
@@ -654,7 +628,7 @@ begin
   end;
 end;
 
-procedure TwbSoundBankArray.BuildSoundBanks(const aJSON: TJSONObject; const aModuleName: string; var aCount: Integer);
+procedure TwbWwiseSoundBankCache.BuildSoundBanks(const aJSON: TJSONObject; const aModuleName: string; var aCount: Integer);
 begin
   var lSoundBanksInfo:= aJSON.O['SoundBanksInfo'];
   var lSoundBanks := lSoundBanksInfo.A['SoundBanks'];
@@ -689,7 +663,7 @@ begin
   end;
 end;
 
-constructor TwbSoundBankArray.Create;
+constructor TwbWwiseSoundBankCache.Create;
 begin
   inherited Create;
 
@@ -705,14 +679,15 @@ begin
   end;
 end;
 
-constructor TwbSoundBankArray.Create(const aLoadOrder: TStringList);
+constructor TwbWwiseSoundBankCache.Create(const aContainerHandler: IwbContainerHandler; const aLoadOrder: TStringList);
 begin
   Create;
 
+  FContainerHandler := aContainerHandler;
   BuildIndex(aLoadOrder);
 end;
 
-destructor TwbSoundBankArray.Destroy;
+destructor TwbWwiseSoundBankCache.Destroy;
 begin
   for var lNodeType := Low(TwbWwiseNodeType) to High(TwbWwiseNodeType) do
   begin
@@ -735,9 +710,9 @@ begin
   inherited;
 end;
 
-procedure TwbSoundBankArray.GetChildStrings(const aParentGUID: TGUID;
-                                            const aChildType: TwbWwiseNodeType;
-                                              var aList: TStringList);
+procedure TwbWwiseSoundBankCache.GetChildStrings(const aParentGUID: TGUID;
+                                                 const aChildType: TwbWwiseNodeType;
+                                                   var aList: TStringList);
 begin
   if not Assigned(aList) then
     Exit;
@@ -775,9 +750,9 @@ begin
   end;
 end;
 
-procedure TwbSoundBankArray.GetStrings(const aNodeType : TwbWwiseNodeType;
-                                       const aMasters  : TStringList;
-                                         var aList     : TStringList);
+procedure TwbWwiseSoundBankCache.GetStrings(const aNodeType : TwbWwiseNodeType;
+                                            const aMasters  : TStringList;
+                                              var aList     : TStringList);
 begin
   if not Assigned(aList) then
     Exit;
@@ -802,9 +777,9 @@ begin
   end;
 end;
 
-procedure TwbSoundBankArray.IndexNode(const aNodeType     : TwbWwiseNodeType;
-                                      const aObject       : TwbWwiseObject;
-                                      const aBankFilename : string);
+procedure TwbWwiseSoundBankCache.IndexNode(const aNodeType     : TwbWwiseNodeType;
+                                           const aObject       : TwbWwiseObject;
+                                           const aBankFilename : string);
 begin
   var lDisplayString := Format('%s [%s]', [aObject.DisplayName, aBankFileName]);
   FDisplayMap[aNodeType].TryAdd(lDisplayString, aObject.FGUID);
@@ -831,9 +806,9 @@ begin
   lTargetList.Add(lDisplayString);
 end;
 
-procedure TwbSoundBankArray.RegisterNode(const aNodeType     : TwbWwiseNodeType;
-                                         const aObject       : TwbWwiseObject;
-                                         const aBankFilename : string);
+procedure TwbWwiseSoundBankCache.RegisterNode(const aNodeType     : TwbWwiseNodeType;
+                                              const aObject       : TwbWwiseObject;
+                                              const aBankFilename : string);
 begin
   var lNode: TwbPendingNode;
   lNode.NodeType := aNodeType;
@@ -842,17 +817,17 @@ begin
   FPending.Add(lNode);
 end;
 
-function TwbSoundBankArray.TryLookupDisplay(const aNodeType     : TwbWwiseNodeType;
-                                            const aDisplayStr   : string;
-                                              var aGUID: TGUID) : Boolean;
+function TwbWwiseSoundBankCache.TryLookupDisplay(const aNodeType     : TwbWwiseNodeType;
+                                                 const aDisplayStr   : string;
+                                                   var aGUID: TGUID) : Boolean;
 begin
   Result := FDisplayMap[aNodeType].TryGetValue(aDisplayStr, aGUID);
 end;
 
-function TwbSoundBankArray.TryLookupGUID(const aNodeType : TwbWwiseNodeType;
-                                         const aGUID     : TGUID;
-                                           var aName     : string;
-                                           var aFilename : string): Boolean;
+function TwbWwiseSoundBankCache.TryLookupGUID(const aNodeType : TwbWwiseNodeType;
+                                              const aGUID     : TGUID;
+                                                var aName     : string;
+                                                var aFilename : string): Boolean;
 begin
   var lObj : TwbWwiseObject;
   Result := FGuidMap[aNodeType].TryGetValue(aGUID, lObj);
@@ -867,8 +842,5 @@ begin
     aFileName := TwbSoundBank(lParent).FFilename;
   end;
 end;
-
-initialization
-  wbSoundBankCache := TwbSoundBankArray.Create;
 
 end.

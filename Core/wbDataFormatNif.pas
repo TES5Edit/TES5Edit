@@ -42,9 +42,9 @@ type
     FTemplate: string;
     FPtr: Boolean;
   public
-    function CreateElement(const aParent: TdfElement): TdfElement; override;
-    function Clone: TdfDef; override;
-    procedure Assign(const aDef: TdfDef); override;
+    function CreateElement(const aParent: TdfElement): TdfElement; override; final;
+    function Clone: TdfDef; override; final;
+    procedure Assign(const aDef: TdfDef); override; final;
     property Template: string read FTemplate write FTemplate;
     // False - NiRef (points to previous blocks)
     // True - NiPtr (points to following blocks)
@@ -65,7 +65,7 @@ type
   TwbNifFile = class;
 
   TwbNifBlockDef = class(TdfStructDef)
-    function CreateElement(const aParent: TdfElement): TdfElement; override;
+    function CreateElement(const aParent: TdfElement): TdfElement; override; final;
   end;
 
   TwbNifBlock = class(TdfStruct)
@@ -75,7 +75,7 @@ type
     // indexed string elements in this block
     FStrings: TList;
   protected
-    function GetName: string; override;
+    function GetName: string; override; final;
     function GetBlockType: string;
     function GetNifFile: TwbNifFile;
     function GetRef(Index: Integer): TwbNiRef;
@@ -87,9 +87,9 @@ type
     function GetIsDynamicRigidBody: Boolean;
     function GetIsEditorMarker: Boolean;
   public
-    constructor Create(const aDef: TdfDef; const aParent: TdfElement); override;
-    destructor Destroy; override;
-    function Index: Integer; override;
+    constructor Create(const aDef: TdfDef; const aParent: TdfElement); override; final;
+    destructor Destroy; override; final;
+    function Index: Integer; override; final;
     procedure AddRef(const aElement: TdfElement);
     procedure RemoveRef(const aElement: TdfElement);
     procedure AddString(const aElement: TdfElement);
@@ -162,14 +162,14 @@ type
   public
     Version, UserVersion, UserVersion2: Cardinal;
     constructor Create; reintroduce; overload;
-    function DataSize: Integer; override;
-    function UnSerialize(const aDataStart, aDataEnd: Pointer; const aDataSize: Integer): Integer; override;
-    function Serialize(const aDataStart, aDataEnd: Pointer): Integer; override;
-    procedure SerializeToJSON(const aJSON: TJSONBaseObject); override;
-    procedure UnSerializeFromJSON(const aJSON: TJSONBaseObject); override;
-    procedure LoadFromFile(const aFileName: string); override;
-    procedure Delete(Index: Integer); override;
-    procedure Move(CurIndex, NewIndex: Integer); override;
+    function DataSize: Integer; override; final;
+    function UnSerialize(const aDataStart, aDataEnd: Pointer; const aDataSize: Integer): Integer; override; final;
+    function Serialize(const aDataStart, aDataEnd: Pointer): Integer; override; final;
+    procedure SerializeToJSON(const aJSON: TJSONBaseObject); override; final;
+    procedure UnSerializeFromJSON(const aJSON: TJSONBaseObject); override; final;
+    procedure LoadFromFile(const aFileName: string); override; final;
+    procedure Delete(Index: Integer); override; final;
+    procedure Move(CurIndex, NewIndex: Integer); override; final;
     procedure UpdateNifVersion;
     procedure UpdateHeader;
     function AddBlock(const aBlockType: string): TwbNifBlock;
@@ -513,24 +513,8 @@ begin
 end;
 }
 
-function wbNiObjectList: TArray<string>;
+procedure EnsureNifDefs;
 begin
-  if not NifDefsInitialized then begin
-    wbDefineNif;
-    NifDefsInitialized := True;
-  end;
-
-  SetLength(Result, Length(NiObjectInfos.NiObjects));
-  for var i := Low(NiObjectInfos.NiObjects) to High(NiObjectInfos.NiObjects) do
-    Result[i] := NiObjectInfos.NiObjects[i].Def.Name;
-end;
-
-
-function wbNiObjectDef(const aNiObject: string): TdfDef;
-var
-  i: integer;
-begin
-  // initialize NIF definitions if missing
   if not NifDefsInitialized then begin
     Sync.BeginWrite;
     try
@@ -542,6 +526,23 @@ begin
       Sync.EndWrite;
     end;
   end;
+end;
+
+function wbNiObjectList: TArray<string>;
+begin
+  EnsureNifDefs;
+
+  SetLength(Result, Length(NiObjectInfos.NiObjects));
+  for var i := Low(NiObjectInfos.NiObjects) to High(NiObjectInfos.NiObjects) do
+    Result[i] := NiObjectInfos.NiObjects[i].Def.Name;
+end;
+
+
+function wbNiObjectDef(const aNiObject: string): TdfDef;
+var
+  i: integer;
+begin
+  EnsureNifDefs;
 
   i := NiObjectInfos.IndexOf(aNiObject);
 
@@ -5502,7 +5503,8 @@ function BSLightingShaderProperty_DecideShaderFlags(const e: TdfElement): Intege
 function BSLightingShaderProperty_EnOldShaderFlags(const e: TdfElement): Boolean; begin Result := nif(e).UserVersion2 <= 130; end;
 function BSLightingShaderProperty_EnNewShaderFlags(const e: TdfElement): Boolean; begin Result := nif(e).UserVersion2 >= 131; end;
 function BSLightingShaderProperty_EnWet(const e: TdfElement): Boolean; begin Result := nif(e).UserVersion2 in [130, 132]; end;
-function BSLightingShaderProperty_EnLightingEffect(const e: TdfElement): Boolean; begin Result := nif(e).UserVersion2 < 130; end;
+function BSLightingShaderProperty_EnLightingEffect(const e: TdfElement): Boolean; begin Result := (nif(e).UserVersion2 < 130) and (e.NativeValues['..\Shader Type'] <> 21); end;
+function BSLightingShaderProperty_EnSpecular(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Shader Type'] <> 21; end;
 function BSLightingShaderProperty_EnBacklightPower(const e: TdfElement): Boolean; begin Result := (nif(e).UserVersion2 in [130, 132]) and (e.EditValues['..\Rimlight Power'] = 'Max'); end;
 function BSLightingShaderProperty_EnEnvMapScale(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Shader Type'] = 1; end;
 function BSLightingShaderProperty_EnUnknownEnvMapShort(const e: TdfElement): Boolean; begin Result := (nif(e).UserVersion2 in [130, 132]) and (e.NativeValues['..\Shader Type'] = 1); end;
@@ -5513,6 +5515,7 @@ function BSLightingShaderProperty_EnMaxPasses(const e: TdfElement): Boolean; beg
 function BSLightingShaderProperty_EnParallax(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Shader Type'] = 11; end;
 function BSLightingShaderProperty_EnSparkleParameters(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Shader Type'] = 14; end;
 function BSLightingShaderProperty_EnEyes(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Shader Type'] = 16; end;
+function BSLightingShaderProperty_EnPBR(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Shader Type'] = 21; end;
 
 procedure wbDefineBSLightingShaderProperty;
 begin
@@ -5542,8 +5545,8 @@ begin
     dfFloat('Refraction Strength'),
     dfFloat('Glossiness', '80.0', [DF_OnGetEnabled, @BSLightingShaderProperty_EnLightingEffect]),
     dfFloat('Smoothness', '1.0', [DF_OnGetEnabled, @BSLightingShaderProperty_EnWet]),
-    wbColor3('Specular Color'),
-    dfFloat('Specular Strength', '1.0'),
+    wbColor3('Specular Color').SetOnEnabled(BSLightingShaderProperty_EnSpecular),
+    dfFloat('Specular Strength', '1.0').SetOnEnabled(BSLightingShaderProperty_EnSpecular),
     dfFloat('Lighting Effect 1', '0.3', [DF_OnGetEnabled, @BSLightingShaderProperty_EnLightingEffect]),
     dfFloat('Lighting Effect 2', '2.0', [DF_OnGetEnabled, @BSLightingShaderProperty_EnLightingEffect]),
     dfFloat('Subsurface Rolloff', '0.3', [DF_OnGetEnabled, @BSLightingShaderProperty_EnWet]),
@@ -5577,7 +5580,30 @@ begin
       dfFloat('Cubemap Scale'),
       wbVector3('Left Eye Reflection Center', []),
       wbVector3('Right Eye Reflection Center', [])
-    ], [DF_OnGetEnabled, @BSLightingShaderProperty_EnEyes])
+    ], [DF_OnGetEnabled, @BSLightingShaderProperty_EnEyes]),
+    dfStruct('PBR Material Data', [
+      dfInteger('Version', dtU32).SetDefaultValue('1'),
+      wbBSLightingShaderPropertyPBRFeatures('Feature Flags', '', []),
+      dfFloat('Roughness Scale').SetDefaultValue('1.0'),
+      dfFloat('Specular Level').SetDefaultValue('0.04'),
+      dfFloat('Displacement Scale').SetDefaultValue('1.0'),
+      wbColor3('Subsurface Color', '#FFFFFF', []),
+      dfFloat('Subsurface Opacity'),
+      dfStruct('Coat', [
+        wbColor3('Color', '#FFFFFF', []),
+        dfFloat('Strength').SetDefaultValue('1.0'),
+        dfFloat('Roughness').SetDefaultValue('1.0'),
+        dfFloat('Specular Level').SetDefaultValue('0.04')
+      ]),
+      wbColor3('Fuzz Color', '#FFFFFF', []),
+      dfFloat('Fuzz Weight'),
+      dfStruct('Glint', [
+        dfFloat('Screen Space Scale').SetDefaultValue('1.5'),
+        dfFloat('Log Microfacet Density').SetDefaultValue('40.0'),
+        dfFloat('Microfacet Roughness').SetDefaultValue('0.015'),
+        dfFloat('Density Randomization').SetDefaultValue('2.0')
+      ])
+    ]).SetOnEnabled(BSLightingShaderProperty_EnPBR)
   ]), 'BSShaderProperty', False, 1);
 end;
 

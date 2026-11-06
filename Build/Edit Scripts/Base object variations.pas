@@ -14,6 +14,24 @@ var
   slRefs: TStringList;
   
 //============================================================================
+function RefusedForMorrowind: Boolean;
+begin
+  Result := wbGameMode = gmTES3;
+  if Result then
+    AddMessage('This script does not work for Morrowind: it would write a record''s display name into each reference''s NAME, which unlinks it');
+end;
+
+//============================================================================
+function Initialize: integer;
+begin
+  if RefusedForMorrowind then begin
+    Result := 1;
+    Exit;
+  end;
+  Result := 0;
+end;
+
+//============================================================================
 function Process(e: IInterface): integer;
 var
   s: string;
@@ -21,6 +39,10 @@ var
   r, ref: IInterface;
   varnum, i, j: integer;
 begin
+  if RefusedForMorrowind then begin
+    Result := 1;
+    Exit;
+  end;
   if not InputQuery('Enter', 'Variations number (min is 2)', s) then 
     Exit;
 

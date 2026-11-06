@@ -16,16 +16,16 @@ uses
 type
   TwbBGSMFile = class(TdfStruct)
     constructor Create; reintroduce; overload;
-    function UnSerialize(const aDataStart, aDataEnd: Pointer; const aDataSize: Integer): Integer; override;
-    procedure FromJSON(const aText: string); override;
-    function ToJSON(aCompact: Boolean): string; override;
+    function UnSerialize(const aDataStart, aDataEnd: Pointer; const aDataSize: Integer): Integer; override; final;
+    procedure FromJSON(const aText: string); override; final;
+    function ToJSON(aCompact: Boolean): string; override; final;
   end;
 
   TwbBGEMFile = class(TdfStruct)
     constructor Create; reintroduce; overload;
-    function UnSerialize(const aDataStart, aDataEnd: Pointer; const aDataSize: Integer): Integer; override;
-    procedure FromJSON(const aText: string); override;
-    function ToJSON(aCompact: Boolean): string; override;
+    function UnSerialize(const aDataStart, aDataEnd: Pointer; const aDataSize: Integer): Integer; override; final;
+    procedure FromJSON(const aText: string); override; final;
+    function ToJSON(aCompact: Boolean): string; override; final;
   end;
 
 implementation

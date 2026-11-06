@@ -42,7 +42,8 @@ uses
 
   xejviScriptAdapterMiscJson,
   xejviScriptAdapterMiscRegEx,
-  xejviScriptAdapterMiscVcl;
+  xejviScriptAdapterMiscVcl,
+  xejviScriptArguments;
 
 
 { Classes Events }
@@ -134,7 +135,7 @@ begin
   Value := -1;
   if VarIsArray(Args.Values[1]) then
     Value := IndexStr(String(Args.Values[0]), System.TArray<string>(Args.Values[1]))
-  else if V2O(Args.Values[1]) is TStringList then
+  else if ObjectArgument(Args.Values[1], TObject, 1) is TStringList then
     Value := TStringList_IndexStr(String(Args.Values[0]), TStringList(V2O(Args.Values[1])));
 end;
 
@@ -143,7 +144,7 @@ begin
   Value := -1;
   if VarIsArray(Args.Values[1]) then
     Value := IndexText(String(Args.Values[0]), System.TArray<string>(Args.Values[1]))
-  else if V2O(Args.Values[1]) is TStringList then
+  else if ObjectArgument(Args.Values[1], TObject, 1) is TStringList then
     Value := TStringList(V2O(Args.Values[1])).IndexOf(String(Args.Values[0]));
 end;
 
@@ -157,7 +158,7 @@ begin
   Value := False;
   if VarIsArray(Args.Values[1]) then
     Value := MatchStr(String(Args.Values[0]), System.TArray<string>(Args.Values[1]))
-  else if V2O(Args.Values[1]) is TStringList then
+  else if ObjectArgument(Args.Values[1], TObject, 1) is TStringList then
     Value := TStringList_IndexStr(String(Args.Values[0]), TStringList(V2O(Args.Values[1]))) <> -1;
 end;
 
@@ -166,7 +167,7 @@ begin
   Value := False;
   if VarIsArray(Args.Values[1]) then
     Value := MatchText(String(Args.Values[0]), System.TArray<string>(Args.Values[1]))
-  else if V2O(Args.Values[1]) is TStringList then
+  else if ObjectArgument(Args.Values[1], TObject, 1) is TStringList then
     Value := TStringList(V2O(Args.Values[1])).IndexOf(String(Args.Values[0])) <> -1;
 end;
 
@@ -504,22 +505,22 @@ end;
 
 procedure TStringList_Difference(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  StringSetOp(TSetOperation.D, TStringList(Args.Obj), TStringList(V2O(Args.Values[0])));
+  StringSetOp(TSetOperation.D, TStringList(Args.Obj), TStringList(ObjectArgument(Args.Values[0], TStrings, 0)));
 end;
 
 procedure TStringList_Intersection(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  StringSetOp(TSetOperation.I, TStringList(Args.Obj), TStringList(V2O(Args.Values[0])));
+  StringSetOp(TSetOperation.I, TStringList(Args.Obj), TStringList(ObjectArgument(Args.Values[0], TStrings, 0)));
 end;
 
 procedure TStringList_SymmetricDifference(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  StringSetOp(TSetOperation.S, TStringList(Args.Obj), TStringList(V2O(Args.Values[0])));
+  StringSetOp(TSetOperation.S, TStringList(Args.Obj), TStringList(ObjectArgument(Args.Values[0], TStrings, 0)));
 end;
 
 procedure TStringList_Union(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  StringSetOp(TSetOperation.U, TStringList(Args.Obj), TStringList(V2O(Args.Values[0])));
+  StringSetOp(TSetOperation.U, TStringList(Args.Obj), TStringList(ObjectArgument(Args.Values[0], TStrings, 0)));
 end;
 
 procedure TStrings_AddPair(var Value: Variant; Args: TJvInterpreterArgs);
@@ -562,7 +563,7 @@ end;
 procedure TStrings_LoadFromFile(var Value: Variant; Args: TJvInterpreterArgs);
 begin
   if Args.Count = 2 then
-    TStrings(Args.Obj).LoadFromFile(string(Args.Values[0]), TEncoding(V2O(Args.Values[1])))
+    TStrings(Args.Obj).LoadFromFile(string(Args.Values[0]), TEncoding(ObjectArgument(Args.Values[1], TEncoding, 1)))
   else
     TStrings(Args.Obj).LoadFromFile(string(Args.Values[0]));
 end;
@@ -570,14 +571,14 @@ end;
 procedure TStrings_SaveToFile(var Value: Variant; Args: TJvInterpreterArgs);
 begin
   if Args.Count = 2 then
-    TStrings(Args.Obj).SaveToFile(string(Args.Values[0]), TEncoding(V2O(Args.Values[1])))
+    TStrings(Args.Obj).SaveToFile(string(Args.Values[0]), TEncoding(ObjectArgument(Args.Values[1], TEncoding, 1)))
   else
     TStrings(Args.Obj).SaveToFile(string(Args.Values[0]));
 end;
 
 procedure TStrings_SetStrings(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  TStrings(Args.Obj).SetStrings(TStrings(V2O(Args.Values[0])));
+  TStrings(Args.Obj).SetStrings(TStrings(ObjectArgument(Args.Values[0], TStrings, 0)));
 end;
 
 procedure JvInterpreter_SameText(var Value: Variant; Args: TJvInterpreterArgs);
@@ -736,7 +737,7 @@ var
 begin
   Value := '';
   aDir := String(Args.Values[2]);
-  if SelectDirectory(String(Args.Values[0]), String(Args.Values[1]), aDir, [], TWinControl(V2O(Args.Values[3]))) then
+  if SelectDirectory(String(Args.Values[0]), String(Args.Values[1]), aDir, [], TWinControl(ObjectArgument(Args.Values[3], TWinControl, 3))) then
     Value := aDir;
 end;
 

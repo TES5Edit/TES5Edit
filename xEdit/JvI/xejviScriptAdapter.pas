@@ -38,6 +38,7 @@ uses
   wbBSArchive,
   wbHelpers,
   wbInterface,
+  xeInit,
 
   xejviScriptAdapterContainer,
   xejviScriptAdapterDF,
@@ -46,7 +47,8 @@ uses
   xejviScriptAdapterHost,
   xejviScriptAdapterMisc,
   xejviScriptAdapterRecord,
-  xejviScriptAdapterResource;
+  xejviScriptAdapterResource,
+  xejviScriptArguments;
 
 const
   cUnit = 'Dummy';
@@ -85,8 +87,8 @@ end;
 
 procedure EnableSkyrimSaveFormat(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  wbTestWrite := True;
-  wbForceNewHeader := True;
+  xeContext.Settings.TestWrite := True;
+  xeContext.Settings.ForceNewHeader := True;
 end;
 
 procedure GetRecordDefNames(var Value: Variant; Args: TJvInterpreterArgs);
@@ -94,13 +96,14 @@ var
   sl: TStrings;
   i: integer;
 begin
-  sl := TStrings(V2O(Args.Values[0]));
+  var lGameDef := xeContext.GameDefObj;
+  sl := TStrings(ObjectArgument(Args.Values[0], TStrings, 0));
 
   if not Assigned(sl) then
     Exit;
 
-  for i := Low(wbRecordDefs) to High(wbRecordDefs) do
-    with wbRecordDefs[i].rdeDef do
+  for i := Low(lGameDef.RecordDefs) to High(lGameDef.RecordDefs) do
+    with lGameDef.RecordDefs[i].rdeDef do
       sl.Add(DefaultSignature + ' - ' + GetName);
 end;
 
@@ -110,8 +113,8 @@ var
   Filter: string;
   i: integer;
 begin
-  slIn := TStrings(V2O(Args.Values[0]));
-  slOut := TStrings(V2O(Args.Values[1]));
+  slIn := TStrings(ObjectArgument(Args.Values[0], TStrings, 0));
+  slOut := TStrings(ObjectArgument(Args.Values[1], TStrings, 1));
   if not Assigned(slIn) or not Assigned(slOut) then
     Exit;
   Filter := Lowercase(string(Args.Values[2]));
@@ -125,7 +128,7 @@ var
   sl: TStringList;
   i, j: integer;
 begin
-  sl := TStringList(V2O(Args.Values[0]));
+  sl := TStringList(ObjectArgument(Args.Values[0], TStringList, 0));
   for i := Pred(sl.Count) downto 0 do begin
     sl.Find(sl[i], j);
     if (j <> -1) and (j <> i) then

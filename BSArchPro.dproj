@@ -8,7 +8,7 @@
         <Platform Condition="'$(Platform)'==''">Win64</Platform>
         <ProjectGuid>{6BB45C53-4ABF-4657-AC81-F842D25722BD}</ProjectGuid>
         <ProjectName Condition="'$(ProjectName)'==''">BSArchPro</ProjectName>
-        <ProjectVersion>20.3</ProjectVersion>
+        <ProjectVersion>20.5</ProjectVersion>
         <TargetedPlatforms>3</TargetedPlatforms>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Config)'=='Base' or '$(Base)'!=''">

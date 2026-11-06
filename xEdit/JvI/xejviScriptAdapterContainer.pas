@@ -13,20 +13,67 @@ unit xejviScriptAdapterContainer;
 interface
 
 uses
-  JvInterpreter;
+  JvInterpreter,
+  wbInterface;
 
 procedure RegisterJvInterpreterAdapter(JvInterpreterAdapter: TJvInterpreterAdapter);
+procedure RequireEditable(const aElement: IwbElement);
 
 implementation
 
 uses
   System.SysUtils,
-  System.Variants,
-
-  wbInterface;
+  System.Variants;
 
 const
   cUnit = 'Dummy';
+
+procedure RequireEditable(const aElement: IwbElement);
+begin
+  if wbAllowUnsafeScripts then
+    Exit;
+  var lMainRecord := aElement.ContainingMainRecord;
+  if Assigned(lMainRecord) then begin
+    if lMainRecord.IsEditable then
+      Exit;
+  end else if Assigned(aElement._File) and aElement._File.IsEditable then
+    Exit;
+  raise Exception.Create(aElement.Path + ': Does not support editing');
+end;
+
+function IsKeywordsMember(const aName: string): Boolean;
+begin
+  Result := (aName = 'KWDA') or (aName = 'KSIZ');
+end;
+
+function KeywordsStruct(const aContainer: IwbContainerElementRef): IwbContainerElementRef;
+begin
+  Result := nil;
+  var lElement := aContainer.ElementByName['Keywords'];
+  if Assigned(lElement) and (lElement.ElementType = etSubRecordStruct) then
+    Supports(lElement, IwbContainerElementRef, Result);
+end;
+
+function DefinesKeywordsStruct(const aMainRecord: IwbMainRecord): Boolean;
+begin
+  Result := False;
+  var lDef := aMainRecord.Def;
+  if Assigned(lDef) then
+    for var i := 0 to Pred(lDef.MemberCount) do
+      if (lDef.Members[i].DefType = dtSubRecordStruct) and (lDef.Members[i].Name = 'Keywords') then
+        Exit(True);
+end;
+
+function KeywordsPath(const aContainer: IwbContainerElementRef; const aPath: string): string;
+begin
+  Result := aPath;
+  var lFirst := aPath;
+  var i := Pos('\', aPath);
+  if i > 0 then
+    lFirst := Copy(aPath, 1, Pred(i));
+  if IsKeywordsMember(lFirst) and Assigned(KeywordsStruct(aContainer)) then
+    Result := 'Keywords\' + aPath;
+end;
 
 
 { IwbContainer }
@@ -35,8 +82,20 @@ procedure IwbContainer_Add(var Value: Variant; Args: TJvInterpreterArgs);
 var
   Container: IwbContainerElementRef;
 begin
-  if Supports(IInterface(Args.Values[0]), IwbContainerElementRef, Container) then
-    Value := Container.Add(Args.Values[1], Args.Values[2]);
+  if Supports(IInterface(Args.Values[0]), IwbContainerElementRef, Container) then begin
+    var lName: string := Args.Values[1];
+    var lMainRecord: IwbMainRecord;
+    if IsKeywordsMember(lName) and Supports(Container, IwbMainRecord, lMainRecord) then begin
+      var lKeywords := KeywordsStruct(Container);
+      if not Assigned(lKeywords) and DefinesKeywordsStruct(lMainRecord) then
+        Supports(Container.Add('Keywords', Args.Values[2]), IwbContainerElementRef, lKeywords);
+      if Assigned(lKeywords) then begin
+        Value := lKeywords.Add(lName, Args.Values[2]);
+        Exit;
+      end;
+    end;
+    Value := Container.Add(lName, Args.Values[2]);
+  end;
 end;
 
 procedure IwbContainer_AddElement(var Value: Variant; Args: TJvInterpreterArgs);
@@ -45,8 +104,10 @@ var
   Element: IwbElement;
 begin
   if Supports(IInterface(Args.Values[0]), IwbContainerElementRef, Container) then
-    if Supports(IInterface(Args.Values[1]), IwbElement, Element) then
+    if Supports(IInterface(Args.Values[1]), IwbElement, Element) then begin
+      RequireEditable(Container);
       Container.AddElement(Element);
+    end;
 end;
 
 procedure IwbContainer_AdditionalElementCount(var Value: Variant; Args: TJvInterpreterArgs);
@@ -87,7 +148,7 @@ var
   Container: IwbContainerElementRef;
 begin
   if Supports(IInterface(Args.Values[0]), IwbContainerElementRef, Container) then
-    Value := Container.ElementByPath[Args.Values[1]];
+    Value := Container.ElementByPath[KeywordsPath(Container, Args.Values[1])];
 end;
 
 procedure IwbContainer_ElementBySignature(var Value: Variant; Args: TJvInterpreterArgs);
@@ -96,8 +157,14 @@ var
   Signature: TwbSignature;
 begin
   if Supports(IInterface(Args.Values[0]), IwbContainerElementRef, Container) then begin
-    Signature := StrToSignature(Args.Values[1]);
-    Value := Container.ElementBySignature[Signature];
+    var lName: string := Args.Values[1];
+    var lPath := KeywordsPath(Container, lName);
+    if lPath <> lName then
+      Value := Container.ElementByPath[lPath]
+    else begin
+      Signature := StrToSignature(lName);
+      Value := Container.ElementBySignature[Signature];
+    end;
   end;
 end;
 
@@ -116,7 +183,7 @@ var
 begin
   Value := False;
   if Supports(IInterface(Args.Values[0]), IwbContainerElementRef, Container) then
-    Value := Container.ElementExists[string(Args.Values[1])];
+    Value := Container.ElementExists[KeywordsPath(Container, Args.Values[1])];
 end;
 
 procedure IwbContainer_GetElementEditValues(var Value: Variant; Args: TJvInterpreterArgs);
@@ -125,7 +192,7 @@ var
 begin
   Value := '';
   if Supports(IInterface(Args.Values[0]), IwbContainerElementRef, Container) then
-    Value := Container.ElementEditValues[Args.Values[1]];
+    Value := Container.ElementEditValues[KeywordsPath(Container, Args.Values[1])];
 end;
 
 procedure IwbContainer_GetElementNativeValues(var Value: Variant; Args: TJvInterpreterArgs);
@@ -133,7 +200,7 @@ var
   Container: IwbContainerElementRef;
 begin
   if Supports(IInterface(Args.Values[0]), IwbContainerElementRef, Container) then
-    Value := Container.ElementNativeValues[Args.Values[1]];
+    Value := Container.ElementNativeValues[KeywordsPath(Container, Args.Values[1])];
 end;
 
 procedure IwbContainer_GetElementValues(var Value: Variant; Args: TJvInterpreterArgs);
@@ -142,7 +209,7 @@ var
 begin
   Value := '';
   if Supports(IInterface(Args.Values[0]), IwbContainerElementRef, Container) then
-    Value := Container.ElementValues[Args.Values[1]];
+    Value := Container.ElementValues[KeywordsPath(Container, Args.Values[1])];
 end;
 
 procedure IwbContainer_IndexOf(var Value: Variant; Args: TJvInterpreterArgs);
@@ -162,8 +229,10 @@ var
   Element: IwbElement;
 begin
   if Supports(IInterface(Args.Values[0]), IwbContainerElementRef, Container) then
-    if Supports(IInterface(Args.Values[2]), IwbElement, Element) then
+    if Supports(IInterface(Args.Values[2]), IwbElement, Element) then begin
+      RequireEditable(Container);
       Container.InsertElement(integer(Args.Values[1]), Element);
+    end;
 end;
 
 procedure IwbContainer_IsSorted(var Value: Variant; Args: TJvInterpreterArgs);
@@ -187,8 +256,10 @@ procedure IwbContainer_RemoveByIndex(var Value: Variant; Args: TJvInterpreterArg
 var
   Container: IwbContainerElementRef;
 begin
-  if Supports(IInterface(Args.Values[0]), IwbContainerElementRef, Container) then
+  if Supports(IInterface(Args.Values[0]), IwbContainerElementRef, Container) then begin
+    RequireEditable(Container);
     Value := Container.RemoveElement(integer(Args.Values[1]), boolean(Args.Values[2]));
+  end;
 end;
 
 procedure IwbContainer_RemoveElement(var Value: Variant; Args: TJvInterpreterArgs);
@@ -198,6 +269,7 @@ var
   vtyp: integer;
 begin
   if Supports(IInterface(Args.Values[0]), IwbContainerElementRef, Container) then begin
+    RequireEditable(Container);
     vtyp := VarType(Args.Values[1]);
     case vtyp of
       varInteger, varInt64, varWord, varLongWord, varShortInt:
@@ -215,8 +287,25 @@ procedure IwbContainer_ReverseElements(var Value: Variant; Args: TJvInterpreterA
 var
   Container: IwbContainerElementRef;
 begin
-  if Supports(IInterface(Args.Values[0]), IwbContainerElementRef, Container) then
+  if Supports(IInterface(Args.Values[0]), IwbContainerElementRef, Container) then begin
+    RequireEditable(Container);
     Container.ReverseElements;
+  end;
+end;
+
+function MemberTarget(const aContainer: IwbContainerElementRef; const aPath: string; out aParent: IwbContainerElementRef; out aName: string): Boolean;
+begin
+  aParent := aContainer;
+  aName := aPath;
+  var i := LastDelimiter('\', aPath);
+  if i > 0 then begin
+    aName := Copy(aPath, Succ(i), High(Integer));
+    if not Supports(aContainer.ElementByPath[Copy(aPath, 1, Pred(i))], IwbContainerElementRef, aParent) then
+      Exit(False);
+  end;
+  if not (wbAllowUnsafeScripts or aParent.IsEditable) then
+    raise Exception.Create(aParent.Path + ': Does not support editing');
+  Result := True;
 end;
 
 procedure IwbContainer_SetElementEditValues(var Value: Variant; Args: TJvInterpreterArgs);
@@ -227,12 +316,19 @@ begin
       var lContainer: IwbContainerElementRef;
       if Supports(IInterface(Args.Values[0]), IwbContainerElementRef, lContainer) then
       begin
+        var lPath := KeywordsPath(lContainer, Args.Values[1]);
         var lElement: IwbElement;
-        if Supports(lContainer.ElementByPath[Args.Values[1]], IwbElement, lElement) then
+        if Supports(lContainer.ElementByPath[lPath], IwbElement, lElement) then begin
           if not (wbAllowUnsafeScripts or lElement.IsEditable) then
             raise Exception.Create(lElement.Path + ': Does not support editing')
           else
             lElement.EditValue := String(Args.Values[2]);
+        end else begin
+          var lParent: IwbContainerElementRef;
+          var lName: string;
+          if MemberTarget(lContainer, lPath, lParent, lName) then
+            lParent.ElementEditValues[lName] := String(Args.Values[2]);
+        end;
       end;
     end;
   else
@@ -248,12 +344,19 @@ begin
       var lContainer: IwbContainerElementRef;
       if Supports(IInterface(Args.Values[0]), IwbContainerElementRef, lContainer) then
       begin
+        var lPath := KeywordsPath(lContainer, Args.Values[1]);
         var lElement: IwbElement;
-        if Supports(lContainer.ElementByPath[Args.Values[1]], IwbElement, lElement) then
+        if Supports(lContainer.ElementByPath[lPath], IwbElement, lElement) then begin
           if not (wbAllowUnsafeScripts or lElement.IsEditable) then
             raise Exception.Create(lElement.Path + ': Does not support editing')
           else
             lElement.NativeValue := Args.Values[2];
+        end else begin
+          var lParent: IwbContainerElementRef;
+          var lName: string;
+          if MemberTarget(lContainer, lPath, lParent, lName) then
+            lParent.ElementNativeValues[lName] := Args.Values[2];
+        end;
       end;
     end;
   else

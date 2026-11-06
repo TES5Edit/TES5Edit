@@ -13,6 +13,7 @@ unit xeOptionsForm;
 interface
 
 uses
+  VirtualTrees.Types,
   System.Classes,
 
   Vcl.Controls,
@@ -23,6 +24,8 @@ uses
   Vcl.StdCtrls,
   Vcl.Styles.Preview,
   Vcl.Themes,
+
+  VirtualTrees,
 
   wbInterface;
 
@@ -98,52 +101,12 @@ type
     cbManualCleaningHide: TCheckBox;
     cbManualCleaningAllow: TCheckBox;
     cbShrinkButtons: TCheckBox;
-    cbCollapseRecordHeader: TCheckBox;
-    cbCollapseObjectBounds: TCheckBox;
-    cbCollapseModels: TCheckBox;
-    cbCollapseFactionRelations: TCheckBox;
-    cbCollapseItems: TCheckBox;
-    cbCollapseScriptProperties: TCheckBox;
-    cbCollapseConditions: TCheckBox;
     cbCollapseBenignArray: TCheckBox;
     tsViewSettings: TTabSheet;
     lblFieldsToCollapse: TLabel;
-    cbCollapseLeveledItems: TCheckBox;
-    cbCollapseObjectProperties: TCheckBox;
-    cbCollapseEquipSlots: TCheckBox;
-    cbCollapseFactions: TCheckBox;
-    lblTypesToCollapse: TLabel;
-    cbCollapseRGBA: TCheckBox;
-    cbCollapseVec3: TCheckBox;
     cbDecodeTexture: TCheckBox;
     cbConvertIntFormID: TCheckBox;
     cbWriteOffsetData: TCheckBox;
-    cbCollapsePosRot: TCheckBox;
-    cbCollapseNavmesh: TCheckBox;
-    cbCollapseKeywords: TCheckBox;
-    cbCollapseAliases: TCheckBox;
-    cbCollapseScriptData: TCheckBox;
-    cbCollapseFlags: TCheckBox;
-    cbCollapseSounds: TCheckBox;
-    cbCollapseFragments: TCheckBox;
-    cbCollapsePlacement: TCheckBox;
-    cbCollapseVertices: TCheckBox;
-    cbCollapsePerk: TCheckBox;
-    cbCollapseOther: TCheckBox;
-    cbCollapseRange: TCheckBox;
-    cbCollapseARMABoneData: TCheckBox;
-    cbCollapseRACEBoneData: TCheckBox;
-    cbCollapseLocations: TCheckBox;
-    cbCollapseTransforms: TCheckBox;
-    cbCollapseHeadParts: TCheckBox;
-    cbCollapseBodyParts: TCheckBox;
-    cbCollapseDestruction: TCheckBox;
-    cbCollapseOwnership: TCheckBox;
-    cbCollapseRagdoll: TCheckBox;
-    cbCollapseFactionRanks: TCheckBox;
-    cbCollapseBaseFormComponent: TCheckBox;
-    cbCollapseModelInfo: TCheckBox;
-    cbCollapseDirectionRotation: TCheckBox;
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure FormCreate(Sender: TObject);
     procedure cbConflictThisChange(Sender: TObject);
@@ -156,11 +119,19 @@ type
     procedure cbThemeSystemSelect(Sender: TObject);
   private
     vspThemePreview: TVisualStylePreview;
+    vstCollapse: TVirtualStringTree;
     procedure UpdateThemePreview;
+    procedure CreateCollapseTree;
+    procedure vstCollapseGetText(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType; var CellText: string);
+    function GetCollapseOptions: TwbCollapseOptions;
+    procedure SetCollapseOptions(const aValue: TwbCollapseOptions);
   public
     { Public declarations }
     _Files: PwbFiles ;
     function GetSelectedTheme: string;
+    property CollapseOptions: TwbCollapseOptions
+      read GetCollapseOptions
+      write SetCollapseOptions;
   end;
 
 implementation
@@ -177,6 +148,12 @@ uses
   Winapi.Windows,
 
   xeMainForm;
+
+type
+  PCollapseNodeData = ^TCollapseNodeData;
+  TCollapseNodeData = record
+    Option : TwbCollapseOption;
+  end;
 
 var
   wbColorConflictAllDefault: TConflictAllColors;
@@ -207,6 +184,45 @@ begin
   wbColorConflictThis[TConflictThis(cbConflictThis.Items.Objects[cbConflictThis.ItemIndex])] := clbConflictThis.Selected;
 end;
 
+procedure TfrmOptions.CreateCollapseTree;
+
+  procedure AddChildren(aParentNode: PVirtualNode; aParent: TwbCollapseOption);
+  begin
+    for var lOption := Low(TwbCollapseOption) to High(TwbCollapseOption) do
+      if (lOption <> clpRoot) and (wbCollapseOptionInfos[lOption].Parent = aParent) then begin
+        var lNode := vstCollapse.AddChild(aParentNode);
+        var lData: PCollapseNodeData := vstCollapse.GetNodeData(lNode);
+        lData.Option := lOption;
+        if cofHeader in wbCollapseOptionInfos[lOption].Flags then begin
+          vstCollapse.CheckType[lNode] := ctTriStateCheckBox;
+          AddChildren(lNode, lOption);
+        end else
+          vstCollapse.CheckType[lNode] := ctCheckBox;
+      end;
+  end;
+
+begin
+  vstCollapse := TVirtualStringTree.Create(Self);
+  vstCollapse.Name := 'vstCollapse';
+  vstCollapse.Parent := tsViewSettings;
+  vstCollapse.SetBounds(16, 39, 420, 296);
+  vstCollapse.TabOrder := 0;
+  vstCollapse.NodeDataSize := SizeOf(TCollapseNodeData);
+  vstCollapse.DefaultNodeHeight := 40;
+  vstCollapse.TreeOptions.MiscOptions := vstCollapse.TreeOptions.MiscOptions + [toCheckSupport, toVariableNodeHeight];
+  vstCollapse.TreeOptions.AutoOptions := vstCollapse.TreeOptions.AutoOptions + [toAutoTristateTracking];
+  vstCollapse.TreeOptions.SelectionOptions := vstCollapse.TreeOptions.SelectionOptions + [toFullRowSelect];
+  vstCollapse.OnGetText := vstCollapseGetText;
+
+  vstCollapse.BeginUpdate;
+  try
+    AddChildren(nil, clpRoot);
+    vstCollapse.FullExpand;
+  finally
+    vstCollapse.EndUpdate;
+  end;
+end;
+
 procedure TfrmOptions.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
   if ModalResult <> mrOk then begin
@@ -225,6 +241,7 @@ var
   cb: TComboBox;
   rb: TRadioButton;
 begin
+  CreateCollapseTree;
   xeApplyFontAndScale(Self);
 
   if wbThemesSupported then begin
@@ -315,6 +332,21 @@ begin
     ModalResult := mrCancel;
 end;
 
+function TfrmOptions.GetCollapseOptions: TwbCollapseOptions;
+var
+  lNode : PVirtualNode;
+  lData : PCollapseNodeData;
+begin
+  Result := [];
+  lNode := vstCollapse.GetFirst;
+  while Assigned(lNode) do begin
+    lData := vstCollapse.GetNodeData(lNode);
+    if not (cofHeader in wbCollapseOptionInfos[lData.Option].Flags) and (vstCollapse.CheckState[lNode] in [csCheckedNormal, csCheckedPressed]) then
+      Include(Result, lData.Option);
+    lNode := vstCollapse.GetNext(lNode);
+  end;
+end;
+
 function TfrmOptions.GetSelectedTheme: string;
 begin
   if rbThemeSystem.Checked then
@@ -346,6 +378,28 @@ begin
   UpdateThemePreview;
 end;
 
+procedure TfrmOptions.SetCollapseOptions(const aValue: TwbCollapseOptions);
+var
+  lNode : PVirtualNode;
+  lData : PCollapseNodeData;
+begin
+  vstCollapse.BeginUpdate;
+  try
+    lNode := vstCollapse.GetFirst;
+    while Assigned(lNode) do begin
+      lData := vstCollapse.GetNodeData(lNode);
+      if not (cofHeader in wbCollapseOptionInfos[lData.Option].Flags) then
+        if lData.Option in aValue then
+          vstCollapse.CheckState[lNode] := csCheckedNormal
+        else
+          vstCollapse.CheckState[lNode] := csUncheckedNormal;
+      lNode := vstCollapse.GetNext(lNode);
+    end;
+  finally
+    vstCollapse.EndUpdate;
+  end;
+end;
+
 procedure TfrmOptions.UpdateThemePreview;
 var
   Style : TCustomStyleServices;
@@ -362,6 +416,14 @@ begin
     vspThemePreview.Repaint;
   end else
     pnlThemePreview.Visible := False;
+end;
+
+procedure TfrmOptions.vstCollapseGetText(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType; var CellText: string);
+var
+  lData : PCollapseNodeData;
+begin
+  lData := Sender.GetNodeData(Node);
+  CellText := wbCollapseOptionInfos[lData.Option].Caption;
 end;
 
 end.

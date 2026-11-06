@@ -54,7 +54,7 @@ type
     Index: Integer;
     Name: string;
     constructor Create(aNiFile: TNiFile; aIndex: Integer); virtual;
-    destructor Destroy; override;
+    destructor Destroy; override; final;
     procedure Load(aStream: TStream); virtual;
   end;
 
@@ -70,35 +70,35 @@ type
     NodeSizes: array of Cardinal;
     NodeStrings: array of string;
     NodeOffsets: array of integer;
-    constructor Create(aNiFile: TNiFile; aIndex: Integer); override;
-    procedure Load(aStream: TStream); override;
+    constructor Create(aNiFile: TNiFile; aIndex: Integer); override; final;
+    procedure Load(aStream: TStream); override; final;
   end;
 
   TNodeNiNode = class(TBaseNiNode)
   public
-    procedure Load(aStream: TStream); override;
+    procedure Load(aStream: TStream); override; final;
   end;
 
   TNodeBSFadeNode = class(TBaseNiNode)
   public
-    procedure Load(aStream: TStream); override;
+    procedure Load(aStream: TStream); override; final;
   end;
 
   TNodeBSXFlags = class(TBaseNiNode)
   public
     Flags: Cardinal;
-    procedure Load(aStream: TStream); override;
+    procedure Load(aStream: TStream); override; final;
   end;
 
   TNodeNiAlphaProperty = class(TBaseNiNode)
   public
-    procedure Load(aStream: TStream); override;
+    procedure Load(aStream: TStream); override; final;
   end;
 
   TNodeBSShaderTextureSet = class(TBaseNiNode)
   public
     Textures: array of string;
-    procedure Load(aStream: TStream); override;
+    procedure Load(aStream: TStream); override; final;
   end;
 
   TNodeBSLightingShaderProperty = class(TBaseNiNode)
@@ -111,14 +111,14 @@ type
     UVOffset: TNiTexCoord;
     UVScale: TNiTexCoord;
     TextureSet: TNodeRef;
-    procedure Load(aStream: TStream); override;
+    procedure Load(aStream: TStream); override; final;
   end;
 
   TNodeBSEffectShaderProperty = class(TBaseNiNode)
   public
     SourceTexture: string;
     GreyScaleTexture: string;
-    procedure Load(aStream: TStream); override;
+    procedure Load(aStream: TStream); override; final;
   end;
 
   TNodeNiTriShape = class(TBaseNiNode)
@@ -160,17 +160,17 @@ type
     HasVertexColors: Boolean;
     VertexColors: array of TNiColor4;
     UVSets: array of array of TNiTexCoord;
-    procedure Load(aStream: TStream); override;
+    procedure Load(aStream: TStream); override; final;
   end;
 
   TNodeNiTriStrips = class(TNodeNiTriShape)
   public
-    procedure Load(aStream: TStream); override;
+    procedure Load(aStream: TStream); override; final;
   end;
 
   TNodeBSLODTriShape = class(TNodeNiTriShape)
   public
-    procedure Load(aStream: TStream); override;
+    procedure Load(aStream: TStream); override; final;
   end;
 
   TNiFile = class
@@ -178,7 +178,7 @@ type
     Header: TNiHeader;
     Nodes: array of TBaseNiNode;
     constructor Create;
-    destructor Destroy; override;
+    destructor Destroy; override; final;
     function Load(aStream: TStream): Boolean;
     function GetNode(aRef: TNodeRef): TBaseNiNode;
   end;

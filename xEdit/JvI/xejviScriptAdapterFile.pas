@@ -23,7 +23,9 @@ uses
   System.Classes,
   System.SysUtils,
 
-  wbInterface;
+  wbInterface,
+
+  xejviScriptArguments;
 
 const
   cUnit = 'Dummy';
@@ -53,8 +55,8 @@ begin
   if Supports(IInterface(Args.Values[0]), IwbFile, _File) then
     case Args.Count of
     0, 1: JvInterpreterError(ieNotEnoughParams, -1);
-    3: _File.AddMasters(TStrings(V2O(Args.Values[1])), Boolean(Args.Values[2]));
-    2: _File.AddMasters(TStrings(V2O(Args.Values[1])));
+    3: _File.AddMasters(TStrings(ObjectArgument(Args.Values[1], TStrings, 1)), Boolean(Args.Values[2]));
+    2: _File.AddMasters(TStrings(ObjectArgument(Args.Values[1], TStrings, 1)));
     else
      JvInterpreterError(ieTooManyParams, -1);
     end;
@@ -67,9 +69,9 @@ begin
   if Supports(IInterface(Args.Values[0]), IwbFile, _File) then
     case Args.Count of
     0, 1: JvInterpreterError(ieNotEnoughParams, -1);
-    4: _File.AddMastersIfMissing(TStrings(V2O(Args.Values[1])), Boolean(Args.Values[2]), Boolean(Args.Values[3]));
-    3: _File.AddMastersIfMissing(TStrings(V2O(Args.Values[1])), Boolean(Args.Values[2]));
-    2: _File.AddMastersIfMissing(TStrings(V2O(Args.Values[1])));
+    4: _File.AddMastersIfMissing(TStrings(ObjectArgument(Args.Values[1], TStrings, 1)), Boolean(Args.Values[2]), Boolean(Args.Values[3]));
+    3: _File.AddMastersIfMissing(TStrings(ObjectArgument(Args.Values[1], TStrings, 1)), Boolean(Args.Values[2]));
+    2: _File.AddMastersIfMissing(TStrings(ObjectArgument(Args.Values[1], TStrings, 1)));
     else
      JvInterpreterError(ieTooManyParams, -1);
     end;
@@ -81,7 +83,7 @@ var
 begin
   Value := False;
   if Supports(IInterface(Args.Values[0]), IwbFile, _File) then
-    if (_File.LoadOrderFileID.IsLightSlot = true) then
+    if _File.HasLoadOrderFileID and (_File.LoadOrderFileID.IsLightSlot = true) then
         Value :=  true;
 end;
 
@@ -91,7 +93,7 @@ var
 begin
   Value := False;
   if Supports(IInterface(Args.Values[0]), IwbFile, _File) then
-    if (_File.LoadOrderFileID.IsMediumSlot = true) then
+    if _File.HasLoadOrderFileID and (_File.LoadOrderFileID.IsMediumSlot = true) then
         Value :=  true;
 end;
 
@@ -129,30 +131,67 @@ begin
 end;
 
 procedure IwbFile_GetIsESM(var Value: Variant; Args: TJvInterpreterArgs);
-var
-  _File: IwbFile;
 begin
   Value := False;
-  if Supports(IInterface(Args.Values[0]), IwbFile, _File) then
-    Value := _File.IsESM;
+
+  case Args.Count of
+    0: JvInterpreterError(ieNotEnoughParams, -1);
+    1: begin
+      var lFile: IwbFile;
+      if Supports(IInterface(Args.Values[0]), IwbFile, lFile) then
+        Value := lFile.IsESM;
+    end
+  else
+    JvInterpreterError(ieTooManyParams, -1);
+  end;
 end;
 
 procedure IwbFile_GetIsLight(var Value: Variant; Args: TJvInterpreterArgs);
-var
-  _File: IwbFile;
 begin
   Value := False;
-  if Supports(IInterface(Args.Values[0]), IwbFile, _File) then
-    Value := _File.IsLight;
+
+  case Args.Count of
+    0: JvInterpreterError(ieNotEnoughParams, -1);
+    1: begin
+      var lFile: IwbFile;
+      if Supports(IInterface(Args.Values[0]), IwbFile, lFile) then
+        Value := lFile.IsLight;
+    end
+  else
+    JvInterpreterError(ieTooManyParams, -1);
+  end;
 end;
 
 procedure IwbFile_GetIsMedium(var Value: Variant; Args: TJvInterpreterArgs);
-var
-  _File: IwbFile;
 begin
   Value := False;
-  if Supports(IInterface(Args.Values[0]), IwbFile, _File) then
-    Value := _File.IsMedium;
+
+  case Args.Count of
+    0: JvInterpreterError(ieNotEnoughParams, -1);
+    1: begin
+      var lFile: IwbFile;
+      if Supports(IInterface(Args.Values[0]), IwbFile, lFile) then
+        Value := lFile.IsMedium;
+    end
+  else
+    JvInterpreterError(ieTooManyParams, -1);
+  end;
+end;
+
+procedure IwbFile_GetIsUpdate(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := False;
+
+  case Args.Count of
+    0: JvInterpreterError(ieNotEnoughParams, -1);
+    1: begin
+      var lFile: IwbFile;
+      if Supports(IInterface(Args.Values[0]), IwbFile, lFile) then
+        Value := lFile.IsUpdate;
+    end
+  else
+    JvInterpreterError(ieTooManyParams, -1);
+  end;
 end;
 
 procedure IwbFile_GetLoadOrder(var Value: Variant; Args: TJvInterpreterArgs);
@@ -169,7 +208,7 @@ var
   _File: IwbFile;
 begin
   Value := -1;
-  if Supports(IInterface(Args.Values[0]), IwbFile, _File) then
+  if Supports(IInterface(Args.Values[0]), IwbFile, _File) and _File.HasLoadOrderFileID then
     Value := _File.LoadOrderFileID.ToString;
 end;
 
@@ -178,7 +217,7 @@ var
   _File : IwbFile;
 begin
   if Supports(IInterface(Args.Values[0]), IwbFile, _File) then
-    _File.GetMasters(TStrings(V2O(Args.Values[1])));
+    _File.GetMasters(TStrings(ObjectArgument(Args.Values[1], TStrings, 1)));
 end;
 
 procedure IwbFile_GetNewFormID(var Value: Variant; Args: TJvInterpreterArgs);
@@ -275,27 +314,59 @@ begin
 end;
 
 procedure IwbFile_SetIsESM(var Value: Variant; Args: TJvInterpreterArgs);
-var
-  _File: IwbFile;
 begin
-  if Supports(IInterface(Args.Values[0]), IwbFile, _File) then
-    _File.IsESM := Args.Values[1];
+  case Args.Count of
+    0, 1: JvInterpreterError(ieNotEnoughParams, -1);
+    2: begin
+      var lFile: IwbFile;
+      if Supports(IInterface(Args.Values[0]), IwbFile, lFile) then
+        lFile.IsESM := Args.Values[1];
+    end
+  else
+    JvInterpreterError(ieTooManyParams, -1);
+  end;
 end;
 
 procedure IwbFile_SetIsLight(var Value: Variant; Args: TJvInterpreterArgs);
-var
-  _File: IwbFile;
 begin
-  if Supports(IInterface(Args.Values[0]), IwbFile, _File) then
-    _File.IsLight := Args.Values[1];
+  case Args.Count of
+    0, 1: JvInterpreterError(ieNotEnoughParams, -1);
+    2: begin
+      var lFile: IwbFile;
+      if Supports(IInterface(Args.Values[0]), IwbFile, lFile) then
+        lFile.IsLight := Args.Values[1];
+    end
+  else
+    JvInterpreterError(ieTooManyParams, -1);
+  end;
 end;
 
 procedure IwbFile_SetIsMedium(var Value: Variant; Args: TJvInterpreterArgs);
-var
-  _File: IwbFile;
 begin
-  if Supports(IInterface(Args.Values[0]), IwbFile, _File) then
-    _File.IsMedium := Args.Values[1];
+  case Args.Count of
+    0, 1: JvInterpreterError(ieNotEnoughParams, -1);
+    2: begin
+      var lFile: IwbFile;
+      if Supports(IInterface(Args.Values[0]), IwbFile, lFile) then
+        lFile.IsMedium := Args.Values[1];
+    end
+  else
+    JvInterpreterError(ieTooManyParams, -1);
+  end;
+end;
+
+procedure IwbFile_SetIsUpdate(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  case Args.Count of
+    0, 1: JvInterpreterError(ieNotEnoughParams, -1);
+    2: begin
+      var lFile: IwbFile;
+      if Supports(IInterface(Args.Values[0]), IwbFile, lFile) then
+        lFile.IsUpdate := Args.Values[1];
+    end
+  else
+    JvInterpreterError(ieTooManyParams, -1);
+  end;
 end;
 
 procedure IwbFile_SortMasters(var Value: Variant; Args: TJvInterpreterArgs);
@@ -314,7 +385,7 @@ var
   rm     : TwbResetModified;
 begin
   if Supports(IInterface(Args.Values[0]), IwbFile, _File) then begin
-    Stream := TStream(V2O(Args.Values[1]));
+    Stream := TStream(ObjectArgument(Args.Values[1], TStream, 1));
     if Assigned(Stream) then begin
       i := Args.Values[2];
       case i of
@@ -349,6 +420,7 @@ begin
     AddFunction(cUnit, 'GetIsLight', IwbFile_GetIsLight, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'GetIsMedium', IwbFile_GetIsMedium, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'GetIsSmall', IwbFile_GetIsLight, 1, [varEmpty], varEmpty);
+    AddFunction(cUnit, 'GetIsUpdate', IwbFile_GetIsUpdate, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'GetLoadOrder', IwbFile_GetLoadOrder, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'GetLoadOrderFileID', IwbFile_GetLoadOrderFileID, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'GetMasters', IwbFile_GetMasters, 2, [varEmpty, varEmpty], varEmpty);
@@ -368,6 +440,7 @@ begin
     AddFunction(cUnit, 'SetIsLight', IwbFile_SetIsLight, 2, [varEmpty, varBoolean], varEmpty);
     AddFunction(cUnit, 'SetIsMedium', IwbFile_SetIsMedium, 2, [varEmpty, varBoolean], varEmpty);
     AddFunction(cUnit, 'SetIsSmall', IwbFile_SetIsLight, 2, [varEmpty, varBoolean], varEmpty);
+    AddFunction(cUnit, 'SetIsUpdate', IwbFile_SetIsUpdate, 2, [varEmpty, varBoolean], varEmpty);
     AddFunction(cUnit, 'SortMasters', IwbFile_SortMasters, 1, [varEmpty], varEmpty);
   end;
 end;

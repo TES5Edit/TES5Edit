@@ -6,8 +6,19 @@ unit UserScript;
 var
   NewFormID: Cardinal;
 
+function RefusedForMorrowind: Boolean;
+begin
+  Result := wbGameMode = gmTES3;
+  if Result then
+    AddMessage('This script does not work for Morrowind: a Morrowind record''s FormID is derived from the record and can not be set');
+end;
+
 function Initialize: integer;
 begin
+  if RefusedForMorrowind then begin
+    Result := 1;
+    Exit;
+  end;
   NewFormID := 0;
 end;
   
@@ -17,6 +28,10 @@ var
   m: IInterface;
   s: string;
 begin
+  if RefusedForMorrowind then begin
+    Result := 1;
+    Exit;
+  end;
   // file header doesn't have formid
   if Signature(e) = 'TES4' then
     Exit;

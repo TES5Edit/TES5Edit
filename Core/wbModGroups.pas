@@ -18,6 +18,7 @@ uses
 
   wbHash,
   wbInterface,
+  wbConflict,
   wbLoadOrder;
 
 type
@@ -38,7 +39,7 @@ type
   PwbModGroupItem = ^TwbModGroupItem;
   TwbModGroupItem = record
   private
-    function mgiLoad(aLine: string): Boolean;
+    function mgiLoad(aContext: TwbGameContext; aLine: string): Boolean;
     procedure mgiCheckValid(aForce: Boolean);
     procedure mgiFlagFilesMissingCRC;
     function mgiNeedsCRCUpdateForTaggedFiles(aAdd, aUpdate: Boolean): Boolean;
@@ -71,10 +72,10 @@ type
 
   TwbModGroup = record
   private
-    procedure mgLoad(aLines: TStrings);
+    procedure mgLoad(aContext: TwbGameContext; aLines: TStrings);
     procedure mgCheckValid(aForce: Boolean);
     procedure mgAddSelfTo(var aList: TwbModGroupPtrs; aValidOnly: Boolean);
-    procedure mgTagTargetFiles(aSource: PwbModuleInfo);
+    procedure mgTagTargetFiles(aSource: PwbModuleInfo; var aTargets: TwbModuleInfos);
     procedure mgFlagFilesMissingCRC;
     procedure mgFlagModGroupsNeedingCRCUpdateForTaggedFiles(aAdd, aUpdate: Boolean);
     function mgUpdateCRC(aAdd, aUpdate: Boolean): Boolean;
@@ -103,7 +104,7 @@ type
 
     function ToString: string;
 
-    function Activate: Boolean;
+    function Activate(aView: TwbConflictView): Boolean;
     procedure ShowValidationMessages;
     procedure FlagFilesMissingCRC;
     procedure FlagModGroupsNeedingCRCUpdateForTaggedFiles(aAdd, aUpdate: Boolean);
@@ -118,7 +119,7 @@ type
 
   TwbModGroupsFile = record
   private
-    procedure mgfLoad;
+    procedure mgfLoad(aContext: TwbGameContext);
     procedure mgfCheckValid(aForce: Boolean);
     procedure mgfAddModGroupsTo(var aList: TwbModGroupPtrs; aValidOnly: Boolean);
     function mgfAnyModuleHasFile: Boolean;
@@ -136,22 +137,47 @@ type
     procedure mgfsAddModGroupsTo(var aList: TwbModGroupPtrs; aValidOnly: Boolean);
   end;
 
-function wbModGroupsByName(aValidOnly: Boolean = True): TwbModGroupPtrs;
-procedure wbReloadModGroups;
+  TwbModGroupList = class
+  private
+    mgContext : TwbGameContext;
+    mgFiles   : TwbModGroupsFiles;
+    mgLoaded  : Boolean;
+    procedure Load;
+  public
+    procedure Reload;
+    function ByName(aValidOnly: Boolean): TwbModGroupPtrs;
+  end;
+
+  TwbGameContextModGroupsHelper = class helper for TwbGameContext
+  private
+    function GetModGroupList: TwbModGroupList;
+  public
+    property ModGroupList: TwbModGroupList
+      read GetModGroupList;
+  end;
 
 implementation
 
 uses
   System.IniFiles,
+  System.Generics.Collections,
 
   wbHelpers,
   wbSort;
 
-var
-  _ModGroupFiles       : TwbModGroupsFiles;
-  _ModGroupFilesLoaded : Boolean;
+{ TwbGameContextModGroupsHelper }
 
-procedure wbLoadModGroups;
+function TwbGameContextModGroupsHelper.GetModGroupList: TwbModGroupList;
+begin
+  if not Assigned(gcModGroupList) then begin
+    Result := TwbModGroupList.Create;
+    Result.mgContext := Self;
+    gcModGroupList := Result;
+  end else
+    Result := TwbModGroupList(gcModGroupList);
+end;
+
+procedure TwbModGroupList.Load;
 var
   ModGroupFilesByName : TStringList;
   ModGroupFiles       : TwbModGroupsFiles;
@@ -160,7 +186,7 @@ var
   ModGroupFileName    : string;
   ModGroupFile        : PwbModGroupsFile;
 begin
-  if _ModGroupFilesLoaded then
+  if mgLoaded then
     Exit;
 
   ModGroupFiles := nil;
@@ -169,14 +195,14 @@ begin
     try
       ModGroupFilesByName.Sorted := True;
       ModGroupFilesByName.Duplicates := dupError;
-      Modules := wbModulesByLoadOrder{.FilteredByFlag(mfHasFile)};
+      Modules := mgContext.ModuleList.ModulesByLoadOrder(False){.FilteredByFlag(mfHasFile)};
       SetLength(ModGroupFiles, Succ(Length(Modules)));
       j := 0;
       for i := Low(Modules) to Length(Modules) do begin
         if i > High(Modules) then
-          ModGroupFileName := wbModGroupFileName
+          ModGroupFileName := mgContext.Settings.ModGroupFileName
         else
-          ModGroupFileName := wbExpandFileName(ChangeFileExt(Modules[i].miName, '.modgroups'));
+          ModGroupFileName := mgContext.ExpandFileName(ChangeFileExt(Modules[i].miName, '.modgroups'));
 
         ModGroupFile := nil;
         if ModGroupFilesByName.Find(ModGroupFileName, k) then
@@ -186,7 +212,7 @@ begin
             ModGroupFile := @ModGroupFiles[j];
             with ModGroupFile^ do begin
               mgfFileName := ModGroupFileName;
-              mgfLoad;
+              mgfLoad(mgContext);
               Inc(j);
             end;
             ModGroupFilesByName.AddObject(ModGroupFileName, Pointer(ModGroupFile));
@@ -204,18 +230,17 @@ begin
     for i := Low(ModGroupFiles) to High(ModGroupFiles) do
       ModGroupFiles[i].mgfCheckValid(True);
   except
-    _ModGroupFiles := nil;
+    mgFiles := nil;
     raise;
   end;
-  _ModGroupFiles := ModGroupFiles;
-  _ModGroupFilesLoaded := True;
+  mgFiles := ModGroupFiles;
+  mgLoaded := True;
 end;
 
-procedure wbReloadModGroups;
-
+procedure TwbModGroupList.Reload;
 begin
-  _ModGroupFilesLoaded := False;
-  wbLoadModGroups;
+  mgLoaded := False;
+  Load;
 end;
 
 
@@ -262,7 +287,7 @@ begin
       Include(mgfFlags, mgffValid);
 end;
 
-procedure TwbModGroupsFile.mgfLoad;
+procedure TwbModGroupsFile.mgfLoad(aContext: TwbGameContext);
 var
   Sections : TStringList;
   Section  : TStringList;
@@ -279,7 +304,7 @@ begin
         with mgfModGroups[i] do begin
           mgName := Sections[i];
           ReadSectionValues(mgName, Section);
-          mgLoad(Section);
+          mgLoad(aContext, Section);
         end;
     finally
       Section.Free;
@@ -415,7 +440,7 @@ begin
     end;
 end;
 
-procedure TwbModGroup.mgLoad(aLines: TStrings);
+procedure TwbModGroup.mgLoad(aContext: TwbGameContext; aLines: TStrings);
 var
   i, j: Integer;
 begin
@@ -423,7 +448,7 @@ begin
   SetLength(mgItems, aLines.Count);
   j := 0;
   for i := 0 to Pred(aLines.Count) do
-    if mgItems[j].mgiLoad(aLines[i]) then
+    if mgItems[j].mgiLoad(aContext, aLines[i]) then
       Inc(j);
   SetLength(mgItems, j);
 end;
@@ -450,7 +475,7 @@ begin
   end;
 end;
 
-procedure TwbModGroup.mgTagTargetFiles(aSource: PwbModuleInfo);
+procedure TwbModGroup.mgTagTargetFiles(aSource: PwbModuleInfo; var aTargets: TwbModuleInfos);
 var
   i, j : Integer;
 begin
@@ -465,7 +490,7 @@ begin
           for j := Pred(i) downto Low(mgItems) do
             with mgItems[j] do
               if Assigned(mgiModule) and (mgiFlags * [mgifIsTarget, mgifHasFile] = [mgifIsTarget, mgifHasFile]) then
-                Include(mgiModule.miFlags, mfIsModGroupTarget);
+                aTargets := aTargets + [mgiModule];
 end;
 
 function TwbModGroup.mgUpdateCRC(aAdd, aUpdate: Boolean): Boolean;
@@ -560,7 +585,7 @@ begin
     Include(mgiFlags, mgifValid);
 end;
 
-function TwbModGroupItem.mgiLoad(aLine: string): Boolean;
+function TwbModGroupItem.mgiLoad(aContext: TwbGameContext; aLine: string): Boolean;
 var
   Fragments : TArray<string>;
   i, j      : Integer;
@@ -615,7 +640,7 @@ begin
   if mgiFileName.IsEmpty then
     Exit(False);
 
-  mgiModule := wbModuleByName(mgiFileName);
+  mgiModule := aContext.ModuleList.ModuleByName(mgiFileName);
 
   if Length(Fragments) > 1 then begin
     Fragments := Fragments[1].Split([',']).ForEach(Trim).RemoveEmpty;
@@ -720,12 +745,10 @@ begin
 end;
 
 
-function wbModGroupsByName(aValidOnly: Boolean = True): TwbModGroupPtrs;
-
+function TwbModGroupList.ByName(aValidOnly: Boolean): TwbModGroupPtrs;
 begin
-
-  wbLoadModGroups;
-  _ModGroupFiles.mgfsAddModGroupsTo(Result, aValidOnly);
+  Load;
+  mgFiles.mgfsAddModGroupsTo(Result, aValidOnly);
   if Length(Result) > 1 then
     wbMergeSortPtr(@Result[0], Length(Result), CompareModGroupPtrsByName);
 end;
@@ -745,61 +768,52 @@ end;
 
 { TwbModGroupPtrsHelper }
 
-function TwbModGroupPtrsHelper.Activate: Boolean;
+function TwbModGroupPtrsHelper.Activate(aView: TwbConflictView): Boolean;
 var
-  Modules : TwbModuleInfos;
+  Modules    : TwbModuleInfos;
   i, j, k    : Integer;
-  Targets : TwbModuleInfos;
-  SourceReported : Boolean;
+  Tagged     : TwbModuleInfos;
+  Targets    : TwbModuleInfos;
+  AllTargets : TDictionary<PwbModuleInfo, TwbModuleInfos>;
 begin
   Result := False;
-  Modules := wbModulesByLoadOrder;
-  for i := Low(Modules) to High(Modules) do
-    with Modules[i]^ do begin
-      miModGroupTargets := nil;
-      miModGroupSources := nil;
+  Modules := aView.Context.ModuleList.ModulesByLoadOrder(False);
+  AllTargets := TDictionary<PwbModuleInfo, TwbModuleInfos>.Create;
+  try
+    for i := Low(Modules) to High(Modules) do begin
+      Tagged := nil;
+      for j := Low(Self) to High(Self) do
+        Self[j].mgTagTargetFiles(Modules[i], Tagged);
+      if Length(Tagged) = 0 then
+        Continue;
+
+      Targets := nil;
+      SetLength(Targets, i);
+      k := 0;
+      for j := Pred(i) downto 0 do
+        if Tagged.Contains(Modules[j]) then begin
+          Targets[k] := Modules[j];
+          Inc(k);
+        end;
+      SetLength(Targets, k);
+      if k > 0 then
+        AllTargets.Add(Modules[i], Targets);
     end;
 
-  for i := Low(Modules) to High(Modules) do begin
-    Modules.ExcludeAll(mfIsModGroupTarget);
-    for j := Low(Self) to High(Self) do
-      Self[j].mgTagTargetFiles(Modules[i]);
-
-    Targets := nil;
-    SetLength(Targets, i);
-    k := 0;
-    for j := Pred(i) downto 0 do
-      if mfIsModGroupTarget in Modules[j].miFlags then begin
-        Targets[k] := Modules[j];
-        Inc(k);
+    for i := Low(Modules) to High(Modules) do
+      if AllTargets.TryGetValue(Modules[i], Targets) then begin
+        Result := True;
+        if wbReportModGroups then begin
+          wbProgress('Records in "'+Modules[i].miName+'" will hide records from:');
+          for j := Low(Targets) to High(Targets) do
+            wbProgress(' - ' + Targets[j].miName);
+        end;
       end;
-    SetLength(Targets, k);
-    Modules[i].miModGroupTargets := Targets;
+
+    aView.SetModGroupTargets(AllTargets);
+  finally
+    AllTargets.Free;
   end;
-
-  Modules.ExcludeAll(mfIsModGroupTarget);
-  Modules.ExcludeAll(mfIsModGroupSource);
-
-  for i := Low(Modules) to High(Modules) do
-    with Modules[i]^ do
-      if Length(miModGroupTargets) > 0 then begin
-        Include(miFlags, mfIsModGroupSource);
-        SourceReported := False;
-        for j := Low(miModGroupTargets) to High(miModGroupTargets) do
-          with miModGroupTargets[j]^ do begin
-            if not SourceReported then begin
-              if wbReportModGroups then
-                wbProgress('Records in "'+Modules[i].miName+'" will hide records from:');
-              SourceReported := True;
-            end;
-            Result := True;
-            Include(miFlags, mfIsModGroupTarget);
-            SetLength(miModGroupSources, Succ(Length(miModGroupSources)));
-            miModGroupSources[High(miModGroupSources)] := Modules[i];
-            if wbReportModGroups then
-              wbProgress(' - ' + miName);
-          end;
-      end;
 end;
 
 procedure TwbModGroupPtrsHelper.ExcludeAll(aFlag: TwbModGroupFlag);
