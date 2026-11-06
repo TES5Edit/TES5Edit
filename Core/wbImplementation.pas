@@ -3278,7 +3278,9 @@ procedure TwbFile.PlanNameChange(const aRecord: IwbMainRecord; const aNewIdentit
   out aPlan: TwbNameChangePlan);
 const
   cNotRenamed : array[0..7] of TwbSignature = ('LAND', 'PGRD', 'INFO', 'SSCR', 'MGEF', 'SKIL', 'GMST', 'DIAL');
-  cLater      : array[0..1] of TwbSignature = ('CELL', 'REGN');
+  cLater      : array[0..0] of TwbSignature = ('REGN');
+  cCell       : TwbSignature = 'CELL';
+  cPathgrid   : TwbSignature = 'PGRD';
 var
   lFiles    : TArray<TwbFile>;
   lIdentity : string;
@@ -3286,6 +3288,7 @@ var
   lCount    : Integer;
   lOldLower : string;
   lNewLower : string;
+  lFilters  : Boolean;
   lFields   : TList<TwbNameChangeField>;
   lValues   : TList<TwbNameChangeValue>;
   lReports  : TList<TwbNameChangeReport>;
@@ -3298,6 +3301,7 @@ var
     aPlan.RefusedRecord := aRec;
     aPlan.RefusedFile := aFile;
     aPlan.Renames := nil;
+    aPlan.Left := nil;
     aPlan.Fields := nil;
     aPlan.Values := nil;
   end;
@@ -3346,6 +3350,8 @@ var
     var lMember := aMember as TObject as TwbMainRecord;
     if not lMember.GetCurrentIdentity(lMemberIdentity, lMemberGrid) then
       Exit(Format('%s in %s has no identity', [aMember.Name, aFile.GetFileName]));
+    if lMemberGrid then
+      Exit(Format('%s in %s is keyed through its grid''s fallback', [aMember.Name, aFile.GetFileName]));
     if not aMember.IsEditable then
       Exit(Format('%s in %s can not be edited', [aMember.Name, aFile.GetFileName]));
     Result := lMember.mrDef.IdentityStoreRefusal(aMember, aNewIdentity);
@@ -3369,7 +3375,9 @@ var
     lItem.Element := aElement;
     lItem.Def := aDef;
     lItem.Path := aElement.Path;
+    lItem.FileName := aRec._File.FileName;
     lItem.Value := lValue;
+    lItem.Derived := (aDef.Unresolved = nuTravelCell) and aRec._File.IsVisibleExteriorName(lValue);
     aDef.ViewValue(aElement, lValue, lItem.Views);
     lItem.Verdict := aDef.VerdictOf(lItem.Views, lTarget);
     lItem.Target := lTarget;
@@ -3437,13 +3445,26 @@ var
     Result := False;
   end;
 
-  procedure Report(aKind: TwbNameChangeReportKind; const aRec: IwbMainRecord; const aElement: IwbElement);
+  procedure Report(aKind: TwbNameChangeReportKind; const aRec: IwbMainRecord; const aElement: IwbElement; aBefore: Boolean = False);
   begin
     var lItem := Default(TwbNameChangeReport);
     lItem.Kind := aKind;
     lItem.Rec := aRec;
     lItem.Path := aElement.Path;
+    lItem.Before := aBefore;
     lReports.Add(lItem);
+  end;
+
+  function NamePrefixedBy(const aName, aFilter: string): Boolean;
+  begin
+    Result := LowerCase(Copy(aName, 1, Length(aFilter))) = LowerCase(aFilter);
+  end;
+
+  procedure ReportFilter(const aRec: IwbMainRecord; const aElement: IwbElement; const aFilter: string);
+  begin
+    var lBefore := NamePrefixedBy(lIdentity, aFilter);
+    if lBefore <> NamePrefixedBy(aNewIdentity, aFilter) then
+      Report(ncpCellFilter, aRec, aElement, lBefore);
   end;
 
   function TextOf(const aRec: IwbMainRecord; const aElement: IwbElement; out aText: string): Boolean;
@@ -3484,15 +3505,23 @@ var
       lElement := aRec.ElementBySignature['BNAM'];
       if TextOf(aRec, lElement, lText) and NamesAsWord(lText) then
         Report(ncpResultText, aRec, lElement);
+      if lFilters then begin
+        lElement := aRec.ElementBySignature['ANAM'];
+        if TextOf(aRec, lElement, lText) then
+          ReportFilter(aRec, lElement, lText);
+      end;
       if Supports(aRec.ElementByName['Conditions'], IwbContainerElementRef, lConditions) then
         for var i := 0 to Pred(lConditions.ElementCount) do
           if Supports(lConditions.Elements[i], IwbContainer, lCondition) and
              Supports(lCondition.ElementBySignature['SCVR'], IwbContainer, lScvr) then begin
             var lObject := lScvr.ElementByName['Variable/Object'];
             var lType := lScvr.ElementByName['Type'];
-            if Assigned(lObject) and Assigned(lType) and (lType.NativeValue <> 66) and TextOf(aRec, lObject, lText) and
-               (lText.ToLowerInvariant = lOldLower) then
-              Report(ncpCondition, aRec, lObject);
+            if Assigned(lObject) and Assigned(lType) then
+              if lType.NativeValue <> 66 then begin
+                if TextOf(aRec, lObject, lText) and (lText.ToLowerInvariant = lOldLower) then
+                  Report(ncpCondition, aRec, lObject);
+              end else if lFilters and TextOf(aRec, lObject, lText) then
+                ReportFilter(aRec, lObject, lText);
           end;
     end else if lSignature = 'GMST' then
       if (aRec as TObject as TwbMainRecord).GetCurrentIdentity(lName, lGrid) then begin
@@ -3524,12 +3553,17 @@ begin
     Exit;
   end;
   if not Assigned(lDef) or not lDef.IsKeyedByIdentity or not lDef.ContainsKnownSubRecord[ksrEditorID] or
-     (lDef.GetGridFormIDBase > 0) or (dfIdentityQualifiedByTopic in lDef.DefFlags) or InList(lSignature, cNotRenamed) then begin
+     (dfIdentityQualifiedByTopic in lDef.DefFlags) or InList(lSignature, cNotRenamed) then begin
     Refuse(ncrKind, Format('%s is not a record Change NAME renames', [aRecord.Name]), aRecord);
     Exit;
   end;
 
-  if not lRecord.GetCurrentIdentity(lIdentity, lHasGrid) then begin
+  var lHasIdentity := lRecord.GetCurrentIdentity(lIdentity, lHasGrid);
+  if lHasIdentity and lHasGrid then begin
+    Refuse(ncrKind, Format('%s is an exterior cell: it is identified by its grid', [aRecord.Name]), aRecord);
+    Exit;
+  end;
+  if not lHasIdentity then begin
     Refuse(ncrNoIdentity, Format('%s has no identity', [aRecord.Name]), aRecord);
     Exit;
   end;
@@ -3543,6 +3577,7 @@ begin
   aPlan.NameBase := lDef.GetFormIDNameBase;
   lOldLower := lIdentity.ToLowerInvariant;
   lNewLower := aNewIdentity.ToLowerInvariant;
+  lFilters := lSignature = cCell;
 
   lFiles := Ordered;
   var lOutside := '';
@@ -3597,6 +3632,40 @@ begin
       aPlan.Renames := aPlan.Renames + [lRename];
     end;
   end;
+
+  var lPathgridDef: PwbMainRecordDef;
+  var lPathgridKey: TwbFormID;
+  if (lSignature = cCell) and flContextObj.GameDefObj.FindRecordDef(cPathgrid, lPathgridDef) and
+     flContextObj.FindIdentity(lPathgridDef^.GetFormIDBase, aPlan.NameBase, lIdentity, lPathgridKey) then
+    for var lFile in lFiles do begin
+      var lFirst := lFile.RecordRunAt(lPathgridKey, lCount);
+      for var k := lFirst to Pred(lFirst + lCount) do begin
+        var lCandidate := lFile.flRecords[k];
+        var lCandidateIdentity := '';
+        var lOffGrid := False;
+        (lCandidate as TObject as TwbMainRecord).GetCurrentIdentity(lCandidateIdentity, lOffGrid);
+        if lOffGrid then
+          Continue;
+        var lCorrupt := False;
+        var lSeen := lFile.SelectAtNameKey(aPlan.Key, lCorrupt);
+        if Assigned(lSeen) and not lCorrupt then begin
+          var lWhy := MemberRefusal(lFile, lCandidate);
+          if lWhy <> '' then begin
+            Refuse(ncrRenamed, lWhy, lCandidate, lFile);
+            Exit;
+          end;
+          var lRename := Default(TwbNameChangeRename);
+          lRename.Rec := lCandidate;
+          aPlan.Renames := aPlan.Renames + [lRename];
+        end else if not lFile.IsDeltaPatch then begin
+          var lLeft := Default(TwbNameChangeLeft);
+          lLeft.Rec := lCandidate;
+          lLeft.Reason := Format('%s does not see the cell', [lFile.GetFileName]);
+          aPlan.Left := aPlan.Left + [lLeft];
+        end;
+      end;
+    end;
+
   var lNoKey := flContextObj.IdentityKeyRefusal(aPlan.FormIDBase, aPlan.NameBase, aNewIdentity);
   if lNoKey <> '' then begin
     Refuse(ncrRenamed, lNoKey, aRecord);
@@ -3703,6 +3772,11 @@ var
     for var i := 0 to High(lNow.Renames) do
       if not SameRecord(lNow.Renames[i].Rec, aPlan.Renames[i].Rec) then
         Exit('the records to rename have changed');
+    if Length(lNow.Left) <> Length(aPlan.Left) then
+      Exit('the pathgrids left behind have changed');
+    for var i := 0 to High(lNow.Left) do
+      if not SameRecord(lNow.Left[i].Rec, aPlan.Left[i].Rec) or (lNow.Left[i].Reason <> aPlan.Left[i].Reason) then
+        Exit('the pathgrids left behind have changed');
     if Length(lNow.Fields) <> Length(aPlan.Fields) then
       Exit('the fields that reference the record have changed');
     if Length(lNow.Values) <> Length(aPlan.Values) then
@@ -3716,7 +3790,7 @@ var
         if not lAt.TryGetValue(lWas.Element.ElementID, j) then
           Exit(Format('%s is gone', [lWas.Path]));
         var lIs := lNow.Values[j];
-        if not SameRecord(lIs.Rec, lWas.Rec) or (lIs.Value <> lWas.Value) or (lIs.Verdict <> lWas.Verdict) or
+        if not SameRecord(lIs.Rec, lWas.Rec) or (lIs.Value <> lWas.Value) or (lIs.Derived <> lWas.Derived) or (lIs.Verdict <> lWas.Verdict) or
            not SameRecord(lIs.Target, lWas.Target) or (lIs.NamesNew <> lWas.NamesNew) or (lIs.SeesBase <> lWas.SeesBase) or
            not SameRecord(lIs.AfterHit, lWas.AfterHit) or (lIs.AfterAllowed <> lWas.AfterAllowed) or
            not SameViews(lIs.Views, lWas.Views) or ((lIs.Field >= 0) <> (lWas.Field >= 0)) then
@@ -3778,7 +3852,7 @@ begin
       try
         var lMember := lNow.Renames[i].Rec;
         lMember.EditorID := aPlan.NewIdentity;
-        if flContextObj.FindIdentity(aPlan.FormIDBase, aPlan.NameBase, aPlan.NewIdentity, lNewKey) and (lMember.FixedFormID = lNewKey) then
+        if flContextObj.FindIdentity(lMember.Def.GetFormIDBase, aPlan.NameBase, aPlan.NewIdentity, lNewKey) and (lMember.FixedFormID = lNewKey) then
           aPlan.Renames[i].Outcome := ncoUpdated
         else begin
           aPlan.Renames[i].Outcome := ncoFailed;

@@ -1768,6 +1768,11 @@ type
     Message : string;
   end;
 
+  TwbNameChangeLeft = record
+    Rec    : IwbMainRecord;
+    Reason : string;
+  end;
+
   TwbNameChangeField = record
     Rec        : IwbMainRecord;
     Element    : IwbElement;
@@ -1786,7 +1791,9 @@ type
     Element      : IwbElement;
     Def          : IwbNameReferenceDef;
     Path         : string;
+    FileName     : string;
     Value        : string;
+    Derived      : Boolean;
     Views        : TwbNameKeyViews;
     Verdict      : TwbNameVerdict;
     Target       : IwbMainRecord;
@@ -1797,12 +1804,13 @@ type
     AfterAllowed : Boolean;
   end;
 
-  TwbNameChangeReportKind = (ncpScriptText, ncpResultText, ncpNotScanned, ncpCondition, ncpGameSetting);
+  TwbNameChangeReportKind = (ncpScriptText, ncpResultText, ncpNotScanned, ncpCondition, ncpGameSetting, ncpCellFilter);
 
   TwbNameChangeReport = record
-    Kind : TwbNameChangeReportKind;
-    Rec  : IwbMainRecord;
-    Path : string;
+    Kind   : TwbNameChangeReportKind;
+    Rec    : IwbMainRecord;
+    Path   : string;
+    Before : Boolean;
   end;
 
   TwbNameChangePlan = record
@@ -1818,12 +1826,15 @@ type
     RefusedFile   : IwbFile;
     StaleText     : string;
     Renames       : TArray<TwbNameChangeRename>;
+    Left          : TArray<TwbNameChangeLeft>;
     Fields        : TArray<TwbNameChangeField>;
     Values        : TArray<TwbNameChangeValue>;
     Reports       : TArray<TwbNameChangeReport>;
     function FaultOf(aField: Integer): TwbNameChangeFault;
     function OutcomeToBe(aField: Integer): TwbNameChangeOutcome;
     function VerdictAfter(aValue: Integer; out aTarget: IwbMainRecord): TwbNameVerdict;
+    function ReportBefore(aValue: Integer): string;
+    function ReportAfter(aValue: Integer): string;
     function ValueChanges(aValue: Integer): Boolean;
     function ChangedValues: TArray<Integer>;
     function AnyFailed: Boolean;
@@ -3325,6 +3336,7 @@ type
     procedure ViewValue(const aElement: IwbElement; const aValue: string; out aViews: TwbNameKeyViews);
     function VerdictOf(const aViews: TwbNameKeyViews; out aTarget: IwbMainRecord): TwbNameVerdict;
     function FitRefusal(const aElement: IwbElement; const aValue: string): string;
+    function VerdictReport(aVerdict: TwbNameVerdict; const aTarget: IwbMainRecord; const aValue, aFileName: string; aVisible: Boolean): string;
 
     property AllowedSignatures: TwbSignatures
       read GetAllowedSignatures;
@@ -10108,6 +10120,7 @@ type
     function IsAllowedSignature(const aSignature: TwbSignature): Boolean;
     function IsSentinel(const aValue: string): Boolean;
     function FitRefusal(const aElement: IwbElement; const aValue: string): string;
+    function VerdictReport(aVerdict: TwbNameVerdict; const aTarget: IwbMainRecord; const aValue, aFileName: string; aVisible: Boolean): string;
   public
     constructor Create(aPriority     : TwbConflictPriority;
                        aRequired     : Boolean;
@@ -25487,28 +25500,39 @@ begin
     Exit;
   if not TryReadValue(aBasePtr, aEndPtr, aElement, lValue) then
     Exit;
-  case ResolveValue(aElement, lValue, lTarget) of
+  var lVerdict := ResolveValue(aElement, lValue, lTarget);
+  if not (lVerdict in [nvEmpty, nvWrongType, nvAmbiguous, nvNotFound]) then
+    Exit;
+  lVisible := False;
+  if (lVerdict = nvNotFound) and (nrdUnresolved = nuTravelCell) then
+    if Assigned(aRun) then
+      lVisible := aRun.IsVisibleExteriorName(aElement._File, lValue)
+    else
+      lVisible := aElement._File.IsVisibleExteriorName(lValue);
+  Result := VerdictReport(lVerdict, lTarget, lValue, aElement._File.FileName, lVisible);
+end;
+
+function TwbNameReferenceDef.VerdictReport(aVerdict: TwbNameVerdict; const aTarget: IwbMainRecord; const aValue, aFileName: string;
+  aVisible: Boolean): string;
+begin
+  Result := '';
+  case aVerdict of
     nvEmpty:
       if nrdEmptyIsError then
         Result := 'is empty';
     nvWrongType:
-      Result := Format('"%s" names a %s, expected one of %s', [lValue, string(lTarget.Signature), AllowedText]);
+      Result := Format('"%s" names a %s, expected one of %s', [aValue, string(aTarget.Signature), AllowedText]);
     nvAmbiguous:
-      Result := Format('"%s" is ambiguous', [lValue]);
+      Result := Format('"%s" is ambiguous', [aValue]);
     nvNotFound:
       case nrdUnresolved of
         nuError:
-          Result := Format('"%s" not found in %s or its masters', [lValue, aElement._File.FileName]);
+          Result := Format('"%s" not found in %s or its masters', [aValue, aFileName]);
         nuDoorCell:
-          Result := Format('"%s" names no interior cell', [lValue]);
-        nuTravelCell: begin
-          if Assigned(aRun) then
-            lVisible := aRun.IsVisibleExteriorName(aElement._File, lValue)
-          else
-            lVisible := aElement._File.IsVisibleExteriorName(lValue);
-          if not lVisible then
-            Result := Format('"%s" names no cell', [lValue]);
-        end;
+          Result := Format('"%s" names no interior cell', [aValue]);
+        nuTravelCell:
+          if not aVisible then
+            Result := Format('"%s" names no cell', [aValue]);
         nuPackageCell: ;
       end;
   end;
@@ -27522,6 +27546,24 @@ begin
     lViews[lAt].Allowed := False;
   end;
   Result := lValue.Def.VerdictOf(lViews, aTarget);
+end;
+
+function TwbNameChangePlan.ReportBefore(aValue: Integer): string;
+begin
+  var lValue := Values[aValue];
+  Result := lValue.Def.VerdictReport(lValue.Verdict, lValue.Target, lValue.Value, lValue.FileName, lValue.Derived);
+end;
+
+function TwbNameChangePlan.ReportAfter(aValue: Integer): string;
+var
+  lTarget : IwbMainRecord;
+begin
+  var lValue := Values[aValue];
+  var lVerdict := VerdictAfter(aValue, lTarget);
+  var lText := lValue.Value;
+  if (lValue.Field >= 0) and (OutcomeToBe(lValue.Field) = ncoUpdated) then
+    lText := NewIdentity;
+  Result := lValue.Def.VerdictReport(lVerdict, lTarget, lText, lValue.FileName, lValue.Derived);
 end;
 
 function TwbNameChangePlan.ValueChanges(aValue: Integer): Boolean;
