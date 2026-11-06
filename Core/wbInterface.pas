@@ -595,7 +595,7 @@ type
     gcMasterFlagFromExtension, gcResourceKeyCRC32NoExtension, gcTextureDDXAlias, gcUpdateArchiveAlwaysLoaded,
     gcWeatherExtendedColors, gcWeatherFogPower, gcWeatherFogMax, gcModelTextureFileHashList, gcCommunityShaders, gcHNVSE,
     gcVWDInTemporary, gcVWDAsQuestChildren, gcComplexFileFileID, gcCanSortINFO, gcOffsetDataPerFile,
-    gcMasterFlagInHeaderData
+    gcMasterFlagInHeaderData, gcCompressedRecords
   );
   TwbGameCapabilities = set of TwbGameCapability;
 
@@ -6757,6 +6757,8 @@ begin
     Include(Result, gcHardcodedFileIsFirstMaster);
   if aGameMode in [gmTES3] then
     Include(Result, gcMasterFlagInHeaderData);
+  if not (aGameMode in [gmTES3]) then
+    Include(Result, gcCompressedRecords);
   if not (aGameMode in [gmTES3]) then
     Include(Result, gcHardcodedPlayerRef);
   if aGameMode in [gmFO4, gmSSE, gmTES5VR, gmEnderalSE, gmFO4VR, gmFO76, gmSF1] then

@@ -16516,7 +16516,7 @@ var
 begin
   InitDataPtr; // reset...
 
-  if mrStruct.mrsFlags(gcFormIDInRecordHeader in GameDefObj.Capabilities).IsCompressed then try
+  if GetIsCompressed then try
     if mrStruct.mrsDataSize < SizeOf(Cardinal) then
       raise Exception.CreateFmt('compressed data of %d bytes is too short to hold its uncompressed length', [mrStruct.mrsDataSize]);
     UncompressedLength := PCardinal(dcDataBasePtr)^;
@@ -18753,7 +18753,8 @@ end;
 
 function TwbMainRecord.GetIsCompressed: Boolean;
 begin
-  Result := GetFlags.IsCompressed;
+  var lCapabilities := GameDefObj.Capabilities;
+  Result := (gcCompressedRecords in lCapabilities) and mrStruct.mrsFlags(gcFormIDInRecordHeader in lCapabilities).IsCompressed;
 end;
 
 function TwbMainRecord.GetIsDeleted: Boolean;
@@ -22670,7 +22671,7 @@ var
         Stream.WriteBuffer(lNewHeaderAddon, SizeOf(lNewHeaderAddon) );
       end;
 
-      if mrStruct.mrsFlags(gcFormIDInRecordHeader in lGameDef.Capabilities).IsCompressed then begin
+      if GetIsCompressed then begin
 
         MemoryStream := TMemoryStream.Create;
         try
