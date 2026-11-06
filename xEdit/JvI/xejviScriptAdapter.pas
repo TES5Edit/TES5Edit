@@ -87,6 +87,8 @@ end;
 
 procedure EnableSkyrimSaveFormat(var Value: Variant; Args: TJvInterpreterArgs);
 begin
+  if xeContext.GameDefObj.IsMorrowind then
+    raise Exception.Create('EnableSkyrimSaveFormat: a Morrowind record header has no room for the Skyrim header format');
   xeContext.Settings.TestWrite := True;
   xeContext.Settings.ForceNewHeader := True;
 end;
