@@ -21814,65 +21814,63 @@ var
   Master     : IwbMainRecord;
   FileFormID : TwbFormID;
 begin
+  if not (gcFormIDInRecordHeader in GameDefObj.Capabilities) then
+    raise Exception.Create(GetName + ': a Morrowind record''s FormID is derived from the record and can not be set');
+
   if GetSignature = 'TES4' then
     aFormID := TwbFormID.Null;
 
   if GetLoadOrderFormID = aFormID then
     Exit;
 
-  var lFormIDInHeader := gcFormIDInRecordHeader in GameDefObj.Capabilities;
-  if not lFormIDInHeader then begin
-    Exit; //|||
-  end else begin
-    _File := GetFile as IwbFileInternal;
+  _File := GetFile as IwbFileInternal;
 
-    if not Assigned(_File) then
-      Exit;
+  if not Assigned(_File) then
+    Exit;
 
-    var lLayout := ContextObj.SlotLayout;
-    aFormID.CheckObjectID(lLayout);
-    if (aFormID.ObjectID[lLayout] < $800) and not aFormID.IsHardcoded then begin
-      if _File.MasterCount[GetMastersUpdated] < 1 then
-        raise Exception.Create('Using FormID [' + aFormID.ToDisplayString(lLayout) + '] requires "' + _File.Name + '" to have at least 1 master' );
-    end;
+  var lLayout := ContextObj.SlotLayout;
+  aFormID.CheckObjectID(lLayout);
+  if (aFormID.ObjectID[lLayout] < $800) and not aFormID.IsHardcoded then begin
+    if _File.MasterCount[GetMastersUpdated] < 1 then
+      raise Exception.Create('Using FormID [' + aFormID.ToDisplayString(lLayout) + '] requires "' + _File.Name + '" to have at least 1 master' );
+  end;
 
-    FileFormID := _File.LoadOrderFormIDtoFileFormID(aFormID, True);
+  FileFormID := _File.LoadOrderFormIDtoFileFormID(aFormID, True);
 
-    if GetFormID.ObjectID[lLayout] = FileFormID.ObjectID[lLayout] then
-      if _File.IsNewRecord(GetFormID, GetMastersUpdated) and _File.IsNewRecord(FileFormID, GetMastersUpdated) then begin
-        // we can do this relatively quietly and quickly...
-        if Assigned(mrGroup) or (GetChildGroup <> nil)  then
-          Assert(mrGroup.GroupLabel = GetFormID.ToCardinal);
-        MakeHeaderWriteable;
-        mrStruct.mrsFormID(lFormIDInHeader)^ := FileFormID;
-        mrFixedFormID := TwbFormID.Null;
-        mrLoadOrderFormID := TwbFormID.Null;
-        SetMastersUpdated(True);
-        if Assigned(mrGroup) or (GetChildGroup <> nil)  then
-          mrGroup.GroupLabel := FileFormID.ToCardinal;
-        UpdateInteriorCellGroup;
-        Exit;
-      end;
-
-    Master := _File.RecordByFormID[FileFormID, False, True];
-    if Assigned(Master) and ((Master._File as IwbFileInternal).Equals(_File)) then
-      raise Exception.Create('FormID [' + aFormID.ToDisplayString(lLayout) + '] is already present in file ' + _File.Name);
-
-    var lPreviousFormID := GetFormID;
-    ReRegister(_File, FileFormID, procedure
-    begin
+  if GetFormID.ObjectID[lLayout] = FileFormID.ObjectID[lLayout] then
+    if _File.IsNewRecord(GetFormID, GetMastersUpdated) and _File.IsNewRecord(FileFormID, GetMastersUpdated) then begin
+      // we can do this relatively quietly and quickly...
       if Assigned(mrGroup) or (GetChildGroup <> nil)  then
         Assert(mrGroup.GroupLabel = GetFormID.ToCardinal);
       MakeHeaderWriteable;
-      mrStruct.mrsFormID(lFormIDInHeader)^ := FileFormID;
+      mrStruct.mrsFormID(True)^ := FileFormID;
+      mrFixedFormID := TwbFormID.Null;
+      mrLoadOrderFormID := TwbFormID.Null;
+      SetMastersUpdated(True);
       if Assigned(mrGroup) or (GetChildGroup <> nil)  then
         mrGroup.GroupLabel := FileFormID.ToCardinal;
-    end, procedure
-    begin
-      MakeHeaderWriteable;
-      mrStruct.mrsFormID(lFormIDInHeader)^ := lPreviousFormID;
-    end);
-  end;
+      UpdateInteriorCellGroup;
+      Exit;
+    end;
+
+  Master := _File.RecordByFormID[FileFormID, False, True];
+  if Assigned(Master) and ((Master._File as IwbFileInternal).Equals(_File)) then
+    raise Exception.Create('FormID [' + aFormID.ToDisplayString(lLayout) + '] is already present in file ' + _File.Name);
+
+  var lPreviousFormID := GetFormID;
+  ReRegister(_File, FileFormID, procedure
+  begin
+    if Assigned(mrGroup) or (GetChildGroup <> nil)  then
+      Assert(mrGroup.GroupLabel = GetFormID.ToCardinal);
+    MakeHeaderWriteable;
+    mrStruct.mrsFormID(True)^ := FileFormID;
+    if Assigned(mrGroup) or (GetChildGroup <> nil)  then
+      mrGroup.GroupLabel := FileFormID.ToCardinal;
+  end, procedure
+  begin
+    MakeHeaderWriteable;
+    mrStruct.mrsFormID(True)^ := lPreviousFormID;
+  end);
 end;
 
 procedure TwbMainRecord.NameViewsFailed;
