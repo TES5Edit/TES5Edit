@@ -104,6 +104,8 @@ type
 function  wbIsAeroEnabled: Boolean;
 
 function wbGetLastWriteTime(const s: string): TDateTime;
+function wbGetLastWriteTimeUtc(const aFileName: string): TDateTime;
+procedure wbSetLastWriteTimeUtc(const aFileName: string; const aTime: TDateTime);
 
 type
   wb<T> = record
@@ -1023,6 +1025,38 @@ begin
     System.SysUtils.FindClose(F);
   end else
     Result := TFile.GetLastWriteTime(s);
+end;
+
+function wbGetLastWriteTimeUtc(const aFileName: string): TDateTime;
+var
+  lData       : TWin32FileAttributeData;
+  lSystemTime : TSystemTime;
+begin
+  if not GetFileAttributesEx(PChar(aFileName), GetFileExInfoStandard, @lData) then
+    RaiseLastOSError;
+  if not FileTimeToSystemTime(lData.ftLastWriteTime, lSystemTime) then
+    RaiseLastOSError;
+  Result := SystemTimeToDateTime(lSystemTime);
+end;
+
+procedure wbSetLastWriteTimeUtc(const aFileName: string; const aTime: TDateTime);
+var
+  lSystemTime : TSystemTime;
+  lFileTime   : TFileTime;
+begin
+  DateTimeToSystemTime(aTime, lSystemTime);
+  if not SystemTimeToFileTime(lSystemTime, lFileTime) then
+    RaiseLastOSError;
+  var lHandle := CreateFile(PChar(aFileName), FILE_WRITE_ATTRIBUTES, FILE_SHARE_READ or FILE_SHARE_WRITE or FILE_SHARE_DELETE, nil,
+    OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
+  if lHandle = INVALID_HANDLE_VALUE then
+    RaiseLastOSError;
+  try
+    if not SetFileTime(lHandle, nil, nil, @lFileTime) then
+      RaiseLastOSError;
+  finally
+    CloseHandle(lHandle);
+  end;
 end;
 
 class function wb<T>.Iff(aCond: Boolean; const aTrue, aFalse: T): T;

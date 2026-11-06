@@ -38,6 +38,7 @@ uses
   WinApi.ShellApi,
   WinApi.Windows,
 
+  wbHelpers,
   wbInterface,
 
   xejviScriptAdapterMiscJson,
@@ -627,6 +628,16 @@ begin
   Value := FileExists(Args.Values[0]);
 end;
 
+procedure JvInterpreter_GetFileLastWriteTimeUtc(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := VarFromDateTime(wbGetLastWriteTimeUtc(Args.Values[0]));
+end;
+
+procedure JvInterpreter_SetFileLastWriteTimeUtc(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  wbSetLastWriteTimeUtc(Args.Values[0], VarToDateTime(Args.Values[1]));
+end;
+
 procedure JvInterpreter_ForceDirectories(var Value: Variant; Args: TJvInterpreterArgs);
 begin
   Value := System.SysUtils.ForceDirectories(Args.Values[0]);
@@ -868,6 +879,8 @@ begin
     AddFunction('SysUtils', 'StrToFloatDef', JvInterpreter_StrToFloatDef, 2, [varEmpty, varEmpty], varEmpty);
     AddFunction('SysUtils', 'DirectoryExists', JvInterpreter_DirectoryExists, 1, [varEmpty], varEmpty);
     AddFunction('SysUtils', 'FileExists', JvInterpreter_FileExists, 1, [varEmpty], varEmpty);
+    AddFunction('SysUtils', 'GetFileLastWriteTimeUtc', JvInterpreter_GetFileLastWriteTimeUtc, 1, [varEmpty], varEmpty);
+    AddFunction('SysUtils', 'SetFileLastWriteTimeUtc', JvInterpreter_SetFileLastWriteTimeUtc, 2, [varEmpty, varEmpty], varEmpty);
     AddFunction('SysUtils', 'ForceDirectories', JvInterpreter_ForceDirectories, 1, [varEmpty], varEmpty);
     AddFunction('SysUtils', 'IncludeTrailingBackslash', JvInterpreter_IncludeTrailingBackslash, 1, [varEmpty], varEmpty);
     AddFunction('SysUtils', 'ExcludeTrailingBackslash', JvInterpreter_ExcludeTrailingBackslash, 1, [varEmpty], varEmpty);

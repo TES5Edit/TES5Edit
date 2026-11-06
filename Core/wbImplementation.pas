@@ -32065,7 +32065,8 @@ var
   lTo          : string;
   lBackup      : string;
   lBackupBase  : string;
-  lOldDateTime : TDateTime;
+  lOldTime     : TDateTime;
+  lHasOldTime  : Boolean;
 begin
   Result := False;
 
@@ -32081,10 +32082,12 @@ begin
   end;
 
   lTo := Settings.DataPath + aTo;
-  lOldDateTime := 0;
+  lOldTime := 0;
+  lHasOldTime := False;
   if FileExists(lTo) then begin
     try
-      lOldDateTime := wbGetLastWriteTime(lTo);
+      lOldTime := wbGetLastWriteTimeUtc(lTo);
+      lHasOldTime := True;
     except
       SaveFailed('Could not get last modified time of "' + lTo + '".', aAlert);
     end;
@@ -32117,9 +32120,9 @@ begin
   end;
 
   if not (gcOrderFromPluginsTxt in GameDefObj.Capabilities) then
-    if lOldDateTime <> 0 then
+    if lHasOldTime then
       if wbIsModule(lTo, GameDefObj.GameExeName) then try
-        TFile.SetLastWriteTime(lTo, lOldDateTime);
+        wbSetLastWriteTimeUtc(lTo, lOldTime);
       except
         SaveFailed('Could not set last modified time of "' + lTo + '".', aAlert);
       end;

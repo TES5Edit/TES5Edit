@@ -54,10 +54,17 @@ procedure SavePlugin(aFile: IInterface; aFileName: string; aReset: Boolean);
 var
   ms: TMemoryStream;
   fs: TFileStream;
-  fdate: Integer;
+  ftime: TDateTime;
+  keeptime: Boolean;
 begin
-  if FileExists(aFileName) then
-    fdate := FileAge(aFileName);
+  keeptime := False;
+  if FileExists(aFileName) and ((wbGameMode = gmTES3) or (wbGameMode = gmTES4) or (wbGameMode = gmFO3) or (wbGameMode = gmFNV)) then try
+    ftime := GetFileLastWriteTimeUtc(aFileName);
+    keeptime := True;
+  except
+    on E: Exception do
+      AddMessage('Can not read the file date of ' + aFileName + ': ' + E.Message);
+  end;
 
   ms := TMemoryStream.Create;
   try
@@ -73,8 +80,8 @@ begin
   end;
 
   // restore original file date for games that use it for load order sorting
-  if (fdate <> 0) and ((wbGameMode = gmTES4) or (wbGameMode = gmFO3) or (wbGameMode = gmFNV)) then try
-    FileSetDate(aFileName, fdate);
+  if keeptime then try
+    SetFileLastWriteTimeUtc(aFileName, ftime);
   except
     on E: Exception do
       AddMessage('Can not change file date to original one: ' + E.Message);
