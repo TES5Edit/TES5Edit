@@ -1850,6 +1850,7 @@ begin
   if Length(Strs) < 1 then
     SetLength(Strs, 1);
   for var t in Strs do begin
+    wbApiServerLog(t);
     mmoMessages.Lines.Add(t);
     stbMain.Panels[0].Text := t;
   end;
@@ -4285,6 +4286,9 @@ var
   Files : TStringDynArray
   ;
   i     : Integer;
+  prompt: string;
+  answer: Integer;
+  dialog: TForm;
 begin
   if not wbBuildRefs then
     Exit;
@@ -4309,9 +4313,26 @@ begin
   if i < 1 then
     Exit;
 
-  if MessageDlg('The Reference Cache contains ' + i.ToString +
+  prompt := 'The Reference Cache contains ' + i.ToString +
     ' files from a different version of ' + wbAppName + wbToolName +
-    '. Do you want to remove them?', mtConfirmation, mbYesNo, 0) = mrYes then
+    '. Do you want to remove them?';
+  if wbApiServerEnabled then begin
+    dialog := CreateMessageDialog(prompt, mtConfirmation, mbYesNo);
+    answer := mrNo;
+    try
+      wbApiServerBeginInteraction(prompt,
+        procedure(aYes: Boolean)
+        begin
+          if aYes then dialog.ModalResult := mrYes else dialog.ModalResult := mrNo;
+        end);
+      answer := dialog.ShowModal;
+    finally
+      wbApiServerEndInteraction(answer = mrYes);
+      dialog.Free;
+    end;
+  end else
+    answer := MessageDlg(prompt, mtConfirmation, mbYesNo, 0);
+  if answer = mrYes then
     for i := Low(Files) to High(Files) do try
       TFile.Delete(Files[i]);
     except end;
@@ -4783,7 +4804,7 @@ begin
         finally
           Stream.Free;
         end;
-        if (i < wbWhatsNewVersion) and not xeAutoLoad then begin
+        if (i < wbWhatsNewVersion) and not xeAutoLoad and not wbApiServerEnabled then begin
           ShowModal;
           if cbDontShowAgain.Checked then begin
             Settings.WriteInteger('WhatsNew', 'Version', wbWhatsNewVersion);
@@ -4803,7 +4824,7 @@ begin
     end;
 
     wbPatron := Settings.ReadBool('Options', 'Patron', wbPatron);
-    if (not wbPatron or not xeAutoLoad) and not xeTestConflicts then
+    if (not wbPatron or not xeAutoLoad) and not xeTestConflicts and not wbApiServerEnabled then
       ShowDeveloperMessage;
   end;
 
@@ -4897,6 +4918,22 @@ begin
 
         sl.Clear;
         if wbToolSource in [tsPlugins] then begin
+          if wbApiServerEnabled and (wbToolMode in [tmEdit, tmView]) then begin
+            wbApiServerBeginSelection;
+            wbApiServerStart(
+              function: TwbFiles
+              begin
+                Result := frmMain.Files;
+              end);
+            AddMessage('API: waiting for plugin selection via GET /api/modules and POST /api/load');
+            while not wbApiServerSelectionDone do begin
+              DoProcessMessages;
+              if Application.Terminated then Exit;
+              Sleep(10);
+            end;
+            Modules := wbModulesByLoadOrder;
+            sl.AddStrings(Modules.SimulateLoad.ToStrings(False));
+          end;
           if (wbToolMode in wbPluginModes) or (xeAutoLoad and (xeTestConflicts or (GetAsyncKeyState(VK_CONTROL) >= 0))) then try
             if xeQuickClean then
               if Length(wbModulesByLoadOrder.FilteredByFlag(mfTaggedForPluginMode)) <> 1 then begin
@@ -5076,6 +5113,7 @@ begin
     end;
   except
     on E: Exception do begin
+      wbApiServerLoadFailed(E.ClassName + ': ' + E.Message);
       AddMessage('Fatal: Error loading plugin list: <' + E.ClassName + ': ' + E.Message + '>');
       Exit;
     end;
@@ -20231,8 +20269,10 @@ begin
   if Length(Strs) < 1 then
     SetLength(Strs, 1);
 
-  for var s in Strs do
+  for var s in Strs do begin
+    wbApiServerLog(s);
     NewMessages.Add(s);
+  end;
 end;
 
 procedure TfrmMain.WMUser1(var Message: TMessage);
@@ -20527,6 +20567,31 @@ begin
         function(const aFileName: string; aIsLight, aIsMedium: Boolean): IwbFile
         begin
           Result := frmMain.AddNewFileName(aFileName, aIsLight, aIsMedium);
+        end
+      );
+      wbApiServerSetRemoveRecordHandler(
+        procedure(const aRecord: IwbMainRecord)
+        var
+          Node: PVirtualNode;
+        begin
+          // Mirror the GUI removal lifecycle; never retain a removed record in
+          // active comparison/history/navigation state. No save is performed.
+          frmMain.vstNav.BeginUpdate;
+          try
+            frmMain.CheckHistoryRemove(frmMain.BackHistory, aRecord);
+            frmMain.CheckHistoryRemove(frmMain.ForwardHistory, aRecord);
+            frmMain.DoSetActiveRecord(nil, True);
+            if not (toAutoFreeOnCollapse in frmMain.vstNav.TreeOptions.AutoOptions) then begin
+              Node := frmMain.FindNodeForElement(aRecord);
+              if Assigned(Node) then frmMain.vstNav.DeleteNode(Node);
+            end;
+            aRecord.Remove;
+            frmMain.NavUpdate(True);
+          finally
+            frmMain.vstNav.EndUpdate;
+            frmMain.InvalidateElementsTreeView(NoNodes);
+            frmMain.vstView.Refresh;
+          end;
         end
       );
       // NOTE: the API intentionally gets no save callback - persisting edits

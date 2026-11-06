@@ -121,6 +121,10 @@ def check_status(port, token):
     record(PASS if loaded else FAIL, "GET /api/status",
            f"pid={data.get('pid')} gameMode={data.get('gameMode')} "
            f"pluginsLoaded={loaded} apiVersion={data.get('apiVersion')}")
+    if loaded:
+        record(PASS if data.get("busy") is False else FAIL,
+               "status excludes its own request from busy",
+               f"pluginsLoaded=True busy={data.get('busy')}")
     if not loaded:
         record(FAIL, "plugins loaded", "load plugins in the xEdit GUI, then re-run")
     return data

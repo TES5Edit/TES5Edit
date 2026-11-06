@@ -1,5 +1,12 @@
 # xEdit-API（中文说明）
 
+GUI 编辑能力全覆盖工作已启动：见 [覆盖矩阵与任务顺序](GUI_API_COVERAGE.md)。
+首批新增 [精确元素读取与编辑条件发现](API_ELEMENT_INSPECTION.md)，尚待编译与运行时验证。
+
+开发中：结构化字段 diff、请求前置条件、会话内幂等及受保护的字段回滚，详见
+[API_CHANGE_SAFETY.md](API_CHANGE_SAFETY.md)。新增代码尚待 Delphi 编译和运行时验证；
+已有写端点不会自动生成回滚历史。
+
 基于 **[TES5Edit/TES5Edit](https://github.com/TES5Edit/TES5Edit)**（ElminsterAU 的 xEdit 代码库）的二次开发分支：为 xEdit（主要面向 **SSEEdit / 上古卷轴5：天际特别版**）内置一个**进程内 HTTP/JSON API**，并提供一套**通用“原子能力”层**——外部工具与 AI agent 通过**组合少量通用原语**即可完成几乎任意 patch/编辑需求，**无需针对每个新需求修改 xEdit 源码**。
 
 **已验证环境**：Windows + **Delphi 13 Community Edition（RAD Studio 37.0）**，工程配置 `LiteDebug / Win64`，基线 `dev-4.1.6`。
