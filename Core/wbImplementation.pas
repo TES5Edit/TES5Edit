@@ -59,6 +59,7 @@ type
     procedure AddNameReferrer(const aValue: string; aRecord: Pointer);
     function HasNameIndex: Boolean;
     procedure ReResolveNameTexts(const aTexts: TArray<string>);
+    function NameReferrers(const aTexts: array of string): TArray<IwbMainRecord>;
     procedure ReResolveNameKeys(aFormIDBase, aNameBase: Byte; const aKeys: array of TwbFormID);
     procedure ReturnDenseID(aID: Cardinal);
     procedure SaveFailed(const aText: string; const aAlert: TwbSaveMessageProc);
@@ -115,6 +116,7 @@ function wbOperationScopeDepth: Integer;
 implementation
 
 uses
+  System.Character,
   System.Generics.Collections,
   System.Generics.Defaults,
   System.IniFiles,
@@ -1056,6 +1058,11 @@ type
     procedure PlanFormIDChange(var aPlan: TwbFormIDChangePlan);
     function ApplyFormIDChange(const aPlan: TwbFormIDChangePlan): Boolean;
     procedure FinishFormIDChange(const aPlan: TwbFormIDChangePlan);
+    procedure PlanNameChange(const aRecord: IwbMainRecord; const aNewIdentity: string; aReports: Boolean; out aPlan: TwbNameChangePlan);
+    function ApplyNameChange(var aPlan: TwbNameChangePlan): Boolean;
+    function FirstBlockedIdentity: IwbMainRecord;
+    function FirstCorruptKey: IwbMainRecord;
+    class function CompareFileSequence(const aLeft, aRight: TwbFile): Integer; static;
     procedure BuildOrLoadRefOfDependents;
     procedure RequireMasterFor(const aLoadOrderFormID: TwbFormID; const aAddMaster: TFunc<IwbFile, Boolean>);
     function PlanReferenceReplacement(const aLines: TStrings; const aReport: TProc<string>): TwbReferenceReplacementPlan;
@@ -1493,7 +1500,9 @@ type
     function CheckChildOfCell: Boolean;
     procedure UpdateCellChildGroup;
     procedure UpdateInteriorCellGroup;
-    procedure ReRegister(const aFile: IwbFileInternal; const aFileFormID: TwbFormID; const aMoveKey: TProc);
+    procedure ReRegister(const aFile: IwbFileInternal; const aFileFormID: TwbFormID; const aMoveKey, aMoveBack: TProc);
+    procedure RejoinAt(const aFile: IwbFileInternal; const aKey: TwbFormID; const aMoveBack: TProc; const aReferrers: TDynMainRecords);
+    procedure NameViewsFailed;
     function RegistrationMaster(const aFile: IwbFileInternal; const aFileFormID: TwbFormID): IwbMainRecord;
     procedure LeaveFileIndex(const aFile: IwbFileInternal);
     procedure JoinFileIndex(const aFile: IwbFileInternal; const aMaster: IwbMainRecord; const aMoveKey: TProc);
@@ -3230,6 +3239,589 @@ begin
     Exit;
   if aPlan.Target.IsEditable then
     aPlan.Target.NextObjectID := aPlan.HighFormID.Next(flContextObj.SlotLayout).ObjectID[flContextObj.SlotLayout];
+end;
+
+class function TwbFile.CompareFileSequence(const aLeft, aRight: TwbFile): Integer;
+begin
+  if aLeft.flLoadOrder < aRight.flLoadOrder then
+    Exit(-1);
+  if aLeft.flLoadOrder > aRight.flLoadOrder then
+    Exit(1);
+  if aLeft.flSerial < aRight.flSerial then
+    Exit(-1);
+  if aLeft.flSerial > aRight.flSerial then
+    Exit(1);
+  Result := 0;
+end;
+
+function TwbFile.FirstBlockedIdentity: IwbMainRecord;
+var
+  lIdentity : string;
+  lHasGrid  : Boolean;
+  lGrid     : TwbGridCell;
+  lKey      : TwbFormID;
+begin
+  Result := nil;
+  for var lEntry in flRecords do
+    if Assigned(lEntry) then begin
+      var lRecord := lEntry as TObject as TwbMainRecord;
+      if not Assigned(lRecord.mrDef) or not lRecord.mrDef.IsKeyedByIdentity or lRecord.IdentityUntouched then
+        Continue;
+      if not lRecord.GetCurrentIdentity(lIdentity, lHasGrid, lGrid) then
+        Continue;
+      if not lRecord.KeyOfIdentity(lIdentity, lHasGrid, lGrid, lKey) or (lKey <> lRecord.GetFixedFormID) then
+        Exit(lEntry);
+    end;
+end;
+
+procedure TwbFile.PlanNameChange(const aRecord: IwbMainRecord; const aNewIdentity: string; aReports: Boolean;
+  out aPlan: TwbNameChangePlan);
+const
+  cNotRenamed : array[0..7] of TwbSignature = ('LAND', 'PGRD', 'INFO', 'SSCR', 'MGEF', 'SKIL', 'GMST', 'DIAL');
+  cLater      : array[0..1] of TwbSignature = ('CELL', 'REGN');
+var
+  lFiles    : TArray<TwbFile>;
+  lIdentity : string;
+  lHasGrid  : Boolean;
+  lCount    : Integer;
+  lOldLower : string;
+  lNewLower : string;
+  lFields   : TList<TwbNameChangeField>;
+  lValues   : TList<TwbNameChangeValue>;
+  lReports  : TList<TwbNameChangeReport>;
+
+  procedure Refuse(aRefusal: TwbNameChangeRefusal; const aText: string; const aRec: IwbMainRecord = nil;
+    const aFile: IwbFile = nil);
+  begin
+    aPlan.Refusal := aRefusal;
+    aPlan.RefusalText := aText;
+    aPlan.RefusedRecord := aRec;
+    aPlan.RefusedFile := aFile;
+    aPlan.Renames := nil;
+    aPlan.Fields := nil;
+    aPlan.Values := nil;
+  end;
+
+  function InList(const aSignature: TwbSignature; const aList: array of TwbSignature): Boolean;
+  begin
+    for var lSignature in aList do
+      if lSignature = aSignature then
+        Exit(True);
+    Result := False;
+  end;
+
+  function Ordered: TArray<TwbFile>;
+  begin
+    Result := nil;
+    for var lFile in flContextObj.Files do
+      Result := Result + [lFile as TObject as TwbFile];
+    TArray.Sort<TwbFile>(Result, TComparer<TwbFile>.Construct(
+      function(const aLeft, aRight: TwbFile): Integer
+      begin
+        Result := TwbFile.CompareFileSequence(aLeft, aRight);
+      end));
+  end;
+
+  function Takes(const aDef: IwbNameReferenceDef; aByFormIDBase: Boolean): Boolean;
+  var
+    lRecordDef : PwbMainRecordDef;
+  begin
+    for var lSignature in aDef.AllowedSignatures do
+      if flContextObj.GameDefObj.FindRecordDef(lSignature, lRecordDef) and lRecordDef^.IsKeyedByIdentity then
+        if aByFormIDBase then begin
+          if lRecordDef^.GetFormIDBase = aPlan.FormIDBase then
+            Exit(True);
+        end else if lRecordDef^.GetFormIDNameBase = aPlan.NameBase then
+          Exit(True);
+    Result := False;
+  end;
+
+  function MemberRefusal(const aFile: TwbFile; const aMember: IwbMainRecord): string;
+  var
+    lMemberIdentity : string;
+    lMemberGrid     : Boolean;
+  begin
+    if aFile.IsDeltaPatch then
+      Exit(Format('%s in %s is in a delta patch', [aMember.Name, aFile.GetFileName]));
+    var lMember := aMember as TObject as TwbMainRecord;
+    if not lMember.GetCurrentIdentity(lMemberIdentity, lMemberGrid) then
+      Exit(Format('%s in %s has no identity', [aMember.Name, aFile.GetFileName]));
+    if not aMember.IsEditable then
+      Exit(Format('%s in %s can not be edited', [aMember.Name, aFile.GetFileName]));
+    Result := lMember.mrDef.IdentityStoreRefusal(aMember, aNewIdentity);
+    if Result <> '' then
+      Result := Format('%s in %s can not take "%s": %s', [aMember.Name, aFile.GetFileName, aNewIdentity, Result]);
+  end;
+
+  procedure Consider(const aRec: IwbMainRecord; const aElement: IwbElement; const aDef: IwbNameReferenceDef);
+  var
+    lValue    : string;
+    lTarget   : IwbMainRecord;
+    lCorrupt  : Boolean;
+  begin
+    if not Takes(aDef, False) or not aDef.ElementValue(aElement, lValue, False) then
+      Exit;
+    var lLower := lValue.ToLowerInvariant;
+    if ((lLower <> lOldLower) and (lLower <> lNewLower)) or aDef.IsSentinel(lValue) then
+      Exit;
+    var lItem := Default(TwbNameChangeValue);
+    lItem.Rec := aRec;
+    lItem.Element := aElement;
+    lItem.Def := aDef;
+    lItem.Path := aElement.Path;
+    lItem.Value := lValue;
+    aDef.ViewValue(aElement, lValue, lItem.Views);
+    lItem.Verdict := aDef.VerdictOf(lItem.Views, lTarget);
+    lItem.Target := lTarget;
+    lItem.Field := -1;
+    lItem.NamesNew := lLower = lNewLower;
+    lItem.SeesBase := Takes(aDef, True);
+    if lItem.SeesBase then begin
+      var lSelected := (aRec._File as TObject as TwbFile).SelectAtNameKey(aPlan.Key, lCorrupt);
+      if Assigned(lSelected) and not lCorrupt then begin
+        lItem.AfterHit := lSelected;
+        lItem.AfterAllowed := aDef.IsAllowedSignature(lSelected.Signature);
+      end;
+    end;
+    if not lItem.NamesNew and (lItem.Verdict in [nvLink, nvWrongType]) and (lTarget.FixedFormID = aPlan.Key) then begin
+      var lField := Default(TwbNameChangeField);
+      lField.Rec := aRec;
+      lField.Element := aElement;
+      lField.Path := lItem.Path;
+      lField.Value := lValue;
+      lField.ValueIndex := lValues.Count;
+      lField.Selected := True;
+      if not aElement.IsEditable then begin
+        lField.Fault := ncfNotEditable;
+        lField.FaultText := 'it can not be edited';
+      end else begin
+        lField.FaultText := aDef.FitRefusal(aElement, aNewIdentity);
+        if lField.FaultText <> '' then
+          lField.Fault := ncfDoesNotFit;
+      end;
+      lItem.Field := lFields.Count;
+      lFields.Add(lField);
+    end;
+    lValues.Add(lItem);
+  end;
+
+  procedure Walk(const aRec: IwbMainRecord; const aContainer: IwbContainer);
+  var
+    lDef       : IwbNameReferenceDef;
+    lContainer : IwbContainer;
+  begin
+    for var i := 0 to Pred(aContainer.ElementCount) do begin
+      var lElement := aContainer.Elements[i];
+      if Supports(lElement.ResolvedValueDef, IwbNameReferenceDef, lDef) then
+        Consider(aRec, lElement, lDef);
+      if Supports(lElement, IwbContainer, lContainer) then
+        Walk(aRec, lContainer);
+    end;
+  end;
+
+  function IsWordChar(const aChar: Char): Boolean;
+  begin
+    Result := aChar.IsLetterOrDigit or (aChar = '_');
+  end;
+
+  function NamesAsWord(const aText: string): Boolean;
+  begin
+    var lText := aText.ToLowerInvariant;
+    var lAt := lText.IndexOf(lOldLower);
+    while lAt >= 0 do begin
+      var lEnd := lAt + Length(lOldLower);
+      if ((lAt = 0) or not IsWordChar(lText.Chars[lAt - 1])) and ((lEnd >= Length(lText)) or not IsWordChar(lText.Chars[lEnd])) then
+        Exit(True);
+      lAt := lText.IndexOf(lOldLower, lAt + 1);
+    end;
+    Result := False;
+  end;
+
+  procedure Report(aKind: TwbNameChangeReportKind; const aRec: IwbMainRecord; const aElement: IwbElement);
+  begin
+    var lItem := Default(TwbNameChangeReport);
+    lItem.Kind := aKind;
+    lItem.Rec := aRec;
+    lItem.Path := aElement.Path;
+    lReports.Add(lItem);
+  end;
+
+  function TextOf(const aRec: IwbMainRecord; const aElement: IwbElement; out aText: string): Boolean;
+  var
+    lDef : IwbStringDef;
+  begin
+    aText := '';
+    if not Assigned(aElement) then
+      Exit(False);
+    Result := Supports(aElement.ResolvedValueDef, IwbStringDef, lDef) and lDef.ElementValue(aElement, aText, True);
+    if not Result then
+      Report(ncpNotScanned, aRec, aElement);
+  end;
+
+  procedure ReportOn(const aRec: IwbMainRecord);
+  var
+    lElement    : IwbElement;
+    lConditions : IwbContainerElementRef;
+    lCondition  : IwbContainer;
+    lScvr       : IwbContainer;
+    lName       : string;
+    lGrid       : Boolean;
+    lText       : string;
+  begin
+    var lSignature := aRec.Signature;
+    if lSignature = 'SCPT' then begin
+      lElement := aRec.ElementBySignature['SCTX'];
+      if Assigned(lElement) and not TextOf(aRec, lElement, lText) then
+        Exit;
+      if NamesAsWord(lText) then
+        Report(ncpScriptText, aRec, lElement)
+      else if lText.Trim = '' then begin
+        lElement := aRec.ElementBySignature['SCDT'];
+        if Assigned(lElement) and (lElement.DataSize > 0) then
+          Report(ncpNotScanned, aRec, lElement);
+      end;
+    end else if lSignature = 'INFO' then begin
+      lElement := aRec.ElementBySignature['BNAM'];
+      if TextOf(aRec, lElement, lText) and NamesAsWord(lText) then
+        Report(ncpResultText, aRec, lElement);
+      if Supports(aRec.ElementByName['Conditions'], IwbContainerElementRef, lConditions) then
+        for var i := 0 to Pred(lConditions.ElementCount) do
+          if Supports(lConditions.Elements[i], IwbContainer, lCondition) and
+             Supports(lCondition.ElementBySignature['SCVR'], IwbContainer, lScvr) then begin
+            var lObject := lScvr.ElementByName['Variable/Object'];
+            var lType := lScvr.ElementByName['Type'];
+            if Assigned(lObject) and Assigned(lType) and (lType.NativeValue <> 66) and TextOf(aRec, lObject, lText) and
+               (lText.ToLowerInvariant = lOldLower) then
+              Report(ncpCondition, aRec, lObject);
+          end;
+    end else if lSignature = 'GMST' then
+      if (aRec as TObject as TwbMainRecord).GetCurrentIdentity(lName, lGrid) then begin
+        lName := lName.ToLowerInvariant;
+        if lName.StartsWith('smagic') and lName.EndsWith('id') then begin
+          lElement := aRec.ElementBySignature['STRV'];
+          if TextOf(aRec, lElement, lText) and (lText.ToLowerInvariant = lOldLower) then
+            Report(ncpGameSetting, aRec, lElement);
+        end;
+      end;
+  end;
+
+begin
+  aPlan := Default(TwbNameChangePlan);
+  if not Assigned(aRecord) or ((aRecord._File as TObject) <> Self) then
+    raise Exception.Create('A Change NAME plan is made by the file holding the record');
+  aPlan.Rec := aRecord;
+  aPlan.NewIdentity := aNewIdentity;
+  var lRecord := aRecord as TObject as TwbMainRecord;
+  var lDef := lRecord.mrDef;
+  var lSignature := lRecord.GetSignature;
+
+  if not flContextObj.GameDefObj.IsMorrowind then begin
+    Refuse(ncrKind, 'Change NAME renames Morrowind records', aRecord);
+    Exit;
+  end;
+  if InList(lSignature, cLater) then begin
+    Refuse(ncrKind, 'Change NAME of a cell or a region comes in a later step', aRecord);
+    Exit;
+  end;
+  if not Assigned(lDef) or not lDef.IsKeyedByIdentity or not lDef.ContainsKnownSubRecord[ksrEditorID] or
+     (lDef.GetGridFormIDBase > 0) or (dfIdentityQualifiedByTopic in lDef.DefFlags) or InList(lSignature, cNotRenamed) then begin
+    Refuse(ncrKind, Format('%s is not a record Change NAME renames', [aRecord.Name]), aRecord);
+    Exit;
+  end;
+
+  if not lRecord.GetCurrentIdentity(lIdentity, lHasGrid) then begin
+    Refuse(ncrNoIdentity, Format('%s has no identity', [aRecord.Name]), aRecord);
+    Exit;
+  end;
+  if lIdentity = '' then begin
+    Refuse(ncrNoIdentity, Format('%s has an empty identity', [aRecord.Name]), aRecord);
+    Exit;
+  end;
+  aPlan.OldIdentity := lIdentity;
+  aPlan.Key := lRecord.GetFixedFormID;
+  aPlan.FormIDBase := lDef.GetFormIDBase;
+  aPlan.NameBase := lDef.GetFormIDNameBase;
+  lOldLower := lIdentity.ToLowerInvariant;
+  lNewLower := aNewIdentity.ToLowerInvariant;
+
+  lFiles := Ordered;
+  var lOutside := '';
+  for var lFile in lFiles do
+    if not lFile.NameReferencesJudged then
+      lOutside := lOutside + ', ' + lFile.GetFileName;
+  if lOutside <> '' then begin
+    Refuse(ncrOutside, 'NAME references are not judged in ' + lOutside.Substring(2));
+    Exit;
+  end;
+
+  for var lFile in lFiles do
+    if not lFile.IsDeltaPatch then begin
+      var lShared := lFile.FirstCorruptKey;
+      if Assigned(lShared) then begin
+        Refuse(ncrCorruptOrBlocked, Format('two or more records share the key [%s] in %s',
+          [lShared.FixedFormID.ToDisplayString(flContextObj.SlotLayout), lFile.GetFileName]), lShared, lFile);
+        Exit;
+      end;
+      var lBlocked := lFile.FirstBlockedIdentity;
+      if Assigned(lBlocked) then begin
+        Refuse(ncrCorruptOrBlocked, Format('%s in %s is not registered under its current identity',
+          [lBlocked.Name, lFile.GetFileName]), lBlocked, lFile);
+        Exit;
+      end;
+    end;
+
+  if aNewIdentity = '' then begin
+    Refuse(ncrNewIdentity, 'the new identity is empty');
+    Exit;
+  end;
+  if lNewLower = lOldLower then begin
+    Refuse(ncrNewIdentity, 'the new identity is the old one: a change of case alone is a plain edit');
+    Exit;
+  end;
+  if flContextObj.GameDefObj.IsNameBaseSentinel(aPlan.NameBase, aNewIdentity) then begin
+    Refuse(ncrNewIdentity, Format('"%s" never links: a field naming this kind of record reads it as no record', [aNewIdentity]));
+    Exit;
+  end;
+
+  for var lFile in lFiles do begin
+    var lFirst := lFile.RecordRunAt(aPlan.Key, lCount);
+    for var k := lFirst to Pred(lFirst + lCount) do begin
+      var lMember := lFile.flRecords[k];
+      var lWhy := MemberRefusal(lFile, lMember);
+      if lWhy <> '' then begin
+        Refuse(ncrRenamed, lWhy, lMember, lFile);
+        Exit;
+      end;
+      var lRename := Default(TwbNameChangeRename);
+      lRename.Rec := lMember;
+      aPlan.Renames := aPlan.Renames + [lRename];
+    end;
+  end;
+  var lNoKey := flContextObj.IdentityKeyRefusal(aPlan.FormIDBase, aPlan.NameBase, aNewIdentity);
+  if lNoKey <> '' then begin
+    Refuse(ncrRenamed, lNoKey, aRecord);
+    Exit;
+  end;
+
+  var lHolder := flContextObj.IdentityHolder(aPlan.NameBase, aNewIdentity);
+  if Assigned(lHolder) then begin
+    Refuse(ncrHolder, Format('%s in %s holds the identity "%s"', [lHolder.Name, lHolder._File.FileName, aNewIdentity]),
+      lHolder, lHolder._File);
+    Exit;
+  end;
+  for var lOther in flContextObj.GameDefObj.NameBasesTogether(aPlan.NameBase) - [aPlan.NameBase] do begin
+    lHolder := flContextObj.IdentityHolder(lOther, aNewIdentity);
+    if Assigned(lHolder) then begin
+      Refuse(ncrHolder, Format('%s in %s holds the identity "%s", and a field looks up both kinds of record by it',
+        [lHolder.Name, lHolder._File.FileName, aNewIdentity]), lHolder, lHolder._File);
+      Exit;
+    end;
+  end;
+
+  var lStop := flContextObj.NameReferencesStop;
+  if lStop <> '' then begin
+    Refuse(ncrReferencesNotBuilt, 'Change NAME needs references built: ' + lStop);
+    Exit;
+  end;
+
+  var lReferrers: TArray<IwbMainRecord> := nil;
+  var lFound := TList<IwbMainRecord>.Create;
+  try
+    for var lReferrer in TwbLoadingGameContext(flContextObj).NameReferrers([lIdentity, aNewIdentity]) do
+      if not (lReferrer._File as TObject as TwbFile).IsDeltaPatch then
+        lFound.Add(lReferrer);
+    lReferrers := lFound.ToArray;
+  finally
+    lFound.Free;
+  end;
+  TArray.Sort<IwbMainRecord>(lReferrers, TComparer<IwbMainRecord>.Construct(
+    function(const aLeft, aRight: IwbMainRecord): Integer
+    begin
+      Result := TwbFile.CompareFileSequence(aLeft._File as TObject as TwbFile, aRight._File as TObject as TwbFile);
+      if Result = 0 then
+        if aLeft.FixedFormID.ToCardinal < aRight.FixedFormID.ToCardinal then
+          Result := -1
+        else if aLeft.FixedFormID.ToCardinal > aRight.FixedFormID.ToCardinal then
+          Result := 1;
+    end));
+  lFields := TList<TwbNameChangeField>.Create;
+  lValues := TList<TwbNameChangeValue>.Create;
+  lReports := TList<TwbNameChangeReport>.Create;
+  try
+    for var lReferrer in lReferrers do begin
+      var lHold := lReferrer as IwbContainerElementRef;
+      Walk(lReferrer, lReferrer);
+    end;
+
+    if aReports then
+      for var lFile in lFiles do
+        if not lFile.IsDeltaPatch then
+          for var lEntry in lFile.flRecords do
+            if Assigned(lEntry) then
+              ReportOn(lEntry);
+    aPlan.Fields := lFields.ToArray;
+    aPlan.Values := lValues.ToArray;
+    aPlan.Reports := lReports.ToArray;
+  finally
+    lReports.Free;
+    lValues.Free;
+    lFields.Free;
+  end;
+end;
+
+function TwbFile.ApplyNameChange(var aPlan: TwbNameChangePlan): Boolean;
+var
+  lNow    : TwbNameChangePlan;
+  lNewKey : TwbFormID;
+
+  function SameRecord(const aLeft, aRight: IwbMainRecord): Boolean;
+  begin
+    Result := (Assigned(aLeft) = Assigned(aRight)) and (not Assigned(aLeft) or aLeft.Equals(aRight));
+  end;
+
+  function SameViews(const aLeft, aRight: TwbNameKeyViews): Boolean;
+  begin
+    Result := Length(aLeft) = Length(aRight);
+    if Result then
+      for var i := 0 to High(aLeft) do
+        if (aLeft[i].Base <> aRight[i].Base) or (aLeft[i].NameBase <> aRight[i].NameBase) or (aLeft[i].Key <> aRight[i].Key) or
+           (aLeft[i].State <> aRight[i].State) or (aLeft[i].Allowed <> aRight[i].Allowed) or not SameRecord(aLeft[i].Hit, aRight[i].Hit) then
+          Exit(False);
+  end;
+
+  function Moved: string;
+  var
+    lAt : TDictionary<Pointer, Integer>;
+    j   : Integer;
+  begin
+    if lNow.Refusal <> ncrNone then
+      Exit('the plan would now be refused: ' + lNow.RefusalText);
+    if (lNow.Key <> aPlan.Key) or (lNow.OldIdentity <> aPlan.OldIdentity) then
+      Exit('the record''s identity has changed');
+    if Length(lNow.Renames) <> Length(aPlan.Renames) then
+      Exit('the records to rename have changed');
+    for var i := 0 to High(lNow.Renames) do
+      if not SameRecord(lNow.Renames[i].Rec, aPlan.Renames[i].Rec) then
+        Exit('the records to rename have changed');
+    if Length(lNow.Fields) <> Length(aPlan.Fields) then
+      Exit('the fields that reference the record have changed');
+    if Length(lNow.Values) <> Length(aPlan.Values) then
+      Exit('the values naming the old or the new identity have changed');
+    lAt := TDictionary<Pointer, Integer>.Create;
+    try
+      for var i := 0 to High(lNow.Values) do
+        lAt.AddOrSetValue(lNow.Values[i].Element.ElementID, i);
+      for var i := 0 to High(aPlan.Values) do begin
+        var lWas := aPlan.Values[i];
+        if not lAt.TryGetValue(lWas.Element.ElementID, j) then
+          Exit(Format('%s is gone', [lWas.Path]));
+        var lIs := lNow.Values[j];
+        if not SameRecord(lIs.Rec, lWas.Rec) or (lIs.Value <> lWas.Value) or (lIs.Verdict <> lWas.Verdict) or
+           not SameRecord(lIs.Target, lWas.Target) or (lIs.NamesNew <> lWas.NamesNew) or (lIs.SeesBase <> lWas.SeesBase) or
+           not SameRecord(lIs.AfterHit, lWas.AfterHit) or (lIs.AfterAllowed <> lWas.AfterAllowed) or
+           not SameViews(lIs.Views, lWas.Views) or ((lIs.Field >= 0) <> (lWas.Field >= 0)) then
+          Exit(Format('%s has changed', [lWas.Path]));
+        if (lWas.Field >= 0) and ((lNow.Fields[lIs.Field].Fault <> aPlan.Fields[lWas.Field].Fault) or
+           (lNow.Fields[lIs.Field].FaultText <> aPlan.Fields[lWas.Field].FaultText)) then
+          Exit(Format('%s has changed', [aPlan.Fields[lWas.Field].Path]));
+      end;
+    finally
+      lAt.Free;
+    end;
+    Result := '';
+  end;
+
+  function Rewritten(aField: Integer): Boolean;
+  var
+    lViews  : TwbNameKeyViews;
+    lTarget : IwbMainRecord;
+  begin
+    var lElement := aPlan.Fields[aField].Element;
+    lElement.EditValue := aPlan.NewIdentity;
+    if lElement.EditValue <> aPlan.NewIdentity then
+      Exit(False);
+    var lValue := aPlan.Values[aPlan.Fields[aField].ValueIndex];
+    lValue.Def.ViewValue(lElement, aPlan.NewIdentity, lViews);
+    Result := (lValue.Def.VerdictOf(lViews, lTarget) = lValue.Verdict) and SameRecord(lTarget, lValue.Target);
+  end;
+
+begin
+  Result := False;
+  aPlan.StaleText := '';
+  if aPlan.Refusal <> ncrNone then
+    Exit;
+  if not Assigned(aPlan.Rec) then
+    raise Exception.Create('A Change NAME plan is applied by the file holding the record');
+  if not Assigned(aPlan.Rec._File) then begin
+    aPlan.StaleText := 'the record has been removed';
+    Exit;
+  end;
+  if (aPlan.Rec._File as TObject) <> Self then
+    raise Exception.Create('A Change NAME plan is applied by the file holding the record');
+  wbCancelLock;
+  try
+    PlanNameChange(aPlan.Rec, aPlan.NewIdentity, False, lNow);
+    aPlan.StaleText := Moved;
+    if aPlan.StaleText <> '' then
+      Exit;
+
+    var lStopped := False;
+    var lStoppedBy := '';
+    for var i := 0 to High(aPlan.Renames) do begin
+      aPlan.Renames[i].Message := '';
+      if lStopped then begin
+        aPlan.Renames[i].Outcome := ncoNotDone;
+        aPlan.Renames[i].Message := lStoppedBy;
+        Continue;
+      end;
+      var lMemberName := aPlan.Renames[i].Rec.Name;
+      try
+        var lMember := lNow.Renames[i].Rec;
+        lMember.EditorID := aPlan.NewIdentity;
+        if flContextObj.FindIdentity(aPlan.FormIDBase, aPlan.NameBase, aPlan.NewIdentity, lNewKey) and (lMember.FixedFormID = lNewKey) then
+          aPlan.Renames[i].Outcome := ncoUpdated
+        else begin
+          aPlan.Renames[i].Outcome := ncoFailed;
+          aPlan.Renames[i].Message := Format('%s kept the key of "%s"', [lMemberName, aPlan.OldIdentity]);
+          lStopped := True;
+        end;
+      except
+        on E: Exception do begin
+          aPlan.Renames[i].Outcome := ncoFailed;
+          aPlan.Renames[i].Message := E.Message;
+          lStopped := True;
+        end;
+      end;
+      if lStopped then
+        lStoppedBy := Format('not done: the rename of %s did not take', [lMemberName]);
+    end;
+
+    for var i := 0 to High(aPlan.Fields) do begin
+      aPlan.Fields[i].Message := '';
+      if aPlan.OutcomeToBe(i) = ncoSkipped then
+        aPlan.Fields[i].Outcome := ncoSkipped
+      else if lStopped then begin
+        aPlan.Fields[i].Outcome := ncoNotDone;
+        aPlan.Fields[i].Message := lStoppedBy;
+      end else
+        try
+          if Rewritten(i) then
+            aPlan.Fields[i].Outcome := ncoUpdated
+          else begin
+            aPlan.Fields[i].Outcome := ncoFailed;
+            aPlan.Fields[i].Message := 'the rewrite did not take';
+          end;
+        except
+          on E: Exception do begin
+            aPlan.Fields[i].Outcome := ncoFailed;
+            aPlan.Fields[i].Message := E.Message;
+          end;
+        end;
+    end;
+    Result := True;
+  finally
+    wbCancelUnlock;
+  end;
 end;
 
 procedure TwbFile.BuildOrLoadRefOfDependents;
@@ -6376,16 +6968,19 @@ begin
   Result := not flContextObj.GameDefObj.IsMorrowind or NameReferencesJudgedInternal;
 end;
 
+function TwbFile.FirstCorruptKey: IwbMainRecord;
+begin
+  Result := nil;
+  for var i := 1 to High(flRecords) do
+    if Assigned(flRecords[i]) and Assigned(flRecords[Pred(i)]) and (flRecords[i].FixedFormID = flRecords[Pred(i)].FixedFormID) then
+      Exit(flRecords[Pred(i)]);
+end;
+
 function TwbFile.HoldsCorruptKey: Boolean;
 begin
   if flCorruptKeyKnown then
     Exit(flCorruptKey);
-  Result := False;
-  for var i := 1 to High(flRecords) do
-    if Assigned(flRecords[i]) and Assigned(flRecords[Pred(i)]) and (flRecords[i].FixedFormID = flRecords[Pred(i)].FixedFormID) then begin
-      Result := True;
-      Break;
-    end;
+  Result := FirstCorruptKey <> nil;
   flCorruptKey := Result;
   flCorruptKeyKnown := flFormIDsSorted;
 end;
@@ -20949,6 +21544,7 @@ begin
     if Assigned(Master) and ((Master._File as IwbFileInternal).Equals(_File)) then
       raise Exception.Create('FormID [' + aFormID.ToDisplayString(lLayout) + '] is already present in file ' + _File.Name);
 
+    var lPreviousFormID := GetFormID;
     ReRegister(_File, FileFormID, procedure
     begin
       if Assigned(mrGroup) or (GetChildGroup <> nil)  then
@@ -20957,19 +21553,68 @@ begin
       mrStruct.mrsFormID(lFormIDInHeader)^ := FileFormID;
       if Assigned(mrGroup) or (GetChildGroup <> nil)  then
         mrGroup.GroupLabel := FileFormID.ToCardinal;
+    end, procedure
+    begin
+      MakeHeaderWriteable;
+      mrStruct.mrsFormID(lFormIDInHeader)^ := lPreviousFormID;
     end);
   end;
 end;
 
-procedure TwbMainRecord.ReRegister(const aFile: IwbFileInternal; const aFileFormID: TwbFormID; const aMoveKey: TProc);
+procedure TwbMainRecord.NameViewsFailed;
+begin
+  if not TwbLoadingGameContext(mrContextObj).HasNameIndex then
+    Exit;
+  var lAll: TArray<TwbFile> := nil;
+  for var lAny in ContextObj.Files do
+    lAll := lAll + [lAny as TObject as TwbFile];
+  (GetFile as TObject as TwbFile).NameViewFailed(lAll);
+end;
+
+procedure TwbMainRecord.ReRegister(const aFile: IwbFileInternal; const aFileFormID: TwbFormID; const aMoveKey, aMoveBack: TProc);
 begin
   var lMaster := RegistrationMaster(aFile, aFileFormID);
+  var lPrevious := GetFixedFormID;
+  var lReferrers: TDynMainRecords := nil;
+  if not Assigned(mrMaster) and (Length(mrOverrides) = 0) then
+    lReferrers := Copy(mrReferencedBy, 0, mrReferencedByCount);
   wbCancelLock;
   try
     LeaveFileIndex(aFile);
-    JoinFileIndex(aFile, lMaster, aMoveKey);
+    try
+      JoinFileIndex(aFile, lMaster, aMoveKey);
+    except
+      RejoinAt(aFile, lPrevious, aMoveBack, lReferrers);
+      raise;
+    end;
   finally
     wbCancelUnlock;
+  end;
+end;
+
+procedure TwbMainRecord.RejoinAt(const aFile: IwbFileInternal; const aKey: TwbFormID; const aMoveBack: TProc; const aReferrers: TDynMainRecords);
+begin
+  if aFile.HoldsRecordAt(Self, aKey) then
+    Exit;
+  var lProgress := _wbProgressCallback;
+  _wbProgressCallback := nil;
+  try
+    if aFile.HoldsRecordAt(Self, GetFixedFormID) then
+      LeaveFileIndex(aFile);
+    if Assigned(aMoveBack) then
+      aMoveBack;
+    mrFixedFormID := aKey;
+    mrLoadOrderFormID := TwbFormID.Null;
+    MoveGroupLabel;
+    UpdateInteriorCellGroup;
+    aFile.AddMainRecord(Self);
+    if Assigned(mrMaster) then
+      TakeChainFromLaterRoot(aFile);
+    for var lReferrer in aReferrers do
+      AddReferencedBy(lReferrer);
+    ResetConflict;
+  finally
+    _wbProgressCallback := lProgress;
   end;
 end;
 
@@ -21083,7 +21728,13 @@ begin
 
   var lLayout := ContextObj.SlotLayout;
   var lOld := mrFixedFormID;
-  var lNew := ComputeFixedFormID(lCacheable);
+  var lNew: TwbFormID;
+  try
+    lNew := ComputeFixedFormID(lCacheable);
+  except
+    NameViewsFailed;
+    raise;
+  end;
   if lNew.ObjectID[lLayout] = lOld.ObjectID[lLayout] then begin
     lFile.IdentityKeyChanged(False);
     Exit;
@@ -21110,7 +21761,12 @@ begin
   end;
 
   var lReleased := ReleaseNameEdges;
-  ReRegister(lFile, lNew, MoveGroupLabel);
+  try
+    ReRegister(lFile, lNew, MoveGroupLabel, nil);
+  except
+    NameViewsFailed;
+    raise;
+  end;
   lFile.IdentityKeyChanged(False);
   UpdateQualifiedChildKeys;
   if lReleased then
@@ -31488,12 +32144,14 @@ begin
   ReResolveNameTexts(lTexts);
 end;
 
-procedure TwbLoadingGameContext.ReResolveNameTexts(const aTexts: TArray<string>);
+function TwbLoadingGameContext.NameReferrers(const aTexts: array of string): TArray<IwbMainRecord>;
 var
   lReferrers : TwbNameReferrers;
-  lRecords   : TList<IwbMainRecord>;
 begin
-  lRecords := TList<IwbMainRecord>.Create;
+  Result := nil;
+  if not Assigned(lgcNameReferrers) then
+    Exit;
+  var lRecords := TList<IwbMainRecord>.Create;
   try
     var lSeen := TDictionary<Cardinal, Boolean>.Create;
     try
@@ -31512,21 +32170,30 @@ begin
     finally
       lSeen.Free;
     end;
-    var lNext := 0;
-    try
-      while lNext < lRecords.Count do begin
-        var lRecord := lRecords[lNext] as TObject as TwbMainRecord;
-        if csRefsBuild in lRecord.cntStates then
-          lRecord.RebuildNameEdges;
-        Inc(lNext);
-      end;
-    except
-      for var i := lNext to Pred(lRecords.Count) do
-        (lRecords[i]._File as TObject as TwbFile).NameViewFailed([lRecords[i]._File as TObject as TwbFile]);
-      raise;
-    end;
+    for var i := Pred(lRecords.Count) downto 0 do
+      if not Assigned(lRecords[i]._File) then
+        lRecords.Delete(i);
+    Result := lRecords.ToArray;
   finally
     lRecords.Free;
+  end;
+end;
+
+procedure TwbLoadingGameContext.ReResolveNameTexts(const aTexts: TArray<string>);
+begin
+  var lRecords := NameReferrers(aTexts);
+  var lNext := 0;
+  try
+    while lNext < Length(lRecords) do begin
+      var lRecord := lRecords[lNext] as TObject as TwbMainRecord;
+      if csRefsBuild in lRecord.cntStates then
+        lRecord.RebuildNameEdges;
+      Inc(lNext);
+    end;
+  except
+    for var i := lNext to High(lRecords) do
+      (lRecords[i]._File as TObject as TwbFile).NameViewFailed([lRecords[i]._File as TObject as TwbFile]);
+    raise;
   end;
 end;
 
