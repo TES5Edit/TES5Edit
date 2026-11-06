@@ -375,6 +375,7 @@ type
     function ParsePump: Boolean;
     function ParseStateManifest: Boolean;
     function ParseToolMode: Boolean;
+    function OpenToolModes(const aModes: TwbSetOfMode): TwbSetOfMode;
     function ParseFilter: Boolean;
     function ParseEdit: Boolean;
     function ParseSaveContexts: Boolean;
@@ -461,6 +462,13 @@ begin
     ShowMessage('teststatemanifest requires an output file, as -teststatemanifest:<filename>');
     Exit(False);
   end;
+end;
+
+function TxeTestSwitches.OpenToolModes(const aModes: TwbSetOfMode): TwbSetOfMode;
+begin
+  Result := aModes;
+  if (xeGameMode = gmTES3) and FindCmdLineSwitch('testtes3edit') then
+    Result := wbAlwaysMode - [tmLODgen];
 end;
 
 function TxeTestSwitches.ParseToolMode: Boolean;

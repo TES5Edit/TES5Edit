@@ -776,6 +776,10 @@ begin
 
   var lIdentity := wbGameIdentities[xeGameMode];
 
+{$IFDEF XE_TEST_CONTROL_POINTS}
+  ToolModes := xeTestSwitches.OpenToolModes(ToolModes);
+{$ENDIF}
+
   if not (xeToolMode in ToolModes) then begin
     xeInitRefusal('Application ' + lIdentity.GameName + ' does not currently support ' + xeToolName);
     Exit(False);
