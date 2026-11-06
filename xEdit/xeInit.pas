@@ -1106,7 +1106,6 @@ begin
     tmScript: begin
       wbIKnowWhatImDoing       := True;
       xeContext.Settings.LoadBSAs := True;
-      xeContext.Settings.BuildRefs := True;
     end;
     tmOnamUpdate, tmMasterUpdate, tmESMify: begin
       wbIKnowWhatImDoing       := True;
