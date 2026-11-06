@@ -1773,6 +1773,19 @@ type
     Reason : string;
   end;
 
+  TwbNameChangeDerivedCell = record
+    Key       : TwbFormID;
+    Field     : Integer;
+    Always    : Boolean;
+    Rewritten : string;
+    Skipped   : string;
+  end;
+
+  TwbNameChangeDerivation = record
+    Stable : TArray<string>;
+    Cells  : TArray<TwbNameChangeDerivedCell>;
+  end;
+
   TwbNameChangeField = record
     Rec        : IwbMainRecord;
     Element    : IwbElement;
@@ -1794,6 +1807,7 @@ type
     FileName     : string;
     Value        : string;
     Derived      : Boolean;
+    Derivation   : Integer;
     Views        : TwbNameKeyViews;
     Verdict      : TwbNameVerdict;
     Target       : IwbMainRecord;
@@ -1828,6 +1842,7 @@ type
     Renames       : TArray<TwbNameChangeRename>;
     Left          : TArray<TwbNameChangeLeft>;
     Fields        : TArray<TwbNameChangeField>;
+    Derivations   : TArray<TwbNameChangeDerivation>;
     Values        : TArray<TwbNameChangeValue>;
     Reports       : TArray<TwbNameChangeReport>;
     function FaultOf(aField: Integer): TwbNameChangeFault;
@@ -1835,6 +1850,7 @@ type
     function VerdictAfter(aValue: Integer; out aTarget: IwbMainRecord): TwbNameVerdict;
     function ReportBefore(aValue: Integer): string;
     function ReportAfter(aValue: Integer): string;
+    function DerivedAfter(aValue: Integer): Boolean;
     function ValueChanges(aValue: Integer): Boolean;
     function ChangedValues: TArray<Integer>;
     function AnyFailed: Boolean;
@@ -27563,7 +27579,26 @@ begin
   var lText := lValue.Value;
   if (lValue.Field >= 0) and (OutcomeToBe(lValue.Field) = ncoUpdated) then
     lText := NewIdentity;
-  Result := lValue.Def.VerdictReport(lVerdict, lTarget, lText, lValue.FileName, lValue.Derived);
+  Result := lValue.Def.VerdictReport(lVerdict, lTarget, lText, lValue.FileName, DerivedAfter(aValue));
+end;
+
+function TwbNameChangePlan.DerivedAfter(aValue: Integer): Boolean;
+begin
+  var lValue := Values[aValue];
+  if lValue.Derivation < 0 then
+    Exit(lValue.Derived);
+  var lText := lValue.Value.ToLowerInvariant;
+  for var lName in Derivations[lValue.Derivation].Stable do
+    if lName = lText then
+      Exit(True);
+  for var lCell in Derivations[lValue.Derivation].Cells do begin
+    var lName := lCell.Skipped;
+    if lCell.Always or ((lCell.Field >= 0) and (OutcomeToBe(lCell.Field) = ncoUpdated)) then
+      lName := lCell.Rewritten;
+    if lName = lText then
+      Exit(True);
+  end;
+  Result := False;
 end;
 
 function TwbNameChangePlan.ValueChanges(aValue: Integer): Boolean;
@@ -27573,7 +27608,8 @@ begin
   var lVerdict := VerdictAfter(aValue, lTarget);
   var lBefore := Values[aValue].Target;
   Result := (lVerdict <> Values[aValue].Verdict) or (Assigned(lTarget) <> Assigned(lBefore)) or
-    (Assigned(lTarget) and not lTarget.Equals(lBefore));
+    (Assigned(lTarget) and not lTarget.Equals(lBefore)) or
+    ((Values[aValue].Derivation >= 0) and (ReportAfter(aValue) <> ReportBefore(aValue)));
 end;
 
 function TwbNameChangePlan.ChangedValues: TArray<Integer>;

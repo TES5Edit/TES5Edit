@@ -1062,6 +1062,8 @@ type
     function ApplyNameChange(var aPlan: TwbNameChangePlan): Boolean;
     function FirstBlockedIdentity: IwbMainRecord;
     function FirstCorruptKey: IwbMainRecord;
+    function ExteriorRegion(const aView: TArray<TwbFile>; const aKey: TwbFormID): IwbRecord;
+    function ViewDefaultCellName(const aView: TArray<TwbFile>; out aName: string): Boolean;
     class function CompareFileSequence(const aLeft, aRight: TwbFile): Integer; static;
     procedure BuildOrLoadRefOfDependents;
     procedure RequireMasterFor(const aLoadOrderFormID: TwbFormID; const aAddMaster: TFunc<IwbFile, Boolean>);
@@ -3278,9 +3280,9 @@ procedure TwbFile.PlanNameChange(const aRecord: IwbMainRecord; const aNewIdentit
   out aPlan: TwbNameChangePlan);
 const
   cNotRenamed : array[0..7] of TwbSignature = ('LAND', 'PGRD', 'INFO', 'SSCR', 'MGEF', 'SKIL', 'GMST', 'DIAL');
-  cLater      : array[0..0] of TwbSignature = ('REGN');
   cCell       : TwbSignature = 'CELL';
   cPathgrid   : TwbSignature = 'PGRD';
+  cRegion     : TwbSignature = 'REGN';
 var
   lFiles    : TArray<TwbFile>;
   lIdentity : string;
@@ -3292,6 +3294,9 @@ var
   lFields   : TList<TwbNameChangeField>;
   lValues   : TList<TwbNameChangeValue>;
   lReports  : TList<TwbNameChangeReport>;
+  lTravel   : TList<string>;
+  lByFile   : TDictionary<Pointer, Integer>;
+  lFieldAt  : TDictionary<Pointer, Integer>;
 
   procedure Refuse(aRefusal: TwbNameChangeRefusal; const aText: string; const aRec: IwbMainRecord = nil;
     const aFile: IwbFile = nil);
@@ -3378,6 +3383,7 @@ var
     lItem.FileName := aRec._File.FileName;
     lItem.Value := lValue;
     lItem.Derived := (aDef.Unresolved = nuTravelCell) and aRec._File.IsVisibleExteriorName(lValue);
+    lItem.Derivation := -1;
     aDef.ViewValue(aElement, lValue, lItem.Views);
     lItem.Verdict := aDef.VerdictOf(lItem.Views, lTarget);
     lItem.Target := lTarget;
@@ -3413,7 +3419,96 @@ var
     lValues.Add(lItem);
   end;
 
-  procedure Walk(const aRec: IwbMainRecord; const aContainer: IwbContainer);
+  function FieldOfElement(const aElement: IInterface): Integer;
+  var
+    lRgnn : IwbElement;
+  begin
+    if not Supports(aElement, IwbElement, lRgnn) or not lFieldAt.TryGetValue(lRgnn.ElementID, Result) then
+      Result := -1;
+  end;
+
+  function DerivationOf(const aFile: TwbFile): Integer;
+  var
+    lCorrupt : Boolean;
+    lName    : string;
+    lDefault : string;
+  begin
+    if lByFile.TryGetValue(Pointer(aFile), Result) then
+      Exit;
+    var lDerivation := Default(TwbNameChangeDerivation);
+    var lView := aFile.ViewInSelectionOrder;
+    if aFile.ViewDefaultCellName(lView, lDefault) then
+      lDefault := lDefault.ToLowerInvariant
+    else
+      lDefault := '';
+    var lRewritten := '';
+    var lChain := aFile.SelectAtNameKeyIn(lView, aPlan.Key, lCorrupt);
+    if Assigned(lChain) and not lCorrupt then begin
+      var lOwn := lChain.RecordBySignature['FNAM'];
+      if Assigned(lOwn) then
+        lRewritten := lOwn.EditValue.ToLowerInvariant;
+      if lRewritten = '' then
+        lRewritten := lNewLower;
+    end else
+      lRewritten := lDefault;
+    var lStable := TList<string>.Create;
+    try
+      for var lKey in aFile.ViewKeysOfSignature(lView, cCell) do begin
+        var lSelected := aFile.SelectAtNameKeyIn(lView, lKey, lCorrupt);
+        if lCorrupt or not Assigned(lSelected) or not (lSelected as TObject as TwbMainRecord).IsExteriorAtKey(lKey) then
+          Continue;
+        var lOwnName := lSelected.RecordBySignature['NAME'];
+        var lRgnn: IwbRecord := nil;
+        if not Assigned(lOwnName) or (lOwnName.EditValue = '') then
+          lRgnn := aFile.ExteriorRegion(lView, lKey);
+        var lRegion := '';
+        if Assigned(lRgnn) then
+          lRegion := lRgnn.EditValue.ToLowerInvariant;
+        if Assigned(lRgnn) and ((lRegion = lOldLower) or (lRegion = lNewLower)) then begin
+          var lCell := Default(TwbNameChangeDerivedCell);
+          lCell.Key := lKey;
+          lCell.Always := lRegion = lNewLower;
+          lCell.Field := FieldOfElement(lRgnn);
+          lCell.Rewritten := lRewritten;
+          lCell.Skipped := lDefault;
+          lDerivation.Cells := lDerivation.Cells + [lCell];
+        end else if aFile.ExteriorDerivedName(lView, lKey, lSelected, lName) then
+          lStable.Add(lName.ToLowerInvariant);
+      end;
+      lDerivation.Stable := lStable.ToArray;
+    finally
+      lStable.Free;
+    end;
+    Result := Length(aPlan.Derivations);
+    aPlan.Derivations := aPlan.Derivations + [lDerivation];
+    lByFile.Add(Pointer(aFile), Result);
+  end;
+
+  procedure ConsiderTravel(const aRec: IwbMainRecord; const aElement: IwbElement; const aDef: IwbNameReferenceDef);
+  var
+    lValue  : string;
+    lTarget : IwbMainRecord;
+  begin
+    if (aDef.Unresolved <> nuTravelCell) or not aDef.ElementValue(aElement, lValue, False) or aDef.IsSentinel(lValue) or
+       not lTravel.Contains(lValue.ToLowerInvariant) then
+      Exit;
+    var lItem := Default(TwbNameChangeValue);
+    lItem.Rec := aRec;
+    lItem.Element := aElement;
+    lItem.Def := aDef;
+    lItem.Path := aElement.Path;
+    lItem.FileName := aRec._File.FileName;
+    lItem.Value := lValue;
+    lItem.Derived := aRec._File.IsVisibleExteriorName(lValue);
+    lItem.Derivation := DerivationOf(aRec._File as TObject as TwbFile);
+    aDef.ViewValue(aElement, lValue, lItem.Views);
+    lItem.Verdict := aDef.VerdictOf(lItem.Views, lTarget);
+    lItem.Target := lTarget;
+    lItem.Field := -1;
+    lValues.Add(lItem);
+  end;
+
+  procedure Walk(const aRec: IwbMainRecord; const aContainer: IwbContainer; aForTravel: Boolean);
   var
     lDef       : IwbNameReferenceDef;
     lContainer : IwbContainer;
@@ -3421,10 +3516,50 @@ var
     for var i := 0 to Pred(aContainer.ElementCount) do begin
       var lElement := aContainer.Elements[i];
       if Supports(lElement.ResolvedValueDef, IwbNameReferenceDef, lDef) then
-        Consider(aRec, lElement, lDef);
+        if aForTravel then
+          ConsiderTravel(aRec, lElement, lDef)
+        else
+          Consider(aRec, lElement, lDef);
       if Supports(lElement, IwbContainer, lContainer) then
-        Walk(aRec, lContainer);
+        Walk(aRec, lContainer, aForTravel);
     end;
+  end;
+
+  procedure NoteTravelText(const aRecord: IwbMainRecord; const aSignature: TwbSignature);
+  begin
+    var lSub := aRecord.RecordBySignature[aSignature];
+    if Assigned(lSub) then begin
+      var lText := lSub.EditValue.ToLowerInvariant;
+      if (lText <> '') and not lTravel.Contains(lText) then
+        lTravel.Add(lText);
+    end;
+  end;
+
+  procedure ConsiderTravelValues;
+  const
+    cSetting : TwbSignature = 'GMST';
+  var
+    lSettingDef : PwbMainRecordDef;
+    lKey        : TwbFormID;
+  begin
+    for var i := 0 to Pred(lFields.Count) do
+      lFieldAt.AddOrSetValue(lFields[i].Element.ElementID, i);
+    lTravel.Add(lOldLower);
+    lTravel.Add(lNewLower);
+    for var lRename in aPlan.Renames do
+      NoteTravelText(lRename.Rec, 'FNAM');
+    if flContextObj.GameDefObj.FindRecordDef(cSetting, lSettingDef) and
+       flContextObj.FindIdentity(lSettingDef^.GetFormIDBase, lSettingDef^.GetFormIDNameBase, 'sDefaultCellname', lKey) then
+      for var lFile in lFiles do begin
+        var lFirst := lFile.RecordRunAt(lKey, lCount);
+        for var k := lFirst to Pred(lFirst + lCount) do
+          NoteTravelText(lFile.flRecords[k], 'STRV');
+      end;
+    for var lRecord in TwbLoadingGameContext(flContextObj).NameReferrers(lTravel.ToArray) do
+      if not (lRecord._File as TObject as TwbFile).IsDeltaPatch then begin
+        var lHold := lRecord as IwbContainerElementRef;
+        Walk(lRecord, lRecord, True);
+      end;
   end;
 
   function IsWordChar(const aChar: Char): Boolean;
@@ -3546,10 +3681,6 @@ begin
 
   if not flContextObj.GameDefObj.IsMorrowind then begin
     Refuse(ncrKind, 'Change NAME renames Morrowind records', aRecord);
-    Exit;
-  end;
-  if InList(lSignature, cLater) then begin
-    Refuse(ncrKind, 'Change NAME of a cell or a region comes in a later step', aRecord);
     Exit;
   end;
   if not Assigned(lDef) or not lDef.IsKeyedByIdentity or not lDef.ContainsKnownSubRecord[ksrEditorID] or
@@ -3716,11 +3847,16 @@ begin
   lFields := TList<TwbNameChangeField>.Create;
   lValues := TList<TwbNameChangeValue>.Create;
   lReports := TList<TwbNameChangeReport>.Create;
+  lTravel := TList<string>.Create;
+  lByFile := TDictionary<Pointer, Integer>.Create;
+  lFieldAt := TDictionary<Pointer, Integer>.Create;
   try
     for var lReferrer in lReferrers do begin
       var lHold := lReferrer as IwbContainerElementRef;
-      Walk(lReferrer, lReferrer);
+      Walk(lReferrer, lReferrer, False);
     end;
+    if lSignature = cRegion then
+      ConsiderTravelValues;
 
     if aReports then
       for var lFile in lFiles do
@@ -3732,6 +3868,9 @@ begin
     aPlan.Values := lValues.ToArray;
     aPlan.Reports := lReports.ToArray;
   finally
+    lFieldAt.Free;
+    lByFile.Free;
+    lTravel.Free;
     lReports.Free;
     lValues.Free;
     lFields.Free;
@@ -3756,6 +3895,29 @@ var
         if (aLeft[i].Base <> aRight[i].Base) or (aLeft[i].NameBase <> aRight[i].NameBase) or (aLeft[i].Key <> aRight[i].Key) or
            (aLeft[i].State <> aRight[i].State) or (aLeft[i].Allowed <> aRight[i].Allowed) or not SameRecord(aLeft[i].Hit, aRight[i].Hit) then
           Exit(False);
+  end;
+
+  function SameDerivation(aIs, aWas: Integer): Boolean;
+  begin
+    if (aIs < 0) or (aWas < 0) then
+      Exit(aIs = aWas);
+    var lIs := lNow.Derivations[aIs];
+    var lWas := aPlan.Derivations[aWas];
+    Result := (Length(lIs.Stable) = Length(lWas.Stable)) and (Length(lIs.Cells) = Length(lWas.Cells));
+    if Result then
+      for var i := 0 to High(lIs.Stable) do
+        if lIs.Stable[i] <> lWas.Stable[i] then
+          Exit(False);
+    if Result then
+      for var i := 0 to High(lIs.Cells) do begin
+        var lIsCell := lIs.Cells[i];
+        var lWasCell := lWas.Cells[i];
+        if (lIsCell.Key <> lWasCell.Key) or (lIsCell.Always <> lWasCell.Always) or (lIsCell.Rewritten <> lWasCell.Rewritten) or
+           (lIsCell.Skipped <> lWasCell.Skipped) or ((lIsCell.Field >= 0) <> (lWasCell.Field >= 0)) then
+          Exit(False);
+        if (lIsCell.Field >= 0) and (lNow.Fields[lIsCell.Field].Element.ElementID <> aPlan.Fields[lWasCell.Field].Element.ElementID) then
+          Exit(False);
+      end;
   end;
 
   function Moved: string;
@@ -3795,6 +3957,8 @@ var
            not SameRecord(lIs.AfterHit, lWas.AfterHit) or (lIs.AfterAllowed <> lWas.AfterAllowed) or
            not SameViews(lIs.Views, lWas.Views) or ((lIs.Field >= 0) <> (lWas.Field >= 0)) then
           Exit(Format('%s has changed', [lWas.Path]));
+        if not SameDerivation(lIs.Derivation, lWas.Derivation) then
+          Exit(Format('the exterior cell names %s is judged against have changed', [lWas.Path]));
         if (lWas.Field >= 0) and ((lNow.Fields[lIs.Field].Fault <> aPlan.Fields[lWas.Field].Fault) or
            (lNow.Fields[lIs.Field].FaultText <> aPlan.Fields[lWas.Field].FaultText)) then
           Exit(Format('%s has changed', [aPlan.Fields[lWas.Field].Path]));
@@ -8552,26 +8716,42 @@ begin
   if aName <> '' then
     Exit;
   var lRegion := '';
-  for var lFile in aView do begin
-    var lCount: Integer;
-    var lFirst := lFile.RecordRunAt(aKey, lCount);
-    if (lCount = 1) and (lFile.flRecords[lFirst] as TObject as TwbMainRecord).IsExteriorAtKey(aKey) then begin
-      var lRgnn := lFile.flRecords[lFirst].RecordBySignature['RGNN'];
-      if Assigned(lRgnn) then begin
-        lRegion := lRgnn.EditValue;
-        Break;
-      end;
-    end;
-  end;
+  var lRgnn := ExteriorRegion(aView, aKey);
+  if Assigned(lRgnn) then
+    lRegion := lRgnn.EditValue;
   if (lRegion <> '') and ViewNamedRecord(aView, 'REGN', lRegion, lSelected) then begin
     aName := ValueOf(lSelected, 'FNAM');
     if aName = '' then
       aName := ValueOf(lSelected, 'NAME');
     Exit;
   end;
+  Result := ViewDefaultCellName(aView, aName);
+end;
+
+function TwbFile.ExteriorRegion(const aView: TArray<TwbFile>; const aKey: TwbFormID): IwbRecord;
+begin
+  Result := nil;
+  for var lFile in aView do begin
+    var lCount: Integer;
+    var lFirst := lFile.RecordRunAt(aKey, lCount);
+    if (lCount = 1) and (lFile.flRecords[lFirst] as TObject as TwbMainRecord).IsExteriorAtKey(aKey) then begin
+      var lRgnn := lFile.flRecords[lFirst].RecordBySignature['RGNN'];
+      if Assigned(lRgnn) then
+        Exit(lRgnn);
+    end;
+  end;
+end;
+
+function TwbFile.ViewDefaultCellName(const aView: TArray<TwbFile>; out aName: string): Boolean;
+var
+  lSelected : IwbMainRecord;
+begin
+  aName := '';
   Result := ViewNamedRecord(aView, 'GMST', 'sDefaultCellname', lSelected);
   if Result then begin
-    aName := ValueOf(lSelected, 'STRV');
+    var lValue := lSelected.RecordBySignature['STRV'];
+    if Assigned(lValue) then
+      aName := lValue.EditValue;
     Result := aName <> '';
   end;
 end;
