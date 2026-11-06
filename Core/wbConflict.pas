@@ -1221,7 +1221,7 @@ begin
       end;
     SetLength(MainRecords, j);
 
-  end else if (aMainRecord.Signature = 'TES4') then begin
+  end else if aMainRecord.Signature = aMainRecord.GameDefObj.HeaderSignature then begin
     Signature := aMainRecord.Signature;
     LoadOrder := aMainRecord.GetFile.LoadOrder;
     SetLength(MainRecords, Length(aFiles));
@@ -1714,7 +1714,7 @@ var
   begin
     wbTick;
     if Supports(aNode.cnElement, IwbMainRecord, lRecord) and
-       (lRecord.Signature <> 'TES4') and
+       (lRecord.Signature <> lRecord.GameDefObj.HeaderSignature) and
        not lRecord.IsDeleted and
        (aNode.cnThis = ctOnlyOne) and
        Supports(aNew.AddCopy(lRecord, [], wbNoCopyRules), IwbMainRecord, lCopy)
