@@ -24,6 +24,7 @@ uses
 
   Vcl.ActnList,
   Vcl.Buttons,
+  Vcl.CheckLst,
   Vcl.ComCtrls,
   Vcl.Controls,
   Vcl.Dialogs,
@@ -193,12 +194,32 @@ type
     procedure TestEndSessionWrite;
     procedure TestEndSessionLoaderDone;
     procedure TestEndSessionStage(const aStage: string);
+    procedure TestSaveStart;
+    procedure TestSaveLoaded;
+    procedure TestSaveStepTimer(Sender: TObject);
+    procedure TestSaveAnswerTimer(Sender: TObject);
+    procedure TestSaveStep(const aStep: TArray<string>);
+    procedure TestSaveGesture(const aGesture: string);
+    procedure TestSaveEndSession;
+    procedure TestSaveMisplace(const aModule: string);
+    procedure TestSaveRestore;
+    procedure TestSaveAnswerFiles(aForm: TCustomForm);
+    procedure TestSaveCaller(const aCaller: string);
+    procedure TestSaveArrival(const aWhat: string);
+    procedure TestSaveEnter(aSilent, aShowMessageIfNothing: Boolean);
+    procedure TestSaveListed(aList: TCheckListBox; aBackup: Boolean);
+    procedure TestSaveWritten(const aName: string; const aWrite: TwbSaveWrite);
+    procedure TestSaveCommitFailed;
+    procedure TestSaveCommitted(const aName: string; const aWrite: TwbSaveWrite);
+    procedure TestSaveRaised(aError: Exception);
+    procedure TestSaveLeave(aResult: TwbSaveResult);
     procedure TestWriteStateManifest(const aTarget: IwbFile);
     procedure TestWriteStateManifestEnd;
     procedure TestWriteFileLists;
   end;
 
 procedure TestSaveContextsReport(const aStage: string);
+procedure TestSaveAfterRename(aAnyError: Boolean);
 
 implementation
 
@@ -222,7 +243,6 @@ uses
   System.UITypes,
 {$ENDIF VER220}
 
-  Vcl.CheckLst,
   Vcl.ClipBrd,
   Vcl.Styles,
   Vcl.Styles.Utils.SystemMenu,
@@ -5504,6 +5524,635 @@ begin
   TestEndSessionAdd('stage' + #9 + aStage + #9 + 'navtree ' + BoolToStr(Assigned(FindComponent('vstNav')), True) +
     #9 + 'viewtree ' + BoolToStr(Assigned(FindComponent('vstView')), True) + #9 + 'activerecord ' + BoolToStr(Assigned(ActiveRecord), True) +
     #9 + 'files ' + IntToStr(Length(Files)) + #9 + 'loaderdones ' + IntToStr(TestHost.TestEndSessionLoaderDones));
+end;
+
+type
+  TTestSaveState = record
+    Lock         : TObject;
+    Plan         : TArray<TArray<string>>;
+    Next         : Integer;
+    Running      : Boolean;
+    Loaded       : Boolean;
+    NotBefore    : UInt64;
+    Sequence     : Integer;
+    Stack        : TArray<Integer>;
+    Caller       : string;
+    Gesture      : string;
+    CommitFailed : Boolean;
+    Answers      : TArray<TArray<string>>;
+    AfterGesture : Boolean;
+    ClosingAt    : UInt64;
+    CtrlDown     : Boolean;
+    Lost         : Integer;
+    AnsweredForm : TCustomForm;
+    AtCommit     : TArray<TArray<string>>;
+    Handles      : TArray<THandle>;
+    Denied       : TArray<TArray<string>>;
+    MovedGroup   : IwbGroupRecord;
+    MovedFrom    : IwbGroupRecord;
+    MovedTo      : IwbGroupRecord;
+  end;
+
+var
+  _TestSave: TTestSaveState;
+
+procedure TestSaveAdd(const aLine: string);
+begin
+  System.TMonitor.Enter(_TestSave.Lock);
+  try
+    try
+      if _TestSave.Lost > 0 then begin
+        TFile.AppendAllText(xeTestSwitches.SaveFile, '# FAILED: ' + IntToStr(_TestSave.Lost) + ' report lines lost' + sLineBreak, TEncoding.UTF8);
+        _TestSave.Lost := 0;
+      end;
+      TFile.AppendAllText(xeTestSwitches.SaveFile, aLine + sLineBreak, TEncoding.UTF8);
+    except
+      Inc(_TestSave.Lost);
+    end;
+  finally
+    System.TMonitor.Exit(_TestSave.Lock);
+  end;
+end;
+
+function TestSaveNames(aList: Vcl.CheckLst.TCheckListBox; aChecked: Boolean): string;
+begin
+  Result := '';
+  for var i := 0 to Pred(aList.Count) do
+    if aList.Checked[i] = aChecked then
+      Result := Result + IfThen(Result <> '', ';') + aList.Items[i];
+end;
+
+function TestSaveTimeText(const aTime: TDateTime): string;
+begin
+  Result := FormatDateTime('yyyy-mm-dd hh:nn:ss.zzz', aTime);
+end;
+
+procedure TestSavePending(const aPhase: string; aSeq: Integer);
+begin
+  var lPending := xeContext.PendingSaves;
+  TestSaveAdd('pendingcount' + #9 + IntToStr(aSeq) + #9 + aPhase + #9 + IntToStr(Length(lPending)));
+  for var i := Low(lPending) to High(lPending) do
+    TestSaveAdd('pending' + #9 + IntToStr(aSeq) + #9 + aPhase + #9 + IntToStr(i) + #9 + lPending[i].psTargetName + #9 +
+      lPending[i].psSaveName + #9 + 'hastime=' + BoolToStr(lPending[i].psHasTime, True) + #9 +
+      'time=' + IfThen(lPending[i].psHasTime, TestSaveTimeText(lPending[i].psTime)));
+end;
+
+procedure TestSaveDiskFolder(const aFolder, aPrefix: string; aSeq: Integer);
+begin
+  if not TDirectory.Exists(aFolder) then
+    Exit;
+  for var lName in TDirectory.GetFiles(aFolder, '*', TSearchOption.soAllDirectories) do begin
+    var lRelative := aPrefix + lName.Substring(Length(aFolder));
+    if lRelative.Contains(' Cache\') then
+      Continue;
+    var lHash := 'unread';
+    var lSize := Int64(-1);
+    var lTime := '';
+    try
+      lSize := TFile.GetSize(lName);
+      lTime := TestSaveTimeText(wbGetLastWriteTimeUtc(lName));
+      if lSize <= 16 * 1024 * 1024 then
+        lHash := THashSHA2.GetHashStringFromFile(lName);
+    except
+      on E: Exception do
+        lHash := 'unreadable ' + E.ClassName;
+    end;
+    TestSaveAdd('disk' + #9 + IntToStr(aSeq) + #9 + lRelative + #9 + 'size=' + IntToStr(lSize) + #9 + 'time=' + lTime + #9 + 'sha256=' + lHash);
+  end;
+end;
+
+procedure TestSaveDisk(aSeq: Integer);
+begin
+  var lData := xeContext.Settings.DataPath;
+  TestSaveDiskFolder(lData, '', aSeq);
+  var lBackup := xeContext.Settings.BackupPath;
+  if (lBackup <> '') and not lBackup.StartsWith(lData, True) then
+    TestSaveDiskFolder(lBackup, '<backup>\', aSeq);
+end;
+
+procedure TestSaveRun(const aCommand: string);
+var
+  lStartup : TStartupInfo;
+  lProcess : TProcessInformation;
+  lLine    : string;
+  lExit    : DWORD;
+begin
+  FillChar(lStartup, SizeOf(lStartup), 0);
+  lStartup.cb := SizeOf(lStartup);
+  lLine := aCommand;
+  UniqueString(lLine);
+  if not CreateProcess(nil, PChar(lLine), nil, nil, False, CREATE_NO_WINDOW, nil, nil, lStartup, lProcess) then
+    RaiseLastOSError;
+  try
+    WaitForSingleObject(lProcess.hProcess, INFINITE);
+    GetExitCodeProcess(lProcess.hProcess, lExit);
+    if lExit <> 0 then
+      raise Exception.Create('exit ' + IntToStr(lExit) + ' from ' + aCommand);
+  finally
+    CloseHandle(lProcess.hThread);
+    CloseHandle(lProcess.hProcess);
+  end;
+end;
+
+procedure TestSaveHold(const aPath: string);
+begin
+  var lHandle := CreateFile(PChar(aPath), GENERIC_READ, FILE_SHARE_READ, nil, OPEN_EXISTING, 0, 0);
+  if lHandle = INVALID_HANDLE_VALUE then
+    RaiseLastOSError;
+  _TestSave.Handles := _TestSave.Handles + [lHandle];
+  TestSaveAdd('held' + #9 + ExtractFileName(aPath));
+end;
+
+procedure TestSaveDeny(const aPath, aInstalled, aRights: string);
+begin
+  TestSaveRun('icacls "' + aPath + '" /deny *S-1-1-0:(' + aRights + ')');
+  _TestSave.Denied := _TestSave.Denied + [[aPath, aInstalled]];
+  TestSaveAdd('denied' + #9 + ExtractFileName(aPath) + #9 + aRights);
+end;
+
+procedure TestSaveRelease;
+begin
+  for var lHandle in _TestSave.Handles do
+    CloseHandle(lHandle);
+  _TestSave.Handles := nil;
+  for var lPaths in _TestSave.Denied do
+    for var lPath in lPaths do
+      if FileExists(lPath) then
+        TestSaveRun('icacls "' + lPath + '" /remove:d *S-1-1-0');
+  _TestSave.Denied := nil;
+  TestSaveAdd('released');
+end;
+
+procedure TestSaveMessageBoxes;
+begin
+  TThread.CreateAnonymousThread(procedure
+    var
+      lText : array[0..1023] of Char;
+      lLast : HWND;
+    begin
+      lLast := 0;
+      while True do begin
+        var lWnd: HWND := 0;
+        repeat
+          lWnd := FindWindowEx(0, lWnd, '#32770', nil);
+          if (lWnd <> 0) and IsWindowVisible(lWnd) and (GetWindowThreadProcessId(lWnd, nil) = MainThreadID) then begin
+            if lWnd <> lLast then begin
+              lLast := lWnd;
+              lText[0] := #0;
+              GetDlgItemText(lWnd, $FFFF, lText, Length(lText));
+              TestSaveAdd('messagebox' + #9 + StringReplace(string(lText), #13#10, ' ', [rfReplaceAll]));
+            end;
+            PostMessage(lWnd, WM_CLOSE, 0, 0);
+          end;
+        until lWnd = 0;
+        Sleep(100);
+      end;
+    end).Start;
+end;
+
+procedure TestSaveAfterRename(aAnyError: Boolean);
+begin
+  if not xeTestSwitches.Save then
+    Exit;
+  TestSaveAdd('renamed' + #9 + 'anyerror=' + BoolToStr(aAnyError, True));
+  TestSavePending('shutdown', 0);
+  TestSaveDisk(0);
+end;
+
+procedure TxeTestFormHelper.TestSaveStart;
+const
+  cFields: array[0..14] of record Verb: string; Least, Most: Integer end = (
+    (Verb: 'loaded';      Least: 0; Most: 0),
+    (Verb: 'filespublished'; Least: 0; Most: 0),
+    (Verb: 'loadstate';   Least: 0; Most: 0),
+    (Verb: 'edit';        Least: 5; Most: 5),
+    (Verb: 'newfile';     Least: 1; Most: 1),
+    (Verb: 'addrecord';   Least: 5; Most: 5),
+    (Verb: 'answer';      Least: 1; Most: 4),
+    (Verb: 'atcommit';    Least: 2; Most: 3),
+    (Verb: 'holdpending'; Least: 1; Most: 1),
+    (Verb: 'release';     Least: 0; Most: 0),
+    (Verb: 'misplace';    Least: 1; Most: 1),
+    (Verb: 'restore';     Least: 0; Most: 0),
+    (Verb: 'gesture';     Least: 1; Most: 1),
+    (Verb: 'endsession';  Least: 0; Most: 0),
+    (Verb: 'end';         Least: 0; Most: 0));
+begin
+  _TestSave.Lock := TObject.Create;
+  System.SysUtils.DeleteFile(xeTestSwitches.SaveFile);
+  TestSaveAdd('# xEdit save probe');
+  TestSaveAdd('# ' + xeApplicationTitle);
+  EditWarnOk := True;
+  CheckResult := 0;
+  var lWhy := '';
+  var lLineNo := 0;
+  for var lLine in TFile.ReadAllLines(xeTestSwitches.SavePlan, TEncoding.UTF8) do begin
+    Inc(lLineNo);
+    if (Trim(lLine) = '') or lLine.StartsWith('#') then
+      Continue;
+    var lFields := lLine.Split([#9]);
+    var lKnown := False;
+    for var i := Low(cFields) to High(cFields) do
+      if SameText(lFields[0], cFields[i].Verb) then begin
+        lKnown := True;
+        if (Length(lFields) - 1 < cFields[i].Least) or (Length(lFields) - 1 > cFields[i].Most) then
+          lWhy := 'line ' + IntToStr(lLineNo) + ': ' + lFields[0] + ' takes ' + IntToStr(cFields[i].Least) + ' to ' + IntToStr(cFields[i].Most) + ' fields';
+      end;
+    if not lKnown then
+      lWhy := 'line ' + IntToStr(lLineNo) + ': unknown verb ' + lFields[0];
+    if lWhy <> '' then
+      Break;
+    _TestSave.Plan := _TestSave.Plan + [lFields];
+  end;
+  if lWhy <> '' then begin
+    TestSaveAdd('# FAILED: ' + lWhy);
+    _TestSave.Plan := [['end']];
+    xeContext.Settings.DontSave := True;
+  end;
+  TestSaveMessageBoxes;
+  TestHost.TestSaveTimer := TTimer.Create(Self);
+  TestHost.TestSaveTimer.Interval := 50;
+  TestHost.TestSaveTimer.OnTimer := TestSaveStepTimer;
+  TestHost.TestSaveTimer.Enabled := True;
+  TestHost.TestSaveAnswer := TTimer.Create(Self);
+  TestHost.TestSaveAnswer.Interval := 100;
+  TestHost.TestSaveAnswer.OnTimer := TestSaveAnswerTimer;
+  TestHost.TestSaveAnswer.Enabled := True;
+end;
+
+procedure TxeTestFormHelper.TestSaveLoaded;
+begin
+  _TestSave.Loaded := True;
+end;
+
+procedure TxeTestFormHelper.TestSaveStepTimer(Sender: TObject);
+begin
+  if _TestSave.Running or (Length(_TestSave.Stack) > 0) or (GetTickCount64 < _TestSave.NotBefore) then
+    Exit;
+  if _TestSave.AfterGesture then begin
+    _TestSave.AfterGesture := False;
+    if _TestSave.CtrlDown then begin
+      _TestSave.CtrlDown := False;
+      TestPumpSetCtrl(False);
+    end;
+    if Length(_TestSave.Answers) > 0 then begin
+      TestSaveAdd('# FAILED: the gesture left an answer unused: ' + string.Join(' ', _TestSave.Answers[0]));
+      _TestSave.Answers := nil;
+    end;
+  end;
+  if _TestSave.Next > High(_TestSave.Plan) then begin
+    if _TestSave.ClosingAt = 0 then
+      _TestSave.ClosingAt := GetTickCount64 + 3000
+    else if GetTickCount64 >= _TestSave.ClosingAt then begin
+      TestHost.TestSaveTimer.Enabled := False;
+      TestSaveAdd('# FAILED: the plan ended with the form still open');
+      xeContext.Settings.DontSave := True;
+      _TestSave.Answers := [['none']];
+      PostMessage(Handle, WM_CLOSE, 0, 0);
+    end;
+    Exit;
+  end;
+  var lStep := _TestSave.Plan[_TestSave.Next];
+  if SameText(lStep[0], 'loaded') and not _TestSave.Loaded then
+    Exit;
+  if SameText(lStep[0], 'filespublished') and (Length(Files) = 0) and not _TestSave.Loaded then
+    Exit;
+  Inc(_TestSave.Next);
+  TestSaveAdd('step' + #9 + IntToStr(_TestSave.Next) + #9 + string.Join(' ', lStep));
+  _TestSave.Running := True;
+  try
+    try
+      TestSaveStep(lStep);
+    except
+      on E: Exception do begin
+        TestSaveAdd('# FAILED: step ' + IntToStr(_TestSave.Next) + ': ' + E.ClassName + ': ' + E.Message);
+        xeContext.Settings.DontSave := True;
+        _TestSave.Next := Length(_TestSave.Plan);
+        _TestSave.Answers := [['none']];
+        PostMessage(Handle, WM_CLOSE, 0, 0);
+      end;
+    end;
+  finally
+    _TestSave.Running := False;
+  end;
+end;
+
+procedure TxeTestFormHelper.TestSaveStep(const aStep: TArray<string>);
+
+  function FindRecord(const aModule, aSignature, aName: string): IwbMainRecord;
+  begin
+    var lFile := TestEndSessionFindFile(Files, aModule);
+    for var i := 0 to Pred(lFile.RecordCount) do
+      if SameText(lFile.Records[i].Signature, aSignature) and SameText(lFile.Records[i].EditorID, aName) then
+        Exit(lFile.Records[i]);
+    raise Exception.Create('no ' + aSignature + ' ' + aName + ' in ' + aModule);
+  end;
+
+begin
+  var lVerb := aStep[0].ToLower;
+  if lVerb = 'loaded' then
+    TestSaveAdd('loaded' + #9 + 'dontsave=' + BoolToStr(xeContext.Settings.DontSave, True) + #9 + 'dontbackup=' + BoolToStr(xeContext.Settings.DontBackup, True) + #9 +
+      'files=' + IntToStr(Length(Files)))
+  else if lVerb = 'loadstate' then
+    TestSaveAdd('loadstate' + #9 + 'loaders=' + IntToStr(LoadersRunning) + #9 + 'files=' + IntToStr(Length(Files)) + #9 +
+      'menubutton=' + BoolToStr(bnMainMenu.Enabled, True) + #9 + 'loaderdone=' + BoolToStr(xeContext.LoaderDone, True))
+  else if lVerb = 'edit' then begin
+    var lRecord := FindRecord(aStep[1], aStep[2], aStep[3]);
+    lRecord.ElementBySignature[StrToSignature(aStep[4])].EditValue := aStep[5];
+    TestSaveAdd('edited' + #9 + aStep[1] + #9 + lRecord.Name + #9 + aStep[4] + #9 + aStep[5] + #9 +
+      'unsaved=' + BoolToStr(esUnsaved in lRecord._File.ElementStates, True));
+  end else if lVerb = 'newfile' then begin
+    var lNew := AddNewFileName(aStep[1], False, False);
+    if not Assigned(lNew) then
+      raise Exception.Create('no new file ' + aStep[1]);
+    TestSaveAdd('newfile' + #9 + lNew.FileName + #9 + 'unsaved=' + BoolToStr(esUnsaved in lNew.ElementStates, True));
+  end else if lVerb = 'addrecord' then begin
+    var lFile := TestEndSessionFindFile(Files, aStep[1]);
+    var lRecord: IwbMainRecord := nil;
+    var lAdded := lFile.Add(aStep[2], True);
+    if not Supports(lAdded, IwbMainRecord, lRecord) then
+      lRecord := (lAdded as IwbContainer).Add(aStep[2], True) as IwbMainRecord;
+    lRecord.EditorID := aStep[3];
+    lRecord.Add(aStep[4], True).EditValue := aStep[5];
+    TestSaveAdd('added' + #9 + aStep[1] + #9 + lRecord.Name + #9 + 'unsaved=' + BoolToStr(esUnsaved in lFile.ElementStates, True));
+  end else if lVerb = 'answer' then
+    _TestSave.Answers := _TestSave.Answers + [Copy(aStep, 1, Length(aStep) - 1)]
+  else if lVerb = 'atcommit' then begin
+    if SameText(aStep[2], 'deny') <> (Length(aStep) = 4) then
+      raise Exception.Create('atcommit: deny takes rights, hold takes none');
+    _TestSave.AtCommit := _TestSave.AtCommit + [Copy(aStep, 1, Length(aStep) - 1)];
+  end
+  else if lVerb = 'holdpending' then begin
+    var lHeld := 0;
+    for var lEntry in xeContext.PendingSaves do
+      if SameText(lEntry.psTargetName, aStep[1]) then begin
+        TestSaveHold(xeContext.Settings.DataPath + lEntry.psSaveName);
+        Inc(lHeld);
+      end;
+    if lHeld = 0 then
+      raise Exception.Create('no pending entry of ' + aStep[1]);
+  end else if lVerb = 'release' then
+    TestSaveRelease
+  else if lVerb = 'misplace' then
+    TestSaveMisplace(aStep[1])
+  else if lVerb = 'restore' then
+    TestSaveRestore
+  else if lVerb = 'gesture' then
+    TestSaveGesture(aStep[1])
+  else if lVerb = 'endsession' then
+    TestSaveEndSession
+  else if lVerb = 'end' then begin
+    if Length(_TestSave.Answers) = 0 then
+      _TestSave.Answers := [['none']];
+    _TestSave.Gesture := 'end';
+    PostMessage(Handle, WM_CLOSE, 0, 0);
+    _TestSave.NotBefore := GetTickCount64 + 300;
+  end;
+end;
+
+procedure TxeTestFormHelper.TestSaveGesture(const aGesture: string);
+begin
+  _TestSave.Gesture := aGesture;
+  if SameText(aGesture, 'menu') then
+    mniMainSave.Click
+  else if SameText(aGesture, 'balloon') then
+    jbhSaveBalloonClick(nil)
+  else if SameText(aGesture, 'ctrls') then begin
+    var lFocus := GetFocus;
+    if lFocus = 0 then
+      lFocus := Handle;
+    TestPumpSetCtrl(True);
+    PostMessage(lFocus, WM_KEYDOWN, Ord('S'), 0);
+    PostMessage(lFocus, WM_KEYUP, Ord('S'), LPARAM($C0000000));
+    _TestSave.CtrlDown := True;
+    _TestSave.NotBefore := GetTickCount64 + 300;
+  end else if SameText(aGesture, 'close') then begin
+    PostMessage(Handle, WM_CLOSE, 0, 0);
+    _TestSave.NotBefore := GetTickCount64 + 300;
+  end else
+    raise Exception.Create('unknown gesture ' + aGesture);
+  _TestSave.AfterGesture := True;
+end;
+
+procedure TxeTestFormHelper.TestSaveEndSession;
+begin
+  _TestSave.Gesture := 'endsession';
+  var lForm := SendMessage(Handle, WM_QUERYENDSESSION, 0, LPARAM(ENDSESSION_LOGOFF));
+  var lApplication := SendMessage(Application.Handle, WM_QUERYENDSESSION, 0, LPARAM(ENDSESSION_LOGOFF));
+  TestSaveAdd('queryendsession' + #9 + 'form=' + IntToStr(lForm) + #9 + 'application=' + IntToStr(lApplication));
+  var lEnding := (lForm <> 0) and (lApplication <> 0);
+  SendMessage(Handle, WM_ENDSESSION, WPARAM(lEnding), LPARAM(ENDSESSION_LOGOFF));
+  SendMessage(Application.Handle, WM_ENDSESSION, WPARAM(lEnding), LPARAM(ENDSESSION_LOGOFF));
+  TestSaveAdd('endsession' + #9 + BoolToStr(lEnding, True));
+  _TestSave.AfterGesture := True;
+  if lEnding then begin
+    if Length(_TestSave.Answers) > 0 then
+      TestSaveAdd('# FAILED: the session end left an answer unused');
+    _TestSave.Next := Length(_TestSave.Plan);
+    _TestSave.ClosingAt := High(UInt64);
+    _TestSave.Answers := [['none']];
+    _TestSave.AfterGesture := False;
+    tmrShutdown.Enabled := True;
+  end else
+    _TestSave.NotBefore := GetTickCount64 + 300;
+end;
+
+procedure TxeTestFormHelper.TestSaveMisplace(const aModule: string);
+var
+  lGroup : IwbGroupRecord;
+begin
+  var lFile := TestEndSessionFindFile(Files, aModule);
+  var lCell: IwbMainRecord := nil;
+  var lDial: IwbMainRecord := nil;
+  for var i := 0 to Pred(lFile.RecordCount) do begin
+    if (lFile.Records[i].Signature = 'CELL') and not Assigned(lCell) then
+      lCell := lFile.Records[i];
+    if (lFile.Records[i].Signature = 'DIAL') and not Assigned(lDial) then
+      lDial := lFile.Records[i];
+  end;
+  if not Assigned(lCell) or not Assigned(lDial) or not Assigned(lCell.ChildGroup) or not Assigned(lDial.ChildGroup) then
+    raise Exception.Create('no cell and topic with children in ' + aModule);
+  _TestSave.MovedFrom := lCell.ChildGroup;
+  _TestSave.MovedTo := lDial.ChildGroup;
+  for var i := 0 to Pred(_TestSave.MovedFrom.ElementCount) do
+    if Supports(_TestSave.MovedFrom.Elements[i], IwbGroupRecord, lGroup) and (lGroup.GroupType = 8) then
+      _TestSave.MovedGroup := lGroup;
+  if not Assigned(_TestSave.MovedGroup) or not Assigned(_TestSave.MovedFrom.RemoveElement(_TestSave.MovedGroup, True)) then
+    raise Exception.Create('no persistent group in ' + aModule);
+  _TestSave.MovedTo.AddElement(_TestSave.MovedGroup);
+  TestSaveAdd('misplaced' + #9 + aModule + #9 + 'unsaved=' + BoolToStr(esUnsaved in lFile.ElementStates, True));
+end;
+
+procedure TxeTestFormHelper.TestSaveRestore;
+begin
+  if not Assigned(_TestSave.MovedGroup) or not Assigned(_TestSave.MovedTo.RemoveElement(_TestSave.MovedGroup, True)) then
+    raise Exception.Create('nothing to restore');
+  _TestSave.MovedFrom.AddElement(_TestSave.MovedGroup);
+  _TestSave.MovedGroup := nil;
+  TestSaveAdd('restored');
+end;
+
+procedure TxeTestFormHelper.TestSaveAnswerTimer(Sender: TObject);
+begin
+  for var i := 0 to Pred(Screen.CustomFormCount) do begin
+    var lForm := Screen.CustomForms[i];
+    if (lForm = Self) or not lForm.Visible or not (fsModal in lForm.FormState) or (lForm.ModalResult <> mrNone) then
+      Continue;
+    if lForm = _TestSave.AnsweredForm then
+      Continue;
+    if lForm is TfrmFileSelect then
+      TestSaveAnswerFiles(lForm)
+    else begin
+      TestSaveAdd('modal' + #9 + lForm.ClassName + #9 + lForm.Caption);
+      lForm.ModalResult := mrOk;
+    end;
+    Exit;
+  end;
+end;
+
+procedure TxeTestFormHelper.TestSaveAnswerFiles(aForm: TCustomForm);
+begin
+  var lDialog := TfrmFileSelect(aForm);
+  var lAnswer: TArray<string> := nil;
+  if Length(_TestSave.Answers) > 0 then begin
+    lAnswer := _TestSave.Answers[0];
+    Delete(_TestSave.Answers, 0, 1);
+  end else begin
+    TestSaveAdd('# FAILED: unscripted dialog');
+    lAnswer := ['none'];
+    xeContext.Settings.DontSave := True;
+  end;
+  _TestSave.AnsweredForm := aForm;
+  for var i := 1 to High(lAnswer) do
+    if SameText(lAnswer[i], 'backup=on') then
+      lDialog.cbBackup.Checked := True
+    else if SameText(lAnswer[i], 'backup=off') then
+      lDialog.cbBackup.Checked := False
+    else if lAnswer[i].StartsWith('uncheck=', True) then begin
+      var lIndex := lDialog.CheckListBox1.Items.IndexOf(lAnswer[i].Substring(8));
+      if lIndex < 0 then
+        TestSaveAdd('# FAILED: not listed: ' + lAnswer[i])
+      else
+        lDialog.CheckListBox1.Checked[lIndex] := False;
+    end else
+      TestSaveAdd('# FAILED: unknown answer option ' + lAnswer[i]);
+  TestSaveAdd('dialog' + #9 + string.Join(' ', lAnswer) + #9 + 'listed=' + TestSaveNames(lDialog.CheckListBox1, True) + '|' +
+    TestSaveNames(lDialog.CheckListBox1, False) + #9 + 'backup=' + BoolToStr(lDialog.cbBackup.Checked, True));
+  if SameText(lAnswer[0], 'ok') then
+    lDialog.btnOK.Click
+  else if SameText(lAnswer[0], 'none') then begin
+    lDialog.SelectNone1.Click;
+    lDialog.btnOK.Click;
+  end else if SameText(lAnswer[0], 'escape') then begin
+    lDialog.CheckListBox1.SetFocus;
+    TestSaveAdd('escape' + #9 + 'listfocused=' + BoolToStr(lDialog.CheckListBox1.Focused, True));
+    PostMessage(lDialog.CheckListBox1.Handle, WM_KEYDOWN, VK_ESCAPE, 0);
+    PostMessage(lDialog.CheckListBox1.Handle, WM_KEYUP, VK_ESCAPE, LPARAM($C0000000));
+  end else if SameText(lAnswer[0], 'closebox') then
+    PostMessage(lDialog.Handle, WM_SYSCOMMAND, SC_CLOSE, 0)
+  else begin
+    TestSaveAdd('# FAILED: unknown answer ' + lAnswer[0]);
+    lDialog.ModalResult := mrCancel;
+  end;
+end;
+
+procedure TxeTestFormHelper.TestSaveCaller(const aCaller: string);
+begin
+  if xeTestSwitches.Save then
+    _TestSave.Caller := aCaller;
+end;
+
+procedure TxeTestFormHelper.TestSaveEnter(aSilent, aShowMessageIfNothing: Boolean);
+begin
+  if not xeTestSwitches.Save then
+    Exit;
+  Inc(_TestSave.Sequence);
+  _TestSave.Stack := _TestSave.Stack + [_TestSave.Sequence];
+  TestSaveAdd('invocation' + #9 + IntToStr(_TestSave.Sequence) + #9 + 'depth=' + IntToStr(Length(_TestSave.Stack)) + #9 +
+    'caller=' + IfThen(_TestSave.Caller <> '', _TestSave.Caller, '-') + #9 + 'gesture=' + IfThen(_TestSave.Gesture <> '', _TestSave.Gesture, '-') + #9 +
+    'silent=' + BoolToStr(aSilent, True) + #9 + 'showifnothing=' + BoolToStr(aShowMessageIfNothing, True));
+  _TestSave.Caller := '';
+  _TestSave.Gesture := '';
+end;
+
+procedure TxeTestFormHelper.TestSaveArrival(const aWhat: string);
+begin
+  if xeTestSwitches.Save then
+    TestSaveAdd('arrival' + #9 + aWhat + #9 + 'loaders=' + IntToStr(LoadersRunning) + #9 + 'files=' + IntToStr(Length(Files)));
+end;
+
+procedure TxeTestFormHelper.TestSaveListed(aList: Vcl.CheckLst.TCheckListBox; aBackup: Boolean);
+begin
+  if not xeTestSwitches.Save then
+    Exit;
+  TestSaveAdd('checked' + #9 + IntToStr(_TestSave.Stack[High(_TestSave.Stack)]) + #9 + TestSaveNames(aList, True) + '|' + TestSaveNames(aList, False) + #9 +
+    'backup=' + BoolToStr(aBackup, True) + #9 + 'dontbackup=' + BoolToStr(xeContext.Settings.DontBackup, True));
+end;
+
+procedure TxeTestFormHelper.TestSaveWritten(const aName: string; const aWrite: TwbSaveWrite);
+begin
+  if not xeTestSwitches.Save then
+    Exit;
+  var lSeq := _TestSave.Stack[High(_TestSave.Stack)];
+  TestSaveAdd('write' + #9 + IntToStr(lSeq) + #9 + aName + #9 + 'saved=' + BoolToStr(aWrite.Saved, True) + #9 + 'failed=' + BoolToStr(aWrite.Failed, True) + #9 +
+    'commit=' + BoolToStr(aWrite.Commit, True) + #9 + 'needsrename=' + BoolToStr(aWrite.NeedsRename, True) + #9 + 'direct=' + BoolToStr(aWrite.TryDirectRename, True) + #9 +
+    'save=' + aWrite.SaveName + #9 + 'target=' + aWrite.TargetName);
+  TestSavePending('afterwrite', lSeq);
+  for var i := High(_TestSave.AtCommit) downto Low(_TestSave.AtCommit) do
+    if SameText(_TestSave.AtCommit[i][0], aName) then begin
+      var lPath := xeContext.Settings.DataPath + aWrite.SaveName;
+      if SameText(_TestSave.AtCommit[i][1], 'hold') then
+        TestSaveHold(lPath)
+      else if SameText(_TestSave.AtCommit[i][1], 'deny') then
+        TestSaveDeny(lPath, xeContext.Settings.DataPath + aWrite.TargetName, _TestSave.AtCommit[i][2])
+      else
+        TestSaveAdd('# FAILED: unknown atcommit action ' + _TestSave.AtCommit[i][1]);
+      Delete(_TestSave.AtCommit, i, 1);
+    end;
+  _TestSave.CommitFailed := False;
+end;
+
+procedure TxeTestFormHelper.TestSaveCommitFailed;
+begin
+  if xeTestSwitches.Save then
+    _TestSave.CommitFailed := True;
+end;
+
+procedure TxeTestFormHelper.TestSaveCommitted(const aName: string; const aWrite: TwbSaveWrite);
+begin
+  if not xeTestSwitches.Save then
+    Exit;
+  var lSeq := _TestSave.Stack[High(_TestSave.Stack)];
+  if aWrite.Commit then
+    TestSaveAdd('commit' + #9 + IntToStr(lSeq) + #9 + aName + #9 + 'result=' + BoolToStr(not _TestSave.CommitFailed, True));
+  TestSavePending('aftercommit', lSeq);
+end;
+
+procedure TxeTestFormHelper.TestSaveRaised(aError: Exception);
+begin
+  if xeTestSwitches.Save then
+    TestSaveAdd('raised' + #9 + IntToStr(_TestSave.Stack[High(_TestSave.Stack)]) + #9 + aError.ClassName + #9 + aError.Message);
+end;
+
+procedure TxeTestFormHelper.TestSaveLeave(aResult: TwbSaveResult);
+begin
+  if not xeTestSwitches.Save then
+    Exit;
+  var lSeq := _TestSave.Stack[High(_TestSave.Stack)];
+  Delete(_TestSave.Stack, High(_TestSave.Stack), 1);
+  if Length(_TestSave.Stack) = 0 then
+    _TestSave.AnsweredForm := nil;
+  TestSaveAdd('end' + #9 + IntToStr(lSeq) + #9 + 'result=' + GetEnumName(TypeInfo(TwbSaveResult), Ord(aResult)));
+  try
+    for var i := Low(Files) to High(Files) do
+      TestSaveAdd('unsaved' + #9 + IntToStr(lSeq) + #9 + Files[i].FileName + #9 + BoolToStr(esUnsaved in Files[i].ElementStates, True));
+    TestSavePending('end', lSeq);
+    TestSaveDisk(lSeq);
+  except
+    on E: Exception do
+      TestSaveAdd('# FAILED: the end of a save: ' + E.ClassName + ': ' + E.Message);
+  end;
+  _TestSave.NotBefore := GetTickCount64 + 100;
 end;
 
 procedure TxeTestFormHelper.DoTestDeltaPatchStart;

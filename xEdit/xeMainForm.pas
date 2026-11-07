@@ -1709,6 +1709,9 @@ begin
       else
         MessageBox(0, PChar(aText), 'Error', 0);
     end);
+{$IFDEF XE_TEST_CONTROL_POINTS}
+  TestSaveAfterRename(AnyError);
+{$ENDIF}
 
   if AnyError then
     if lUnattended then begin
@@ -2208,6 +2211,9 @@ begin
     CloseInProgress := True;
     try
       if inherited CloseQuery then begin
+{$IFDEF XE_TEST_CONTROL_POINTS}
+        TestSaveCaller('endsession');
+{$ENDIF}
         if not UnattendedSaveFailed then
           case SaveChanged of
             srAbort:
@@ -4496,7 +4502,7 @@ begin
     wbPatron := Settings.ReadBool('Options', 'Patron', wbPatron);
     if (not wbPatron or not xeAutoLoad)
 {$IFDEF XE_TEST_CONTROL_POINTS}
-      and not (xeTestSwitches.Conflicts or xeTestSwitches.NavCopy or xeTestSwitches.ViewText or xeTestSwitches.ViewTree or xeTestSwitches.Options or xeTestSwitches.CopyIntoGap or xeTestSwitches.NewFile or xeTestSwitches.GameLink or xeTestSwitches.CheckMenus or xeTestSwitches.FormIDSearch or xeTestSwitches.SplitTreeLOD or xeTestSwitches.DropMaster or xeTestSwitches.DeltaPatch or xeTestSwitches.Merge or xeTestSwitches.MergedPatch or xeTestSwitches.CopyInto or xeTestSwitches.Renumber or xeTestSwitches.ChangeFormID or xeTestSwitches.Hide or xeTestSwitches.Filter or xeTestSwitches.SaveContexts or xeTestSwitches.EndSession or (xeTestSwitches.PumpDuringLoad <> ''))
+      and not (xeTestSwitches.Conflicts or xeTestSwitches.NavCopy or xeTestSwitches.ViewText or xeTestSwitches.ViewTree or xeTestSwitches.Options or xeTestSwitches.CopyIntoGap or xeTestSwitches.NewFile or xeTestSwitches.GameLink or xeTestSwitches.CheckMenus or xeTestSwitches.FormIDSearch or xeTestSwitches.SplitTreeLOD or xeTestSwitches.DropMaster or xeTestSwitches.DeltaPatch or xeTestSwitches.Merge or xeTestSwitches.MergedPatch or xeTestSwitches.CopyInto or xeTestSwitches.Renumber or xeTestSwitches.ChangeFormID or xeTestSwitches.Hide or xeTestSwitches.Filter or xeTestSwitches.SaveContexts or xeTestSwitches.EndSession or xeTestSwitches.Save or (xeTestSwitches.PumpDuringLoad <> ''))
 {$ENDIF}
     then
       ShowDeveloperMessage;
@@ -4773,6 +4779,8 @@ begin
 {$IFDEF XE_TEST_CONTROL_POINTS}
       if xeTestSwitches.EndSession and xeTestSwitches.EndSessionDuringLoad then
         TestEndSessionDuringLoad;
+      if xeTestSwitches.Save then
+        TestSaveStart;
 {$ENDIF}
     finally
       FreeAndNil(sl);
@@ -5581,8 +5589,14 @@ begin
   Action := caFree;
   CloseInProgress := True;
   try
+{$IFDEF XE_TEST_CONTROL_POINTS}
+    TestSaveArrival('close');
+{$ENDIF}
     StopBackgroundWork;
 
+{$IFDEF XE_TEST_CONTROL_POINTS}
+    TestSaveCaller('close');
+{$ENDIF}
     if not UnattendedSaveFailed and (SaveChanged >= srAbort) then
       if xeUnattended then begin
         if CheckResult = 0 then
@@ -5947,11 +5961,18 @@ var
   r                           : TRect;
   i                           : Integer;
 begin
+{$IFDEF XE_TEST_CONTROL_POINTS}
+  if (Key = Ord('S')) and (Shift = [ssCtrl]) then
+    TestSaveArrival('ctrls');
+{$ENDIF}
   if NestedPumpDepth > 0 then
     Exit;
   if xeContext.LoaderDone then begin
     if (Key = Ord('S')) and (Shift = [ssCtrl]) then begin
       jbhSave.CancelHint;
+{$IFDEF XE_TEST_CONTROL_POINTS}
+      TestSaveCaller('ctrls');
+{$ENDIF}
       SaveChanged(False, True);
     end;
     if (Key = Ord('O')) and (Shift = [ssCtrl]) then
@@ -6558,6 +6579,9 @@ end;
 
 procedure TfrmMain.jbhSaveBalloonClick(Sender: TObject);
 begin
+{$IFDEF XE_TEST_CONTROL_POINTS}
+  TestSaveCaller('balloon');
+{$ENDIF}
   SaveChanged(False, True);
 end;
 
@@ -14232,6 +14256,9 @@ end;
 procedure TfrmMain.mniMainSaveClick(Sender: TObject);
 begin
   jbhSave.CancelHint;
+{$IFDEF XE_TEST_CONTROL_POINTS}
+  TestSaveCaller('menu');
+{$ENDIF}
   SaveChanged(False, True);
 end;
 
@@ -14263,6 +14290,11 @@ var
 begin
   Result := srNothingToDo;
 
+{$IFDEF XE_TEST_CONTROL_POINTS}
+  TestSaveEnter(aSilent, aShowMessageIfNothing);
+  try
+    try
+{$ENDIF}
   if xeContext.Settings.DontSave then
     Exit;
 
@@ -14326,6 +14358,9 @@ begin
         end;
       end;
 
+{$IFDEF XE_TEST_CONTROL_POINTS}
+      TestSaveListed(CheckListBox1, cbBackup.Checked);
+{$ENDIF}
       Inc(wbShowStartTime);
       try
         SavedAny := False;
@@ -14340,14 +14375,24 @@ begin
               SaveWrite := xeContext.WriteSave(TwbLocalizationFile(CheckListBox1.Items.Objects[i]), t, Report)
             else
               SaveWrite := xeContext.WriteSave(IwbFile(Pointer(CheckListBox1.Items.Objects[i])), t, Report);
+{$IFDEF XE_TEST_CONTROL_POINTS}
+            TestSaveWritten(CheckListBox1.Items[i], SaveWrite);
+{$ENDIF}
 
             if SaveWrite.Saved then
               SavedAny := True;
             if SaveWrite.Failed then
               AnyErrors := True;
             if SaveWrite.Commit then
-              if not xeContext.CommitSave(SaveWrite, Alert) then
+              if not xeContext.CommitSave(SaveWrite, Alert) then begin
                 AnyErrors := True;
+{$IFDEF XE_TEST_CONTROL_POINTS}
+                TestSaveCommitFailed;
+{$ENDIF}
+              end;
+{$IFDEF XE_TEST_CONTROL_POINTS}
+            TestSaveCommitted(CheckListBox1.Items[i], SaveWrite);
+{$ENDIF}
 
             DoProcessMessages;
             tmrMessagesTimer(nil);
@@ -14384,6 +14429,17 @@ begin
 
   if SavedAny then
     SetSaveInterval;
+{$IFDEF XE_TEST_CONTROL_POINTS}
+    except
+      on E: Exception do begin
+        TestSaveRaised(E);
+        raise;
+      end;
+    end;
+  finally
+    TestSaveLeave(Result);
+  end;
+{$ENDIF}
 end;
 
 function TfrmMain.SelectionIncludesAnyDeepCopyRecords: Boolean;
@@ -16120,6 +16176,9 @@ begin
         end;
       end;
 
+{$IFDEF XE_TEST_CONTROL_POINTS}
+      TestSaveCaller('automode');
+{$ENDIF}
       var lSaveResult := SaveChanged;
       if lSaveResult = srNothingToDo then
         ChangesMade := False;
@@ -19208,7 +19267,7 @@ begin
 {$IFDEF XE_TEST_CONTROL_POINTS}
           if xeTestSwitches.Conflicts or xeTestSwitches.NavCopy or xeTestSwitches.Merge or xeTestSwitches.MergedPatch or
              xeTestSwitches.CopyInto or xeTestSwitches.Renumber or xeTestSwitches.ChangeFormID or xeTestSwitches.NewFile or
-             xeTestSwitches.GameLink or xeTestSwitches.CheckMenus or xeTestSwitches.FormIDSearch or xeTestSwitches.SplitTreeLOD or xeTestSwitches.EndSession then begin
+             xeTestSwitches.GameLink or xeTestSwitches.CheckMenus or xeTestSwitches.FormIDSearch or xeTestSwitches.SplitTreeLOD or xeTestSwitches.EndSession or xeTestSwitches.Save then begin
             wbProgress('Test mode FAILED: an error occured while loading modules');
             CheckResult := 255;
             if xeAutoExit then
@@ -19507,6 +19566,9 @@ begin
 
         if xeTestSwitches.EndSession and not xeTestSwitches.EndSessionDuringLoad then
           DoTestEndSession;
+
+        if xeTestSwitches.Save then
+          TestSaveLoaded;
 {$ENDIF}
       finally
         Dec(wbShowStartTime);
