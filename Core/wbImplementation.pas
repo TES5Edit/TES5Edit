@@ -1285,6 +1285,7 @@ type
     procedure RemoveChildGroup(const aGroup: IwbGroupRecord);
     procedure InvalidateReferencesInjected;
     procedure RenumberOwnSlot(aOldSlot, aNewSlot: Integer);
+    procedure RemapMasterSlots(const aSlots: TArray<Integer>);
     procedure ClearForRelease;
     function DoBuildRef(aRemove: Boolean): Boolean;
 
@@ -1693,6 +1694,7 @@ type
     procedure RemoveChildGroup(const aGroup: IwbGroupRecord);
     procedure InvalidateReferencesInjected;
     procedure RenumberOwnSlot(aOldSlot, aNewSlot: Integer);
+    procedure RemapMasterSlots(const aSlots: TArray<Integer>);
     procedure ClearForRelease;
     procedure SaveRefsToStream(aStream: TStream; aSaveNames: Boolean);
     procedure LoadRefsFromStream(aStream: TStream; aLoadNames: Boolean);
@@ -12107,6 +12109,7 @@ var
   lNextFull   : Integer;
   lNextLight  : Integer;
   lNextMedium : Integer;
+  lSlots      : TArray<Integer>;
 
   function NextFileID(const aFile: IwbFile): TwbFileID;
   begin
@@ -12127,17 +12130,17 @@ var
     Inc(lNextFull);
   end;
 
-  function HoldsMasterSlotRecord: Boolean;
+  function RemappedMarker(const aMarker: TBytes): TBytes;
   begin
-    var lLayout := flContextObj.SlotLayout;
-    for var lRecord in flRecords do
-      if Assigned(lRecord) then begin
-        var lSlot := lRecord.FixedFormID.FileID[lLayout].FullSlot;
-        var lIdentitySlot := (lRecord as IwbMainRecordInternal).IdentityKey.FileID[lLayout].FullSlot;
-        if ((lSlot > 0) and (lSlot < Length(flMasters))) or ((lIdentitySlot > 0) and (lIdentitySlot < Length(flMasters))) then
-          Exit(True);
-      end;
-    Result := False;
+    Result := aMarker;
+    if (Length(aMarker) < 12) or (PwbSignature(@aMarker[0])^ <> 'MVRF') then
+      Exit;
+    var lValue := PCardinal(@aMarker[8])^;
+    var lSlot := lValue shr 24;
+    if (lSlot = 0) or (lSlot >= Cardinal(Length(lSlots))) or (lSlots[lSlot] = Integer(lSlot)) then
+      Exit;
+    Result := Copy(aMarker);
+    PCardinal(@Result[8])^ := (lValue and $00FFFFFF) or (Cardinal(lSlots[lSlot]) shl 24);
   end;
 
 begin
@@ -12145,7 +12148,7 @@ begin
     raise Exception.Create('File "' + GetFileName + '" is not editable');
   if GetIsNotPlugin then
     Exit;
-  if not (gcMasterSlotsInFormID in flContextObj.GameDefObj.Capabilities) and HoldsMasterSlotRecord then
+  if not (gcMasterSlotsInFormID in flContextObj.GameDefObj.Capabilities) and (UnwrittenMasterCount = 0) then
     Exit;
 
   if (GetElementCount < 1) or not Supports(GetElement(0), IwbContainerElementRef, Header) then
@@ -12155,6 +12158,9 @@ begin
   if Length(flMasters) > Succ(lUnwritten) then begin
     flOldMasters := Copy(flMasters);
     wbCancelLock;
+    var lProgressLocked := not (gcMasterSlotsInFormID in flContextObj.GameDefObj.Capabilities);
+    if lProgressLocked then
+      wbProgressLock;
     try
       MasterFiles := Header.ElementByName['Master Files'] as IwbContainerElementRef;
       Assert(Assigned(MasterFiles));
@@ -12186,8 +12192,10 @@ begin
       lNextFull := 0;
       lNextLight := 0;
       lNextMedium := 0;
+      SetLength(lSlots, Length(flMasters));
       for i := Low(flMasters) to High(flMasters) do begin
         j := PwbMasterSortEntry(lOrder[i]).mseIndex;
+        lSlots[j] := i;
         flMasters[i] := flOldMasters[j];
         var lNewID := NextFileID(flMasters[i]);
         if i <> j then
@@ -12212,11 +12220,19 @@ begin
           var lNewCount := TwbSlotCounts.Create(flMasters, flComplexFileFileID);
 
           MastersUpdated(Old, New, lOldCount, lNewCount);
+        end else begin
+          for var lRecord in flRecords do
+            if Assigned(lRecord) then
+              (lRecord as IwbMainRecordInternal).RemapMasterSlots(lSlots);
+          for var lIndex := Low(flRecordStream) to High(flRecordStream) do
+            flRecordStream[lIndex].rseMarker := RemappedMarker(flRecordStream[lIndex].rseMarker);
         end;
         SetModified(True);
       end;
       SortRecords;
     finally
+      if lProgressLocked then
+        wbProgressUnlock;
       wbCancelUnlock;
       flOldMasters := nil;
     end;
@@ -22385,6 +22401,29 @@ begin
      (ComputeFixedFormID(lCacheable).FileID[lLayout].FullSlot <> aOldSlot)
   then
     mrFixedFormID.FileID[lLayout] := TwbFileID.CreateFull(aNewSlot);
+end;
+
+procedure TwbMainRecord.RemapMasterSlots(const aSlots: TArray<Integer>);
+begin
+  if not IsEmbeddedReference then
+    Exit;
+  var lLayout := ContextObj.SlotLayout;
+  var lKeySlot := mrFixedFormID.FileID[lLayout].FullSlot;
+  if (lKeySlot > 0) and (lKeySlot < Length(aSlots)) then
+    mrFixedFormID.FileID[lLayout] := TwbFileID.CreateFull(aSlots[lKeySlot]);
+  var lFRMR := GetRecordBySignature('FRMR');
+  if Assigned(lFRMR) then begin
+    var lValue: Cardinal := lFRMR.NativeValue;
+    var lSlot := lValue shr 24;
+    if (lSlot > 0) and (lSlot < Cardinal(Length(aSlots))) and (aSlots[lSlot] <> Integer(lSlot)) then begin
+      if ContextObj.BeginInternalEdit(True) then try
+        lFRMR.NativeValue := (lValue and $00FFFFFF) or (Cardinal(aSlots[lSlot]) shl 24);
+      finally
+        wbEndInternalEdit;
+      end else
+        Assert(False);
+    end;
+  end;
 end;
 
 function CompareReferencedByFile(Item1, Item2: Pointer): Integer;
