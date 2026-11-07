@@ -2437,6 +2437,8 @@ type
     function DenseIDIn(aContext: TwbGameContext): Cardinal;
     function GetChainStamp: Cardinal;
     procedure MarkConflictStored;
+    function IsIdentityElement(const aElement: IwbElement): Boolean;
+    function IdentityWriteRefusal(const aEditorID: string): string;
 
     function GetIsESM: Boolean;
     procedure SetIsESM(aValue: Boolean);
@@ -2982,6 +2984,7 @@ type
 
     function KnownSubRecordSignatures: PwbKnownSubRecordSignatures;
     function GetIdentity(const aMainRecord: IwbMainRecord): string;
+    function IdentityWith(const aMainRecord: IwbMainRecord; const aEditorID: string): string;
     function IdentityFrom(aHasGrid: Boolean; const aGrid: TwbGridCell; aHasEditorID: Boolean; const aEditorID: string;
                           out aIdentity: string): Boolean;
     function SetIdentityCallback(const aCallback: TwbMainRecordIdentityCallback): IwbMainRecordDef;
@@ -4566,6 +4569,12 @@ type
 
   TwbNameTarget = (ntNone, ntCorrupt, ntNoIdentity, ntExterior, ntEmpty, ntFound);
 
+  TwbIdentityRequest = record
+    FormIDBase : Byte;
+    NameBase   : Byte;
+    Identity   : string;
+  end;
+
   TwbGameContext = class(TInterfacedObject, IwbGameContext)
   protected
     gcRenameQueue    : TList<TwbPendingSave>;
@@ -4650,6 +4659,8 @@ type
     procedure DetachFilesFromModules; virtual;
     function SlotLayout: TwbSlotLayout;
     function FormIDFromIdentity(aFormIDBase, aFormIDNameBase: Byte; aIdentity: string): TwbFormID;
+    function InternIdentityLocked(aFormIDBase, aFormIDNameBase: Byte; const aIdentity: string): Cardinal;
+    function ReserveIdentities(const aRequests: array of TwbIdentityRequest): string;
     function IdentityKeyRefusal(aFormIDBase, aFormIDNameBase: Byte; const aIdentity: string): string;
     function FindIdentity(aFormIDBase, aFormIDNameBase: Byte; const aIdentity: string; out aFormID: TwbFormID): Boolean;
     function IdentityAtKey(aFormIDBase, aFormIDNameBase: Byte; const aKey: TwbFormID; out aIdentity: string): Boolean;
@@ -8203,37 +8214,77 @@ begin
   aIdentity := aIdentity.ToLowerInvariant;
   gcIdentitiesLock.BeginWrite;
   try
-    var lIdentities := gcIdentities[aFormIDNameBase];
-    if not (Assigned(lIdentities) and lIdentities.TryGetValue(aIdentity, i)) then begin
-      i := gcNextIDs[aFormIDNameBase];
-      if i >= gcGameDefObj.IdentityKeyCapacity(aFormIDNameBase) then
-        raise Exception.Create(NoIdentityKeyText(aFormIDBase, aIdentity));
-      if not Assigned(lIdentities) then begin
-        var lNew := TList<string>.Create;
-        try
-          lIdentities := TDictionary<string, Cardinal>.Create;
-        except
-          lNew.Free;
-          raise;
-        end;
-        gcIdentities[aFormIDNameBase] := lIdentities;
-        gcIdentityAt[aFormIDNameBase] := lNew;
-      end;
-      var lNames := gcIdentityAt[aFormIDNameBase];
-      lNames.Add(aIdentity);
-      try
-        lIdentities.Add(aIdentity, i);
-      except
-        lNames.Delete(Pred(lNames.Count));
-        raise;
-      end;
-      Inc(gcNextIDs[aFormIDNameBase]);
-    end;
+    i := InternIdentityLocked(aFormIDBase, aFormIDNameBase, aIdentity);
   finally
     gcIdentitiesLock.EndWrite;
   end;
 
   Result := TwbFormID.FromCardinal( (Cardinal(aFormIDBase) shl 16) + i );
+end;
+
+function TwbGameContext.InternIdentityLocked(aFormIDBase, aFormIDNameBase: Byte; const aIdentity: string): Cardinal;
+begin
+  var lIdentities := gcIdentities[aFormIDNameBase];
+  if Assigned(lIdentities) and lIdentities.TryGetValue(aIdentity, Result) then
+    Exit;
+  Result := gcNextIDs[aFormIDNameBase];
+  if Result >= gcGameDefObj.IdentityKeyCapacity(aFormIDNameBase) then
+    raise Exception.Create(NoIdentityKeyText(aFormIDBase, aIdentity));
+  if not Assigned(lIdentities) then begin
+    var lNew := TList<string>.Create;
+    try
+      lIdentities := TDictionary<string, Cardinal>.Create;
+    except
+      lNew.Free;
+      raise;
+    end;
+    gcIdentities[aFormIDNameBase] := lIdentities;
+    gcIdentityAt[aFormIDNameBase] := lNew;
+  end;
+  var lNames := gcIdentityAt[aFormIDNameBase];
+  lNames.Add(aIdentity);
+  try
+    lIdentities.Add(aIdentity, Result);
+  except
+    lNames.Delete(Pred(lNames.Count));
+    raise;
+  end;
+  Inc(gcNextIDs[aFormIDNameBase]);
+end;
+
+function TwbGameContext.ReserveIdentities(const aRequests: array of TwbIdentityRequest): string;
+var
+  lNeed : array[Byte] of Cardinal;
+begin
+  Result := '';
+  FillChar(lNeed, SizeOf(lNeed), 0);
+  gcIdentitiesLock.BeginWrite;
+  try
+    var lNew: TArray<TwbIdentityRequest> := nil;
+    for var lRequest in aRequests do begin
+      if gcGameDefObj.IdentityNameBaseOf(lRequest.FormIDBase) <> lRequest.NameBase then
+        raise Exception.CreateFmt('FormID base $%.2x does not take its identities from name base $%.2x', [lRequest.FormIDBase, lRequest.NameBase]);
+      var lPending := lRequest;
+      lPending.Identity := lRequest.Identity.ToLowerInvariant;
+      var lIdentities := gcIdentities[lPending.NameBase];
+      if Assigned(lIdentities) and lIdentities.ContainsKey(lPending.Identity) then
+        Continue;
+      var lSeen := False;
+      for var lEarlier in lNew do
+        if (lEarlier.NameBase = lPending.NameBase) and (lEarlier.Identity = lPending.Identity) then
+          lSeen := True;
+      if lSeen then
+        Continue;
+      Inc(lNeed[lPending.NameBase]);
+      if gcNextIDs[lPending.NameBase] + lNeed[lPending.NameBase] > gcGameDefObj.IdentityKeyCapacity(lPending.NameBase) then
+        Exit(NoIdentityKeyText(lPending.FormIDBase, lPending.Identity));
+      lNew := lNew + [lPending];
+    end;
+    for var lPending in lNew do
+      InternIdentityLocked(lPending.FormIDBase, lPending.NameBase, lPending.Identity);
+  finally
+    gcIdentitiesLock.EndWrite;
+  end;
 end;
 
 function TwbGameContext.FindIdentity(aFormIDBase, aFormIDNameBase: Byte; const aIdentity: string; out aFormID: TwbFormID): Boolean;
@@ -9406,6 +9457,7 @@ type
 
     function KnownSubRecordSignatures: PwbKnownSubRecordSignatures;
     function GetIdentity(const aMainRecord: IwbMainRecord): string;
+    function IdentityWith(const aMainRecord: IwbMainRecord; const aEditorID: string): string;
     function IdentityFrom(aHasGrid: Boolean; const aGrid: TwbGridCell; aHasEditorID: Boolean; const aEditorID: string;
                           out aIdentity: string): Boolean;
     function SetIdentityCallback(const aCallback: TwbMainRecordIdentityCallback): IwbMainRecordDef;
@@ -10104,6 +10156,7 @@ type
     function SetFormater(const aFormater: IwbStringDefFormater): IwbStringDef;
   public
     function StoreRefusal(const aElement: IwbElement; const aValue: string): string;
+    function StoredBytes(const aElement: IwbElement; const aValue: string): TBytes;
     function ElementValue(const aElement: IwbElement; out aValue: string; aToFirstZero: Boolean): Boolean; virtual;
   end;
 
@@ -14691,13 +14744,18 @@ begin
 end;
 
 function TwbMainRecordDef.GetIdentity(const aMainRecord: IwbMainRecord): string;
+begin
+  Result := IdentityWith(aMainRecord, aMainRecord.EditorID);
+end;
+
+function TwbMainRecordDef.IdentityWith(const aMainRecord: IwbMainRecord; const aEditorID: string): string;
 var
   lGrid : TwbGridCell;
 begin
   if not Assigned(recIdentityCallback) then
-    Exit(aMainRecord.EditorID);
+    Exit(aEditorID);
   var lHasGrid := aMainRecord.GetGridCell(lGrid);
-  if not recIdentityCallback(lHasGrid, lGrid, True, aMainRecord.EditorID, Result) then
+  if not recIdentityCallback(lHasGrid, lGrid, True, aEditorID, Result) then
     Result := '';
 end;
 
@@ -19873,7 +19931,7 @@ begin
   FromStringTransform(aBasePtr, aEndPtr, aElement, lValue, ttFromNativeValue);
 end;
 
-procedure TwbStringDef.FromStringNative(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aValue: string; aTransformType: TwbStringTransformType);
+function TwbStringDef.StoredBytes(const aElement: IwbElement; const aValue: string): TBytes;
 var
   NewSize : Integer;
   b       : TBytes;
@@ -19890,24 +19948,39 @@ begin
       Inc(NewSize);
   end;
 
-  aElement.RequestStorageChange(aBasePtr, aEndPtr, NewSize + Ord(ndTerminator));
-
-  if sdSize > 0 then begin
-    FillChar(aBasePtr^, NewSize, 0);
-    var lLen := Length(b);
-    if lLen > sdSize then
-      lLen := sdSize;
-    if lLen > 0 then
-      Move(b[0], aBasePtr^, lLen);
-  end else begin
-    if Length(b) > 0 then
-      Move(b[0], aBasePtr^, Length(b));
-
-    if not (dfNoZeroTerminator in defFlags) then
-      PByte(aBasePtr)[Pred(NewSize)] := 0;
-  end;
+  SetLength(Result, NewSize + Ord(ndTerminator));
+  if Length(Result) > 0 then
+    FillChar(Result[0], Length(Result), 0);
+  var lLen := Length(b);
+  if (sdSize > 0) and (lLen > sdSize) then
+    lLen := sdSize;
+  if lLen > 0 then
+    Move(b[0], Result[0], lLen);
   if ndTerminator then
-    PAnsiChar(aBasePtr)[NewSize] := AnsiChar(wbTerminator);
+    Result[NewSize] := Byte(AnsiChar(wbTerminator));
+end;
+
+procedure TwbStringDef.FromStringNative(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aValue: string; aTransformType: TwbStringTransformType);
+var
+  lRecord : IwbMainRecord;
+begin
+  var lBytes := StoredBytes(aElement, aValue);
+
+  if Assigned(aElement) then begin
+    lRecord := aElement.ContainingMainRecord;
+    if Assigned(lRecord) and lRecord.IsIdentityElement(aElement) then begin
+      var lText := '';
+      if Length(lBytes) > 0 then
+        lText := ToEditValue(@lBytes[0], PByte(lBytes) + Length(lBytes), aElement);
+      var lRefusal := lRecord.IdentityWriteRefusal(lText);
+      if lRefusal <> '' then
+        raise Exception.Create(lRefusal);
+    end;
+  end;
+
+  aElement.RequestStorageChange(aBasePtr, aEndPtr, Length(lBytes));
+  if Length(lBytes) > 0 then
+    Move(lBytes[0], aBasePtr^, Length(lBytes));
 end;
 
 procedure TwbStringDef.FromStringTransform(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aValue: string; aTransformType: TwbStringTransformType);

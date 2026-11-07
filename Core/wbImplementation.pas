@@ -1522,6 +1522,8 @@ type
     procedure UpdateQualifiedChildKeys;
     function QualifyIdentity(var aIdentity: string): Boolean;
     function IdentityUntouched: Boolean;
+    function IsIdentityElement(const aElement: IwbElement): Boolean;
+    function IdentityWriteRefusal(const aEditorID: string): string;
     function ReleaseNameEdges: Boolean;
     function ChainHoldsReferrer(const aReferrer: IwbMainRecord): Boolean;
     procedure RebuildNameEdges;
@@ -17204,6 +17206,20 @@ begin
     end;
   end;
   Index := L;
+  if Result then begin
+    Result := False;
+    var lAt := L;
+    while (lAt > 0) and (CompareReferencedBy(Pointer(mrReferencedBy[Pred(lAt)]), Pointer(aMainRecord)) = 0) do
+      Dec(lAt);
+    while (lAt < mrReferencedByCount) and (CompareReferencedBy(Pointer(mrReferencedBy[lAt]), Pointer(aMainRecord)) = 0) do begin
+      if mrReferencedBy[lAt].Equals(aMainRecord) then begin
+        Result := True;
+        Index := lAt;
+        Break;
+      end;
+      Inc(lAt);
+    end;
+  end;
 {$IFDEF USE_PARALLEL_BUILD_REFS}
   finally
     if ContextObj.BuildingRefsParallel then
@@ -18298,6 +18314,80 @@ procedure TwbMainRecord.NameKeysChanged(const aKeys: array of TwbFormID);
 begin
   if Assigned(mrDef) and mrDef.IsKeyedByIdentity and TwbLoadingGameContext(mrContextObj).HasNameIndex then
     TwbLoadingGameContext(mrContextObj).ReResolveNameKeys(mrDef.GetFormIDBase, mrDef.GetFormIDNameBase, aKeys);
+end;
+
+function TwbMainRecord.IsIdentityElement(const aElement: IwbElement): Boolean;
+var
+  lElement   : IwbElement;
+  lContainer : IwbContainer;
+  lSubRecord : IwbSubRecord;
+  lStruct    : IwbStructDef;
+begin
+  Result := False;
+  if (mrStates * [mrsRegisterLater, mrsAssigningWhole] <> []) or not Assigned(mrDef) or not mrDef.IsKeyedByIdentity or
+     (gcFormIDInRecordHeader in GameDefObj.Capabilities) then
+    Exit;
+  lElement := aElement;
+  while Assigned(lElement) do begin
+    lContainer := lElement.Container;
+    if not Assigned(lContainer) then
+      Exit;
+    if Equals(lContainer) then
+      Break;
+    lElement := lContainer;
+  end;
+  if not Supports(lElement, IwbSubRecord, lSubRecord) or (lSubRecord.Signature <> mrDef.KnownSubRecordSignatures[ksrEditorID]) then
+    Exit;
+  if lSubRecord.Equals(aElement) then
+    Exit(True);
+  if not Supports(lSubRecord.ValueDef, IwbStructDef, lStruct) or not lSubRecord.Equals(aElement.Container) then
+    Exit;
+  for var i := 0 to Pred(lStruct.MemberCount) do
+    if Supports(lStruct.Members[i], IwbStringDef) then
+      Exit(aElement.Name = lStruct.Members[i].Name);
+end;
+
+function TwbMainRecord.IdentityWriteRefusal(const aEditorID: string): string;
+var
+  lFormID   : TwbFormID;
+  lGroup    : IwbGroupRecord;
+  lChild    : IwbMainRecord;
+  lRequests : TArray<TwbIdentityRequest>;
+
+  procedure Want(const aDef: IwbMainRecordDef; const aIdentity: string);
+  var
+    lRequest : TwbIdentityRequest;
+  begin
+    lRequest.FormIDBase := aDef.GetFormIDBase;
+    lRequest.NameBase := aDef.GetFormIDNameBase;
+    lRequest.Identity := aIdentity;
+    lRequests := lRequests + [lRequest];
+  end;
+
+begin
+  var lBare := mrDef.IdentityWith(Self, aEditorID);
+  var lOwn := lBare;
+  QualifyIdentity(lOwn);
+  if not mrDef.GetFormID(Self, lFormID) then begin
+    Want(mrDef, lOwn);
+    if (dfIdentityQualifiedByTopic in mrDef.DefFlags) and Supports(GetContainer, IwbGroupRecord, lGroup) and (lGroup.GroupType = 7) then begin
+      var lTopic := lGroup.ChildrenOf;
+      var lLabel := '';
+      if Assigned(lTopic) and Assigned(lTopic.Def) and ContextObj.IdentityAtKey(lTopic.GetMainRecordDef.GetFormIDBase,
+           lTopic.GetMainRecordDef.GetFormIDNameBase, TwbFormID.FromCardinal(lGroup.GroupLabel), lLabel) then begin
+        var lWanted := lTopic.GetMainRecordDef.GetIdentity(lTopic);
+        if lWanted.ToLowerInvariant <> lLabel.ToLowerInvariant then
+          Want(mrDef, lWanted + #0 + lBare);
+      end;
+    end;
+  end;
+  lGroup := GetChildGroup;
+  if Assigned(lGroup) then
+    for var i := 0 to Pred(lGroup.ElementCount) do
+      if Supports(lGroup.Elements[i], IwbMainRecord, lChild) and Assigned(lChild.Def) and
+         (dfIdentityQualifiedByTopic in lChild.Def.DefFlags) and not lChild.GetMainRecordDef.GetFormID(lChild, lFormID) then
+        Want(lChild.GetMainRecordDef, lOwn + #0 + lChild.GetMainRecordDef.GetIdentity(lChild));
+  Result := ContextObj.ReserveIdentities(lRequests);
 end;
 
 function TwbMainRecord.IdentityUntouched: Boolean;
