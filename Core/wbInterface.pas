@@ -4542,6 +4542,13 @@ type
     Failed          : Boolean;
   end;
 
+  TwbPendingSave = record
+    psTargetName : string;
+    psSaveName   : string;
+    psHasTime    : Boolean;
+    psTime       : TDateTime;
+  end;
+
   TwbCheckRun = class
   private
     crNoticed    : TList<IwbFile>;
@@ -4558,7 +4565,7 @@ type
 
   TwbGameContext = class(TInterfacedObject, IwbGameContext)
   protected
-    gcRenameQueue    : TStringList;
+    gcRenameQueue    : TList<TwbPendingSave>;
     gcGameDef        : IwbGameDef;
     gcGameDefObj     : TwbGameDef;
     gcFiles          : TwbFiles;
@@ -4669,6 +4676,7 @@ type
     function CommitSave(const aWrite: TwbSaveWrite; const aAlert: TwbSaveMessageProc): Boolean; virtual; abstract;
     function RenamePendingSaves(const aAlert: TwbSaveMessageProc): Boolean; virtual; abstract;
     function HasRenameQueue: Boolean;
+    function PendingSaves: TArray<TwbPendingSave>;
     procedure EnsureBackupPath;
     function FindBSAs(const IniName, DataPath: String; var bsaNames: TStringList; var bsaMissing: TStringList): Integer; overload; virtual; abstract;
     function FindBSAs(const IniName, CustomIniName, DataPath: String; var bsaNames: TStringList; var bsaMissing: TStringList): Integer; overload; virtual; abstract;
@@ -7962,6 +7970,13 @@ end;
 function TwbGameContext.HasRenameQueue: Boolean;
 begin
   Result := Assigned(gcRenameQueue);
+end;
+
+function TwbGameContext.PendingSaves: TArray<TwbPendingSave>;
+begin
+  Result := nil;
+  if Assigned(gcRenameQueue) then
+    Result := gcRenameQueue.ToArray;
 end;
 
 procedure TwbGameContext.EnsureBackupPath;

@@ -63,8 +63,11 @@ type
     procedure ReResolveNameKeys(aFormIDBase, aNameBase: Byte; const aKeys: array of TwbFormID);
     procedure ReturnDenseID(aID: Cardinal);
     procedure SaveFailed(const aText: string; const aAlert: TwbSaveMessageProc);
-    function RenameSaved(const aFrom, aTo: string; const aAlert: TwbSaveMessageProc): Boolean;
+    function RenameSaved(var aSave: TwbPendingSave; const aAlert: TwbSaveMessageProc): Boolean;
     function BackupSaved(const aFrom: string; const aAlert: TwbSaveMessageProc): Boolean;
+    procedure RestoreSavedTime(const aSave: TwbPendingSave; const aAlert: TwbSaveMessageProc);
+    procedure RetireSaves(const aTargetName: string; aCount: Integer; var aRetired: TArray<string>);
+    procedure CleanRetiredSave(const aSaveName, aTargetName, aRoute: string; const aAlert: TwbSaveMessageProc);
     function NewSaveStream(const aFileName: string): TStream; virtual;
   public
     destructor Destroy; override; final;
@@ -32009,11 +32012,24 @@ begin
 end;
 
 function TwbLoadingGameContext.CommitSave(const aWrite: TwbSaveWrite; const aAlert: TwbSaveMessageProc): Boolean;
+var
+  lSave    : TwbPendingSave;
+  lRetired : TArray<string>;
 begin
   Result := True;
+  lSave := Default(TwbPendingSave);
+  lSave.psTargetName := aWrite.TargetName;
+  lSave.psSaveName := aWrite.SaveName;
+  if Assigned(gcRenameQueue) then
+    for var lPending in gcRenameQueue do
+      if SameText(lPending.psTargetName, aWrite.TargetName) and lPending.psHasTime then begin
+        lSave.psHasTime := True;
+        lSave.psTime := lPending.psTime;
+        Break;
+      end;
   var lNeedsRename := aWrite.NeedsRename;
   if lNeedsRename and aWrite.TryDirectRename then try
-    if not RenameSaved(aWrite.SaveName, aWrite.TargetName, nil) then begin
+    if not RenameSaved(lSave, nil) then begin
       Result := False;
       wbProgress('Direct save failed. Will queue save for renaming on shutdown.');
     end else
@@ -32022,34 +32038,90 @@ begin
 
   if lNeedsRename then begin
     if not Assigned(gcRenameQueue) then
-      gcRenameQueue := TStringList.Create;
-    gcRenameQueue.AddPair(aWrite.TargetName, aWrite.SaveName);
+      gcRenameQueue := TList<TwbPendingSave>.Create;
+    gcRenameQueue.Add(lSave);
     wbProgress('Queued renaming of save "' + Settings.DataPath + aWrite.SaveName + '" to "' + Settings.DataPath + aWrite.TargetName + '" on shutdown.');
-  end else if Assigned(gcRenameQueue) then
-    for var lIdx := Pred(gcRenameQueue.Count) downto 0 do
-      if SameText(aWrite.TargetName, gcRenameQueue.KeyNames[lIdx]) then begin
-        var lQueued := gcRenameQueue.ValueFromIndex[lIdx];
-        if Settings.DontBackup then begin
-          wbProgress('******** WARNING ********');
-          wbProgress('* Backups are disabled! *');
-          wbProgress('******** WARNING ********');
-          wbProgress('Removing previously queued save "' + Settings.DataPath + lQueued + '" as a direct save to "' + Settings.DataPath + aWrite.TargetName + '" has succeeded.');
-          System.SysUtils.DeleteFile(Settings.DataPath + lQueued);
-        end else begin
-          wbProgress('Backing up previously queued save "' + Settings.DataPath + lQueued + '" as a direct save to "' + Settings.DataPath + aWrite.TargetName + '" has succeeded.');
-          BackupSaved(lQueued, aAlert);
-        end;
+  end else begin
+    if Assigned(gcRenameQueue) then
+      RetireSaves(aWrite.TargetName, gcRenameQueue.Count, lRetired);
+    if not aWrite.NeedsRename then
+      RestoreSavedTime(lSave, aAlert);
+    for var lName in lRetired do
+      CleanRetiredSave(lName, aWrite.TargetName, 'a direct save', aAlert);
+  end;
+end;
+
+procedure TwbLoadingGameContext.RetireSaves(const aTargetName: string; aCount: Integer; var aRetired: TArray<string>);
+begin
+  aRetired := nil;
+  if Assigned(gcRenameQueue) then
+    for var lIdx := Pred(aCount) downto 0 do
+      if SameText(aTargetName, gcRenameQueue[lIdx].psTargetName) then begin
+        aRetired := aRetired + [gcRenameQueue[lIdx].psSaveName];
         gcRenameQueue.Delete(lIdx);
       end;
 end;
 
+procedure TwbLoadingGameContext.CleanRetiredSave(const aSaveName, aTargetName, aRoute: string; const aAlert: TwbSaveMessageProc);
+begin
+  if not FileExists(Settings.DataPath + aSaveName) then
+    Exit;
+  try
+    if Settings.DontBackup then begin
+      wbProgress('******** WARNING ********');
+      wbProgress('* Backups are disabled! *');
+      wbProgress('******** WARNING ********');
+      wbProgress('Removing previously queued save "' + Settings.DataPath + aSaveName + '" as ' + aRoute + ' to "' + Settings.DataPath + aTargetName + '" has succeeded.');
+      if not System.SysUtils.DeleteFile(Settings.DataPath + aSaveName) then
+        SaveFailed('Could not delete "' + Settings.DataPath + aSaveName + '".', aAlert);
+    end else begin
+      wbProgress('Backing up previously queued save "' + Settings.DataPath + aSaveName + '" as ' + aRoute + ' to "' + Settings.DataPath + aTargetName + '" has succeeded.');
+      BackupSaved(aSaveName, aAlert);
+    end;
+  except
+  end;
+end;
+
 function TwbLoadingGameContext.RenamePendingSaves(const aAlert: TwbSaveMessageProc): Boolean;
+var
+  lRetired : TArray<string>;
 begin
   Result := True;
-  if Assigned(gcRenameQueue) then
-    for var lIdx := 0 to Pred(gcRenameQueue.Count) do
-      if not RenameSaved(gcRenameQueue.ValueFromIndex[lIdx], gcRenameQueue.Names[lIdx], aAlert) then
-        Result := False;
+  if not Assigned(gcRenameQueue) then
+    Exit;
+  var lIdx := 0;
+  while lIdx < gcRenameQueue.Count do begin
+    var lSave := gcRenameQueue[lIdx];
+    var lInstalled := False;
+    try
+      lInstalled := RenameSaved(lSave, aAlert);
+    except
+      on E: Exception do
+        try
+          SaveFailed('Could not rename "' + Settings.DataPath + lSave.psSaveName + '" to "' + Settings.DataPath + lSave.psTargetName + '": ' + E.Message, aAlert);
+        except
+        end;
+    end;
+    if lSave.psHasTime then
+      for var lLater := Succ(lIdx) to Pred(gcRenameQueue.Count) do
+        if SameText(gcRenameQueue[lLater].psTargetName, lSave.psTargetName) and not gcRenameQueue[lLater].psHasTime then begin
+          var lEntry := gcRenameQueue[lLater];
+          lEntry.psHasTime := True;
+          lEntry.psTime := lSave.psTime;
+          gcRenameQueue[lLater] := lEntry;
+        end;
+    if lInstalled then begin
+      gcRenameQueue.Delete(lIdx);
+      RetireSaves(lSave.psTargetName, lIdx, lRetired);
+      Dec(lIdx, Length(lRetired));
+      for var lName in lRetired do
+        CleanRetiredSave(lName, lSave.psTargetName, 'a queued save', aAlert);
+    end else begin
+      Result := False;
+      gcRenameQueue[lIdx] := lSave;
+      Inc(lIdx);
+    end;
+  end;
 end;
 
 procedure TwbLoadingGameContext.SaveFailed(const aText: string; const aAlert: TwbSaveMessageProc);
@@ -32059,14 +32131,29 @@ begin
     aAlert(aText);
 end;
 
-function TwbLoadingGameContext.RenameSaved(const aFrom, aTo: string; const aAlert: TwbSaveMessageProc): Boolean;
+procedure TwbLoadingGameContext.RestoreSavedTime(const aSave: TwbPendingSave; const aAlert: TwbSaveMessageProc);
+begin
+  if not aSave.psHasTime or (gcOrderFromPluginsTxt in GameDefObj.Capabilities) then
+    Exit;
+  var lTo := Settings.DataPath + aSave.psTargetName;
+  try
+    if wbIsModule(lTo, GameDefObj.GameExeName) then
+      wbSetLastWriteTimeUtc(lTo, aSave.psTime);
+  except
+    try
+      SaveFailed('Could not set last modified time of "' + lTo + '".', aAlert);
+    except
+    end;
+  end;
+end;
+
+function TwbLoadingGameContext.RenameSaved(var aSave: TwbPendingSave; const aAlert: TwbSaveMessageProc): Boolean;
 var
-  lFrom        : string;
-  lTo          : string;
-  lBackup      : string;
-  lBackupBase  : string;
-  lOldTime     : TDateTime;
-  lHasOldTime  : Boolean;
+  lFrom      : string;
+  lTo        : string;
+  lBackup    : string;
+  lBackedUp  : Boolean;
+  lInstalled : Boolean;
 begin
   Result := False;
 
@@ -32075,24 +32162,24 @@ begin
 
   EnsureBackupPath;
 
-  lFrom := Settings.DataPath + aFrom;
+  lFrom := Settings.DataPath + aSave.psSaveName;
   if not FileExists(lFrom) then begin
     SaveFailed('Could not rename "' + lFrom + '". File not found.', aAlert);
     Exit;
   end;
 
-  lTo := Settings.DataPath + aTo;
-  lOldTime := 0;
-  lHasOldTime := False;
+  lTo := Settings.DataPath + aSave.psTargetName;
+  lBackedUp := False;
   if FileExists(lTo) then begin
-    try
-      lOldTime := wbGetLastWriteTimeUtc(lTo);
-      lHasOldTime := True;
-    except
-      SaveFailed('Could not get last modified time of "' + lTo + '".', aAlert);
-    end;
-    lBackup := Settings.BackupPath + ExtractFileName(aTo) + '.backup.' + FormatDateTime('yyyy_mm_dd_hh_nn_ss', Now);
-    lBackupBase := lBackup;
+    if not aSave.psHasTime then
+      try
+        aSave.psTime := wbGetLastWriteTimeUtc(lTo);
+        aSave.psHasTime := True;
+      except
+        SaveFailed('Could not get last modified time of "' + lTo + '".', aAlert);
+      end;
+    lBackup := Settings.BackupPath + ExtractFileName(aSave.psTargetName) + '.backup.' + FormatDateTime('yyyy_mm_dd_hh_nn_ss', Now);
+    var lBackupBase := lBackup;
     var lIdx := 1;
     while FileExists(lBackup) and (lIdx < 1000) do begin
       lBackup := lBackupBase + '_' + lIdx.ToString;
@@ -32104,6 +32191,7 @@ begin
         SaveFailed('Could not rename "' + lTo + '" to "' + lBackup + '".', aAlert);
         Exit;
       end;
+      lBackedUp := True;
     end else begin
       wbProgress('Deleting "' + lTo + '".');
       if not System.SysUtils.DeleteFile(lTo) then begin
@@ -32113,22 +32201,24 @@ begin
     end;
   end;
 
-  wbProgress('Renaming "' + lFrom + '" to "' + lTo + '".');
-  if not RenameFile(lFrom, lTo) then begin
+  lInstalled := False;
+  try
+    wbProgress('Renaming "' + lFrom + '" to "' + lTo + '".');
+    lInstalled := RenameFile(lFrom, lTo);
+  finally
+    if lBackedUp and not lInstalled then
+      if not RenameFile(lBackup, lTo) then
+        try
+          SaveFailed('Could not rename "' + lBackup + '" back to "' + lTo + '".', aAlert);
+        except
+        end;
+  end;
+  if not lInstalled then begin
     SaveFailed('Could not rename "' + lFrom + '" to "' + lTo + '".', aAlert);
     Exit;
   end;
 
-  if not (gcOrderFromPluginsTxt in GameDefObj.Capabilities) then
-    if lHasOldTime then
-      if wbIsModule(lTo, GameDefObj.GameExeName) then try
-        wbSetLastWriteTimeUtc(lTo, lOldTime);
-      except
-        try
-          SaveFailed('Could not set last modified time of "' + lTo + '".', aAlert);
-        except
-        end;
-      end;
+  RestoreSavedTime(aSave, aAlert);
 
   Result := True;
 end;
