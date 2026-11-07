@@ -6241,6 +6241,63 @@ var
   NotAllAdded    : Boolean;
   lMasters       : TStringList;
 
+  function WrittenGroup(const aRecord: IwbMainRecord): IwbGroupRecord;
+  var
+    lGroup : IwbGroupRecord;
+  begin
+    Result := nil;
+    if (aRecord.Signature = 'REFR') and Supports(aRecord.Container, IwbGroupRecord, lGroup) and (lGroup.GroupType in [8, 9]) then
+      Result := lGroup;
+  end;
+
+  procedure RefuseClaimedBytes;
+  var
+    lFrom, lTo : Integer;
+    lNumber    : Cardinal;
+    lMaster    : string;
+    lMarker    : TBytes;
+
+    function Claimed(aNumber: Cardinal): Boolean;
+    begin
+      lNumber := aNumber;
+      var lSlot := Integer(aNumber shr 24);
+      Result := (lSlot >= lFrom) and (lSlot < lTo);
+      if Result then
+        lMaster := lMasters[lSlot - lFrom];
+    end;
+
+  begin
+    lFrom := Length(flMasters);
+    lTo := Min(lFrom + lMasters.Count, Succ(Integer(TwbFileID.MaxFullSlot(flContextObj.SlotLayout))));
+    var lSlotless := UnwrittenMasterCount = 0;
+
+    for var lRecord in flRecords do
+      if Assigned(lRecord) then begin
+        var lMain := lRecord as TObject as TwbMainRecord;
+        if lMain.IsEmbeddedReference then begin
+          if lSlotless then
+            raise Exception.CreateFmt('[AddMasters] "%s" can not add its masters: it was loaded without "%s" as its first master, so its master bytes can not be read; load it with a load order above 0',
+              [GetFileName, flContextObj.GameDefObj.GameExeName]);
+          var lFRMR := lMain.GetRecordBySignature('FRMR');
+          if Assigned(lFRMR) and Claimed(lFRMR.NativeValue) then
+            raise Exception.CreateFmt('[AddMasters] "%s" can not add its masters: %s, FRMR %s, names its own reference by a master byte "%s" would take; remove the reference or leave the master out',
+              [GetFileName, lRecord.Name, IntToHex(lNumber, 8), lMaster]);
+        end;
+      end;
+
+    for var lEntry in flRecordStream do
+      if Assigned(lEntry.rseRecord) then begin
+        if (Length(lMarker) >= 12) and Claimed(PCardinal(@lMarker[8])^) then begin
+          var lGroup := WrittenGroup(lEntry.rseRecord);
+          if Assigned(lGroup) then
+            raise Exception.CreateFmt('[AddMasters] "%s" can not add its masters: the moved reference marker %s in %s, before %s, names its own reference by a master byte "%s" would take; remove the reference or leave the master out',
+              [GetFileName, IntToHex(lNumber, 8), lGroup.Name, lEntry.rseRecord.Name, lMaster]);
+        end;
+        lMarker := nil;
+      end else if (Length(lEntry.rseMarker) >= SizeOf(TwbSignature)) and (PwbSignature(@lEntry.rseMarker[0])^ = 'MVRF') then
+        lMarker := lEntry.rseMarker;
+  end;
+
   procedure Inner;
   var
     Header         : IwbContainerElementRef;
@@ -6254,6 +6311,9 @@ var
 
     if GetIsNotPlugin then
       Exit;
+
+    if not (gcMasterSlotsInFormID in flContextObj.GameDefObj.Capabilities) then
+      RefuseClaimedBytes;
 
     if (GetElementCount < 1) or not Supports(GetElement(0), IwbContainerElementRef, Header) then
       raise Exception.CreateFmt('Unexpected error reading file "%s"', [flFileName]);
