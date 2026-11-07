@@ -1947,6 +1947,7 @@ type
     ['{38AA15A6-F652-45C7-B875-9CB502E5DA92}']
     function GetFileName: string;
     function GetFileNameOnDisk: string;
+    function GetFullFileNameOnDisk: string;
     function GetModuleInfo: Pointer;
     function GetModuleType: TwbModuleType;
     function GetUnsavedSince: TDateTime;
@@ -2090,6 +2091,8 @@ type
       read GetFileName;
     property FileNameOnDisk: string
       read GetFileNameOnDisk;
+    property FullFileNameOnDisk: string
+      read GetFullFileNameOnDisk;
 
     property ModuleInfo: Pointer
       read GetModuleInfo;

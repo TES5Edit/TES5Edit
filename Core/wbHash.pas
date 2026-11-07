@@ -55,6 +55,7 @@ type
     class function CRC32(aData: Pointer; aSize: Integer): TwbCRC32; overload;
     class function CRC32(const aData: TBytes): TwbCRC32; overload;
     class function CRC32(const aFileName: string): TwbCRC32; overload;
+    class function CRC32Chunked(const aFileName: string): TwbCRC32;
     {$IFDEF CRYPTOAPI}
     class function SHA1(const aData: TBytes): TBytes; overload;
     class function SHA1(const aFileName: string): TBytes; overload;
@@ -452,6 +453,32 @@ begin
     finally
       Free;
     end;
+end;
+
+class function TwbHash.CRC32Chunked(const aFileName: string): TwbCRC32;
+const
+  cChunkSize = 1 shl 20;
+var
+  lBuffer : TBytes;
+  lCRC    : Cardinal;
+begin
+  SetLength(lBuffer, cChunkSize);
+  lCRC := $FFFFFFFF;
+  var lStream := TFileStream.Create(aFileName, fmOpenRead or fmShareDenyNone);
+  try
+    var lLeft := lStream.Size;
+    while lLeft > 0 do begin
+      var lChunk: Integer := cChunkSize;
+      if lLeft < lChunk then
+        lChunk := lLeft;
+      lStream.ReadBuffer(lBuffer[0], lChunk);
+      lCRC := ShaCrcRefresh(lCRC, @lBuffer[0], lChunk);
+      Dec(lLeft, lChunk);
+    end;
+  finally
+    lStream.Free;
+  end;
+  Result := not lCRC;
 end;
 
 procedure CRCInit;

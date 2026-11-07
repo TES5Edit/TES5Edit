@@ -65,6 +65,7 @@ type
     procedure SaveFailed(const aText: string; const aAlert: TwbSaveMessageProc);
     function RenameSaved(var aSave: TwbPendingSave; const aAlert: TwbSaveMessageProc): Boolean;
     function BackupSaved(const aFrom: string; const aAlert: TwbSaveMessageProc): Boolean;
+    function TargetHoldsWritten(const aTargetName: string; aCRC: Cardinal): Boolean;
     procedure RestoreSavedTime(const aSave: TwbPendingSave; const aAlert: TwbSaveMessageProc);
     procedure RetireSaves(const aTargetName: string; aCount: Integer; var aRetired: TArray<string>);
     procedure CleanRetiredSave(const aSaveName, aTargetName, aRoute: string; const aAlert: TwbSaveMessageProc);
@@ -929,6 +930,7 @@ type
     {---IwbFile---}
     function GetFileName: string;
     function GetFileNameOnDisk: string;
+    function GetFullFileNameOnDisk: string;
     function GetModuleInfo: Pointer;
     function GetModuleType: TwbModuleType;
     function GetUnsavedSince: TDateTime; inline;
@@ -9634,6 +9636,11 @@ end;
 function TwbFile.GetFileNameOnDisk: string;
 begin
   Result := ExtractFileName(flFileNameOnDisk);
+end;
+
+function TwbFile.GetFullFileNameOnDisk: string;
+begin
+  Result := flFileNameOnDisk;
 end;
 
 function TwbFile.GetFileStates: TwbFileStates;
@@ -31937,7 +31944,7 @@ begin
 
     var lWritten := TwbFile(aFile as TObject).flWrittenCRC32;
     if Result.NeedsRename then
-      if lCRC = lWritten then begin
+      if (lCRC = lWritten) and TargetHoldsWritten(Result.TargetName, lWritten) then begin
         System.SysUtils.DeleteFile(Settings.DataPath + Result.SaveName);
         Result.NeedsRename := False;
         Result.TryDirectRename := False;
@@ -32008,6 +32015,19 @@ begin
       Result.Commit := False;
       aReport('Error saving ' + Result.SaveName + ': ' + E.Message);
     end;
+  end;
+end;
+
+function TwbLoadingGameContext.TargetHoldsWritten(const aTargetName: string; aCRC: Cardinal): Boolean;
+begin
+  if Assigned(gcRenameQueue) then
+    for var lIdx := Pred(gcRenameQueue.Count) downto 0 do
+      if SameText(aTargetName, gcRenameQueue[lIdx].psTargetName) then
+        Exit(FileExists(Settings.DataPath + gcRenameQueue[lIdx].psSaveName));
+  try
+    Result := TwbHash.CRC32Chunked(Settings.DataPath + aTargetName) = aCRC;
+  except
+    Result := False;
   end;
 end;
 

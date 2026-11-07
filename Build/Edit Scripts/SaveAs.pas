@@ -56,7 +56,13 @@ var
   fs: TFileStream;
   ftime: TDateTime;
   keeptime: Boolean;
+  i: Integer;
 begin
+  // a loaded plugin's own file: the editor would not know it changed, and a queued save of it would replace this one at shutdown
+  for i := 0 to Pred(FileCount) do
+    if SameText(ExpandFileName(aFileName), ExpandFileName(GetFilePathOnDisk(FileByIndex(i)))) then
+      raise Exception.Create(aFileName + ' is the file of a loaded plugin and can not be overwritten.');
+
   keeptime := False;
   if FileExists(aFileName) and ((wbGameMode = gmTES3) or (wbGameMode = gmTES4) or (wbGameMode = gmFO3) or (wbGameMode = gmFNV)) then try
     ftime := GetFileLastWriteTimeUtc(aFileName);

@@ -149,6 +149,15 @@ begin
     Value := _File.FileFormIDtoLoadOrderFormID(TwbFormID.FromVar(Args.Values[1]), True).ToCardinal;
 end;
 
+procedure IwbFile_GetFilePathOnDisk(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  _File: IwbFile;
+begin
+  Value := '';
+  if Supports(IInterface(Args.Values[0]), IwbFile, _File) then
+    Value := _File.FullFileNameOnDisk;
+end;
+
 procedure IwbFile_GetFileName(var Value: Variant; Args: TJvInterpreterArgs);
 var
   _File: IwbFile;
@@ -455,6 +464,7 @@ begin
     AddFunction(cUnit, 'FileFormIDtoLoadOrderFormID', IwbFile_FileFormIDtoLoadOrderFormID, 2, [varEmpty, varString], varEmpty);
     AddFunction(cUnit, 'FileWriteToStream', IwbFile_WriteToStream, 3, [varEmpty, varEmpty, varEmpty], varEmpty);
     AddFunction(cUnit, 'GetFileName', IwbFile_GetFileName, 1, [varEmpty], varEmpty);
+    AddFunction(cUnit, 'GetFilePathOnDisk', IwbFile_GetFilePathOnDisk, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'GetIsESL', IwbFile_GetIsLight, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'GetIsESM', IwbFile_GetIsESM, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'GetIsLight', IwbFile_GetIsLight, 1, [varEmpty], varEmpty);
