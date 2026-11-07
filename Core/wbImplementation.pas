@@ -875,6 +875,7 @@ type
     function OwnMasterAtKey(const aKey: TwbFormID): IwbFile;
     function OwnProvider: IwbFile;
     function CopyRefusal(const aItem: IwbElement; aAsNew, aDeep: Boolean; const aRules: TwbCopyRules): string;
+    function ReferenceMasterRefusal(const aItem: IwbElement): string;
     function AddCopyAlongPath(const aSource: IwbElement; aFlags: TwbCopyFlags; const aRules: TwbCopyRules): IwbElement;
     class function CurrentIdentityIs(const aRecord: IwbMainRecord; const aLowerValue: string): Boolean; static;
     function HoldsCurrentIdentityAtNameKey(const aKey: TwbFormID; const aLowerValue: string): Boolean;
@@ -1368,7 +1369,8 @@ type
     mrsIndexKeysActive,
     mrsConflictStored,
     mrsRegisterLater,
-    mrsAssigningWhole
+    mrsAssigningWhole,
+    mrsKeepKey
   );
 
   TwbMainRecordStates = set of TwbMainRecordState;
@@ -1442,6 +1444,8 @@ type
     function GetIsReachable: Boolean; override; final;
     function GetCountedRecordCount: Cardinal; override; final;
     function IsEmbeddedReference: Boolean;
+    function DefiningFile: IwbFile;
+    procedure AssignReference(const aSource: IwbElement; const aKey: TwbFormID);
     procedure InitDataPtr; override; final;
     procedure DecompressIfNeeded;
     procedure ScanData; override; final;
@@ -4413,10 +4417,25 @@ function TwbFile.AddCopy(const aSource: IwbElement; aFlags: TwbCopyFlags; const 
 begin
   if flContextObj.GameDefObj.IsMorrowind then begin
     var lRefusal := CopyRefusal(aSource, cfAsNew in aFlags, cfDeepCopy in aFlags, aRules);
+    if lRefusal = '' then
+      lRefusal := ReferenceMasterRefusal(aSource);
     if lRefusal <> '' then
       raise Exception.Create(lRefusal);
   end;
   Result := AddCopyAlongPath(aSource, aFlags, aRules);
+end;
+
+function TwbFile.ReferenceMasterRefusal(const aItem: IwbElement): string;
+var
+  lFileID : TwbFileID;
+begin
+  Result := '';
+  var lRecord := aItem.ContainingMainRecord;
+  if not Assigned(lRecord) or not Assigned(lRecord._File) or not (lRecord as TObject as TwbMainRecord).IsEmbeddedReference then
+    Exit;
+  if not TryLoadOrderFileIDtoFileFileID(lRecord.LoadOrderFormID.FileID[flContextObj.SlotLayout], True, lFileID) then
+    Result := Format('%s can not be copied into "%s": "%s", which defines it, is not one of its masters',
+      [lRecord.Name, GetFileName, (lRecord as TObject as TwbMainRecord).DefiningFile.FileName]);
 end;
 
 function TwbFile.CopyRefusal(const aItem: IwbElement; aAsNew, aDeep: Boolean; const aRules: TwbCopyRules): string;
@@ -4466,6 +4485,31 @@ var
     end;
   end;
 
+  function OfReference(const aRecord: IwbMainRecord): string;
+  var
+    lGroup : IwbGroupRecord;
+  begin
+    Result := '';
+    var lRecord := aRecord as TObject as TwbMainRecord;
+    var lSource := aRecord._File as TObject as TwbFile;
+    if not Supports(aRecord.Container, IwbGroupRecord, lGroup) or not (lGroup.GroupType in [8, 9]) then
+      Exit(RecordRefused(aRecord, 'it is in no cell'));
+    if fsIsCompareLoad in lSource.flStates then
+      Exit(RecordRefused(aRecord, Format('"%s" is loaded for comparison, and its references are not read as a file''s own', [lSource.GetFileName])));
+    if fsIsCompareLoad in flStates then
+      Exit(RecordRefused(aRecord, Format('"%s" is loaded for comparison, and its references are not written as a file''s own', [GetFileName])));
+    var lFRMR := lRecord.GetRecordBySignature('FRMR');
+    if not Assigned(lFRMR) then
+      Exit(Format('A %s can not be copied into "%s": it has no reference number', [string(lRecord.GetSignature), GetFileName]));
+    if Assigned(lRecord.GetRecordBySignature('CNDT')) then
+      Exit(RecordRefused(aRecord, 'it was moved out of its cell, and its copy would lose what says so'));
+    var lNumber: Cardinal := lFRMR.NativeValue;
+    if lNumber shr 24 >= Cardinal(lSource.GetMasterCount(lRecord.GetMastersUpdated)) then
+      Exit(RecordRefused(aRecord, Format('its master byte is past the masters of "%s", which has no encoding in another file', [lSource.GetFileName])));
+    if lRecord.IdentityKey <> lRecord.GetFixedFormID then
+      Exit(RecordRefused(aRecord, Format('its FRMR does not give the key it sits at [%s]', [lRecord.GetFixedFormID.ToDisplayString(flContextObj.SlotLayout)])));
+  end;
+
   function OfRecord(const aRecord: IwbMainRecord; aNew: Boolean): string;
 
     function Refused(const aWhy: string): string;
@@ -4489,8 +4533,10 @@ var
     if aRecord.IsDeleted then
       Exit(Refused('its header marks it deleted, and its copy would lose what keys it'));
     if Assigned(lRecord.mrDef) and not lRecord.mrDef.IsKeyedByIdentity then begin
-      if not aNew then
-        Result := Refused('a reference''s key is relative to its own file''s masters, so its copy would be another reference');
+      if aNew then
+        Result := Refused('a copy as new would keep its source''s reference number')
+      else
+        Result := OfReference(aRecord);
       Exit;
     end;
     var lSource := lRecordFile as TObject as TwbFile;
@@ -4571,6 +4617,7 @@ var
 var
   lRecord : IwbMainRecord;
   lGroup  : IwbGroupRecord;
+  lField  : IwbHasSignature;
 begin
   Result := '';
   lDestJudged := NameReferencesJudgedInternal;
@@ -4581,18 +4628,22 @@ begin
     if (Result = '') and aAsNew then
       Result := OfRequest(lRecord);
   end else if Supports(aItem, IwbGroupRecord, lGroup) then
-    Result := OfGroup(lGroup, True);
+    Result := OfGroup(lGroup, True)
+  else if Supports(aItem, IwbHasSignature, lField) and (lField.Signature = 'FRMR') then
+    Result := Format('%s can not be copied into "%s": a reference number belongs to its reference', [aItem.Name, GetFileName]);
   if Result <> '' then
     Exit;
 
+  var lReference := Supports(aItem, IwbMainRecord, lRecord) and (lRecord as TObject as TwbMainRecord).IsEmbeddedReference;
   var lContainer := aItem.Container;
   while Assigned(lContainer) do begin
     if Supports(lContainer, IwbMainRecord, lRecord) then begin
       Result := OfParent(lRecord, False);
+      lReference := (lRecord as TObject as TwbMainRecord).IsEmbeddedReference;
       lContainer := lRecord.Container;
     end else begin
       if Supports(lContainer, IwbGroupRecord, lGroup) then
-        if lGroup.GroupType in cCellChildGroups then
+        if (lGroup.GroupType in cCellChildGroups) and not lReference then
           Exit(InCellChildGroup(aItem))
         else if Assigned(lGroup.ChildrenOf) then
           Result := OfParent(lGroup.ChildrenOf, False);
@@ -19413,6 +19464,40 @@ begin
   Result := (gcReferencesEmbeddedInCell in GameDefObj.Capabilities) and (GetSignature = 'REFR');
 end;
 
+function TwbMainRecord.DefiningFile: IwbFile;
+begin
+  Result := GetFile.GetMasterForFileID(GetFixedFormID.FileID[ContextObj.SlotLayout], GetMastersUpdated, True);
+end;
+
+procedure TwbMainRecord.AssignReference(const aSource: IwbElement; const aKey: TwbFormID);
+begin
+  var lLayout := ContextObj.SlotLayout;
+  var lSlot := aKey.FileID[lLayout].FullSlot;
+  if lSlot >= GetFile.MasterCount[True] then
+    lSlot := 0;
+  wbProgressLock;
+  Include(mrStates, mrsKeepKey);
+  try
+    BeginUpdate;
+    try
+      AssignInternal(wbAssignThis, aSource, False);
+    finally
+      EndUpdate;
+    end;
+    if ContextObj.BeginInternalEdit(True) then try
+      var lFRMR: IwbElement := GetRecordBySignature('FRMR');
+      if not Assigned(lFRMR) then
+        lFRMR := Add('FRMR', True);
+      lFRMR.NativeValue := aKey.ObjectID[lLayout] or (Cardinal(lSlot) shl 24);
+    finally
+      wbEndInternalEdit;
+    end;
+  finally
+    Exclude(mrStates, mrsKeepKey);
+    wbProgressUnlock;
+  end;
+end;
+
 function TwbMainRecord.GetReferencedBy(aIndex: Integer): IwbMainRecord;
 begin
   if Assigned(mrMaster) then
@@ -21450,8 +21535,11 @@ begin
           lOwnMaster := lFile;
       end else if Assigned(mrDef) and mrDef.IsKeyedByIdentity then
         lOwnMaster := (lFile as TObject as TwbFile).OwnMasterAtKey(GetFixedFormID)
-      else
-        lOwnMaster := (lFile as TObject as TwbFile).OwnProvider;
+      else begin
+        lOwnMaster := DefiningFile;
+        if lFile.Equals(lOwnMaster) then
+          lOwnMaster := (lFile as TObject as TwbFile).OwnProvider;
+      end;
       if Assigned(lOwnMaster) then
         aMasters.Add(lOwnMaster);
     end;
@@ -22233,6 +22321,8 @@ end;
 
 procedure TwbMainRecord.UpdateIdentityKey;
 begin
+  if mrsKeepKey in mrStates then
+    Exit;
   var lOld := mrFixedFormID;
   UpdateIdentityKeyInner;
   if not lOld.IsNull and not (mrsRegisterLater in mrStates) and TwbLoadingGameContext(mrContextObj).HasNameIndex then
@@ -25285,6 +25375,7 @@ var
     var lByIdentity := not (gcFormIDInRecordHeader in GameDefObj.Capabilities);
     var lIsNew := False;
     var lCreated := False;
+    var lReplaced: IwbMainRecord := nil;
 
     if not Assigned(Result) then begin
 
@@ -25296,6 +25387,11 @@ var
 
       if not (cfAllowOverwrite in aFlags) then
         Exit;
+      if Result.Equals(aSource) then
+        Exit;
+      if (Result as TObject as TwbMainRecord).IsEmbeddedReference and Assigned((Result as TObject as TwbMainRecord).GetRecordBySignature('CNDT')) then
+        raise Exception.CreateFmt('%s can not be copied into "%s": it holds it as a moved reference, and a copy over it would leave the marker with no cell',
+          [aSource.Name, _File.FileName]);
 
       if cfDeepCopy in aFlags then begin
         var lAction := coCopy;
@@ -25304,7 +25400,10 @@ var
         case lAction of
           coCopy: begin
             if not Equals(Result.Container) then begin
-              Result.Remove;
+              if lByIdentity then
+                lReplaced := Result as IwbMainRecord
+              else
+                Result.Remove;
               Result := nil;
               Result := TwbMainRecord.Create(Self, aSource.Signature, lFormID, not lByIdentity);
               lCreated := True;
@@ -25337,7 +25436,10 @@ var
           lResult.IsPartialForm := True;
 
         if not (lResult.IsPartialForm or lResult.IsDeleted) then
-          Result.Assign(wbAssignThis, aElement, False);
+          if not (cfAsNew in aFlags) and (lResult as TObject as TwbMainRecord).IsEmbeddedReference then
+            (lResult as TObject as TwbMainRecord).AssignReference(aElement, lFormID)
+          else
+            Result.Assign(wbAssignThis, aElement, False);
 
         if not lResult.IsDeleted and ((aSource.EditorID <> '') or (aRules.EditorID <> '')) and ((cfAsNew in aFlags) or not lByIdentity) then begin
           if ContextObj.BeginInternalEdit(True) then try
@@ -25348,8 +25450,11 @@ var
         end;
       end;
 
-      if lByIdentity then
+      if lByIdentity then begin
+        if Assigned(lReplaced) then
+          lReplaced.Remove;
         (Result as IwbMainRecordInternal).RegisterWithIdentity(cfAsNew in aFlags);
+      end;
     except
       if lCreated and lByIdentity and Assigned(Result) then begin
         var lContainer := Result.Container;
@@ -25360,14 +25465,16 @@ var
       raise;
     end;
 
-    if not (cfAsNew in aFlags) and aSource.IsMaster then
-      if (Result._File.LoadOrder < aSource._File.LoadOrder) or
-        ((Result._File.LoadOrder = aSource._File.LoadOrder) and not (fsIsCompareLoad in Result._File.FileStates) )
+    if not (cfAsNew in aFlags) then begin
+      var lRoot := aSource.MasterOrSelf;
+      if (Result._File.LoadOrder < lRoot._File.LoadOrder) or
+        ((Result._File.LoadOrder = lRoot._File.LoadOrder) and not (fsIsCompareLoad in Result._File.FileStates) )
       then begin
         var lMainRecordResult: IwbMainRecord;
-        if Supports(Result, IwbMainRecord, lMainRecordResult) then
-          (aSource as IwbMainRecordInternal).YouGotAMaster(lMainRecordResult);
+        if Supports(Result, IwbMainRecord, lMainRecordResult) and not lRoot.Equals(lMainRecordResult) then
+          (lRoot as IwbMainRecordInternal).YouGotAMaster(lMainRecordResult);
       end;
+    end;
 
     if Assigned(Result) and (csRefsBuild in Result._File.ContainerStates) then
       Result.BuildRef;
@@ -25422,6 +25529,19 @@ begin
       end else if TwbSignature(grStruct.grsLabel) = 'CELL' then begin
         var lGroupRecord0Cell: IwbGroupRecord;
         if Supports(aElement, IwbGroupRecord, lGroupRecord0Cell) then begin
+          if (lGroupRecord0Cell.GroupType = 6) and (gcReferencesEmbeddedInCell in GameDefObj.Capabilities) then begin
+            var lSourceMainRecord0Cell := lGroupRecord0Cell.ChildrenOf;
+            if not Assigned(lSourceMainRecord0Cell) then
+              raise Exception.Create('Can''t find record for ' + lGroupRecord0Cell.Name);
+            lSourceMainRecord0Cell := lSourceMainRecord0Cell.HighestOverrideVisibleForFile[_File];
+            var lTargetMainRecord0Cell := AddIfMissingInternal(lSourceMainRecord0Cell, aFlags - [cfAllowOverwrite] + [cfDeepCopy], aRules) as IwbMainRecord;
+            if Assigned(lTargetMainRecord0Cell) then begin
+              Result := lTargetMainRecord0Cell.ChildGroup;
+              if not Assigned(Result) then
+                Result := TwbGroupRecord.Create(Self, 6, lTargetMainRecord0Cell);
+            end;
+            Exit;
+          end;
           if lGroupRecord0Cell.GroupType <> 2 then
             raise Exception.Create('Can''t add ' + lGroupRecord0Cell.Name + ' to top level group with signature ' + TwbSignature(grStruct.grsLabel));
           if lGroupRecord0Cell.GroupLabel > 9 then
