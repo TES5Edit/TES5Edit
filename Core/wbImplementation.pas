@@ -19009,8 +19009,13 @@ begin
 end;
 
 function TwbMainRecord.GetIsPersistent: Boolean;
+var
+  lGroup : IwbGroupRecord;
 begin
-  Result := GetFlags.IsPersistent;
+  if IsEmbeddedReference then
+    Result := Supports(GetContainer, IwbGroupRecord, lGroup) and (lGroup.GroupType = 8)
+  else
+    Result := GetFlags.IsPersistent;
 end;
 
 function TwbMainRecord.GetIsReachable: Boolean;
@@ -21886,15 +21891,42 @@ end;
 
 procedure TwbMainRecord.SetIsPersistent(aValue: Boolean);
 var
-  NeedUpdate: Boolean;
+  NeedUpdate : Boolean;
+  lOld       : IwbGroupRecord;
+  lChildren  : IwbGroupRecord;
+  lNew       : IwbGroupRecord;
 begin
-  if aValue <> GetIsPersistent then begin
-    NeedUpdate := CheckChildOfCell;
-    MakeHeaderWriteable;
-    GetFlagsPtr.SetPersistent(aValue);
-    if NeedUpdate then
-      UpdateCellChildGroup;
+  if aValue = GetIsPersistent then
+    Exit;
+  if IsEmbeddedReference then begin
+    if not Supports(GetContainer, IwbGroupRecord, lOld) or not (lOld.GroupType in [8, 9]) or
+       not Supports(lOld.Container, IwbGroupRecord, lChildren) or (lChildren.GroupType <> 6) then
+      raise Exception.Create(GetName + ': a Morrowind reference''s persistence is its place in its cell, and it is in no cell');
+    var lType := 9;
+    if aValue then
+      lType := 8;
+    var lCell := lChildren.ChildrenOf;
+    lNew := lChildren.FindChildGroup(lType, lCell);
+    if not Assigned(lNew) then
+      lNew := TwbGroupRecord.Create(lChildren, lType, lCell);
+    var lSelf: IwbElement := Self;
+    lOld.RemoveElement(lSelf);
+    if lOld.ElementCount = 0 then
+      lOld.Remove
+    else
+      (lOld as IwbGroupRecordInternal).SetModified(True);
+    lNew.AddElement(lSelf);
+    (lNew as IwbGroupRecordInternal).SetModified(True);
+    (lNew as IwbGroupRecordInternal).Sort;
+    SetModified(True);
+    ResetConflict;
+    Exit;
   end;
+  NeedUpdate := CheckChildOfCell;
+  MakeHeaderWriteable;
+  GetFlagsPtr.SetPersistent(aValue);
+  if NeedUpdate then
+    UpdateCellChildGroup;
 end;
 
 procedure TwbMainRecord.SetIsVisibleWhenDistant(aValue: Boolean);
@@ -34391,7 +34423,7 @@ begin
 
         if Flags.IsPersistent <> MainRecordInternal.GetFlagsPtr.IsPersistent then begin
           Flags.SetPersistent(MainRecordInternal.GetFlagsPtr.IsPersistent);
-          TogglePersistent := True;
+          TogglePersistent := not (MainRecordInternal as TObject as TwbMainRecord).IsEmbeddedReference;
         end;
 
         if Flags.IsVisibleWhenDistant <> MainRecordInternal.GetFlagsPtr.IsVisibleWhenDistant then begin
