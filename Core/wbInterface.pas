@@ -4680,6 +4680,7 @@ type
     function RenamePendingSaves(const aAlert: TwbSaveMessageProc): Boolean; virtual; abstract;
     function HasRenameQueue: Boolean;
     function PendingSaves: TArray<TwbPendingSave>;
+    procedure NormalizeBackupPath;
     procedure EnsureBackupPath;
     function FindBSAs(const IniName, DataPath: String; var bsaNames: TStringList; var bsaMissing: TStringList): Integer; overload; virtual; abstract;
     function FindBSAs(const IniName, CustomIniName, DataPath: String; var bsaNames: TStringList; var bsaMissing: TStringList): Integer; overload; virtual; abstract;
@@ -7982,11 +7983,21 @@ begin
     Result := gcRenameQueue.ToArray;
 end;
 
+procedure TwbGameContext.NormalizeBackupPath;
+begin
+  if Settings.BackupPath = '' then
+    Settings.BackupPath := Settings.DataPath;
+  Settings.BackupPath := IncludeTrailingPathDelimiter(System.SysUtils.ExpandFileName(Settings.BackupPath));
+end;
+
 procedure TwbGameContext.EnsureBackupPath;
 begin
+  NormalizeBackupPath;
   if not Settings.DontBackup and not DirectoryExists(Settings.BackupPath) then
-    if not ForceDirectories(Settings.BackupPath) then
+    if not ForceDirectories(Settings.BackupPath) then begin
       Settings.BackupPath := Settings.DataPath;
+      NormalizeBackupPath;
+    end;
 end;
 
 function TwbGameContext.SaveContextFileByName(const aFileName: string): IwbFile;

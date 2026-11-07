@@ -4355,6 +4355,8 @@ begin
 
   AddMessage('Using '+xeContext.GameDefObj.Identity.GameName2+' Data Path: ' + xeContext.Settings.DataPath);
 
+  if not xeContext.Settings.DontSave then
+    xeContext.NormalizeBackupPath;
   if not (xeContext.Settings.DontSave or xeContext.Settings.DontBackup) then
     AddMessage('Using Backup Path: ' + xeContext.Settings.BackupPath);
 

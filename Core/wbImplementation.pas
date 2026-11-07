@@ -32262,7 +32262,7 @@ begin
     Exit;
   end;
 
-  lBackup := Settings.BackupPath + aFrom.Replace('.save.', '.backup.');
+  lBackup := Settings.BackupPath + ExtractFileName(aFrom).Replace('.save.', '.backup.');
   lBackupBase := lBackup;
   var lIdx := 1;
   while FileExists(lBackup) and (lIdx < 1000) do begin
