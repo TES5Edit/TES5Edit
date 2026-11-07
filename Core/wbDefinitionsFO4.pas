@@ -2661,7 +2661,7 @@ begin
             if Supports(Container2.Elements[k], IwbContainerElementRef, Entry2) then
               slList.AddObject(
                 EntryName + ' - ' + Entry2.ElementEditValues['MPPN'],
-                TObject(Cardinal(Entry2.ElementNativeValues['MPPI']))
+                TObject(Cardinal(Int64(Entry2.ElementNativeValues['MPPI'])))
               );
         end;
 
@@ -2671,7 +2671,7 @@ begin
           if Supports(Container.Elements[j], IwbContainerElementRef, Entry) then
             slList.AddObject(
               Entry.ElementEditValues['MSM0'] + '/' + Entry.ElementEditValues['MSM1'],
-              TObject(Cardinal(Entry.ElementNativeValues['MSID']))
+              TObject(Cardinal(Int64(Entry.ElementNativeValues['MSID'])))
             );
 
       SetLength(Cache.Entries, slList.Count);

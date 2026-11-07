@@ -18711,7 +18711,7 @@ begin
     SelfRef := Self as IwbContainerElementRef;
 
     // markers can't be precombined
-    if Cardinal(SelfRef.ElementNativeValues[mrDef.KnownSubRecordSignatures[ksrBaseRecord]]) < $800 then
+    if Int64(SelfRef.ElementNativeValues[mrDef.KnownSubRecordSignatures[ksrBaseRecord]]) < $800 then
       Exit;
 
     if Supports(SelfRef.Container, IwbGroupRecord, Group) then
