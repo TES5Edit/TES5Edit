@@ -94,6 +94,11 @@ const
     '____'
   );
 
+function wbNotRemovable(const aElement: IwbElement): Boolean;
+begin
+  Result := False;
+end;
+
 function wbCalcPGRCSize(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Cardinal;
   function ExtractCountFromLabel(const aElement: IwbElement; aCount: Integer): Integer;
   begin
@@ -1339,7 +1344,7 @@ begin
     wbRArrayS('Relations',
       wbRStructSK([0], 'Relation', [
         wbNameReference(ANAM, 'Faction', [FACT]),
-        wbInteger(INTV, 'Reaction', itS32)
+        wbInteger(INTV, 'Reaction', itS32).SetIsRemovable(wbNotRemovable)
       ]).SetToStr(wbFactionReactionToStr))
   ]).SetFormIDBase($1C);
 
@@ -1351,8 +1356,9 @@ begin
       102, 'Float',
       108, 'Long',
       115, 'Short'
-      ])).SetDefaultNativeValue(115),
-    wbFloat(FLTV, 'Value', cpNormal, False, 1, 2)
+      ])).SetDefaultNativeValue(115)
+         .SetIsRemovable(wbNotRemovable),
+    wbFloat(FLTV, 'Value', cpNormal, False, 1, 2).SetIsRemovable(wbNotRemovable)
   ]).SetFormIDBase($58)
     .SetSummaryKey([3])
     .SetAfterLoad(wbGlobalAfterLoad);
@@ -1545,8 +1551,8 @@ begin
           wbStringForward('Variable/Object')
         ]),
         wbRUnion('Value', [
-          wbInteger(INTV, 'Value', itS32),
-          wbFloat(FLTV, 'Value')
+          wbInteger(INTV, 'Value', itS32).SetIsRemovable(wbNotRemovable),
+          wbFloat(FLTV, 'Value').SetIsRemovable(wbNotRemovable)
         ])
       ])),
     wbRStruct('Quest Data', [
@@ -1691,11 +1697,11 @@ begin
       .SetRequired
       .IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse),
     wbInteger(NNAM, 'Chance None', itU8).SetRequired,
-    wbInteger(INDX, 'Entry Count', itU32).IncludeFlag(dfSkipImplicitEdit),
+    wbInteger(INDX, 'Entry Count', itU32).IncludeFlag(dfSkipImplicitEdit).SetIsRemovable(wbNotRemovable),
     wbRArrayS('Leveled Creature Entries',
       wbRStructSK([1], 'Leveled Creature Entry', [
         wbNameReference(CNAM, 'Creature', [CREA, NPC_, LEVC]),
-        wbInteger(INTV, 'Level', itU16)
+        wbInteger(INTV, 'Level', itU16).SetIsRemovable(wbNotRemovable)
       ]).SetSummaryKey([1,0])
         .SetSummaryMemberPrefixSuffix(1, '[Level: ', ']')
         .SetSummaryMemberPrefixSuffix(0, '', ' x1')
@@ -1716,11 +1722,11 @@ begin
       .SetRequired
       .IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse),
     wbInteger(NNAM, 'Chance None', itU8).SetRequired,
-    wbInteger(INDX, 'Entry Count', itU32).IncludeFlag(dfSkipImplicitEdit),
+    wbInteger(INDX, 'Entry Count', itU32).IncludeFlag(dfSkipImplicitEdit).SetIsRemovable(wbNotRemovable),
     wbRArrayS('Leveled Item Entries',
       wbRStructSK([1], 'Leveled Item Entry', [
         wbNameReference(INAM, 'Item', [ALCH, APPA, ARMO, BOOK, CLOT, INGR, LEVI, LIGH, LOCK, MISC, PROB, REPA, WEAP]),
-        wbInteger(INTV, 'Player Level', itU16)
+        wbInteger(INTV, 'Player Level', itU16).SetIsRemovable(wbNotRemovable)
       ]).SetSummaryKey([1,0])
         .SetSummaryMemberPrefixSuffix(1, '[Level: ', ']')
         .SetSummaryMemberPrefixSuffix(0, '', ' x1')
@@ -1793,7 +1799,7 @@ begin
     .IncludeFlag(dfNoRequestedIdentity);
 
   RegisterRecordDef(MGEF, 'Magic Effect', @wbKnownSubRecordSignaturesINDX, [
-    wbInteger(INDX, 'Effect', itU32, wbMagicEffectEnum),
+    wbInteger(INDX, 'Effect', itU32, wbMagicEffectEnum).SetIsRemovable(wbNotRemovable),
     wbDeleted,
     wbStruct(MEDT, 'Data', [
       wbInteger('School', itU32,
@@ -1950,6 +1956,7 @@ begin
       11, 'Metal Blood'
       ], False, 12))
     ).SetDefaultNativeValue(18)
+     .SetIsRemovable(wbNotRemovable)
      .IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse),
     wbInventory,
     wbSpells,
