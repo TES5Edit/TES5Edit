@@ -30315,8 +30315,20 @@ begin
     if Assigned(lElementAsContainer) then
       for var lContainedElementIdx := 0 to Pred(lElementAsContainer.ElementCount) do begin
         var lContainedElement := lElementAsContainer.Elements[lContainedElementIdx];
-        if not aOnlySK or GetIsInSK(lContainedElement.SortOrder) then
-          Assign(lContainedElement.SortOrder, lContainedElement, aOnlySK);
+        if not aOnlySK or GetIsInSK(lContainedElement.SortOrder) then begin
+          var lSortOrder := lContainedElement.SortOrder;
+          var lReplaced := False;
+          if (lSortOrder >= 0) and (lSortOrder < srcDef.MemberCount) and (srcDef.Members[lSortOrder].DefType = dtSubRecordUnion) then begin
+            var lPresent := GetElementBySortOrder(lSortOrder + GetAdditionalElementCount);
+            if Assigned(lPresent) and not lPresent.Def.Equals(lContainedElement.Def) then begin
+              RemoveElement(lPresent);
+              lReplaced := True;
+            end;
+          end;
+          Assign(lSortOrder, lContainedElement, aOnlySK);
+          if lReplaced then
+            SortBySortOrder;
+        end;
       end;
 
   end else begin

@@ -1325,7 +1325,7 @@ begin
     wbEditorID,
     wbDeleted,
     wbFullName.SetRequired,
-    wbRArray('Ranks', wbStringForward(RNAM, 'Rank', 32)),
+    wbRArray('Ranks', wbStringForward(RNAM, 'Rank', 32)).SetMaxCount(10),
     wbStruct(FADT, 'Data', [
       wbArray('Favored Attributes', wbInteger('Attribute', itS32, wbAttributeEnum), 2),
       wbArray('Rank Requirements',
@@ -1350,7 +1350,7 @@ begin
     wbRArrayS('Relations',
       wbRStructSK([0], 'Relation', [
         wbNameReference(ANAM, 'Faction', [FACT]),
-        wbInteger(INTV, 'Reaction', itS32).SetIsRemovable(wbNotRemovable)
+        wbInteger(INTV, 'Reaction', itS32).SetRequired
       ]).SetToStr(wbFactionReactionToStr))
   ]).SetFormIDBase($1C);
 
@@ -1557,9 +1557,9 @@ begin
           wbStringForward('Variable/Object')
         ]),
         wbRUnion('Value', [
-          wbInteger(INTV, 'Value', itS32).SetIsRemovable(wbNotRemovable),
-          wbFloat(FLTV, 'Value').SetIsRemovable(wbNotRemovable)
-        ])
+          wbInteger(INTV, 'Value', itS32),
+          wbFloat(FLTV, 'Value')
+        ]).SetRequired
       ])),
     wbRStruct('Quest Data', [
       wbInteger(QSTN, 'Quest Named', itU8, wbBoolEnum).SetDefaultNativeValue(1),
@@ -1707,7 +1707,7 @@ begin
     wbRArrayS('Leveled Creature Entries',
       wbRStructSK([1], 'Leveled Creature Entry', [
         wbNameReference(CNAM, 'Creature', [CREA, NPC_, LEVC]),
-        wbInteger(INTV, 'Level', itU16).SetIsRemovable(wbNotRemovable)
+        wbInteger(INTV, 'Level', itU16).SetRequired
       ]).SetSummaryKey([1,0])
         .SetSummaryMemberPrefixSuffix(1, '[Level: ', ']')
         .SetSummaryMemberPrefixSuffix(0, '', ' x1')
@@ -1732,7 +1732,7 @@ begin
     wbRArrayS('Leveled Item Entries',
       wbRStructSK([1], 'Leveled Item Entry', [
         wbNameReference(INAM, 'Item', [ALCH, APPA, ARMO, BOOK, CLOT, INGR, LEVI, LIGH, LOCK, MISC, PROB, REPA, WEAP]),
-        wbInteger(INTV, 'Player Level', itU16).SetIsRemovable(wbNotRemovable)
+        wbInteger(INTV, 'Player Level', itU16).SetRequired
       ]).SetSummaryKey([1,0])
         .SetSummaryMemberPrefixSuffix(1, '[Level: ', ']')
         .SetSummaryMemberPrefixSuffix(0, '', ' x1')
@@ -1806,7 +1806,6 @@ begin
 
   RegisterRecordDef(MGEF, 'Magic Effect', @wbKnownSubRecordSignaturesINDX, [
     wbInteger(INDX, 'Effect', itU32, wbMagicEffectEnum).SetIsRemovable(wbNotRemovable),
-    wbDeleted,
     wbStruct(MEDT, 'Data', [
       wbInteger('School', itU32,
         wbEnum([
@@ -2257,7 +2256,6 @@ begin
 
   RegisterRecordDef(SKIL, 'Skill', @wbKnownSubRecordSignaturesINDX, [
     wbInteger(INDX, 'Name', itU32, wbSkillEnum).SetRequired,
-    wbDeleted,
     wbStruct(SKDT, 'Data', [
       wbInteger('Governing Attribute', itS32, wbAttributeEnum),
       wbInteger('Type', itU32, wbSpecializationEnum),
