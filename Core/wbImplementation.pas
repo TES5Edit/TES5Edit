@@ -22889,7 +22889,7 @@ begin
   else
     CorrectGroupType := 9;
 
-  if (OldTypeGroup.GroupType = CorrectGroupType) and (CorrectGroupType <> 9) then
+  if (OldTypeGroup.GroupType = CorrectGroupType) and (CorrectGroupType = 8) then
     Exit;
 
   OldCell := OldChildGroup.ChildrenOf;
