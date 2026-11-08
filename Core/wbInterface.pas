@@ -503,6 +503,7 @@ type
     dfCollapsed,
     dfDontAssign,
     dfDontSave,
+    dfElementsFixed,
     dfExcludeFromBuildRef,
     dfFastAssign,
     dfFloatSometimesBroken,

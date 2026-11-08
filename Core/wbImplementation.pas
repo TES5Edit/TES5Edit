@@ -23995,7 +23995,7 @@ var
     if srsIsArray in srStates then begin
       Result :=
          ArrayDef.CanAssign(Self, aIndex, lDef) or
-         ( (ArrayDef.ElementCount <= 0) and not AtMaxCount and ArrayDef.Element.CanAssign(Self, wbAssignThis, lDef) );
+         ( (ArrayDef.ElementCount <= 0) and not AtMaxCount and not (dfElementsFixed in ArrayDef.DefFlags) and ArrayDef.Element.CanAssign(Self, wbAssignThis, lDef) );
     end else begin
       Result := inherited CanAssignInternal(aIndex, aElement, aCheckDontShow);
       if not Result and Assigned(srDef) then
@@ -24025,7 +24025,7 @@ begin
     ArrayDef := srValueDef as IwbArrayDef;
     if not Assigned(aElement) then begin
       if aIndex = wbAssignAdd then
-        Result := (ArrayDef.ElementCount <= 0) and not AtMaxCount;
+        Result := (ArrayDef.ElementCount <= 0) and not AtMaxCount and not (dfElementsFixed in ArrayDef.DefFlags);
       Exit;
     end;
   end;
@@ -24051,7 +24051,8 @@ begin
   Result :=
     (srStates * [srsIsArray, srsSorted] = [srsIsArray]) and
     not (dfNoMove in srDef.DefFlags) and
-    not (dfNoMove in srValueDef.DefFlags);
+    not (dfNoMove in srValueDef.DefFlags) and
+    not (dfElementsFixed in srValueDef.DefFlags);
 end;
 
 function TwbSubRecord.CanElementReset: Boolean;
@@ -24787,6 +24788,7 @@ begin
     and (srsIsArray in srStates)
     and Assigned(srValueDef)
     and not (dfArrayStaticSize in srValueDef.DefFlags)
+    and not (dfElementsFixed in srValueDef.DefFlags)
     and ( (srValueDef as IwbArrayDef).ElementCount <= 0 )
     and ( (dfArrayCanBeEmpty in srValueDef.DefFlags) or (Length(cntElements) > 1) );
 
@@ -31280,7 +31282,7 @@ begin
   ArrayDef := vbValueDef as IwbArrayDef;
   if not Assigned(aElement) then begin
     if aIndex = wbAssignAdd then
-      Result := (ArrayDef.ElementCount <= 0) and not AtMaxCount;
+      Result := (ArrayDef.ElementCount <= 0) and not AtMaxCount and not (dfElementsFixed in ArrayDef.DefFlags);
     Exit;
   end;
   Result :=
@@ -31480,6 +31482,7 @@ function TwbArray.IsElementRemovable(const aElement: IwbElement): Boolean;
 begin
   Result := IsElementEditable(aElement)
     and not (dfArrayStaticSize in vbValueDef.DefFlags)
+    and not (dfElementsFixed in vbValueDef.DefFlags)
     and ((vbValueDef as IwbArrayDef).ElementCount <= 0)
     { and (Length(cntElements)>1)};
 

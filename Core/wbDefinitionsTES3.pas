@@ -113,7 +113,13 @@ function wbCalcPGRCSize(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: Iwb
   end;
 begin
   var Index := ExtractCountFromLabel(aElement, aElement.Container.ElementCount);
-  Result := ((aElement.Container.Container as IwbMainRecord).RecordBySignature['PGRP'].Elements[Pred(Index)] as IwbContainer).Elements[2].NativeValue;
+  var lPoints := (aElement.Container.Container as IwbMainRecord).RecordBySignature['PGRP'];
+  if Assigned(lPoints) and (Pred(Index) < lPoints.ElementCount) then
+    Exit((lPoints.Elements[Pred(Index)] as IwbContainer).Elements[2].NativeValue);
+  // connections no point claims: one list takes what is left, so the array around it ends
+  Result := 0;
+  if NativeUInt(aEndPtr) > NativeUInt(aBasePtr) then
+    Result := (NativeUInt(aEndPtr) - NativeUInt(aBasePtr) + 3) div SizeOf(Cardinal);
 end;
 
 procedure wbCELLAfterLoad(const aElement: IwbElement);
@@ -1982,7 +1988,8 @@ begin
     IfThen(DefineOptions.SimpleRecords,
       wbArray(PGRP, 'Points',
         wbByteArray('Point', 16)
-      ).SetCountPathOnValue('DATA\Point Count', False),
+      ).SetCountPathOnValue('DATA\Point Count', False)
+       .IncludeFlagOnValue(dfElementsFixed),
       wbArray(PGRP, 'Points',
         wbStruct('Point', [
           wbStruct('Position', [
@@ -1991,19 +1998,21 @@ begin
             wbInteger('Z', itS32)
           ]).IncludeFlag(dfCollapsed, clpVec3 in DefineOptions.Collapse),
           wbInteger('User Created', itU8, wbBoolEnum),
-          wbInteger('Connection Count', itU8),
+          wbInteger('Connection Count', itU8).IncludeFlag(dfInternalEditOnly),
           wbUnused(2)
         ]).SetSummaryKey([0,2])
           .SetSummaryMemberPrefixSuffix(0, '', '')
           .SetSummaryMemberPrefixSuffix(2, 'Connections: ', '')
           .IncludeFlag(dfCollapsed, clpNavmesh in DefineOptions.Collapse)
-      ).SetCountPathOnValue('DATA\Point Count', False)),
+      ).SetCountPathOnValue('DATA\Point Count', False)
+       .IncludeFlagOnValue(dfElementsFixed)
+       .IncludeFlag(dfFastAssign)),
     IfThen(DefineOptions.SimpleRecords,
       wbByteArray(PGRC, 'Point Connections'),
       wbArray(PGRC, 'Point Connections',
         wbArrayS('Point Connection',
           wbInteger('Point', itU32),
-        wbCalcPGRCSize)).IncludeFlag(dfCollapsed, clpNavmesh in DefineOptions.Collapse))
+        wbCalcPGRCSize).IncludeFlag(dfElementsFixed)).IncludeFlagOnValue(dfElementsFixed).IncludeFlag(dfCollapsed, clpNavmesh in DefineOptions.Collapse))
   ]).SetFormIDBase($F0)
     .SetFormIDNameBase($B0)
     .SetGridFormIDBase(wbPathgridGridFormIDBase)
@@ -2231,7 +2240,7 @@ begin
       .IncludeFlag(dfSummaryMembersNoName)
       .IncludeFlag(dfCollapsed, clpScriptData in DefineOptions.Collapse),
     wbDeleted,
-    wbArrayS(SCVR, 'Script Variables', wbString('Script Variable', 0, cpCritical)),
+    wbArrayS(SCVR, 'Script Variables', wbString('Script Variable', 0, cpCritical).IncludeFlag(dfInternalEditOnly)).IncludeFlagOnValue(dfElementsFixed).IncludeFlag(dfFastAssign),
     wbByteArray(SCDT, 'Compiled Script'),
     wbStringScript(SCTX, 'Script Source').SetRequired
   ]).SetFormIDBase($30)
