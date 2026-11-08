@@ -1423,7 +1423,7 @@ type
 
     mrLGeneration       : Integer;
 
-    mrPositionGeneration: Integer;
+    mrPlacedPosition    : Cardinal;
 
     mrIndexKeys         : TwbIndexKeys;
 
@@ -1511,7 +1511,11 @@ type
     function Add(const aName: string; aSilent: Boolean): IwbElement; override; final;
 
     function CheckChildOfCell: Boolean;
-    procedure UpdateCellChildGroup;
+    procedure UpdateCellChildGroup(aPositionEdit: Boolean = False);
+    class function PositionHash(aBase: Pointer): Cardinal; static;
+    function StoredPosition(out aPosition: TwbVector): Boolean;
+    procedure TakePlacedPosition(aBase: Pointer; aSize: Integer; aReplace: Boolean);
+    procedure PlaceIfPositionChanged(const aData: IwbDataContainer);
     procedure PlaceEmbeddedReference;
     procedure UpdateInteriorCellGroup;
     procedure ReRegister(const aFile: IwbFileInternal; const aFileFormID: TwbFormID; const aMoveKey, aMoveBack: TProc);
@@ -1800,6 +1804,8 @@ type
     procedure ScanData; override; final;
 
     procedure DoInit(aNeedSorted: Boolean); override; final;
+    procedure DoAfterInit; override; final;
+    procedure TakePositionBaseline(aReplace: Boolean);
     procedure Init; override; final;
     procedure Reset; override; final;
 
@@ -15661,8 +15667,11 @@ begin
           Exclude(mrStates, mrsAssigningWhole);
         end;
 
-        if NeedUpdate then
-          UpdateCellChildGroup;
+        if NeedUpdate then begin
+          if Supports(GetRecordBySignature('DATA'), IwbDataContainer, DataContainer) and (DataContainer.DataSize >= SizeOf(TwbVector)) then
+            mrPlacedPosition := PositionHash(DataContainer.DataBasePtr);
+          UpdateCellChildGroup(True);
+        end;
 
         RefreshKnownSubRecords;
         CollapseStorage(nil, True);
@@ -15879,25 +15888,55 @@ end;
 procedure TwbMainRecord.DoAfterSet(const aOldValue, aNewValue: Variant);
 var
   SelfRef   : IwbContainerElementRef;
-  DataRec   : IwbContainerElementRef;
-  Position  : IwbElement;
 begin
   SelfRef := Self;
   DoInit(False);
   inherited;
-  if Assigned(mrDef) and mrDef.IsReference and CheckChildOfCell then begin
-    if not Supports(GetRecordBySignature('DATA'), IwbContainerElementRef, DataRec) then
-      Exit;
-    if DataRec.ElementCount <> 2 then
-      Exit;
-    Position := DataRec.Elements[0];
-    if not Position.Modified then
-      Exit;
-    if Position.ElementGeneration = mrPositionGeneration then
-      Exit;
-    UpdateCellChildGroup;
-    mrPositionGeneration := Position.ElementGeneration;
-  end;
+end;
+
+class function TwbMainRecord.PositionHash(aBase: Pointer): Cardinal;
+var
+  lBits : array[0..2] of Cardinal;
+begin
+  Move(aBase^, lBits, SizeOf(lBits));
+  Result := TwbHash.CRC32(@lBits, SizeOf(lBits));
+  if Result = 0 then
+    Result := 1;
+end;
+
+function TwbMainRecord.StoredPosition(out aPosition: TwbVector): Boolean;
+var
+  lData : IwbDataContainer;
+begin
+  Result := Supports(GetRecordBySignature('DATA'), IwbDataContainer, lData) and (lData.DataSize >= SizeOf(TwbVector));
+  if Result then
+    Move(lData.DataBasePtr^, aPosition, SizeOf(TwbVector));
+end;
+
+procedure TwbMainRecord.TakePlacedPosition(aBase: Pointer; aSize: Integer; aReplace: Boolean);
+begin
+  if ((aReplace and not (mrsAssigningWhole in mrStates)) or (mrPlacedPosition = 0)) and Assigned(aBase) and (aSize >= SizeOf(TwbVector)) and Assigned(mrDef) and mrDef.IsReference and
+     not IsEmbeddedReference
+  then
+    mrPlacedPosition := PositionHash(aBase);
+end;
+
+procedure TwbMainRecord.PlaceIfPositionChanged(const aData: IwbDataContainer);
+var
+  lTypeGroup  : IwbGroupRecord;
+  lChildGroup : IwbGroupRecord;
+begin
+  if not Supports(GetContainer, IwbGroupRecord, lTypeGroup) or not (lTypeGroup.GroupType in [8, 9, 10]) or
+     not Supports(lTypeGroup.Container, IwbGroupRecord, lChildGroup) or (lChildGroup.GroupType <> 6) or not CheckChildOfCell or
+     (aData.DataSize < SizeOf(TwbVector))
+  then
+    Exit;
+  var lHash := PositionHash(aData.DataBasePtr);
+  if lHash = mrPlacedPosition then
+    Exit;
+  mrPlacedPosition := lHash;
+  SetModified(True);
+  UpdateCellChildGroup(True);
 end;
 
 function TwbMainRecord.DoBuildRef(aRemove: Boolean): Boolean;
@@ -16209,6 +16248,18 @@ begin
     wbProgressLock;
     try
       PlaceEmbeddedReference;
+    finally
+      wbProgressUnlock;
+      wbCancelUnlock;
+    end;
+  end;
+  if Assigned(SubRecord) and (SubRecord.Signature = 'DATA') and not (mrsAssigningWhole in mrStates) and Assigned(mrDef) and mrDef.IsReference and
+     not IsEmbeddedReference
+  then begin
+    wbCancelLock;
+    wbProgressLock;
+    try
+      PlaceIfPositionChanged(SubRecord as IwbDataContainer);
     finally
       wbProgressUnlock;
       wbCancelUnlock;
@@ -22802,7 +22853,7 @@ begin
   ResetConflict;
 end;
 
-procedure TwbMainRecord.UpdateCellChildGroup;
+procedure TwbMainRecord.UpdateCellChildGroup(aPositionEdit: Boolean);
 var
   OldTypeGroup      : IwbGroupRecord;
   OldChildGroup     : IwbGroupRecord;
@@ -22846,15 +22897,21 @@ begin
     Exit;//raise Exception.Create(OldChildGroup.GetName + ' can not find its CELL record');
 
   var OldCellNotPartial := OldCell;
-  if not OldCell.ElementExists['DATA'] then begin
+  if not OldCell.ElementExists['DATA'] then
     if not Supports(OldCell.HighestOverrideVisibleForFile[GetFile], IwbMainRecord, OldCellNotPartial) or
        not OldCellNotPartial.ElementExists['DATA']
     then
-      Exit;//raise Exception.Create(OldCell.GetName + ' is missing its DATA subrecord');
-  end;
+      OldCellNotPartial := nil;
 
-  i := OldCellNotPartial.GetElementNativeValue('DATA');
-  IsExterior := (i and 1) = 0;
+  if Assigned(OldCellNotPartial) then begin
+    i := OldCellNotPartial.GetElementNativeValue('DATA');
+    IsExterior := (i and 1) = 0;
+  end else begin
+    if not OldCell.GetGridCell(TempGridCell) then
+      Exit;
+    OldCellNotPartial := OldCell;
+    IsExterior := True;
+  end;
 
   if (OldTypeGroup.GroupType = CorrectGroupType) and not IsExterior then
     Exit;
@@ -22880,8 +22937,16 @@ begin
       end else
         NewChildGroup := OldChildGroup;
     end else begin
-      if not GetPosition(Position) then
+      if not StoredPosition(Position) then
         Exit;//raise Exception.Create('Could not determine position of ' + GetName);
+
+      var lLimit := 262144 * GameDefObj.CellSizeFactor;
+      if IsNan(Position.x) or IsNan(Position.y) or not ((Position.x >= -lLimit) and (Position.x < lLimit) and (Position.y >= -lLimit) and (Position.y < lLimit)) then
+      begin
+        if aPositionEdit then
+          Exit;
+        raise Exception.Create('The position of ' + GetName + ' does not name a cell');
+      end;
 
       GridCell := GameDefObj.PositionToGridCell(Position);
 
@@ -24114,6 +24179,7 @@ begin
 
   if SaveAsCreatedEmpty then
     Include(cntStates, csAsCreatedEmpty);
+  TakePositionBaseline(True);
 end;
 
 destructor TwbSubRecord.Destroy;
@@ -24137,6 +24203,19 @@ end;
 function TwbSubRecord.DoCheckSizeAfterWrite: Boolean;
 begin
   Result := True;
+end;
+
+procedure TwbSubRecord.DoAfterInit;
+begin
+  TakePositionBaseline(False);
+end;
+
+procedure TwbSubRecord.TakePositionBaseline(aReplace: Boolean);
+begin
+  if (GetSignature = 'DATA') and Assigned(eContainer) and not (dcfStorageInvalid in dcFlags) and Assigned(dcDataBasePtr) and Assigned(dcDataEndPtr) and
+     (TObject(IwbContainer(eContainer).ElementID) is TwbMainRecord)
+  then
+    TwbMainRecord(IwbContainer(eContainer).ElementID).TakePlacedPosition(dcDataBasePtr, NativeUInt(dcDataEndPtr) - NativeUInt(dcDataBasePtr), aReplace);
 end;
 
 procedure TwbSubRecord.DoInit(aNeedSorted: Boolean);
@@ -25071,6 +25150,7 @@ var
 begin
   SelfRef := Self as IwbContainerElementRef;
   var lOldData := GetDataBytes;
+  TakePositionBaseline(False);
 
   if csInit in cntStates then
     DoReset(True);
