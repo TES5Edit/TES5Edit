@@ -155,10 +155,13 @@ type
     procedure TestCheckMenusRunTimer(Sender: TObject);
     procedure TestCheckMenusAnswerTimer(Sender: TObject);
     procedure TestCheckMenusWrite;
+    procedure TestCheckMenusException(Sender: TObject; E: Exception);
+    procedure TestCheckMenusCloseEntered;
     procedure TestCheckMenusPickNewText(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; NewText: string);
     procedure TestCheckMenusPick;
     procedure TestCheckMenusPickControls;
     procedure TestCheckMenusPickCostRun;
+    function TestCheckMenusViewStep: Boolean;
     function TestPickOpen(const aElement: IwbElement; aEdit: Boolean = True): TObject;
     function TestPickList(aLink: TObject): TArray<string>;
     function TestPickShown(aLink: TObject): string;
@@ -3316,6 +3319,7 @@ end;
 
 procedure TxeTestFormHelper.DoTestCheckMenus;
 begin
+  Application.OnException := TestCheckMenusException;
   xeContext.Settings.DontSave := True;
   EditWarnOk := True;
   TestHost.TestCheckMenusLines := TStringList.Create;
@@ -3751,6 +3755,10 @@ begin
              TestCheckMenusPickControls;
       5: if xeTestSwitches.CheckMenusPickCost <> '' then
            TestCheckMenusPickCostRun;
+      6: if xeTestSwitches.CheckMenusView and not TestCheckMenusViewStep then begin
+           TestHost.TestCheckMenusTimer.Enabled := True;
+           Exit;
+         end;
     else
       TestCheckMenusWrite;
       Exit;
@@ -3807,8 +3815,46 @@ begin
   end;
 end;
 
+procedure TxeTestFormHelper.TestCheckMenusException(Sender: TObject; E: Exception);
+begin
+  var lSender := '';
+  if Assigned(Sender) then
+    lSender := Sender.ClassName;
+  TFile.AppendAllText(xeTestSwitches.CheckMenusFile + '.exceptions', lSender + #9 + E.ClassName + #9 + E.Message + sLineBreak, TEncoding.UTF8);
+end;
+
+procedure TxeTestFormHelper.TestCheckMenusCloseEntered;
+begin
+  var lPage := '<none>';
+  if Assigned(pgMain.ActivePage) then
+    lPage := pgMain.ActivePage.Name;
+  TFile.AppendAllText(xeTestSwitches.CheckMenusFile + '.close', 'closeentry' + #9 + lPage + sLineBreak, TEncoding.UTF8);
+end;
+
 procedure TxeTestFormHelper.TestCheckMenusWrite;
 begin
+  if xeTestSwitches.CheckMenusClosePage <> '' then
+    try
+      var lPage: TTabSheet := nil;
+      for var i := 0 to Pred(pgMain.PageCount) do
+        if SameText(pgMain.Pages[i].Name, xeTestSwitches.CheckMenusClosePage) then
+          lPage := pgMain.Pages[i];
+      if not Assigned(lPage) then
+        raise Exception.Create('no page ' + xeTestSwitches.CheckMenusClosePage);
+      TestHost.TestCheckMenusAnswer.Enabled := True;
+      try
+        pgMain.ActivePage := lPage;
+      finally
+        TestHost.TestCheckMenusAnswer.Enabled := False;
+      end;
+      TestHost.TestCheckMenusLines.Add('closepage' + #9 + lPage.Name + #9 + 'tab visible ' + BoolToStr(lPage.TabVisible, True) + #9 +
+        'active ' + pgMain.ActivePage.Name + #9 + 'Referenced By tab visible ' + BoolToStr(tbsReferencedBy.TabVisible, True));
+    except
+      on E: Exception do begin
+        CheckResult := 2;
+        TestHost.TestCheckMenusLines.Add('# FAILED: ' + E.ClassName + ': ' + E.Message);
+      end;
+    end;
   try
     var lTmp := xeTestSwitches.CheckMenusFile + '.partial';
     TestHost.TestCheckMenusLines.Insert(0, '# xEdit check menus probe: ' + xeApplicationTitle);
@@ -4760,6 +4806,534 @@ begin
   finally
     xeContext.Settings.EditAllowed := lEdit;
   end;
+end;
+
+type
+  TxeViewMenuRow = record
+    Name    : string;
+    Records : TArray<string>;
+    Path    : string;
+    Item    : TMenuItem;
+    Must    : TArray<TMenuItem>;
+    MustNot : TArray<TMenuItem>;
+    Typed   : string;
+    Target  : TFunc<IwbMainRecord>;
+    Act     : TProc;
+    Snap    : TFunc<string>;
+    Check   : TFunc<string, string, string>;
+  end;
+
+function ViewRec(const aModule: IwbFile; const aKey: string): IwbMainRecord;
+begin
+  for var j := 0 to Pred(aModule.RecordCount) do
+    if (string(aModule.Records[j].Signature) = Copy(aKey, 1, 4)) and (aModule.Records[j].EditorID = Copy(aKey, 6, MaxInt)) then
+      Exit(aModule.Records[j]);
+  raise Exception.Create('no ' + aKey + ' in ' + aModule.FileName);
+end;
+
+function ViewAt(const aModule: IwbFile; const aKey, aPath: string): IwbElement;
+begin
+  Result := ViewRec(aModule, aKey).ElementByPath[aPath];
+end;
+
+function ViewText(const aElement: IwbElement): string;
+begin
+  if Assigned(aElement) then
+    Result := aElement.EditValue
+  else
+    Result := '<absent>';
+end;
+
+function ViewLink(const aElement: IwbElement): string;
+var
+  lTarget : IwbMainRecord;
+begin
+  if not Assigned(aElement) then
+    Exit('<absent>');
+  Result := '-';
+  if Supports(aElement.LinksTo, IwbMainRecord, lTarget) then
+    Result := string(lTarget.Signature) + ':' + lTarget.EditorID;
+end;
+
+function ViewRefersTo(const aTarget, aReferrer: IwbMainRecord): Boolean;
+begin
+  Result := False;
+  if not Assigned(aTarget) then
+    Exit;
+  var lMaster := aTarget.MasterOrSelf;
+  for var i := 0 to Pred(lMaster.ReferencedByCount) do
+    if lMaster.ReferencedBy[i].Equals(aReferrer) then
+      Exit(True);
+end;
+
+function ViewEntries(const aElement: IwbElement; const aChild: string): string;
+var
+  lList, lEntry : IwbContainerElementRef;
+begin
+  if not Supports(aElement, IwbContainerElementRef, lList) then
+    Exit('<absent>');
+  var lParts: TArray<string> := nil;
+  for var i := 0 to Pred(lList.ElementCount) do
+    if not Supports(lList.Elements[i], IwbContainerElementRef, lEntry) then
+      lParts := lParts + ['?']
+    else if aChild = '' then
+      lParts := lParts + [IntToStr(lEntry.ElementCount)]
+    else
+      lParts := lParts + [ViewText(lEntry.ElementByPath[aChild])];
+  Result := string.Join(',', lParts);
+end;
+
+function ViewDump(const aElement: IwbElement): string;
+var
+  lContainer : IwbContainerElementRef;
+begin
+  if Supports(aElement, IwbContainerElementRef, lContainer) and (lContainer.ElementCount > 0) then begin
+    Result := aElement.Name + '{';
+    for var i := 0 to Pred(lContainer.ElementCount) do
+      Result := Result + ViewDump(lContainer.Elements[i]) + ';';
+    Result := Result + '}';
+  end else
+    Result := aElement.Name + '=' + aElement.EditValue;
+end;
+
+function ViewNames(const aElement: IwbElement): TArray<string>;
+var
+  lList : IwbContainerElementRef;
+begin
+  Result := nil;
+  if Supports(aElement, IwbContainerElementRef, lList) then
+    for var i := 0 to Pred(lList.ElementCount) do
+      Result := Result + [lList.Elements[i].Name + ' ' + THashSHA2.GetHashString(ViewDump(lList.Elements[i])).Substring(0, 12)];
+end;
+
+function TxeTestFormHelper.TestCheckMenusViewStep: Boolean;
+var
+  lModule : IwbFile;
+  lRows   : TArray<TxeViewMenuRow>;
+
+  function Row(const aName: string; const aRecords: TArray<string>; const aPath: string; aItem: TMenuItem;
+    const aMust, aMustNot: TArray<TMenuItem>): TxeViewMenuRow;
+  begin
+    Result := Default(TxeViewMenuRow);
+    Result.Name := aName;
+    Result.Records := aRecords;
+    Result.Path := aPath;
+    Result.Item := aItem;
+    Result.Must := aMust;
+    Result.MustNot := aMustNot;
+  end;
+
+  function Offers: string;
+  begin
+    Result := '';
+    for var lItem in TArray<TMenuItem>.Create(mniViewEdit, mniViewSetToDefault, mniViewAdd, mniViewNextMember, mniViewPreviousMember,
+      mniViewRemove, mniViewClear, mniViewMoveUp, mniViewMoveDown, mniViewRemoveFromSelected, mniViewCopyToSelectedRecords,
+      mniViewCopyMultipleToSelectedRecords, mniViewCompareReferencedRow) do
+      if lItem.Visible and lItem.Enabled then
+        Result := Result + ' ' + lItem.Name;
+    Result := Result.Trim;
+  end;
+
+  function Unlike(const aItems: TArray<TMenuItem>; aOffered: Boolean): string;
+  begin
+    Result := '';
+    for var lItem in aItems do
+      if (lItem.Visible and lItem.Enabled) <> aOffered then
+        Result := Result + ' ' + lItem.Name;
+    Result := Result.Trim;
+  end;
+
+  function Show(const aRow: TxeViewMenuRow): IwbMainRecord;
+  begin
+    var lRecords: TDynMainRecords := nil;
+    for var lKey in aRow.Records do
+      lRecords := lRecords + [ViewRec(lModule, lKey)];
+    Result := lRecords[0];
+    vstNav.ClearSelection;
+    for var i := High(lRecords) downto Low(lRecords) do begin
+      var lNode := FindNodeForElement(lRecords[i]);
+      if not Assigned(lNode) then
+        raise Exception.Create('no nav node for ' + lRecords[i].Name);
+      vstNav.FullyVisible[lNode] := True;
+      vstNav.FocusedNode := lNode;
+      vstNav.Selected[lNode] := True;
+    end;
+    DoSetActiveRecord(IwbMainRecord(nil));
+    if Length(lRecords) = 1 then
+      DoSetActiveRecord(Result, True)
+    else
+      DoSetActiveRecord(lRecords);
+    TestPickPump;
+    var lElement := Result.ElementByPath[aRow.Path];
+    if not Assigned(lElement) then
+      raise Exception.Create('no ' + aRow.Path + ' in ' + Result.Name);
+    var lColumn := -1;
+    for var c := Low(ActiveRecords) to High(ActiveRecords) do
+      if Result.Equals(ActiveRecords[c].Element) then
+        lColumn := c;
+    if lColumn < 0 then
+      raise Exception.Create('no View column for ' + Result.Name);
+    var lRow: PVirtualNode := nil;
+    for var lNode in vstView.Nodes(False) do begin
+      var lCells := ViewCells(lNode);
+      if Assigned(lCells) and Assigned(lCells[lColumn].Element) and (lCells[lColumn].Element.ElementID = lElement.ElementID) then begin
+        lRow := lNode;
+        Break;
+      end;
+    end;
+    if not Assigned(lRow) then
+      raise Exception.Create('no View row for ' + lElement.Path);
+    vstView.FullyVisible[lRow] := True;
+    vstView.ScrollIntoView(lRow, False);
+    vstViewFocusedNode := lRow;
+    vstView.FocusedColumn := Succ(lColumn);
+  end;
+
+  function NavLine(const aRecord: IwbMainRecord; out aFresh: Boolean): string;
+  begin
+    aFresh := False;
+    var lNode := vstNav.GetFirstInitialized;
+    while Assigned(lNode) and (lNode <> TestHost.TestCheckMenusViewNode) do
+      lNode := vstNav.GetNextInitialized(lNode);
+    if not Assigned(lNode) then
+      Exit('nav node gone');
+    var lData := PNavNodeData(vstNav.GetNodeData(lNode));
+    if not Assigned(lData) or not aRecord.Equals(lData.Element) then
+      Exit('nav node holds another element');
+    var lChecked := (vstNavLastCheckedForChanges = wbGlobalModifedGeneration) and (wbGlobalModifedGeneration <> TestHost.TestCheckMenusViewGlobal);
+    aFresh := (lData.ElementGen = aRecord.ElementGeneration) and (aRecord.ElementGeneration <> TestHost.TestCheckMenusViewGen) and lChecked;
+    Result := Format('nav record generation %d -> %d, node %d, global %d -> %d, checked by NavUpdate %s',
+      [TestHost.TestCheckMenusViewGen, aRecord.ElementGeneration, lData.ElementGen, TestHost.TestCheckMenusViewGlobal, wbGlobalModifedGeneration,
+       BoolToStr(lChecked, True)]);
+  end;
+
+  procedure WriteModule;
+  begin
+    if not xeContext.Settings.EditAllowed then begin
+      TestHost.TestCheckMenusLines.Add('viewwritten' + #9 + 'none' + #9 + 'edits are not allowed');
+      Exit;
+    end;
+    var lStream := TMemoryStream.Create;
+    try
+      lModule.WriteToStream(lStream, rmNo);
+      lStream.SaveToFile(xeTestSwitches.CheckMenusFile + '.esp');
+      TestHost.TestCheckMenusLines.Add('viewwritten' + #9 + xeTestSwitches.CheckMenusFile + '.esp' + #9 + IntToStr(lStream.Size));
+    finally
+      lStream.Free;
+    end;
+  end;
+
+begin
+  Result := False;
+  lModule := nil;
+  for var lFile in Files do
+    if SameText(lFile.FileName, xeTestSwitches.CheckMenusModule) then
+      lModule := lFile;
+  if not Assigned(lModule) then
+    raise Exception.Create('no module ' + xeTestSwitches.CheckMenusModule);
+
+  if TestHost.TestCheckMenusViewRow = 0 then begin
+    lModule.BuildRef;
+    TestHost.TestCheckMenusLines.Add('viewmode' + #9 + 'edit allowed ' + BoolToStr(xeContext.Settings.EditAllowed, True) + #9 +
+      'tool mode ' + GetEnumName(TypeInfo(TwbToolMode), Ord(xeToolMode)));
+    TestHost.TestCheckMenusViewRow := 1;
+    Exit;
+  end;
+
+  lRows := [
+    Row('Remove: a full name', ['MISC:xedit_vm_misc'], 'FNAM - Name', mniViewRemove, [mniViewRemove, mniViewEdit], [mniViewClear, mniViewSetToDefault]),
+    Row('Remove: a script link, and its reverse edge', ['MISC:xedit_vm_misc'], 'SCRI - Script', mniViewRemove, [mniViewRemove], [mniViewClear]),
+    Row('not removable: a global''s type', ['GLOB:xedit_vm_glob'], 'FNAM - Variable Type', nil, [mniViewEdit], [mniViewRemove, mniViewClear]),
+    Row('not removable: a global''s value', ['GLOB:xedit_vm_glob'], 'FLTV - Value', nil, [mniViewEdit], [mniViewRemove, mniViewClear]),
+    Row('not removable: a leveled entry''s level', ['LEVI:xedit_vm_levi'], 'Leveled Item Entries\[0]\INTV - Player Level', nil, [mniViewEdit],
+      [mniViewRemove, mniViewClear]),
+    Row('Add: a leveled entry, with its level', ['LEVI:xedit_vm_levi'], 'Leveled Item Entries', mniViewAdd, [mniViewAdd, mniViewRemove], [mniViewClear]),
+    Row('Add refused: a faction''s ranks at ten', ['FACT:xedit_vm_fact'], 'Ranks', nil, [mniViewRemove], [mniViewAdd, mniViewClear]),
+    Row('Add offered: a faction''s ranks at nine', ['FACT:xedit_vm_fact9'], 'Ranks', nil, [mniViewAdd, mniViewRemove], [mniViewClear]),
+    Row('Move Down: the first inventory item', ['CONT:xedit_vm_cont'], 'Inventory\[0]', mniViewMoveDown, [mniViewMoveDown, mniViewRemove],
+      [mniViewMoveUp, mniViewClear]),
+    Row('Next Member: a package', ['NPC_:xedit_vm_npc'], 'Packages\[0]', mniViewNextMember, [mniViewNextMember, mniViewPreviousMember], [mniViewClear]),
+    Row('Previous Member: the package back', ['NPC_:xedit_vm_npc'], 'Packages\[0]', mniViewPreviousMember, [mniViewNextMember, mniViewPreviousMember],
+      [mniViewClear]),
+    Row('Set to Default: weather chances', ['REGN:xedit_vm_regn'], 'WEAT - Weather Chances', mniViewSetToDefault, [mniViewSetToDefault],
+      [mniViewRemove, mniViewClear]),
+    Row('Edit: a value through the dialog', ['MISC:xedit_vm_misc2'], 'MCDT - Data\Value', mniViewEdit, [mniViewEdit], [mniViewRemove, mniViewClear]),
+    Row('Remove from Selected: two compared records', ['MISC:xedit_vm_misc2', 'MISC:xedit_vm_misc3'], 'ITEX - Icon Filename',
+      mniViewRemoveFromSelected, [mniViewRemoveFromSelected, mniViewRemove], [mniViewClear]),
+    Row('the NAME picker in place: a leveled item', ['LEVI:xedit_vm_levi2'], 'Leveled Item Entries\[0]\INAM - Item', nil, [mniViewEdit],
+      [mniViewRemove, mniViewClear])
+  ];
+
+  lRows[0].Snap := function: string
+  begin
+    Result := ViewText(ViewAt(lModule, 'MISC:xedit_vm_misc', 'FNAM - Name'));
+  end;
+  lRows[0].Check := function(aBefore, aAfter: string): string
+  begin
+    Result := '';
+    if (aBefore <> 'vm xedit_vm_misc') or (aAfter <> '<absent>') then
+      Result := 'the name was not removed';
+  end;
+
+  lRows[1].Target := function: IwbMainRecord
+  begin
+    Result := nil;
+    var lScript := ViewAt(lModule, 'MISC:xedit_vm_misc', 'SCRI - Script');
+    if Assigned(lScript) then
+      Supports(lScript.LinksTo, IwbMainRecord, Result);
+  end;
+  lRows[1].Snap := function: string
+  begin
+    Result := ViewLink(ViewAt(lModule, 'MISC:xedit_vm_misc', 'SCRI - Script')) + ' | referenced by it ' +
+      BoolToStr(ViewRefersTo(TestHost.TestCheckMenusViewTarget, ViewRec(lModule, 'MISC:xedit_vm_misc')), True);
+  end;
+  lRows[1].Check := function(aBefore, aAfter: string): string
+  begin
+    Result := '';
+    if not Assigned(TestHost.TestCheckMenusViewTarget) then
+      Exit('no script was linked before');
+    if (aBefore <> 'SCPT:' + TestHost.TestCheckMenusViewTarget.EditorID + ' | referenced by it True') or
+       (aAfter <> '<absent> | referenced by it False') then
+      Result := 'the link or its reverse edge did not go';
+  end;
+
+  lRows[5].Snap := function: string
+  begin
+    var lList := ViewAt(lModule, 'LEVI:xedit_vm_levi', 'Leveled Item Entries');
+    Result := 'entries ' + ViewEntries(lList, '') + ' | count ' + ViewText(ViewAt(lModule, 'LEVI:xedit_vm_levi', 'INDX - Entry Count')) +
+      ' | levels ' + ViewEntries(lList, 'INTV - Player Level');
+  end;
+  lRows[5].Check := function(aBefore, aAfter: string): string
+  begin
+    Result := '';
+    if (aBefore <> 'entries 2 | count 1 | levels 3') or (aAfter <> 'entries 2,2 | count 2 | levels 0,3') then
+      Result := 'the new entry or its count is not as the loader reads it';
+  end;
+
+  lRows[8].Snap := function: string
+  begin
+    Result := ViewEntries(ViewAt(lModule, 'CONT:xedit_vm_cont', 'Inventory'), 'Item');
+  end;
+  lRows[8].Check := function(aBefore, aAfter: string): string
+  begin
+    Result := '';
+    if (aBefore <> 'xedit_vm_old,xedit_vm_target') or (aAfter <> 'xedit_vm_target,xedit_vm_old') then
+      Result := 'the items did not change places';
+  end;
+
+  lRows[9].Snap := function: string
+  begin
+    Result := string.Join(',', ViewNames(ViewAt(lModule, 'NPC_:xedit_vm_npc', 'Packages')));
+  end;
+  lRows[9].Check := function(aBefore, aAfter: string): string
+  begin
+    Result := '';
+    var lBefore := aBefore.Split([',']);
+    var lAfter := aAfter.Split([',']);
+    if (Length(lBefore) < 2) or not lBefore[0].StartsWith('AI_W - Wander ') or (Length(lAfter) <> Length(lBefore)) or
+       not lAfter[0].StartsWith('AI_T - Travel ') or
+       (string.Join(',', Copy(lAfter, 1, MaxInt)) <> string.Join(',', Copy(lBefore, 1, MaxInt))) then
+      Result := 'not the first package alone went to the next member';
+  end;
+  lRows[10].Snap := lRows[9].Snap;
+  lRows[10].Check := function(aBefore, aAfter: string): string
+  begin
+    Result := '';
+    var lBefore := aBefore.Split([',']);
+    var lAfter := aAfter.Split([',']);
+    if (Length(lBefore) < 2) or not lBefore[0].StartsWith('AI_T - Travel ') or (Length(lAfter) <> Length(lBefore)) or
+       not lAfter[0].StartsWith('AI_W - Wander ') or
+       (string.Join(',', Copy(lAfter, 1, MaxInt)) <> string.Join(',', Copy(lBefore, 1, MaxInt))) then
+      Result := 'not the first package alone went back';
+  end;
+
+  lRows[11].Snap := function: string
+  begin
+    Result := '<absent>';
+    var lWeather: IwbContainerElementRef;
+    if Supports(ViewAt(lModule, 'REGN:xedit_vm_regn', 'WEAT - Weather Chances'), IwbContainerElementRef, lWeather) then begin
+      Result := '';
+      for var i := 0 to Pred(lWeather.ElementCount) do
+        Result := Result + ' ' + lWeather.Elements[i].EditValue;
+      Result := Result.Trim;
+    end;
+  end;
+  lRows[11].Check := function(aBefore, aAfter: string): string
+  begin
+    Result := '';
+    var lTwin := ViewAt(lModule, 'REGN:xedit_vm_regn_twin', 'WEAT - Weather Chances');
+    var lWeather: IwbContainerElementRef;
+    if not Supports(lTwin, IwbContainerElementRef, lWeather) then
+      Exit('no twin weather chances');
+    var lBefore := '';
+    for var i := 0 to Pred(lWeather.ElementCount) do
+      lBefore := lBefore + ' ' + lWeather.Elements[i].EditValue;
+    lTwin.SetToDefault;
+    var lDefault := '';
+    if Supports(ViewAt(lModule, 'REGN:xedit_vm_regn_twin', 'WEAT - Weather Chances'), IwbContainerElementRef, lWeather) then
+      for var i := 0 to Pred(lWeather.ElementCount) do
+        lDefault := lDefault + ' ' + lWeather.Elements[i].EditValue;
+    if (lBefore.Trim <> aBefore) or (aAfter = aBefore) or (aAfter <> lDefault.Trim) then
+      Result := 'not the engine''s default: the twin went from "' + lBefore.Trim + '" to "' + lDefault.Trim + '"';
+  end;
+
+  lRows[12].Typed := '77';
+  lRows[12].Snap := function: string
+  begin
+    Result := ViewText(ViewAt(lModule, 'MISC:xedit_vm_misc2', 'MCDT - Data\Value'));
+  end;
+  lRows[12].Check := function(aBefore, aAfter: string): string
+  begin
+    Result := '';
+    if (aBefore <> '5') or (aAfter <> '77') or (TestHost.TestCheckMenusSeen <> ' TInputQueryForm') then
+      Result := 'the typed value did not arrive through the dialog';
+  end;
+
+  lRows[13].Snap := function: string
+  begin
+    Result := ViewText(ViewAt(lModule, 'MISC:xedit_vm_misc2', 'ITEX - Icon Filename')) + ' | ' +
+      ViewText(ViewAt(lModule, 'MISC:xedit_vm_misc3', 'ITEX - Icon Filename'));
+  end;
+  lRows[13].Check := function(aBefore, aAfter: string): string
+  begin
+    Result := '';
+    if (aBefore <> 'a.tga | b.tga') or (aAfter <> '<absent> | <absent>') then
+      Result := 'the icon was not removed from both';
+  end;
+
+  lRows[14].Act := procedure
+  begin
+    var lLink := TestPickOpen(ViewAt(lModule, 'LEVI:xedit_vm_levi2', 'Leveled Item Entries\[0]\INAM - Item'));
+    if lLink is TStringEditLink then
+      TStringEditLink(lLink).Edit.SelectAll
+    else begin
+      var lControl := TPickLinkCracker(lLink).EditControl;
+{$IFNDEF LiteVersion}
+      if lControl is TcxComboBox then
+        TcxComboBox(lControl).SelectAll;
+{$ENDIF}
+      if lControl is Vcl.StdCtrls.TComboBox then
+        Vcl.StdCtrls.TComboBox(lControl).SelectAll;
+    end;
+    TestPickChars('xedit_vm_target');
+    TestPickKey(VK_RETURN);
+    if vstView.IsEditing then
+      TestPickKey(VK_RETURN);
+    TestHost.TestCheckMenusPickLink := nil;
+    TestHost.TestCheckMenusPickEditor := 0;
+  end;
+  lRows[14].Snap := function: string
+  begin
+    var lLevi := ViewRec(lModule, 'LEVI:xedit_vm_levi2');
+    Result := ViewLink(ViewAt(lModule, 'LEVI:xedit_vm_levi2', 'Leveled Item Entries\[0]\INAM - Item')) +
+      ' | the old item referenced by it ' + BoolToStr(ViewRefersTo(ViewRec(lModule, 'MISC:xedit_vm_old'), lLevi), True) +
+      ' | the new ' + BoolToStr(ViewRefersTo(ViewRec(lModule, 'MISC:xedit_vm_target'), lLevi), True);
+  end;
+  lRows[14].Check := function(aBefore, aAfter: string): string
+  begin
+    Result := '';
+    if (aBefore <> 'MISC:xedit_vm_old | the old item referenced by it True | the new False') or
+       (aAfter <> 'MISC:xedit_vm_target | the old item referenced by it False | the new True') then
+      Result := 'the picked item, its link or its reverse edges are not as picked';
+  end;
+
+  var lIndex := TestHost.TestCheckMenusViewRow;
+  if lIndex > Length(lRows) then begin
+    WriteModule;
+    Exit(True);
+  end;
+  var lRow := lRows[Pred(lIndex)];
+
+  if not TestHost.TestCheckMenusViewActed then begin
+    TestHost.TestCheckMenusLines.Add('viewstep' + #9 + lRow.Name);
+    TestHost.TestCheckMenusLines.SaveToFile(xeTestSwitches.CheckMenusFile + '.progress', TEncoding.UTF8);
+    var lRecord := Show(lRow);
+    pmuViewPopup(nil);
+    TestHost.TestCheckMenusViewOffers := Offers;
+    var lNote := '';
+    var lUnlike := Unlike(lRow.Must, True);
+    if lUnlike <> '' then
+      lNote := 'not offered: ' + lUnlike;
+    lUnlike := Unlike(lRow.MustNot, False);
+    if lUnlike <> '' then
+      lNote := (lNote + ' offered: ' + lUnlike).Trim;
+    TestHost.TestCheckMenusViewTarget := nil;
+    if Assigned(lRow.Target) then
+      TestHost.TestCheckMenusViewTarget := lRow.Target();
+    TestHost.TestCheckMenusViewBefore := '';
+    if Assigned(lRow.Snap) then
+      TestHost.TestCheckMenusViewBefore := lRow.Snap();
+    TestHost.TestCheckMenusViewGen := lRecord.ElementGeneration;
+    TestHost.TestCheckMenusViewGlobal := wbGlobalModifedGeneration;
+    TestHost.TestCheckMenusViewNode := FindNodeForElement(lRecord);
+    TestHost.TestCheckMenusViewKey := lRecord.LoadOrderFormID.ToString + ' ' + lRecord.EditorID;
+    TestHost.TestCheckMenusSeen := '';
+    TestHost.TestCheckMenusTyped := lRow.Typed;
+    var lActed := False;
+    TestHost.TestCheckMenusAnswer.Enabled := True;
+    try
+      try
+        if Assigned(lRow.Act) then begin
+          lRow.Act();
+          lActed := True;
+        end else if Assigned(lRow.Item) and lRow.Item.Visible and lRow.Item.Enabled then begin
+          if lRow.Item.Count > 0 then
+            lRow.Item.Items[0].Click
+          else
+            lRow.Item.Click;
+          lActed := True;
+        end;
+      except
+        on E: Exception do
+          lNote := (lNote + ' ' + E.ClassName + ': ' + E.Message).Trim;
+      end;
+    finally
+      TestHost.TestCheckMenusAnswer.Enabled := False;
+      TestHost.TestCheckMenusTyped := '';
+    end;
+    if vstView.IsEditing then begin
+      vstView.CancelEditNode;
+      lNote := (lNote + ' the editor stayed open').Trim;
+    end;
+    TestHost.TestCheckMenusViewNote := lNote;
+    if lActed then begin
+      TestHost.TestCheckMenusViewActed := True;
+      Exit;
+    end;
+    var lClicks := Assigned(lRow.Item) or Assigned(lRow.Act);
+    var lUnchanged := True;
+    if Assigned(lRow.Snap) then
+      lUnchanged := lRow.Snap() = TestHost.TestCheckMenusViewBefore;
+    TestHost.TestCheckMenusLines.Add('view' + #9 + lRow.Name + #9 + BoolToStr((lNote = '') and not lClicks, True) + #9 +
+      'offers ' + TestHost.TestCheckMenusViewOffers + #9 + 'acted False' + #9 + 'unchanged ' + BoolToStr(lUnchanged, True) + #9 + lNote);
+    Inc(TestHost.TestCheckMenusViewRow);
+    Exit;
+  end;
+
+  TestHost.TestCheckMenusViewActed := False;
+  var lRecord := ViewRec(lModule, lRow.Records[0]);
+  var lFresh := False;
+  var lNav := NavLine(lRecord, lFresh);
+  var lAfter := '';
+  if Assigned(lRow.Snap) then
+    lAfter := lRow.Snap();
+  var lReason := '';
+  if Assigned(lRow.Check) then
+    lReason := lRow.Check(TestHost.TestCheckMenusViewBefore, lAfter);
+  var lKey := lRecord.LoadOrderFormID.ToString + ' ' + lRecord.EditorID;
+  var lNote := TestHost.TestCheckMenusViewNote;
+  if lReason <> '' then
+    lNote := (lNote + ' ' + lReason).Trim;
+  if lKey <> TestHost.TestCheckMenusViewKey then
+    lNote := (lNote + ' the key moved from ' + TestHost.TestCheckMenusViewKey + ' to ' + lKey).Trim;
+  if (lRow.Typed = '') and (TestHost.TestCheckMenusSeen <> '') then
+    lNote := (lNote + ' a dialog:' + TestHost.TestCheckMenusSeen).Trim;
+  if not lFresh then
+    lNote := (lNote + ' the nav tree was not refreshed').Trim;
+  TestHost.TestCheckMenusLines.Add('view' + #9 + lRow.Name + #9 + BoolToStr(lNote = '', True) + #9 + 'offers ' + TestHost.TestCheckMenusViewOffers + #9 +
+    'acted True' + #9 + 'before "' + TestHost.TestCheckMenusViewBefore + '"' + #9 + 'after "' + lAfter + '"' + #9 + lNav + #9 + lNote);
+  TestHost.TestCheckMenusViewTarget := nil;
+  Inc(TestHost.TestCheckMenusViewRow);
 end;
 
 procedure TxeTestFormHelper.DoTestFormIDSearch;

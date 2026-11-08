@@ -87,6 +87,16 @@ type
     TestCheckMenusPickShown  : string;
     TestCheckMenusPickLink   : IVTEditLink;
     TestCheckMenusPickEditor : HWND;
+    TestCheckMenusViewRow    : Integer;
+    TestCheckMenusViewActed  : Boolean;
+    TestCheckMenusViewNode   : PVirtualNode;
+    TestCheckMenusViewGen    : Integer;
+    TestCheckMenusViewKey    : string;
+    TestCheckMenusViewBefore : string;
+    TestCheckMenusViewOffers : string;
+    TestCheckMenusViewNote   : string;
+    TestCheckMenusViewTarget : IwbMainRecord;
+    TestCheckMenusViewGlobal : UInt64;
     TestFormIDSearchTimer    : TTimer;
     TestFormIDSearchTarget   : IwbMainRecord;
     TestFormIDSearchStart    : UInt64;
@@ -262,6 +272,8 @@ type
     CheckMenusKeywords    : string;
     CheckMenusPick        : Boolean;
     CheckMenusPickCost    : string;
+    CheckMenusView        : Boolean;
+    CheckMenusClosePage   : string;
     FormIDSearch          : Boolean;
     FormIDSearchFile      : string;
     FormIDSearchModule    : string;
@@ -497,6 +509,8 @@ begin
     wbFindCmdLineParam('testcheckmenuskeywords', CheckMenusKeywords);
     CheckMenusPick := FindCmdLineSwitch('testcheckmenuspick');
     wbFindCmdLineParam('testcheckmenuspickcost', CheckMenusPickCost);
+    CheckMenusView := FindCmdLineSwitch('testcheckmenusview');
+    wbFindCmdLineParam('testcheckmenusclosepage', CheckMenusClosePage);
     CheckMenus := True;
     xeAutoLoad := True;
     xeAutoExit := True;

@@ -5585,6 +5585,8 @@ begin
     FlushPostedMessages;
     TestChangeFormIDOnClose;
   end;
+  if xeTestSwitches.CheckMenusClosePage <> '' then
+    TestCheckMenusCloseEntered;
 {$ENDIF}
   Action := caFree;
   CloseInProgress := True;
