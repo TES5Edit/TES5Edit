@@ -5709,6 +5709,7 @@ begin
     vstSpreadSheetAmmo.Free;
     pnlNav.Free;
     pnlTop.Visible := False;
+    pgMain.ActivePage := tbsMessages;
     for i := 0 to Pred(pgMain.PageCount) do
       pgMain.Pages[i].TabVisible := tbsMessages = pgMain.Pages[i];
   finally
