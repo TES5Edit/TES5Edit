@@ -1512,6 +1512,7 @@ type
 
     function CheckChildOfCell: Boolean;
     procedure UpdateCellChildGroup;
+    procedure PlaceEmbeddedReference;
     procedure UpdateInteriorCellGroup;
     procedure ReRegister(const aFile: IwbFileInternal; const aFileFormID: TwbFormID; const aMoveKey, aMoveBack: TProc);
     procedure RejoinAt(const aFile: IwbFileInternal; const aKey: TwbFormID; const aMoveBack: TProc; const aReferrers: TDynMainRecords);
@@ -6340,7 +6341,7 @@ var
       if Assigned(lEntry.rseRecord) then begin
         if (Length(lMarker) >= 12) and Claimed(PCardinal(@lMarker[8])^) then begin
           var lGroup := WrittenGroup(lEntry.rseRecord);
-          if Assigned(lGroup) then
+          if Assigned(lGroup) and Assigned(lEntry.rseRecord.RecordBySignature['CNDT']) then
             raise Exception.CreateFmt('[AddMasters] "%s" can not add its masters: the moved reference marker %s in %s, before %s, names its own reference by a master byte "%s" would take; remove the reference or leave the master out',
               [GetFileName, IntToHex(lNumber, 8), lGroup.Name, lEntry.rseRecord.Name, lMaster]);
         end;
@@ -12565,13 +12566,28 @@ var
       Inc(lCount);
   end;
 
+  function MovedMarker(const aRecord: IwbMainRecord): TBytes;
+  begin
+    SetLength(Result, 12);
+    PwbSignature(@Result[0])^ := 'MVRF';
+    PCardinal(@Result[4])^ := SizeOf(Cardinal);
+    var lNumber: Cardinal := 0;
+    var lFRMR := aRecord.RecordBySignature['FRMR'];
+    if Assigned(lFRMR) then
+      lNumber := lFRMR.NativeValue;
+    PCardinal(@Result[8])^ := lNumber;
+  end;
+
   procedure WriteReferences(const aList: TArray<TwbStreamOrder>);
   var
     lMarker : TBytes;
   begin
     for var lOrder in Ordered(aList) do begin
-      if lMovedRef.TryGetValue(Pointer(lOrder.soRecord), lMarker) then
+      if Assigned(lOrder.soRecord.RecordBySignature['CNDT']) then begin
+        if not lMovedRef.TryGetValue(Pointer(lOrder.soRecord), lMarker) then
+          lMarker := MovedMarker(lOrder.soRecord);
         WriteMarker(lMarker);
+      end;
       WriteRecord(lOrder.soRecord);
       Inc(lPlaced);
     end;
@@ -16188,6 +16204,16 @@ begin
   UpdateKeys;
   if not (mrsNoUpdateRefs in mrStates) then
     UpdateRefs;
+  if Assigned(SubRecord) and (SubRecord.Signature = 'DATA') and IsEmbeddedReference then begin
+    wbCancelLock;
+    wbProgressLock;
+    try
+      PlaceEmbeddedReference;
+    finally
+      wbProgressUnlock;
+      wbCancelUnlock;
+    end;
+  end;
 end;
 
 function TwbMainRecord.RefreshKnownSubRecord(const aSubRecord: IwbSubRecord): Boolean;
@@ -22624,6 +22650,156 @@ begin
       _ResizeLock.Leave;
   end;
 {$ENDIF}
+end;
+
+procedure TwbMainRecord.PlaceEmbeddedReference;
+var
+  lSelf     : IwbElement;
+  lOld      : IwbGroupRecord;
+  lChildren : IwbGroupRecord;
+  lNew      : IwbGroupRecord;
+  lPosition : TwbVector;
+  lCellGrid : TwbGridCell;
+  lGrid     : TwbGridCell;
+  lKey      : TwbFormID;
+  lTarget   : IwbMainRecord;
+  lMoved    : IwbRecord;
+  lOwn      : Boolean;
+
+  function RawPosition(const aRecord: IwbMainRecord; out aResult: TwbVector): Boolean;
+  var
+    lData    : IwbContainerElementRef;
+    lVector  : IwbContainerElementRef;
+    lCoord   : IwbDataContainer;
+  begin
+    Result := Supports(aRecord.RecordBySignature['DATA'], IwbContainerElementRef, lData) and (lData.ElementCount = 2) and
+      Supports(lData.Elements[0], IwbContainerElementRef, lVector) and (lVector.ElementCount = 3);
+    if not Result then
+      Exit;
+    for var i := 0 to 2 do begin
+      Result := Supports(lVector.Elements[i], IwbDataContainer, lCoord) and (lCoord.DataSize >= SizeOf(Single));
+      if not Result then
+        Exit;
+      Move(lCoord.DataBasePtr^, (PByte(@aResult) + i * SizeOf(Single))^, SizeOf(Single));
+    end;
+  end;
+
+  procedure PlaceMoved;
+  var
+    lRoot          : IwbMainRecord;
+    lVersion       : IwbMainRecord;
+    lBelow         : IwbMainRecord;
+    lBelowPosition : TwbVector;
+    lMovedBelow    : Boolean;
+    lNeeded        : Boolean;
+
+    function InClosure(const aFile: IwbFile): Boolean;
+    begin
+      Result := False;
+      for var lMaster in GetFile.AllMasters do
+        if aFile.Equals(lMaster) then
+          Exit(True);
+    end;
+
+  begin
+    lRoot := GetMasterOrSelf;
+    lBelow := nil;
+    lMovedBelow := False;
+    for var i := -1 to Pred(lRoot.OverrideCount) do begin
+      if i < 0 then
+        lVersion := lRoot
+      else
+        lVersion := lRoot.Overrides[i];
+      var lFile := lVersion._File;
+      if lFile.Equals(GetFile) then
+        Continue;
+      if InClosure(lFile) and Assigned(lVersion.RecordBySignature['CNDT']) then
+        lMovedBelow := True;
+      if not InClosure(lFile) then
+        Continue;
+      if not Assigned(lBelow) or (lFile.LoadOrder >= lBelow._File.LoadOrder) then
+        lBelow := lVersion;
+    end;
+    lNeeded := lMovedBelow or (not (lGrid = lCellGrid) and not (Assigned(lBelow) and RawPosition(lBelow, lBelowPosition) and CompareMem(@lBelowPosition, @lPosition, SizeOf(TwbVector))));
+    if not lNeeded then begin
+      if Assigned(lMoved) then
+        lMoved.Remove;
+      Exit;
+    end;
+    if not Assigned(lMoved) then
+      Add('CNDT', True);
+    SetElementNativeValue('CNDT\X', lGrid.x);
+    SetElementNativeValue('CNDT\Y', lGrid.y);
+  end;
+
+begin
+  if mrsAssigningWhole in mrStates then
+    Exit;
+  if not Supports(GetContainer, IwbGroupRecord, lOld) or not (lOld.GroupType in [8, 9]) or
+     not Supports(lOld.Container, IwbGroupRecord, lChildren) or (lChildren.GroupType <> 6) then
+    Exit;
+  var lCell := lChildren.ChildrenOf;
+  if not Assigned(lCell) or not lCell.GetGridCell(lCellGrid) or not RawPosition(Self, lPosition) or IsNan(lPosition.x) or IsNan(lPosition.y) then
+    Exit;
+  var lLimit := 512 * GameDefObj.CellSizeFactor;
+  if not ((lPosition.x >= -lLimit) and (lPosition.x < lLimit) and (lPosition.y >= -lLimit) and (lPosition.y < lLimit)) then
+    Exit;
+  lGrid := GameDefObj.PositionToGridCell(lPosition);
+  lGrid.ToGridKey((lCell as TObject as TwbMainRecord).mrDef.GetGridFormIDBase, lKey);
+  lMoved := GetRecordBySignature('CNDT');
+  var lDefining := DefiningFile;
+  lOwn := Assigned(lDefining) and lDefining.Equals(GetFile);
+  if not lOwn then begin
+    PlaceMoved;
+    Exit;
+  end;
+  if lGrid = lCellGrid then begin
+    if Assigned(lMoved) then
+      lMoved.Remove;
+    Exit;
+  end;
+  lTarget := GetFile.RecordByFormID[lKey, True, False];
+  if Assigned(lTarget) then begin
+    if lTarget.IsDeleted then
+      Exit;
+    if not (lTarget as TObject as TwbMainRecord).IsExteriorAtKey(lKey) then
+      Exit;
+    if not lTarget._File.Equals(GetFile) then begin
+      if (GetFile as TObject as TwbFile).CopyRefusal(lTarget, False, False, wbNoCopyRules) <> '' then
+        Exit;
+      lTarget := GetFile.AddCopy(lTarget, [], wbNoCopyRules) as IwbMainRecord;
+    end;
+  end else begin
+    lTarget := GetFile.GroupBySignature['CELL'].Add('CELL', True) as IwbMainRecord;
+    lTarget.ElementNativeValues['DATA\Grid\X'] := lGrid.x;
+    lTarget.ElementNativeValues['DATA\Grid\Y'] := lGrid.y;
+    lTarget.ElementNativeValues['DATA\Flags'] := 2;
+    lTarget.ElementEditValues['NAME'] := '';
+  end;
+  if Assigned(lMoved) then
+    lMoved.Remove;
+  var lType := lOld.GroupType;
+  var lTargetChildren := lTarget.EnsureChildGroup;
+  lNew := lTargetChildren.FindChildGroup(lType, lTarget);
+  if not Assigned(lNew) then
+    lNew := TwbGroupRecord.Create(lTargetChildren, lType, lTarget);
+  if lNew.Equals(lOld) then
+    Exit;
+  lSelf := Self;
+  lOld.RemoveElement(lSelf);
+  if lOld.ElementCount = 0 then
+    lOld.Remove
+  else
+    (lOld as IwbGroupRecordInternal).SetModified(True);
+  lNew.AddElement(lSelf);
+  (lNew as IwbGroupRecordInternal).SetModified(True);
+  (lNew as IwbGroupRecordInternal).Sort;
+  if lChildren.ElementCount = 0 then
+    lChildren.Remove
+  else
+    (lChildren as IwbGroupRecordInternal).SetModified(True);
+  SetModified(True);
+  ResetConflict;
 end;
 
 procedure TwbMainRecord.UpdateCellChildGroup;
