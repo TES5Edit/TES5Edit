@@ -25447,9 +25447,11 @@ begin
       Delete(s, 1, 1);
       Delete(s, Length(s), 1);
       Params := s.Split([',']).ForEach(Trim);
-      if (Length(Params) = 1) and SameText(Params[0], 'P') then
-        Persistent := True
-      else if Length(Params) = 2 then begin
+      if (Length(Params) = 1) and SameText(Params[0], 'P') then begin
+        Persistent := True;
+        GridCell.x := 0;
+        GridCell.y := 0;
+      end else if Length(Params) = 2 then begin
         Persistent := False;
         GridCell.x := StrToInt(Params[0]);
         GridCell.y := StrToInt(Params[1]);
