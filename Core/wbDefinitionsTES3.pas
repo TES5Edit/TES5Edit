@@ -840,6 +840,7 @@ end;
 procedure TwbGameDefTES3.Define;
 begin
   gdHeaderSignature := 'TES3';
+  gdCellSizeFactor := 8192;
 
   gdRecordFlags :=
     wbInteger('Record Flags', itU32,
