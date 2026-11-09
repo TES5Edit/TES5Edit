@@ -4,6 +4,198 @@ If you share your mods on Nexus Mods and use xEdit as a major component in devel
 
 xEdit is crucial to our shared modding community and your contribution - no matter the size - is invaluable and deeply appreciated.
 
+# What's New in xEdit 4.1.5r?
+
+## TL;DR
+
+About 1,250 commits since 4.1.5q. The Merged Patch is rebuilt as a three-way merge, Create Delta Patch and Merge into Master now round-trip, world space offset tables are written on save, Morrowind gains NAME links and Referenced By, and hundreds of crashes, data-loss paths and malformed-archive failures are fixed. Underneath, the engine no longer depends on the user interface or on one global game, and xEdit builds with Delphi 13.
+
+### Key highlights
+* Merged Patch - entries are now merged three-way against each plugin's own master, so a plugin only counts where it actually changed something
+* Create Delta Patch and Merge into Master - a delta patch between two versions of a module, merged back into the first, now gives the second
+* World spaces - valid OFST tables, and CLSZ on Fallout 4 and later, are written on save by default
+* Morrowind - NAME references are links, Referenced By works, and Check for Errors knows Morrowind's identity rules (Morrowind is still view only in this release)
+* Saving - a failed save no longer leaves a damaged file or reads as saved
+* Closing and cancelling - the editor stays safe when you close it, or press keys, while something is running, and a Windows session end behaves like a normal close
+* BSArch - full PlayStation GNMF archive support, Bethesda's texture chunking, no more forced texture compression, and malformed archives are refused instead of crashing
+* Definitions - Fallout 76 updated to HEDR 266 and Form Version 209, Starfield soundbank names reworked, and many fixes across all games
+
+### Contributors
+ElminsterAU, robertgk2017, Jonathan Ostrus (jbostrus), eckserah, fireundubh, sheson, and thanks to Cobb for assistance.
+
+## Major Features
+
+### Merged Patch
+* A plugin's entry is now taken only where that plugin changed it against its own master; if two plugins change the same entry, the later one wins
+* Identical additions made by two plugins count once; if they differ, the later plugin's addition wins
+* A compatibility patch is compared with the merge of its masters, so its removals and reversals count
+* Entries are paired by what they are, across changes of count and between entries that share a key
+* Now merges Starfield's nested NPC perks and container items, a Fallout 76 NPC's inventory, and Oblivion NPC and race spells
+* A delta patch can be merged; a plugin and its own Compare To copy are not merged with each other
+* The keyword lists, which never merged, were removed
+
+### Create Delta Patch, Compare To and Merge into Master
+* A delta patch between two versions of a module, merged into the first with Merge into Master, gives the second, in either order
+* Create Delta Patch ignores Allow Make Partial, and no longer runs after a failed or terminated delta load
+* Compare To and Create Delta Patch work against a Starfield update module
+* A Starfield delta patch that would change the module's type is refused with a message before its masters are loaded
+* A record created in a delta patch belongs to the delta patch's module from the start, and Clean Masters keeps that module and its masters
+* A file loaded through Compare To can never be saved
+
+### World space offset tables
+* A valid OFST cell-offset table is written for every world space on save, by default, with a new Options checkbox; on Oblivion only in the file that creates the world space
+* On Fallout 4 and later the CLSZ cell-size grid is written with it
+* The in-memory tables are updated too, so the View tab shows what was written, and a stale table can no longer be saved
+
+### Morrowind (view only in this release)
+* NAME references behave like FormID links: leveled list entries, a reference's base record, cell names and the other record references
+* Referenced By tracks NAME references, and a note says when the list may be incomplete
+* An INFO is identified by its topic and INAM
+* Check for Errors reports a record's shared key, a bad grid and a blocked identity, and checks leveled lists for cycles using the game's own lookup rules
+* A faction's relations are shown as reaction and faction name
+* Records and references are counted and placed the way the file holds them
+
+### Views and windows
+* Right Click > Edit in the View tab now opens every editable field: the single-line dialog for fields with an in-place editor, the multi-line editor for the rest (contributed by robertgk2017)
+* Add a clipboard copy menu to the View tab's column header (#1495, contributed by Jonathan Ostrus)
+* Hiding is now per view rather than global, and Hide Never Show is a setting
+* The Options dialog shows the collapse options as a grouped checkbox tree
+* The View tab refreshes itself when it goes stale, and its header keeps the theme's look with only its captions coloured
+* A visible zebra stripe on dark styles, and the window colour on the spreadsheets under a VCL style
+* Referenced By now uses the same Virtual TreeView as the rest of the editor, and Ctrl+C copies the selected records' load order FormIDs (Ctrl+Alt+C their names)
+* Show the enchantment in Oblivion's spreadsheets and the enchantment and amount in Skyrim's weapon spreadsheet; Skyrim's spreadsheet keyword dialog appears again
+
+### Light and medium plugins
+* Compact FormIDs takes a goal: light or medium
+* Renumber and Inject hold a light- or medium-flagged file to its flag's range
+* Detect OblivionESL.dll as light plugin support for Oblivion, and what Daytripper4.dll enables on Fallout 4 VR
+
+### Engine
+* The conflict walk, the editor's data operations (Copy Into, Renumber, Clean Masters, Merge into Master, Quick Auto Clean and more) and Create Delta Patch moved out of the user interface into the engine
+* The engine no longer has a current game or context: every record reaches its own game definition and context
+* Saves are loaded through a save context on top of the game context, and are no longer treated as plugins
+* The resource cache is built on its own thread while plugins load
+* xEdit now builds with Delphi 13 (Community Edition included)
+* Virtual TreeView, JCL, vcl-styles-utils, JsonDataObjects and lz4-delphi updated from their upstream projects
+
+## Bugfixes
+
+### Saving
+* A failed save no longer commits, reads as saved, or leaves a file behind, and a failed Save As keeps the target's bytes
+* A plugin whose save file cannot be created is reported and the rest of the batch goes on; if the save was part of closing, the close stops
+* Keep a file's edits when its write resets the modified state
+* Only the editor's own save marks a plugin saved; no script export does
+* Keep a replaced plugin's time exactly, and report a failed update of it
+* Remove a .seq file the plugin no longer needs
+* Fix main records losing all their subrecords when storage was invalidated during initialisation
+
+### Masters, FormIDs and copying
+* Reference the game master for a hardcoded FormID in a module without the extended range
+* Renumber skips FormIDs other files injected, and a FormID change that does not fit the target's slot is refused
+* Refuse a new record, or a changed FormID, with ObjectID 000
+* Sort Masters handles a master listed twice and a master whose index among its type changes
+* Refuse a module that is its own master
+* Cleanup Injected skips and reports a cleanup whose target already holds the record
+* Follow load order for a record's winner and its next master
+* Copy no more entries than an array's maximum, and report lists over it in Check for Errors
+
+### Loading and caches
+* Rebuild a reference cache that cannot be read or does not match its file, and save it atomically
+* Refuse a strings file, a record or compressed data that runs past its end
+* Skip .git folders when listing a loose data folder
+* Unregister a failed plugin's records from its masters
+
+### Closing, cancelling and background work
+* The editor is safe against close requests, shortcuts and timers arriving while a nested operation runs; a close during a cancellable operation asks first, then stops it
+* A Windows session end shows the same save dialog as a normal close, and Cancel refuses it
+* A script can not start while the background loader runs
+* Crash fixes for closing with a given tab active and for a close during reference building
+* A force cancel waits until Add Masters, Clean Masters, Sort Masters or a Change FormID has reached a safe point
+* The game link and Oblivion's Pluggy link retry a read that fails for a moment, and keep running after a refused close
+
+### Checks and display
+* Conflict results: FO3 / FNV navmesh triangle edges are compared, and landscape normals are Benign only when the height map is identical
+* Check for Errors no longer loops on a cyclic parent chain or NPC template chain
+* Fix an access violation in condition-alias resolution for INFO records
+* Stop offering Remove on a record's Record Header
+* Filtering the Referenced By list no longer leaves a row selected that you did not select, so a following command can not act on the wrong record
+* A double at its maximum or minimum shows as Default or Min
+* Fix a RichEdit EOutOfResources error when adding lines (contributed by sheson)
+
+### Command line and unattended runs
+* An unattended run logs a failure and exits non-zero instead of showing a dialog
+* `-autoload` and `-autoexit` work in script mode; a missing or unreadable script fails the run
+* MasterUpdate, MasterRestore and setESM start again, `-SortAndCleanMasters` is accepted, and a plugin can be named by full path or with `.ghost`
+* A `-M:` My Games path gets its trailing backslash
+
+## Definition Updates
+
+### All Games
+* MGEF \ DATA - Organize and fix Union handling (contributed by robertgk2017)
+* REFR \ XTEL, CELL \ XCLR, VMAD \ ScriptPropertyObject - Add FormID filters (contributed by robertgk2017)
+* ALL - Convert Dialogue Text handling to a definition flag, and make MODT cpBenign (contributed by robertgk2017)
+* Conditions - Add Run On to the CTDA sort key (contributed by robertgk2017)
+* NAVI - Prune invalid NVMI entries (contributed by robertgk2017)
+* REFR \ XRDS - Hint when the Light Radius is too small (contributed by robertgk2017)
+* ACHR / REFR \ Persist Location - Add an error check (contributed by robertgk2017)
+* Array definitions can now state a maximum count: leveled lists are limited to 255 on TES5 / SSE, FO4, FO76 and SF1
+* Partial Form support finished; a definition flag says what a partial form keeps (contributed by robertgk2017)
+
+### FO3/FNV
+* FNV - Fix the group order to what the GECK writes, and add a cell region conflict check that follows hNVSE (contributed by robertgk2017)
+
+### TES5
+* Add SCOL support and FormID checks for a Unique Actor, NPC template, actor flags and location references (contributed by robertgk2017)
+* PERK - Num Ranks must be non-zero, confirmed by Cobb (contributed by robertgk2017)
+* ALCH, SCRL, AMMO - Add VMAD, from Cobb (contributed by robertgk2017)
+* NIF - Community Shaders PBR shader type and features (contributed by robertgk2017)
+
+### FO4/FO76
+* Fix object mod properties using the count as their count callback (contributed by robertgk2017)
+* FO4 VR - Support for Daytripper4.dll light files (contributed by robertgk2017)
+* Fallout 76 - Update Form Version to 209 and HEDR to 266, with many newly decoded fields (contributed by eckserah and robertgk2017)
+
+### SF1
+* Soundbank handling reworked: Wwise GUID indexing and lookup, additional soundbank files, and a switch or state shown with its group (contributed by Jonathan Ostrus and robertgk2017)
+* ONAM lists overrides of every master type and no own records
+* QUST - Swap FULL and Base Form Components order (contributed by robertgk2017)
+
+## Scripting
+
+* Resolve a script's units relative to the running script, so a script in a subfolder can use its own units (#1496, contributed by fireundubh)
+* Add functions for an array's aligned rows and an aligned add
+* Add `GetIsUpdate` and `SetIsUpdate`, and argument count checks on the file type getters and setters and the element value setters (contributed by robertgk2017)
+* A script can no longer write to a record that is not editable
+* Script functions refuse a wrong list, object or index with a message instead of crashing
+* `KWDA` and `KSIZ` resolve for scripts on wrapped keywords
+* Add scaling to the UI of the Find cell in worldspace script (contributed by Jonathan Ostrus)
+
+## SNIFF
+
+* Check For Errors: report vertices in the MOPP collision check, fix the Moveable mass message, and add Community Shaders PBR shader checks (contributed by robertgk2017)
+* Universal Fixer: fix a wrong layer on bhkCompressedMeshShapeData and remove flags a Community Shaders PBR shader disallows (contributed by robertgk2017)
+* Apply Transforms: fix BSTriShape vertex flag detection (contributed by robertgk2017)
+* Update Havok Inertia: account for the minimum penetration depth (contributed by robertgk2017)
+* Unskin Mesh: refuse BSTriShapes; access violation fixes (contributed by robertgk2017)
+
+## BSArch
+
+* Full support for PlayStation GNMF archives (contributed by robertgk2017)
+* Stop forcing compression of Skyrim SE and DDS archive textures: only a warning, which says to ignore it if you use an appropriate engine fixes mod
+* Chunk a texture by its mips' area, as Bethesda's archives do, and size each chunk as its own mip
+* Share packed data only between entries with the same compression and the same cubemap marker
+* Malformed archives are refused instead of crashing or decoding forever: file names, folder names, entry sizes and offsets, header counts, texture chunks, compressed data and LZ4 frames
+* A write or an unpack that fails now fails, rather than leaving an empty or partial file
+* Read legacy DDS pixel formats and FourCC codes as Microsoft's loader maps them, and recognise a DX10 cubemap marked only in its miscFlags
+* Refuse texture arrays, volume and 1D textures in BA2 packing
+* Always add the Voices flag if an .mp3 file is included, and fix the Misc files flag in new FO3, FNV and TES5 archives (contributed by robertgk2017)
+* Fix an abnormally large saved-space figure after packing with shared data, and set max texture chunks to 1 for Xbox .ba2s (contributed by robertgk2017)
+
+## xDump
+
+* Skyrim saves are no longer misparsed after their header, and a crash on New Vegas saves is fixed
+* Finds a game's install folder, reads its ini and picks its language the same way the editor does
+
 # What's New in xEdit 4.1.5q?
 
 ## TL;DR

@@ -2,6 +2,164 @@
 \pard\sb360\sa180{\b\f0\fs36\ulth Request for Mod Authors using xEdit}\par
 \pard\sa180{\f0\fs24 If you share your mods on Nexus Mods and use xEdit as a major component in development, please consider donating a small share of your Donation Points (DP) to ElminsterAU to support the ongoing development of this tool. The recommended donation is ~10%.}\par
 \pard\sa180{\f0\fs24 xEdit is crucial to our shared modding community and your contribution - no matter the size - is invaluable and deeply appreciated.}\par
+\pard\sb360\sa180{\b\f0\fs36\ulth What's New in xEdit 4.1.5r?}\par
+\pard\sb300\sa180{\b\f0\fs32\ulth TL;DR}\par
+\pard\sa180{\f0\fs24 About 1,250 commits since 4.1.5q. The Merged Patch is rebuilt as a three-way merge, Create Delta Patch and Merge into Master now round-trip, world space offset tables are written on save, Morrowind gains NAME links and Referenced By, and hundreds of crashes, data-loss paths and malformed-archive failures are fixed. Underneath, the engine no longer depends on the user interface or on one global game, and xEdit builds with Delphi 13.}\par
+\pard\sb240\sa180{\b\f0\fs28\ulth Key highlights}\par
+\pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab Merged Patch - entries are now merged three-way against each plugin's own master, so a plugin only counts where it actually changed something}\par
+\pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab Create Delta Patch and Merge into Master - a delta patch between two versions of a module, merged back into the first, now gives the second}\par
+\pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab World spaces - valid OFST tables, and CLSZ on Fallout 4 and later, are written on save by default}\par
+\pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab Morrowind - NAME references are links, Referenced By works, and Check for Errors knows Morrowind's identity rules (Morrowind is still view only in this release)}\par
+\pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab Saving - a failed save no longer leaves a damaged file or reads as saved}\par
+\pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab Closing and cancelling - the editor stays safe when you close it, or press keys, while something is running, and a Windows session end behaves like a normal close}\par
+\pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab BSArch - full PlayStation GNMF archive support, Bethesda's texture chunking, no more forced texture compression, and malformed archives are refused instead of crashing}\par
+\pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab Definitions - Fallout 76 updated to HEDR 266 and Form Version 209, Starfield soundbank names reworked, and many fixes across all games}\par
+\pard\sb240\sa180{\b\f0\fs28\ulth Contributors}\par
+\pard\sa180{\f0\fs24 ElminsterAU, robertgk2017, Jonathan Ostrus (jbostrus), eckserah, fireundubh, sheson, and thanks to Cobb for assistance.}\par
+\pard\sb300\sa180{\b\f0\fs32\ulth Major Features}\par
+\pard\sb240\sa180{\b\f0\fs28\ulth Merged Patch}\par
+\pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab A plugin's entry is now taken only where that plugin changed it against its own master; if two plugins change the same entry, the later one wins}\par
+\pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab Identical additions made by two plugins count once; if they differ, the later plugin's addition wins}\par
+\pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab A compatibility patch is compared with the merge of its masters, so its removals and reversals count}\par
+\pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab Entries are paired by what they are, across changes of count and between entries that share a key}\par
+\pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab Now merges Starfield's nested NPC perks and container items, a Fallout 76 NPC's inventory, and Oblivion NPC and race spells}\par
+\pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab A delta patch can be merged; a plugin and its own Compare To copy are not merged with each other}\par
+\pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab The keyword lists, which never merged, were removed}\par
+\pard\sb240\sa180{\b\f0\fs28\ulth Create Delta Patch, Compare To and Merge into Master}\par
+\pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab A delta patch between two versions of a module, merged into the first with Merge into Master, gives the second, in either order}\par
+\pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab Create Delta Patch ignores Allow Make Partial, and no longer runs after a failed or terminated delta load}\par
+\pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab Compare To and Create Delta Patch work against a Starfield update module}\par
+\pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab A Starfield delta patch that would change the module's type is refused with a message before its masters are loaded}\par
+\pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab A record created in a delta patch belongs to the delta patch's module from the start, and Clean Masters keeps that module and its masters}\par
+\pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab A file loaded through Compare To can never be saved}\par
+\pard\sb240\sa180{\b\f0\fs28\ulth World space offset tables}\par
+\pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab A valid OFST cell-offset table is written for every world space on save, by default, with a new Options checkbox; on Oblivion only in the file that creates the world space}\par
+\pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab On Fallout 4 and later the CLSZ cell-size grid is written with it}\par
+\pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab The in-memory tables are updated too, so the View tab shows what was written, and a stale table can no longer be saved}\par
+\pard\sb240\sa180{\b\f0\fs28\ulth Morrowind (view only in this release)}\par
+\pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab NAME references behave like FormID links: leveled list entries, a reference's base record, cell names and the other record references}\par
+\pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab Referenced By tracks NAME references, and a note says when the list may be incomplete}\par
+\pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab An INFO is identified by its topic and INAM}\par
+\pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab Check for Errors reports a record's shared key, a bad grid and a blocked identity, and checks leveled lists for cycles using the game's own lookup rules}\par
+\pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab A faction's relations are shown as reaction and faction name}\par
+\pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab Records and references are counted and placed the way the file holds them}\par
+\pard\sb240\sa180{\b\f0\fs28\ulth Views and windows}\par
+\pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab Right Click > Edit in the View tab now opens every editable field: the single-line dialog for fields with an in-place editor, the multi-line editor for the rest (contributed by robertgk2017)}\par
+\pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab Add a clipboard copy menu to the View tab's column header (#1495, contributed by Jonathan Ostrus)}\par
+\pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab Hiding is now per view rather than global, and Hide Never Show is a setting}\par
+\pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab The Options dialog shows the collapse options as a grouped checkbox tree}\par
+\pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab The View tab refreshes itself when it goes stale, and its header keeps the theme's look with only its captions coloured}\par
+\pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab A visible zebra stripe on dark styles, and the window colour on the spreadsheets under a VCL style}\par
+\pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab Referenced By now uses the same Virtual TreeView as the rest of the editor, and Ctrl+C copies the selected records' load order FormIDs (Ctrl+Alt+C their names)}\par
+\pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab Show the enchantment in Oblivion's spreadsheets and the enchantment and amount in Skyrim's weapon spreadsheet; Skyrim's spreadsheet keyword dialog appears again}\par
+\pard\sb240\sa180{\b\f0\fs28\ulth Light and medium plugins}\par
+\pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab Compact FormIDs takes a goal: light or medium}\par
+\pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab Renumber and Inject hold a light- or medium-flagged file to its flag's range}\par
+\pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab Detect OblivionESL.dll as light plugin support for Oblivion, and what Daytripper4.dll enables on Fallout 4 VR}\par
+\pard\sb240\sa180{\b\f0\fs28\ulth Engine}\par
+\pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab The conflict walk, the editor's data operations (Copy Into, Renumber, Clean Masters, Merge into Master, Quick Auto Clean and more) and Create Delta Patch moved out of the user interface into the engine}\par
+\pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab The engine no longer has a current game or context: every record reaches its own game definition and context}\par
+\pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab Saves are loaded through a save context on top of the game context, and are no longer treated as plugins}\par
+\pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab The resource cache is built on its own thread while plugins load}\par
+\pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab xEdit now builds with Delphi 13 (Community Edition included)}\par
+\pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab Virtual TreeView, JCL, vcl-styles-utils, JsonDataObjects and lz4-delphi updated from their upstream projects}\par
+\pard\sb300\sa180{\b\f0\fs32\ulth Bugfixes}\par
+\pard\sb240\sa180{\b\f0\fs28\ulth Saving}\par
+\pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab A failed save no longer commits, reads as saved, or leaves a file behind, and a failed Save As keeps the target's bytes}\par
+\pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab A plugin whose save file cannot be created is reported and the rest of the batch goes on; if the save was part of closing, the close stops}\par
+\pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab Keep a file's edits when its write resets the modified state}\par
+\pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab Only the editor's own save marks a plugin saved; no script export does}\par
+\pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab Keep a replaced plugin's time exactly, and report a failed update of it}\par
+\pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab Remove a .seq file the plugin no longer needs}\par
+\pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab Fix main records losing all their subrecords when storage was invalidated during initialisation}\par
+\pard\sb240\sa180{\b\f0\fs28\ulth Masters, FormIDs and copying}\par
+\pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab Reference the game master for a hardcoded FormID in a module without the extended range}\par
+\pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab Renumber skips FormIDs other files injected, and a FormID change that does not fit the target's slot is refused}\par
+\pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab Refuse a new record, or a changed FormID, with ObjectID 000}\par
+\pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab Sort Masters handles a master listed twice and a master whose index among its type changes}\par
+\pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab Refuse a module that is its own master}\par
+\pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab Cleanup Injected skips and reports a cleanup whose target already holds the record}\par
+\pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab Follow load order for a record's winner and its next master}\par
+\pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab Copy no more entries than an array's maximum, and report lists over it in Check for Errors}\par
+\pard\sb240\sa180{\b\f0\fs28\ulth Loading and caches}\par
+\pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab Rebuild a reference cache that cannot be read or does not match its file, and save it atomically}\par
+\pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab Refuse a strings file, a record or compressed data that runs past its end}\par
+\pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab Skip .git folders when listing a loose data folder}\par
+\pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab Unregister a failed plugin's records from its masters}\par
+\pard\sb240\sa180{\b\f0\fs28\ulth Closing, cancelling and background work}\par
+\pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab The editor is safe against close requests, shortcuts and timers arriving while a nested operation runs; a close during a cancellable operation asks first, then stops it}\par
+\pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab A Windows session end shows the same save dialog as a normal close, and Cancel refuses it}\par
+\pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab A script can not start while the background loader runs}\par
+\pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab Crash fixes for closing with a given tab active and for a close during reference building}\par
+\pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab A force cancel waits until Add Masters, Clean Masters, Sort Masters or a Change FormID has reached a safe point}\par
+\pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab The game link and Oblivion's Pluggy link retry a read that fails for a moment, and keep running after a refused close}\par
+\pard\sb240\sa180{\b\f0\fs28\ulth Checks and display}\par
+\pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab Conflict results: FO3 / FNV navmesh triangle edges are compared, and landscape normals are Benign only when the height map is identical}\par
+\pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab Check for Errors no longer loops on a cyclic parent chain or NPC template chain}\par
+\pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab Fix an access violation in condition-alias resolution for INFO records}\par
+\pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab Stop offering Remove on a record's Record Header}\par
+\pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab Filtering the Referenced By list no longer leaves a row selected that you did not select, so a following command can not act on the wrong record}\par
+\pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab A double at its maximum or minimum shows as Default or Min}\par
+\pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab Fix a RichEdit EOutOfResources error when adding lines (contributed by sheson)}\par
+\pard\sb240\sa180{\b\f0\fs28\ulth Command line and unattended runs}\par
+\pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab An unattended run logs a failure and exits non-zero instead of showing a dialog}\par
+\pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab -autoload and -autoexit work in script mode; a missing or unreadable script fails the run}\par
+\pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab MasterUpdate, MasterRestore and setESM start again, -SortAndCleanMasters is accepted, and a plugin can be named by full path or with .ghost}\par
+\pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab A -M: My Games path gets its trailing backslash}\par
+\pard\sb300\sa180{\b\f0\fs32\ulth Definition Updates}\par
+\pard\sb240\sa180{\b\f0\fs28\ulth All Games}\par
+\pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab MGEF \\ DATA - Organize and fix Union handling (contributed by robertgk2017)}\par
+\pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab REFR \\ XTEL, CELL \\ XCLR, VMAD \\ ScriptPropertyObject - Add FormID filters (contributed by robertgk2017)}\par
+\pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab ALL - Convert Dialogue Text handling to a definition flag, and make MODT cpBenign (contributed by robertgk2017)}\par
+\pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab Conditions - Add Run On to the CTDA sort key (contributed by robertgk2017)}\par
+\pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab NAVI - Prune invalid NVMI entries (contributed by robertgk2017)}\par
+\pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab REFR \\ XRDS - Hint when the Light Radius is too small (contributed by robertgk2017)}\par
+\pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab ACHR / REFR \\ Persist Location - Add an error check (contributed by robertgk2017)}\par
+\pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab Array definitions can now state a maximum count: leveled lists are limited to 255 on TES5 / SSE, FO4, FO76 and SF1}\par
+\pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab Partial Form support finished; a definition flag says what a partial form keeps (contributed by robertgk2017)}\par
+\pard\sb240\sa180{\b\f0\fs28\ulth FO3/FNV}\par
+\pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab FNV - Fix the group order to what the GECK writes, and add a cell region conflict check that follows hNVSE (contributed by robertgk2017)}\par
+\pard\sb240\sa180{\b\f0\fs28\ulth TES5}\par
+\pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab Add SCOL support and FormID checks for a Unique Actor, NPC template, actor flags and location references (contributed by robertgk2017)}\par
+\pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab PERK - Num Ranks must be non-zero, confirmed by Cobb (contributed by robertgk2017)}\par
+\pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab ALCH, SCRL, AMMO - Add VMAD, from Cobb (contributed by robertgk2017)}\par
+\pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab NIF - Community Shaders PBR shader type and features (contributed by robertgk2017)}\par
+\pard\sb240\sa180{\b\f0\fs28\ulth FO4/FO76}\par
+\pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab Fix object mod properties using the count as their count callback (contributed by robertgk2017)}\par
+\pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab FO4 VR - Support for Daytripper4.dll light files (contributed by robertgk2017)}\par
+\pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab Fallout 76 - Update Form Version to 209 and HEDR to 266, with many newly decoded fields (contributed by eckserah and robertgk2017)}\par
+\pard\sb240\sa180{\b\f0\fs28\ulth SF1}\par
+\pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab Soundbank handling reworked: Wwise GUID indexing and lookup, additional soundbank files, and a switch or state shown with its group (contributed by Jonathan Ostrus and robertgk2017)}\par
+\pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab ONAM lists overrides of every master type and no own records}\par
+\pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab QUST - Swap FULL and Base Form Components order (contributed by robertgk2017)}\par
+\pard\sb300\sa180{\b\f0\fs32\ulth Scripting}\par
+\pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab Resolve a script's units relative to the running script, so a script in a subfolder can use its own units (#1496, contributed by fireundubh)}\par
+\pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab Add functions for an array's aligned rows and an aligned add}\par
+\pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab Add GetIsUpdate and SetIsUpdate, and argument count checks on the file type getters and setters and the element value setters (contributed by robertgk2017)}\par
+\pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab A script can no longer write to a record that is not editable}\par
+\pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab Script functions refuse a wrong list, object or index with a message instead of crashing}\par
+\pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab KWDA and KSIZ resolve for scripts on wrapped keywords}\par
+\pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab Add scaling to the UI of the Find cell in worldspace script (contributed by Jonathan Ostrus)}\par
+\pard\sb300\sa180{\b\f0\fs32\ulth SNIFF}\par
+\pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab Check For Errors: report vertices in the MOPP collision check, fix the Moveable mass message, and add Community Shaders PBR shader checks (contributed by robertgk2017)}\par
+\pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab Universal Fixer: fix a wrong layer on bhkCompressedMeshShapeData and remove flags a Community Shaders PBR shader disallows (contributed by robertgk2017)}\par
+\pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab Apply Transforms: fix BSTriShape vertex flag detection (contributed by robertgk2017)}\par
+\pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab Update Havok Inertia: account for the minimum penetration depth (contributed by robertgk2017)}\par
+\pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab Unskin Mesh: refuse BSTriShapes; access violation fixes (contributed by robertgk2017)}\par
+\pard\sb300\sa180{\b\f0\fs32\ulth BSArch}\par
+\pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab Full support for PlayStation GNMF archives (contributed by robertgk2017)}\par
+\pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab Stop forcing compression of Skyrim SE and DDS archive textures: only a warning, which says to ignore it if you use an appropriate engine fixes mod}\par
+\pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab Chunk a texture by its mips' area, as Bethesda's archives do, and size each chunk as its own mip}\par
+\pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab Share packed data only between entries with the same compression and the same cubemap marker}\par
+\pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab Malformed archives are refused instead of crashing or decoding forever: file names, folder names, entry sizes and offsets, header counts, texture chunks, compressed data and LZ4 frames}\par
+\pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab A write or an unpack that fails now fails, rather than leaving an empty or partial file}\par
+\pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab Read legacy DDS pixel formats and FourCC codes as Microsoft's loader maps them, and recognise a DX10 cubemap marked only in its miscFlags}\par
+\pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab Refuse texture arrays, volume and 1D textures in BA2 packing}\par
+\pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab Always add the Voices flag if an .mp3 file is included, and fix the Misc files flag in new FO3, FNV and TES5 archives (contributed by robertgk2017)}\par
+\pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab Fix an abnormally large saved-space figure after packing with shared data, and set max texture chunks to 1 for Xbox .ba2s (contributed by robertgk2017)}\par
+\pard\sb300\sa180{\b\f0\fs32\ulth xDump}\par
+\pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab Skyrim saves are no longer misparsed after their header, and a crash on New Vegas saves is fixed}\par
+\pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab Finds a game's install folder, reads its ini and picks its language the same way the editor does}\par
 \pard\sb360\sa180{\b\f0\fs36\ulth What's New in xEdit 4.1.5q?}\par
 \pard\sb300\sa180{\b\f0\fs32\ulth TL;DR}\par
 \pard\sa180{\f0\fs24 Development continues with ~250 commits since 4.1.5p, focused on Starfield .esp editing and small/medium master support, a major Referenced By tab overhaul, regular-expression filtering, BSArch Xbox-texture and compression-library work, and a large Fallout 76 record expansion.}\par
