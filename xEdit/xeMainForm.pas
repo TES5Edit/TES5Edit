@@ -1735,8 +1735,10 @@ begin
     end else begin
       MessageBox(RenameErrorOwner, PChar('One or more errors occured during renaming of saved modules.'+#13#13+
       'Please check the files in your data path: ' + xeContext.Settings.DataPath), 'Error', 0);
-      if _SaveProgress and Assigned(frmMain) then
+      if _SaveProgress and Assigned(frmMain) then begin
+        frmMain.FlushPostedMessages;
         frmMain.SaveLogs(False);
+      end;
     end;
 
   wbCurrentAction := '';
