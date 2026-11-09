@@ -1193,7 +1193,7 @@ begin
       1, 'Respawns',
       3, 'Can Hold Items'
       ], False, 4))
-    ).SetDefaultNativeValue(4)
+    ).SetDefaultNativeValue(8)
      .SetRequired
      .IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse),
     wbScript, //[SCPT]
