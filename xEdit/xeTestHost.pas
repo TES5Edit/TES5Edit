@@ -273,6 +273,7 @@ type
     CheckMenusPick        : Boolean;
     CheckMenusPickCost    : string;
     CheckMenusView        : Boolean;
+    CheckMenusNavAdd      : Boolean;
     CheckMenusClosePage   : string;
     CheckMenusCloseRoute  : string;
     FormIDSearch          : Boolean;
@@ -511,6 +512,7 @@ begin
     CheckMenusPick := FindCmdLineSwitch('testcheckmenuspick');
     wbFindCmdLineParam('testcheckmenuspickcost', CheckMenusPickCost);
     CheckMenusView := FindCmdLineSwitch('testcheckmenusview');
+    CheckMenusNavAdd := FindCmdLineSwitch('testcheckmenusnavadd');
     wbFindCmdLineParam('testcheckmenusclosepage', CheckMenusClosePage);
     wbFindCmdLineParam('testcheckmenuscloseroute', CheckMenusCloseRoute);
     CheckMenus := True;

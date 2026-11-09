@@ -500,6 +500,7 @@ type
     dfAllowAnyMember,
     dfArrayCanBeEmpty,
     dfArrayStaticSize,
+    dfChildRecordOnly,
     dfCollapsed,
     dfDontAssign,
     dfDontSave,
@@ -511,6 +512,7 @@ type
     dfIdentityQualifiedByTopic,
     dfIncludeValueInDisplaySignature,
     dfIndexEditorID,
+    dfInNewRecord,
     dfInternalEditOnly,
     dfIsRecordFlags,
     dfKeepInPartialForm,
@@ -4670,6 +4672,9 @@ type
     function IsKnownIdentity(aFormIDNameBase: Byte; const aIdentity: string): Boolean;
     function UnusedIdentity(aFormIDNameBase: Byte; const aPrefix: string; const aQualifier: string = ''): string;
     function IdentityHolder(aFormIDNameBase: Byte; const aIdentity: string): IwbMainRecord; virtual; abstract;
+    function IdentityEnum(const aDef: IwbMainRecordDef): IwbEnumDef;
+    function UnusedIndexIdentity(const aDef: IwbMainRecordDef; const aEnum: IwbEnumDef): string;
+    function CanAddNewRecord(const aDef: IwbMainRecordDef): Boolean;
     class function IdentityText(const aIdentity: string): string; static;
     class function NoIdentityKeyText(aFormIDBase: Byte; const aIdentity: string): string; static;
     function ExpandFileName(const aFileName: string): string;
@@ -8349,6 +8354,32 @@ begin
     for var lNameBase in lNameBases do
       lKnown := lKnown or IsKnownIdentity(lNameBase, aQualifier + Result);
   until not lKnown;
+end;
+
+function TwbGameContext.IdentityEnum(const aDef: IwbMainRecordDef): IwbEnumDef;
+var
+  lEditorID : IwbSubRecordDef;
+  lIndex    : IwbIntegerDef;
+begin
+  Result := nil;
+  if Supports(aDef.GetKnownSubRecordMember(ksrEditorID), IwbSubRecordDef, lEditorID) and Supports(lEditorID.Value, IwbIntegerDef, lIndex) then
+    Supports(lIndex.Formater[nil], IwbEnumDef, Result);
+end;
+
+function TwbGameContext.UnusedIndexIdentity(const aDef: IwbMainRecordDef; const aEnum: IwbEnumDef): string;
+begin
+  for var i := 0 to Pred(aEnum.NameCount) do begin
+    Result := aEnum.Names[i];
+    if not Assigned(IdentityHolder(aDef.GetFormIDNameBase, Result)) then
+      Exit;
+  end;
+  Result := '';
+end;
+
+function TwbGameContext.CanAddNewRecord(const aDef: IwbMainRecordDef): Boolean;
+begin
+  var lEnum := IdentityEnum(aDef);
+  Result := not Assigned(lEnum) or (UnusedIndexIdentity(aDef, lEnum) <> '');
 end;
 
 class function TwbGameContext.IdentityText(const aIdentity: string): string;

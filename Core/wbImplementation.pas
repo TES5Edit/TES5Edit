@@ -1543,6 +1543,8 @@ type
     procedure RegisterWithIdentity(aNew: Boolean);
     function RefreshKnownSubRecord(const aSubRecord: IwbSubRecord): Boolean;
     procedure RefreshKnownSubRecords;
+    procedure AddMembersOfNewRecord;
+    procedure PrepareNewIdentity;
 
     procedure MarkModifiedRecursive(const aElementTypes: TwbElementTypes); override; final;
 
@@ -2681,6 +2683,9 @@ begin
   if flContextObj.GroupToSkip.Find(Signature, Dummy) then
     Exit;
   if flContextObj.RecordToSkip.Find(Signature, Dummy) then
+    Exit;
+  var lRecordDef: PwbMainRecordDef;
+  if flContextObj.GameDefObj.FindRecordDef(Signature, lRecordDef) and (dfChildRecordOnly in lRecordDef.DefFlags) then
     Exit;
 
   Result := TwbGroupRecord.Create(Self, Signature);
@@ -9394,7 +9399,7 @@ begin
     Sorted := False;
 
     for i := Pred(Count) downto 0 do
-      if GameDefObj.FindRecordDef(AnsiString(Strings[i]), RecordDef) and not (dfInternalEditOnly in RecordDef.DefFlags) then
+      if GameDefObj.FindRecordDef(AnsiString(Strings[i]), RecordDef) and (RecordDef.DefFlags * [dfInternalEditOnly, dfChildRecordOnly] = []) and flContextObj.CanAddNewRecord(RecordDef^) then
         Strings[i] := Strings[i] + ' - ' + RecordDef.Name
       else
         Delete(i);
@@ -15658,11 +15663,8 @@ begin
                 Continue;
               Assign(Element.SortOrder, Element, aOnlySK);
             end;
-          end else begin
-            for i := 0 to Pred(mrDef.MemberCount) do
-              if mrDef.Members[i].Required then
-                Assign(i, nil, False);
-          end;
+          end else
+            AddMembersOfNewRecord;
         finally
           Exclude(mrStates, mrsAssigningWhole);
         end;
@@ -16288,6 +16290,13 @@ begin
     Result := False;
 end;
 
+procedure TwbMainRecord.AddMembersOfNewRecord;
+begin
+  for var i := 0 to Pred(mrDef.MemberCount) do
+    if mrDef.Members[i].Required or (dfInNewRecord in mrDef.Members[i].DefFlags) then
+      Assign(i, nil, False);
+end;
+
 procedure TwbMainRecord.RefreshKnownSubRecords;
 var
   lSubRecord : IwbSubRecord;
@@ -16675,7 +16684,6 @@ begin
     wbCodeBlock(procedure
     var
       SelfRef      : IwbContainerElementRef;
-      i            : Integer;
       ContainerRef : IwbContainerElementRef;
       Group        : IwbGroupRecordInternal;
       Cell         : IwbMainRecord;
@@ -16686,9 +16694,7 @@ begin
       DoInit(True);
       SetModified(True);
       InvalidateStorage;
-      for i := 0 to Pred(mrDef.MemberCount) do
-        if mrDef.Members[i].Required then
-          Assign(i, nil, False);
+      AddMembersOfNewRecord;
 
       if IsInterior then
         if Supports(GetRecordBySignature('DATA'), IwbContainerElementRef, ContainerRef) then begin
@@ -16706,8 +16712,16 @@ begin
             SetPosition(GameDefObj.GridCellToCenterPosition(GridCell));
         end;
 
-      if aRegister then
+      if aRegister then begin
+        if mrsRegisterLater in mrStates then
+          try
+            PrepareNewIdentity;
+          except
+            lContainer.RemoveElement(Self);
+            raise;
+          end;
         RegisterWithIdentity(True);
+      end;
     end);
 
     CollapseStorage(nil, True);
@@ -21939,9 +21953,7 @@ begin
       BeginUpdate;
       try
         if Assigned(mrDef) then
-          for i := 0 to Pred(mrDef.MemberCount) do
-            if mrDef.Members[i].Required then
-              Assign(i, nil, False);
+          AddMembersOfNewRecord;
 
         Master := GetMaster;
 
@@ -22092,9 +22104,7 @@ begin
 
       BeginUpdate;
       try
-        for i := 0 to Pred(mrDef.MemberCount) do
-          if mrDef.Members[i].Required then
-            Assign(i, nil, False);
+        AddMembersOfNewRecord;
 
         Master := GetMaster;
 
@@ -22462,6 +22472,25 @@ begin
   UpdateQualifiedChildKeys;
   if lReleased then
     RebuildNameEdges;
+end;
+
+procedure TwbMainRecord.PrepareNewIdentity;
+begin
+  RefreshKnownSubRecords;
+  var lEnum := ContextObj.IdentityEnum(mrDef);
+  if not Assigned(lEnum) then
+    Exit;
+  var lIdentity := mrDef.GetIdentity(Self);
+  if (lIdentity = '') or Assigned(ContextObj.IdentityHolder(mrDef.GetFormIDNameBase, lIdentity)) then begin
+    var lName := ContextObj.UnusedIndexIdentity(mrDef, lEnum);
+    if lName = '' then
+      raise Exception.Create(GetSignature + ' - ' + mrDef.Name + ' can not be added: every one of its kind is held by a loaded module. To change one, copy it as an override instead.');
+    if ContextObj.BeginInternalEdit(True) then try
+      SetEditorID(lName);
+    finally
+      wbEndInternalEdit;
+    end;
+  end;
 end;
 
 procedure TwbMainRecord.RegisterWithIdentity(aNew: Boolean);
@@ -25333,8 +25362,13 @@ begin
   Signature := StrToSignature(aName);
 
   case grStruct.grsGroupType of
-    0: if Signature <> TwbSignature(grStruct.grsLabel) then
-         Exit;
+    0: begin
+      if Signature <> TwbSignature(grStruct.grsLabel) then
+        Exit;
+      var lRecordDef: PwbMainRecordDef;
+      if GameDefObj.FindRecordDef(Signature, lRecordDef) and (dfChildRecordOnly in lRecordDef.DefFlags) then
+        raise Exception.Create(Signature + ' - ' + lRecordDef.Name + ' can only be added under its parent record');
+    end;
     1: if (Signature <> 'ROAD') and
           (Signature <> 'CELL') then
          Exit;
@@ -25493,7 +25527,7 @@ begin
     end;
   end;
 
-  if aSilent then
+  if aSilent or not (gcFormIDInRecordHeader in GameDefObj.Capabilities) then
     if Signature = 'PLYR' then
       FormID := TwbFormID.FromCardinal($00000014)
     else
@@ -26478,7 +26512,8 @@ begin
   j := 0;
   var lGameDef := GameDefObj;
   for i := Low(Result) to High(Result) do
-    if lGameDef.FindRecordDef(AnsiString(Result[i]), RecordDef) then begin
+    if lGameDef.FindRecordDef(AnsiString(Result[i]), RecordDef) and
+       ((grStruct.grsGroupType <> 0) or (not (dfChildRecordOnly in RecordDef.DefFlags) and ContextObj.CanAddNewRecord(RecordDef^))) then begin
       Result[j] := Result[i] + ' - ' + RecordDef.Name;
       Inc(j);
     end;

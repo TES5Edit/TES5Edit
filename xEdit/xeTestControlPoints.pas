@@ -154,6 +154,7 @@ type
     procedure DoTestCheckMenus;
     procedure TestCheckMenusRunTimer(Sender: TObject);
     procedure TestCheckMenusAnswerTimer(Sender: TObject);
+    procedure TestCheckMenusNavAdd;
     procedure TestCheckMenusWrite;
     procedure TestCheckMenusException(Sender: TObject; E: Exception);
     procedure TestCheckMenusCloseEntered;
@@ -3763,6 +3764,8 @@ begin
            TestHost.TestCheckMenusTimer.Enabled := True;
            Exit;
          end;
+      7: if xeTestSwitches.CheckMenusNavAdd then
+           TestCheckMenusNavAdd;
     else
       TestCheckMenusWrite;
       Exit;
@@ -3777,6 +3780,107 @@ begin
   end;
   Inc(TestHost.TestCheckMenusStage);
   TestHost.TestCheckMenusTimer.Enabled := True;
+end;
+
+procedure TxeTestFormHelper.TestCheckMenusNavAdd;
+var
+  lFile : IwbFile;
+
+  procedure Click(const aElement: IwbElement; const aKind, aTyped: string; aShift: Boolean; out aRaised: string);
+  var
+    lKeys : TKeyboardState;
+  begin
+    aRaised := '';
+    vstNav.FocusedNode := FindNodeForElement(aElement);
+    var lItem := TMenuItem.Create(nil);
+    try
+      lItem.Caption := aKind;
+      TestHost.TestCheckMenusTyped := aTyped;
+      TestHost.TestCheckMenusSeen := '';
+      GetKeyboardState(lKeys);
+      if aShift then begin
+        lKeys[VK_SHIFT] := $80;
+        SetKeyboardState(lKeys);
+      end;
+      TestHost.TestCheckMenusAnswer.Enabled := True;
+      try
+        try
+          mniNavAddClick(lItem);
+        except
+          on E: Exception do
+            aRaised := E.Message;
+        end;
+      finally
+        TestHost.TestCheckMenusAnswer.Enabled := False;
+        lKeys[VK_SHIFT] := 0;
+        SetKeyboardState(lKeys);
+      end;
+    finally
+      lItem.Free;
+    end;
+  end;
+
+  function Focused: string;
+  begin
+    Result := '';
+    var lData: PNavNodeData := vstNav.GetNodeData(vstNav.FocusedNode);
+    if Assigned(lData) and Assigned(lData.Element) then
+      Result := lData.Element.Name;
+  end;
+
+  procedure Row(const aName, aRaised: string; const aGroup: IwbContainerElementRef);
+  begin
+    var lCount := -1;
+    if Assigned(aGroup) then
+      lCount := aGroup.ElementCount;
+    TestHost.TestCheckMenusLines.Add('navadd' + #9 + aName + #9 + 'seen[' + TestHost.TestCheckMenusSeen.Trim + ']' + #9 + 'raised[' + aRaised + ']' + #9 +
+      'count ' + IntToStr(lCount) + #9 + 'focus[' + Focused + ']');
+  end;
+
+var
+  lRaised : string;
+  lGroup  : IwbContainerElementRef;
+begin
+  for var i := Low(Files) to High(Files) do
+    if SameText(Files[i].FileName, xeTestSwitches.CheckMenusModule) then
+      lFile := Files[i];
+  if not Assigned(lFile) then
+    raise Exception.Create('no module ' + xeTestSwitches.CheckMenusModule);
+  TestHost.TestCheckMenusLines.Add('navoffer' + #9 + string.Join(',', (lFile as IwbContainer).GetAddList));
+
+  for var lKind in ['GLOB - Global', 'NPC_ - Non-Player Character'] do begin
+    Click(lFile, lKind, '', False, lRaised);
+    Row('group ' + Copy(lKind, 1, 4), lRaised, nil);
+    Supports(lFile.GroupBySignature[StrToSignature(lKind)], IwbContainerElementRef, lGroup);
+    Click(lGroup, lKind, '', False, lRaised);
+    Row('single ' + Copy(lKind, 1, 4), lRaised, lGroup);
+  end;
+
+  Click(lFile, 'SKIL - Skill', '', False, lRaised);
+  Supports(lFile.GroupBySignature['SKIL'], IwbContainerElementRef, lGroup);
+  Click(lGroup, 'SKIL - Skill', '', False, lRaised);
+  Row('refused SKIL', lRaised, lGroup);
+  TestHost.TestCheckMenusLines.Add('navtop' + #9 + 'SKIL' + #9 + IntToStr(Length((lGroup as IwbContainer).GetAddList)));
+
+  Click(lFile, 'GLOB - Global', '', False, lRaised);
+  Supports(lFile.GroupBySignature['GLOB'], IwbContainerElementRef, lGroup);
+  Click(lGroup, 'GLOB - Global', '3', True, lRaised);
+  Row('batch GLOB', lRaised, lGroup);
+  lGroup := nil;
+
+  var lWritten := xeTestSwitches.CheckMenusFile + '.navadd.esp';
+  try
+    var lStream := TFileStream.Create(lWritten, fmCreate);
+    try
+      lFile.WriteToStream(lStream, rmNo);
+    finally
+      lStream.Free;
+    end;
+    TestHost.TestCheckMenusLines.Add('navwrote' + #9 + 'ok');
+  except
+    on E: Exception do
+      TestHost.TestCheckMenusLines.Add('navwrote' + #9 + E.Message);
+  end;
 end;
 
 procedure TxeTestFormHelper.TestCheckMenusAnswerTimer(Sender: TObject);

@@ -1260,7 +1260,7 @@ begin
       10, 'Skeleton Blood',
       11, 'Metal Blood'
       ], False, 12))
-    ).SetDefaultNativeValue(48)
+    ).SetDefaultNativeValue(72)
      .SetRequired
      .IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse),
     wbFloat(XSCL, 'Scale', cpNormal, False, 1, 2).SetDefaultNativeValue(1),
@@ -1363,8 +1363,9 @@ begin
       108, 'Long',
       115, 'Short'
       ])).SetDefaultNativeValue(115)
-         .SetIsRemovable(wbNotRemovable),
-    wbFloat(FLTV, 'Value', cpNormal, False, 1, 2).SetIsRemovable(wbNotRemovable)
+         .SetIsRemovable(wbNotRemovable)
+         .IncludeFlag(dfInNewRecord),
+    wbFloat(FLTV, 'Value', cpNormal, False, 1, 2).SetIsRemovable(wbNotRemovable).IncludeFlag(dfInNewRecord)
   ]).SetFormIDBase($58)
     .SetSummaryKey([3])
     .SetAfterLoad(wbGlobalAfterLoad);
@@ -1569,7 +1570,8 @@ begin
     wbString(BNAM, 'Result')
   ]).SetFormIDBase($90)
     .IncludeFlag(dfIdentityQualifiedByTopic)
-    .IncludeFlag(dfNoRequestedIdentity);
+    .IncludeFlag(dfNoRequestedIdentity)
+    .IncludeFlag(dfChildRecordOnly);
 
   RegisterRecordDef(INGR, 'Ingredient',
     wbFlags(wbFlagsList([
@@ -1701,7 +1703,8 @@ begin
       Result := aHasGrid;
       if Result then
         aIdentity := aGrid.SortKey;
-    end);
+    end)
+    .IncludeFlag(dfChildRecordOnly);
 
   RegisterRecordDef(LEVC, 'Leveled Creature',
     wbFlags(wbFlagsList([
@@ -1815,7 +1818,7 @@ begin
     .IncludeFlag(dfNoRequestedIdentity);
 
   RegisterRecordDef(MGEF, 'Magic Effect', @wbKnownSubRecordSignaturesINDX, [
-    wbInteger(INDX, 'Effect', itU32, wbMagicEffectEnum).SetIsRemovable(wbNotRemovable),
+    wbInteger(INDX, 'Effect', itU32, wbMagicEffectEnum).SetIsRemovable(wbNotRemovable).IncludeFlag(dfInNewRecord),
     wbStruct(MEDT, 'Data', [
       wbInteger('School', itU32,
         wbEnum([
@@ -1970,8 +1973,9 @@ begin
       10, 'Skeleton Blood',
       11, 'Metal Blood'
       ], False, 12))
-    ).SetDefaultNativeValue(18)
+    ).SetDefaultNativeValue(8)
      .SetIsRemovable(wbNotRemovable)
+     .IncludeFlag(dfInNewRecord)
      .IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse),
     wbInventory,
     wbSpells,
@@ -2046,7 +2050,8 @@ begin
       else
         Result := False;
     end)
-    .IncludeFlag(dfNoRequestedIdentity);
+    .IncludeFlag(dfNoRequestedIdentity)
+    .IncludeFlag(dfChildRecordOnly);
 
   RegisterRecordDef(PROB, 'Probe',
     wbFlags(wbFlagsList([
