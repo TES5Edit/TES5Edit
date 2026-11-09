@@ -3381,10 +3381,10 @@ procedure TxeTestFormHelper.TestCheckMenusRunTimer(Sender: TObject);
     pgMain.ActivePage := tbsReferencedBy;
     pgMainChange(pgMain);
     Application.ProcessMessages;
-    lvReferencedBy.SelectAll;
+    vstReferencedBy.SelectAll(False);
     pmuRefByPopup(nil);
     for var lItem in TArray<TMenuItem>.Create(mniRefByCopyOverrideInto, mniRefByCopyDisabledOverrideInto, mniRefByVWD, mniRefByNotVWD) do
-      TestHost.TestCheckMenusLines.Add('refbymenu' + #9 + aStage + #9 + IntToStr(lvReferencedBy.SelCount) + #9 + lItem.Name + #9 +
+      TestHost.TestCheckMenusLines.Add('refbymenu' + #9 + aStage + #9 + IntToStr(vstReferencedBy.SelectedCount) + #9 + lItem.Name + #9 +
         BoolToStr(lItem.Visible, True));
   end;
 
@@ -3399,7 +3399,7 @@ procedure TxeTestFormHelper.TestCheckMenusRunTimer(Sender: TObject);
       pgMain.ActivePage := tbsReferencedBy;
       pgMainChange(pgMain);
       Application.ProcessMessages;
-      lCount := lvReferencedBy.Items.Count;
+      lCount := vstReferencedBy.RootNodeCount;
       if Assigned(lblReferencedByNote) and lblReferencedByNote.Visible then
         lFirst := lblReferencedByNote.Caption;
     end;
@@ -9094,7 +9094,6 @@ end;
 
 procedure TxeTestFormHelper.TestRefByShow(aLines: TStrings);
 var
-  lItem   : TListItem;
   lRecord : IwbMainRecord;
 begin
   vstNavChange(vstNav, vstNav.FocusedNode);
@@ -9102,25 +9101,46 @@ begin
     tmrPendingSetActiveTimer(tmrPendingSetActive);
   pgMain.ActivePage := tbsReferencedBy;
   pgMainChange(pgMain);
-  lvReferencedBy.ClearSelection;
-  for var i := 0 to Pred(lvReferencedBy.Items.Count) do begin
-    lItem := lvReferencedBy.Items[i];
-    if not Assigned(lItem) or not Assigned(lItem.Data) then
-      Continue;
-    lRecord := IwbMainRecord(lItem.Data);
-    for var lWanted in TestHost.TestChangeFormIDRecords do
-      if lWanted.Equals(lRecord) then begin
-        lItem.Selected := True;
-        Break;
-      end;
+  vstReferencedBy.ClearSelection;
+  var lNode := vstReferencedBy.GetFirst;
+  while Assigned(lNode) do begin
+    var lItem := ReferencedByItems[lNode.Index];
+    if Assigned(lItem.Data) then begin
+      lRecord := IwbMainRecord(lItem.Data);
+      for var lWanted in TestHost.TestChangeFormIDRecords do
+        if lWanted.Equals(lRecord) then begin
+          vstReferencedBy.Selected[lNode] := True;
+          Break;
+        end;
+    end;
+    lNode := vstReferencedBy.GetNext(lNode);
   end;
   TestRefByRows(aLines, 'before');
+  var lFilterText := '';
+  if FindCmdLineSwitch('testrefbyfilter', lFilterText) then begin
+    edReferencedByFilterName.Text := lFilterText;
+    tmrReferencedByFilterApplyTimer(tmrReferencedByFilterApply);
+    TestRefByRows(aLines, 'filtered');
+    aLines.Add('refbyfocus' + #9 + 'filtered' + #9 + BoolToStr(Assigned(vstReferencedBy.FocusedNode), True));
+  end;
+  var lShotFile := '';
+  if FindCmdLineSwitch('testrefbyshot', lShotFile) then begin
+    Application.ProcessMessages;
+    var lBitmap := Vcl.Graphics.TBitmap.Create;
+    try
+      lBitmap.PixelFormat := pf32bit;
+      lBitmap.SetSize(vstReferencedBy.Width, vstReferencedBy.Height);
+      vstReferencedBy.PaintTo(lBitmap.Canvas, 0, 0);
+      lBitmap.SaveToFile(lShotFile);
+    finally
+      lBitmap.Free;
+    end;
+  end;
   pmuRefByPopup(nil);
 end;
 
 procedure TxeTestFormHelper.TestRefByRows(aLines: TStrings; const aWhen: string);
 var
-  lItem   : TListItem;
   lRecord : IwbMainRecord;
   lActive : string;
 begin
@@ -9128,21 +9148,22 @@ begin
   if Assigned(ActiveRecord) then
     lActive := ActiveRecord.EditorID + '@' + ActiveRecord._File.FileName;
   aLines.Add('refbylist' + #9 + aWhen + #9 + 'active ' + lActive + #9 + 'page ' + pgMain.ActivePage.Name + #9 + 'rows ' +
-    IntToStr(lvReferencedBy.Items.Count) + #9 + 'selected ' + IntToStr(lvReferencedBy.SelCount));
+    IntToStr(vstReferencedBy.RootNodeCount) + #9 + 'selected ' + IntToStr(vstReferencedBy.SelectedCount));
   var lColumns := '';
   for var i := Low(ActiveRecords) to High(ActiveRecords) do
     if Supports(ActiveRecords[i].Element, IwbMainRecord, lRecord) then
       lColumns := lColumns + ' ' + lRecord.EditorID + '@' + lRecord._File.FileName;
   aLines.Add('refbyview' + #9 + aWhen + #9 + 'columns' + lColumns);
-  for var i := 0 to Pred(lvReferencedBy.Items.Count) do begin
-    lItem := lvReferencedBy.Items[i];
-    if not Assigned(lItem) or not Assigned(lItem.Data) then begin
-      aLines.Add('refbyrow' + #9 + aWhen + #9 + IntToStr(i) + #9 + 'no record');
-      Continue;
-    end;
-    lRecord := IwbMainRecord(lItem.Data);
-    aLines.Add('refbyrow' + #9 + aWhen + #9 + IntToStr(i) + #9 + TestChangeFormIDText(lRecord.LoadOrderFormID) + #9 +
-      string(lRecord.Signature) + #9 + lRecord.EditorID + #9 + lItem.SubItems[1] + #9 + 'selected ' + BoolToStr(lItem.Selected, True));
+  var lNode := vstReferencedBy.GetFirst;
+  while Assigned(lNode) do begin
+    var lItem := ReferencedByItems[lNode.Index];
+    if Assigned(lItem.Data) then begin
+      lRecord := IwbMainRecord(lItem.Data);
+      aLines.Add('refbyrow' + #9 + aWhen + #9 + IntToStr(lNode.Index) + #9 + TestChangeFormIDText(lRecord.LoadOrderFormID) + #9 +
+        string(lRecord.Signature) + #9 + lRecord.EditorID + #9 + lItem.FileName + #9 + 'selected ' + BoolToStr(vstReferencedBy.Selected[lNode], True));
+    end else
+      aLines.Add('refbyrow' + #9 + aWhen + #9 + IntToStr(lNode.Index) + #9 + 'no record');
+    lNode := vstReferencedBy.GetNext(lNode);
   end;
 end;
 

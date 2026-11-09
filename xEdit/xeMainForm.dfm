@@ -324,7 +324,7 @@ object frmMain: TfrmMain
           ImageIndex = 3
           TabVisible = False
           OnShow = tbsViewShow
-          object lvReferencedBy: TListView
+          object vstReferencedBy: TVirtualEditTree
             AlignWithMargins = True
             Left = 0
             Top = 25
@@ -337,42 +337,52 @@ object frmMain: TfrmMain
             BevelInner = bvNone
             BevelKind = bkSoft
             BorderStyle = bsNone
+            Header.AutoSizeIndex = 2
+            Header.Options = [hoAutoResize, hoColumnResize, hoDblClickResize, hoVisible, hoAutoSpring]
+            HintMode = hmTooltip
+            ParentShowHint = False
+            PopupMenu = pmuRefBy
+            SelectionBlendFactor = 32
+            ShowHint = True
+            TabOrder = 0
+            TreeOptions.AutoOptions = [toAutoDropExpand, toAutoScrollOnExpand, toAutoTristateTracking, toAutoDeleteMovedNodes, toAutoChangeScale]
+            TreeOptions.MiscOptions = [toWheelPanning]
+            TreeOptions.PaintOptions = [toShowHorzGridLines, toShowVertGridLines, toThemeAware, toUseBlendedImages, toFullVertGridLines, toUseBlendedSelection]
+            TreeOptions.SelectionOptions = [toFullRowSelect, toMultiSelect, toRightClickSelect]
+            OnChange = vstReferencedByChange
+            OnDblClick = vstReferencedByDblClick
+            OnGetText = vstReferencedByGetText
+            OnHeaderClick = vstReferencedByHeaderClick
+            OnKeyDown = vstReferencedByKeyDown
             Columns = <
               item
-                AutoSize = True
-                Caption = 'Record'
+                Options = [coAllowClick, coEnabled, coParentBidiMode, coParentColor, coResizable, coShowDropMark, coVisible, coAllowFocus, coAutoSpring]
+                Position = 0
+                Text = 'Record'
+                Width = 412
               end
               item
-                Caption = 'Signature'
+                Options = [coAllowClick, coEnabled, coParentBidiMode, coParentColor, coResizable, coShowDropMark, coVisible, coAllowFocus]
+                Position = 1
+                Text = 'Signature'
                 Width = 70
               end
               item
-                AutoSize = True
-                Caption = 'File'
+                Options = [coAllowClick, coEnabled, coParentBidiMode, coParentColor, coResizable, coShowDropMark, coVisible, coAllowFocus, coAutoSpring]
+                Position = 2
+                Text = 'File'
+                Width = 412
               end
               item
-                Caption = 'FormID'
-                Width = 0
+                Options = [coAllowClick, coEnabled, coParentBidiMode, coParentColor, coResizable, coShowDropMark, coAllowFocus]
+                Position = 3
+                Text = 'FormID'
               end
               item
-                Caption = 'RawFileName'
-                Width = 0
+                Options = [coAllowClick, coEnabled, coParentBidiMode, coParentColor, coResizable, coShowDropMark, coAllowFocus]
+                Position = 4
+                Text = 'RawFileName'
               end>
-            GridLines = True
-            HideSelection = False
-            MultiSelect = True
-            OwnerData = True
-            ReadOnly = True
-            RowSelect = True
-            PopupMenu = pmuRefBy
-            TabOrder = 0
-            ViewStyle = vsReport
-            OnColumnClick = lvReferencedByColumnClick
-            OnData = lvReferencedByLoadData
-            OnDataStateChange = lvReferencedByOnDataStateChange
-            OnDblClick = lvReferencedByDblClick
-            OnKeyDown = lvReferencedByKeyDown
-            OnSelectItem = lvReferencedByOnSelect
           end
           object pnlReferencedByTop: TPanel
             Left = 0
