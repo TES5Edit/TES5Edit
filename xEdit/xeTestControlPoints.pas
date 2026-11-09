@@ -157,6 +157,10 @@ type
     procedure TestCheckMenusWrite;
     procedure TestCheckMenusException(Sender: TObject; E: Exception);
     procedure TestCheckMenusCloseEntered;
+    procedure TestCloseRouteShow;
+    procedure TestCloseRouteFault(const aRoute: string);
+    procedure TestCloseRouteModal(aOwner: HWND);
+    procedure TestCloseRouteReenter;
     procedure TestCheckMenusPickNewText(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; NewText: string);
     procedure TestCheckMenusPick;
     procedure TestCheckMenusPickControls;
@@ -3831,6 +3835,43 @@ begin
   TFile.AppendAllText(xeTestSwitches.CheckMenusFile + '.close', 'closeentry' + #9 + lPage + sLineBreak, TEncoding.UTF8);
 end;
 
+procedure TxeTestFormHelper.TestCloseRouteShow;
+begin
+  Application.OnException := TestCheckMenusException;
+  TFile.WriteAllText(xeTestSwitches.CheckMenusFile, 'closeroute' + #9 + 'prestart' + sLineBreak + '# checkResult = 0' + sLineBreak, TEncoding.UTF8);
+  PostMessage(Handle, WM_CLOSE, 0, 0);
+end;
+
+procedure TxeTestFormHelper.TestCloseRouteFault(const aRoute: string);
+begin
+  if xeTestSwitches.CheckMenusCloseRoute <> aRoute then
+    Exit;
+  xeTestSwitches.CheckMenusCloseRoute := '';
+  raise Exception.Create('Fault raised by -testcheckmenuscloseroute:' + aRoute);
+end;
+
+procedure TxeTestFormHelper.TestCloseRouteReenter;
+begin
+  if xeTestSwitches.CheckMenusCloseRoute <> 'reenter' then
+    Exit;
+  xeTestSwitches.CheckMenusCloseRoute := '';
+  Perform(WM_CLOSE, 0, 0);
+end;
+
+function MessageBoxTimeoutW(aWnd: HWND; aText, aCaption: PWideChar; aType: UINT; aLanguage: WORD; aMilliseconds: DWORD): Integer; stdcall; external user32;
+
+procedure TxeTestFormHelper.TestCloseRouteModal(aOwner: HWND);
+begin
+  if not xeTestSwitches.CheckMenus then
+    Exit;
+  TFile.AppendAllText(xeTestSwitches.CheckMenusFile + '.route', 'dorename' + sLineBreak, TEncoding.UTF8);
+  if xeTestSwitches.CheckMenusCloseRoute.StartsWith('modal') then begin
+    if MessageBoxTimeoutW(aOwner, 'The modal loop a failed rename shows', 'Close route', 0, 0, 500) = 0 then
+      raise Exception.Create('no modal loop');
+    TFile.AppendAllText(xeTestSwitches.CheckMenusFile + '.route', 'modal owner ' + BoolToStr(aOwner <> 0, True) + sLineBreak, TEncoding.UTF8);
+  end;
+end;
+
 procedure TxeTestFormHelper.TestCheckMenusWrite;
 begin
   if xeTestSwitches.CheckMenusClosePage <> '' then
@@ -3855,6 +3896,8 @@ begin
         TestHost.TestCheckMenusLines.Add('# FAILED: ' + E.ClassName + ': ' + E.Message);
       end;
     end;
+  if xeTestSwitches.CheckMenusCloseRoute <> '' then
+    TestHost.TestCheckMenusLines.Add('closeroute' + #9 + xeTestSwitches.CheckMenusCloseRoute);
   try
     var lTmp := xeTestSwitches.CheckMenusFile + '.partial';
     TestHost.TestCheckMenusLines.Insert(0, '# xEdit check menus probe: ' + xeApplicationTitle);
@@ -3866,7 +3909,10 @@ begin
     CheckResult := 2;
   end;
   FreeAndNil(TestHost.TestCheckMenusLines);
-  tmrShutdown.Enabled := True;
+  if xeTestSwitches.CheckMenusCloseRoute <> '' then
+    TestCloseRouteArm(xeTestSwitches.CheckMenusCloseRoute)
+  else
+    tmrShutdown.Enabled := True;
 end;
 
 type

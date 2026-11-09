@@ -974,6 +974,9 @@ type
 
     function FindColors(const s: string; out aColors: TArray<TColor>): Boolean;
     procedure WndProc(var Message: TMessage); override; final;
+{$IFDEF XE_TEST_CONTROL_POINTS}
+    procedure TestCloseRouteArm(const aRoute: string);
+{$ENDIF}
   private
     procedure WMClose(var Message: TWMClose); message WM_CLOSE;
     procedure WMQueryEndSession(var Message: TWMQueryEndSession); message WM_QUERYENDSESSION;
@@ -981,6 +984,7 @@ type
     function AppWindowHook(var Message: TMessage): Boolean;
     procedure StopBackgroundWork;
     procedure CloseDown;
+    procedure TearDown;
     procedure WMUser(var Message: TMessage); message WM_USER;
     procedure WMUser1(var Message: TMessage); message WM_USER + 1;
     procedure WMUserLoaderDone(var Message: TMessage); message WM_USER + 2;
@@ -1665,6 +1669,13 @@ begin
     GeneralProgress(s);
 end;
 
+function RenameErrorOwner: HWND;
+begin
+  Result := 0;
+  if Assigned(frmMain) and frmMain.HandleAllocated then
+    Result := frmMain.Handle;
+end;
+
 procedure DoRename(aSessionEnd: Boolean = False);
 var
   AnyError : Boolean;
@@ -1684,8 +1695,10 @@ begin
 {$IFDEF XE_TEST_CONTROL_POINTS}
   if xeTestSwitches.SaveContexts then
     TestSaveContextsReport('AFTER-FORCECLOSEDFILES');
-  if Assigned(frmMain) then
+  if Assigned(frmMain) then begin
     frmMain.TestEndSessionStage('forceclosedfiles');
+    frmMain.TestCloseRouteModal(RenameErrorOwner);
+  end;
 {$ENDIF}
 
   if xeContext.Settings.DontSave then
@@ -1707,7 +1720,7 @@ begin
       if lUnattended then
         xeSaveLogs('Error: ' + aText, False)
       else
-        MessageBox(0, PChar(aText), 'Error', 0);
+        MessageBox(RenameErrorOwner, PChar(aText), 'Error', 0);
     end);
 {$IFDEF XE_TEST_CONTROL_POINTS}
   TestSaveAfterRename(AnyError);
@@ -1720,7 +1733,7 @@ begin
       if ExitCode = 0 then
         ExitCode := xeFailureExitCode;
     end else begin
-      MessageBox(0, PChar('One or more errors occured during renaming of saved modules.'+#13#13+
+      MessageBox(RenameErrorOwner, PChar('One or more errors occured during renaming of saved modules.'+#13#13+
       'Please check the files in your data path: ' + xeContext.Settings.DataPath), 'Error', 0);
       if _SaveProgress and Assigned(frmMain) then
         frmMain.SaveLogs(False);
@@ -5636,6 +5649,23 @@ begin
 end;
 
 procedure TfrmMain.CloseDown;
+begin
+  if ClosedDown then
+    Exit;
+  ClosedDown := True;
+  try
+    TearDown;
+  except
+    on E: Exception do begin
+      xeSaveLogs('Error: ' + E.ClassName + ': ' + E.Message, False);
+      if CheckResult = 0 then
+        CheckResult := xeFailureExitCode;
+      ExitCode := CheckResult;
+    end;
+  end;
+end;
+
+procedure TfrmMain.TearDown;
 var
   i: Integer;
 begin
@@ -5687,6 +5717,9 @@ begin
     end;
   end;
 
+{$IFDEF XE_TEST_CONTROL_POINTS}
+  TestCloseRouteReenter;
+{$ENDIF}
   FlushPostedMessages;
   SaveLogs(True);
 {$IFDEF XE_TEST_CONTROL_POINTS}
@@ -5698,6 +5731,9 @@ begin
 
   tmrCheckUnsaved.Enabled := False;
 
+{$IFDEF XE_TEST_CONTROL_POINTS}
+  TestCloseRouteFault('raiseearly');
+{$ENDIF}
   LockWindowUpdate(Handle);
   try
     BackHistory := nil;
@@ -5710,6 +5746,11 @@ begin
     vstSpreadSheetArmor.Free;
     vstSpreadSheetAmmo.Free;
     pnlNav.Free;
+{$IFDEF XE_TEST_CONTROL_POINTS}
+    TestCloseRouteFault('raisemid');
+    TestCloseRouteFault('raisesession');
+    TestCloseRouteFault('raisesecond');
+{$ENDIF}
     pnlTop.Visible := False;
     pgMain.ActivePage := tbsMessages;
     for i := 0 to Pred(pgMain.PageCount) do
@@ -5721,7 +5762,6 @@ begin
   Files := nil;
   _wbProgressCallback := nil;
   ExitCode := CheckResult;
-  ClosedDown := True;
 end;
 
 procedure xeApplyFontAndScale(aForm: TForm);
@@ -6161,7 +6201,46 @@ end;
 procedure TfrmMain.FormShow(Sender: TObject);
 begin
   tmrStartup.Enabled := True;
+{$IFDEF XE_TEST_CONTROL_POINTS}
+  if xeTestSwitches.CheckMenusCloseRoute = 'prestart' then
+    TestCloseRouteShow;
+{$ENDIF}
 end;
+
+{$IFDEF XE_TEST_CONTROL_POINTS}
+procedure TfrmMain.TestCloseRouteArm(const aRoute: string);
+begin
+  if aRoute = 'raisesession' then begin
+    PostMessage(Application.Handle, WM_ENDSESSION, 1, 0);
+    Exit;
+  end;
+  PostMessage(Handle, WM_CLOSE, 0, 0);
+  if aRoute = 'style' then
+    PostMessage(Handle, CM_CUSTOMSTYLECHANGED, 0, 0)
+  else if aRoute.EndsWith('second') then
+    PostMessage(Handle, WM_CLOSE, 0, 0)
+  else if aRoute = 'resettree' then begin
+    PendingResetActiveTree := True;
+    PostMessage(Handle, WM_USER + 3, 0, 0);
+  end else if aRoute = 'expandview' then begin
+    DelayedExpandView := True;
+    PostMessage(Handle, WM_USER + 5, 0, 0);
+  end else if aRoute.EndsWith('widths') then begin
+    tmrUpdateColumnWidths.Interval := 1;
+    tmrUpdateColumnWidths.Enabled := True;
+  end else if aRoute.EndsWith('viewfilter') then begin
+    tmrViewFilterApply.Interval := 1;
+    tmrViewFilterApply.Enabled := True;
+  end else if aRoute.EndsWith('refbyfilter') then begin
+    tmrReferencedByFilterApply.Interval := 1;
+    tmrReferencedByFilterApply.Enabled := True;
+  end else if aRoute = 'shutdown' then begin
+    tmrShutdown.Interval := 1;
+    tmrShutdown.Enabled := True;
+  end else if aRoute = 'autodone' then
+    AutoDone := True;
+end;
+{$ENDIF}
 
 procedure TfrmMain.fpnlViewFilterResize(Sender: TObject);
 begin
@@ -15668,7 +15747,7 @@ end;
 procedure TfrmMain.tmrStartupTimer(Sender: TObject);
 begin
   tmrStartup.Enabled := False;
-  if InitStarted then
+  if InitStarted or ClosedDown then
     Exit;
   InitStarted := True;
 
@@ -19715,7 +19794,7 @@ end;
 
 procedure TfrmMain.WMUser5(var Message: TMessage);
 begin
-  if InNestedLoop then
+  if InNestedLoop or ClosedDown then
     Exit;
   if DelayedExpandView then begin
     DelayedExpandView := False;
@@ -19875,7 +19954,8 @@ begin
         Settings.WriteString('UI', 'Theme', StyleName);
         Settings.UpdateFile;
       end;
-    UpdateTreeLineColor;
+    if not ClosedDown then
+      UpdateTreeLineColor;
   end;
   if (wbParallelRefBuilds = 0) or (Length(MessageScopeMarks) > 0) then
     inherited

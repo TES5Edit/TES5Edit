@@ -274,6 +274,7 @@ type
     CheckMenusPickCost    : string;
     CheckMenusView        : Boolean;
     CheckMenusClosePage   : string;
+    CheckMenusCloseRoute  : string;
     FormIDSearch          : Boolean;
     FormIDSearchFile      : string;
     FormIDSearchModule    : string;
@@ -511,6 +512,7 @@ begin
     wbFindCmdLineParam('testcheckmenuspickcost', CheckMenusPickCost);
     CheckMenusView := FindCmdLineSwitch('testcheckmenusview');
     wbFindCmdLineParam('testcheckmenusclosepage', CheckMenusClosePage);
+    wbFindCmdLineParam('testcheckmenuscloseroute', CheckMenusCloseRoute);
     CheckMenus := True;
     xeAutoLoad := True;
     xeAutoExit := True;
