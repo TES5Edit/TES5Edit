@@ -8948,9 +8948,11 @@ begin
           ]).SetToStr(wbRGBAToStr)
             .IncludeFlag(dfCollapsed, clpVec3 in DefineOptions.Collapse),
         33).SetSummaryName('Columns')
-           .IncludeFlag(dfCollapsed, clpVertices in DefineOptions.Collapse),
+           .IncludeFlag(dfCollapsed, clpVertices in DefineOptions.Collapse)
+           .IncludeFlag(dfNoMove),
       33).SetSummaryName('Rows')
-         .IncludeFlag(dfCollapsed, clpVertices in DefineOptions.Collapse));
+         .IncludeFlag(dfCollapsed, clpVertices in DefineOptions.Collapse)
+         .IncludeFlag(dfNoMove));
 end;
 
 function TwbGameDefCommon.wbLandHeights: IwbRecordMemberDef;
@@ -8964,9 +8966,11 @@ begin
           wbArray('Row',
             wbInteger('Column', itS8),
           33).SetSummaryName('Columns')
-             .IncludeFlag(dfCollapsed, clpVertices in DefineOptions.Collapse),
+             .IncludeFlag(dfCollapsed, clpVertices in DefineOptions.Collapse)
+             .IncludeFlag(dfNoMove),
         33).SetSummaryName('Rows')
-           .IncludeFlag(dfCollapsed, clpVertices in DefineOptions.Collapse),
+           .IncludeFlag(dfCollapsed, clpVertices in DefineOptions.Collapse)
+           .IncludeFlag(dfNoMove),
         wbUnused(3)
       ]));
 end;
@@ -9038,9 +9042,11 @@ begin
             .IncludeFlag(dfSummaryMembersNoName)
             .IncludeFlag(dfCollapsed, clpVertices in DefineOptions.Collapse),
         33).SetSummaryName('Columns')
-           .IncludeFlag(dfCollapsed, clpVertices in DefineOptions.Collapse),
+           .IncludeFlag(dfCollapsed, clpVertices in DefineOptions.Collapse)
+           .IncludeFlag(dfNoMove),
       33).SetSummaryName('Rows')
-         .IncludeFlag(dfCollapsed, clpVertices in DefineOptions.Collapse));
+         .IncludeFlag(dfCollapsed, clpVertices in DefineOptions.Collapse)
+         .IncludeFlag(dfNoMove));
 end;
 
 function TwbGameDefCommon.wbLeveledListEntry(const aObjectName: string; const aSigs: TwbSignatures): IwbRecordMemberDef;
@@ -9145,8 +9151,10 @@ begin
         wbArray('Max Heights',
           wbArray('Row',
             wbInteger('Column', itU8),
-          IsSF1(50, 32)).IncludeFlag(dfCollapsed, clpMaxHeightData in DefineOptions.Collapse),
+          IsSF1(50, 32)).IncludeFlag(dfCollapsed, clpMaxHeightData in DefineOptions.Collapse)
+                        .IncludeFlag(dfNoMove),
         IsSF1(50, 32)).IncludeFlag(dfCollapsed, clpMaxHeightData in DefineOptions.Collapse)
+                      .IncludeFlag(dfNoMove)
       ]).SetSummaryKeyOnValue([0, 1])
         .IncludeFlag(dfCollapsed, clpMaxHeightData in DefineOptions.Collapse));
 end;
@@ -10161,9 +10169,11 @@ begin
             .SetSummaryName('Columns')
             .IncludeFlag(dfCollapsed, clpObjectBounds in DefineOptions.Collapse)
             .IncludeFlag(dfNotAlignable)
+            .IncludeFlag(dfNoMove)
         ).SetSummaryName('Rows')
          .IncludeFlag(dfCollapsed, clpObjectBounds in DefineOptions.Collapse)
-         .IncludeFlag(dfNotAlignable))
+         .IncludeFlag(dfNotAlignable)
+         .IncludeFlag(dfNoMove))
     ]).IncludeFlag(dfCollapsed, clpOther in DefineOptions.Collapse)
       .IncludeFlag(dfFastAssign)
       .IncludeFlag(dfNoCopyAsOverride, not IsFallout4);

@@ -1630,9 +1630,11 @@ begin
             .IncludeFlag(dfCollapsed, clpVec3 in DefineOptions.Collapse)
             .IncludeFlag(dfSummaryMembersNoName),
         65).SetSummaryName('Columns')
-           .IncludeFlag(dfCollapsed, clpVertices in DefineOptions.Collapse),
+           .IncludeFlag(dfCollapsed, clpVertices in DefineOptions.Collapse)
+           .IncludeFlag(dfNoMove),
       65).SetSummaryName('Rows')
-         .IncludeFlag(dfCollapsed, clpVertices in DefineOptions.Collapse)),
+         .IncludeFlag(dfCollapsed, clpVertices in DefineOptions.Collapse)
+         .IncludeFlag(dfNoMove)),
     IfThen(DefineOptions.SimpleRecords,
       wbByteArray(VHGT, 'Vertex Height Map'),
       wbStruct(VHGT, 'Vertex Height Map', [
@@ -1642,9 +1644,11 @@ begin
           wbArray('Row',
             wbInteger('Column', itS8),
           65).SetSummaryName('Columns')
-             .IncludeFlag(dfCollapsed, clpVertices in DefineOptions.Collapse),
+             .IncludeFlag(dfCollapsed, clpVertices in DefineOptions.Collapse)
+             .IncludeFlag(dfNoMove),
         65).SetSummaryName('Rows')
-           .IncludeFlag(dfCollapsed, clpVertices in DefineOptions.Collapse),
+           .IncludeFlag(dfCollapsed, clpVertices in DefineOptions.Collapse)
+           .IncludeFlag(dfNoMove),
         wbUnused(2)
       ])),
     IfThen(DefineOptions.SimpleRecords,
@@ -1653,9 +1657,11 @@ begin
         wbArray('Row',
           wbInteger('Column', itS8),
         9).SetSummaryName('Columns')
-          .IncludeFlag(dfCollapsed, clpOther in DefineOptions.Collapse),
+          .IncludeFlag(dfCollapsed, clpOther in DefineOptions.Collapse)
+          .IncludeFlag(dfNoMove),
       9).SetSummaryName('Rows')
-        .IncludeFlag(dfCollapsed, clpOther in DefineOptions.Collapse)),
+        .IncludeFlag(dfCollapsed, clpOther in DefineOptions.Collapse)
+        .IncludeFlag(dfNoMove)),
     IfThen(DefineOptions.SimpleRecords,
       wbByteArray(VCLR, 'Vertex Colors'),
       wbArray(VCLR, 'Vertex Colors',
@@ -1667,18 +1673,22 @@ begin
           ]).SetToStr(wbRGBAToStr)
             .IncludeFlag(dfCollapsed, clpRGBA in DefineOptions.Collapse),
         65).SetSummaryName('Columns')
-           .IncludeFlag(dfCollapsed, clpVertices in DefineOptions.Collapse),
+           .IncludeFlag(dfCollapsed, clpVertices in DefineOptions.Collapse)
+           .IncludeFlag(dfNoMove),
       65).SetSummaryName('Rows')
-         .IncludeFlag(dfCollapsed, clpVertices in DefineOptions.Collapse)),
+         .IncludeFlag(dfCollapsed, clpVertices in DefineOptions.Collapse)
+         .IncludeFlag(dfNoMove)),
     IfThen(DefineOptions.SimpleRecords,
       wbByteArray(VTEX, 'Textures'),
       wbArray(VTEX, 'Textures',
         wbArray('Row',
           wbInteger('Column', itU16), //[LTEX]
         16).SetSummaryName('Columns')
-           .IncludeFlag(dfCollapsed, clpOther in DefineOptions.Collapse),
+           .IncludeFlag(dfCollapsed, clpOther in DefineOptions.Collapse)
+           .IncludeFlag(dfNoMove),
       16).SetSummaryName('Rows')
-         .IncludeFlag(dfCollapsed, clpOther in DefineOptions.Collapse))
+         .IncludeFlag(dfCollapsed, clpOther in DefineOptions.Collapse)
+         .IncludeFlag(dfNoMove))
   ]).SetFormIDBase($D0)
     .SetFormIDNameBase($B0)
     .SetGridFormIDBase(wbLandGridFormIDBase)
