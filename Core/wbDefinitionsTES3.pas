@@ -33,6 +33,7 @@ implementation
 
 uses
   System.SysUtils,
+  System.Generics.Collections,
 
   wbDefinitionsSignatures,
   wbHelpers;
@@ -310,6 +311,99 @@ begin
           Container.ElementNativeValues['FLTV'] := 0; //All errors are zero in the CS.
   finally
     wbEndInternalEdit;
+  end;
+end;
+
+type
+  TwbInfoPlace = record
+    Id      : string;
+    Prev    : string;
+    Deleted : Boolean;
+  end;
+
+procedure wbInfoNewRecord(const aMainRecord: IwbMainRecord);
+var
+  lOrder  : TList<string>;
+  lPlaces : TDictionary<string, TwbInfoPlace>;
+
+  procedure Insert(const aInfo: IwbMainRecord);
+  var
+    lPlace  : TwbInfoPlace;
+    lPlaced : TwbInfoPlace;
+  begin
+    lPlace.Id := aInfo.EditorID;
+    lPlace.Prev := '';
+    var lPrev := aInfo.ElementBySignature['PNAM'];
+    if Assigned(lPrev) then
+      lPlace.Prev := LowerCase(lPrev.EditValue);
+    lPlace.Deleted := Assigned(aInfo.ElementBySignature['DELE']);
+    var lKey := LowerCase(lPlace.Id);
+    var lWasPlaced := lPlaces.TryGetValue(lKey, lPlaced);
+    if not (lWasPlaced and (lPlaced.Prev = lPlace.Prev)) then begin
+      var lBefore := 0;
+      if lPlace.Prev <> '' then
+        if lPlaces.ContainsKey(lPlace.Prev) then
+          lBefore := Succ(lOrder.IndexOf(lPlace.Prev))
+        else
+          lBefore := lOrder.Count;
+      if lWasPlaced then begin
+        var lAt := lOrder.IndexOf(lKey);
+        lOrder.Delete(lAt);
+        if lBefore > lAt then
+          Dec(lBefore);
+      end;
+      lOrder.Insert(lBefore, lKey);
+    end;
+    lPlaces.AddOrSetValue(lKey, lPlace);
+  end;
+
+  procedure InsertTopic(const aFile: IwbFile; const aTopic: IwbMainRecord);
+  begin
+    if not Assigned(aTopic) or aTopic.Flags.IsIgnored then
+      Exit;
+    if Assigned(aTopic.ElementBySignature['DELE']) then begin
+      lOrder.Clear;
+      lPlaces.Clear;
+      Exit;
+    end;
+    var lGroup := aTopic.ChildGroup;
+    if not Assigned(lGroup) then
+      Exit;
+    var lInfos: TArray<IwbMainRecord>;
+    SetLength(lInfos, lGroup.ElementCount);
+    var lCount := 0;
+    for var i := 0 to Pred(lGroup.ElementCount) do begin
+      var lInfo: IwbMainRecord;
+      if Supports(lGroup.Elements[i], IwbMainRecord, lInfo) and not lInfo.Equals(aMainRecord) and not lInfo.Flags.IsIgnored then begin
+        lInfos[lCount] := lInfo;
+        Inc(lCount);
+      end;
+    end;
+    SetLength(lInfos, lCount);
+    for var lInfo in aMainRecord.ContextObj.InFileStreamOrder(aFile, lInfos) do
+      Insert(lInfo);
+  end;
+
+begin
+  var lTopic := (aMainRecord.Container as IwbGroupRecord).ChildrenOf;
+  var lFile := aMainRecord._File;
+  lOrder := TList<string>.Create;
+  lPlaces := TDictionary<string, TwbInfoPlace>.Create;
+  try
+    var lMasters := lFile.AllMasters;
+    for var i := High(lMasters) downto Low(lMasters) do
+      InsertTopic(lMasters[i], lMasters[i].ContainedRecordByLoadOrderFormID[lTopic.LoadOrderFormID, False]);
+    InsertTopic(lFile, lTopic);
+    for var i := Pred(lOrder.Count) downto 0 do begin
+      var lPlace := lPlaces[lOrder[i]];
+      if not lPlace.Deleted then begin
+        aMainRecord.ElementBySignature['PNAM'].EditValue := lPlace.Id;
+        Exit;
+      end;
+    end;
+  finally
+    lPlaces.Free;
+    lOrder.Free;
   end;
 end;
 
@@ -1603,6 +1697,7 @@ begin
     ]).SetUnordered,
     wbString(BNAM, 'Result')
   ]).SetFormIDBase($90)
+    .SetNewRecordCallback(wbInfoNewRecord)
     .IncludeFlag(dfIdentityQualifiedByTopic)
     .IncludeFlag(dfNoRequestedIdentity)
     .IncludeFlag(dfChildRecordOnly);

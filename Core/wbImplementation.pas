@@ -45,6 +45,8 @@ type
     function PathgridCell(const aElement: IwbElement; const aCellSignature: TwbSignature; out aCell: IwbMainRecord): Boolean; override; final;
     function NameFileKey(const aElement: IwbElement; const aLoadOrderFormID: TwbFormID; out aKey: TwbFormID): Boolean; override; final;
     function FileRecordsInStreamOrder(const aFile: IwbFile): TArray<IwbMainRecord>; override; final;
+  public
+    function InFileStreamOrder(const aFile: IwbFile; const aRecords: TArray<IwbMainRecord>): TArray<IwbMainRecord>; override; final;
   protected
     lgcDenseRecords : TArray<Pointer>;
     lgcFreeIDs      : TArray<Cardinal>;
@@ -889,7 +891,8 @@ type
     function WalkVisibleExteriorNames(const aVisit: TFunc<string, Boolean>): Boolean;
     function IsVisibleExteriorName(const aValue: string): Boolean;
     function VisibleExteriorNames: TArray<string>;
-    function RecordsInStreamOrder: TArray<IwbMainRecord>;
+    function RecordsInStreamOrder: TArray<IwbMainRecord>; overload;
+    function RecordsInStreamOrder(const aRecords: TArray<IwbMainRecord>): TArray<IwbMainRecord>; overload;
     function FindInjectedID(const aFormID: TwbFormID; var Index: Integer): Boolean;
     function GetMasterRecordByFormID(aFormID: TwbFormID; aAllowInjected, aNewMasters: Boolean): IwbMainRecord;
 
@@ -8960,6 +8963,35 @@ begin
     Result := lSeen.ToArray;
   finally
     lSeen.Free;
+  end;
+end;
+
+function TwbFile.RecordsInStreamOrder(const aRecords: TArray<IwbMainRecord>): TArray<IwbMainRecord>;
+var
+  lAt : TDictionary<Pointer, Integer>;
+begin
+  lAt := TDictionary<Pointer, Integer>.Create;
+  try
+    for var i := Low(aRecords) to High(aRecords) do
+      lAt.AddOrSetValue(Pointer(aRecords[i]), i);
+    SetLength(Result, Length(aRecords));
+    var lCount := 0;
+    for var i := Low(flRecordStream) to High(flRecordStream) do begin
+      var lIndex: Integer;
+      if lAt.TryGetValue(Pointer(flRecordStream[i].rseRecord), lIndex) then begin
+        Result[lCount] := aRecords[lIndex];
+        Inc(lCount);
+        lAt.Remove(Pointer(flRecordStream[i].rseRecord));
+      end;
+    end;
+    for var lRecord in aRecords do
+      if lAt.ContainsKey(Pointer(lRecord)) then begin
+        Result[lCount] := lRecord;
+        Inc(lCount);
+      end;
+    SetLength(Result, lCount);
+  finally
+    lAt.Free;
   end;
 end;
 
@@ -33194,6 +33226,22 @@ end;
 function TwbLoadingGameContext.FileRecordsInStreamOrder(const aFile: IwbFile): TArray<IwbMainRecord>;
 begin
   Result := (aFile as TObject as TwbFile).RecordsInStreamOrder;
+end;
+
+function TwbLoadingGameContext.InFileStreamOrder(const aFile: IwbFile; const aRecords: TArray<IwbMainRecord>): TArray<IwbMainRecord>;
+var
+  lSorted : TDynElements;
+begin
+  SetLength(lSorted, Length(aRecords));
+  for var i := Low(aRecords) to High(aRecords) do
+    lSorted[i] := aRecords[i];
+  if Length(lSorted) > 1 then
+    wbMergeSortPtr(@lSorted[0], Length(lSorted), CompareGroupContents);
+  var lRecords: TArray<IwbMainRecord>;
+  SetLength(lRecords, Length(lSorted));
+  for var i := Low(lSorted) to High(lSorted) do
+    lRecords[i] := lSorted[i] as IwbMainRecord;
+  Result := (aFile as TObject as TwbFile).RecordsInStreamOrder(lRecords);
 end;
 
 function TwbLoadingGameContext.NameFileKey(const aElement: IwbElement; const aLoadOrderFormID: TwbFormID;

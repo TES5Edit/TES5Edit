@@ -4678,6 +4678,7 @@ type
     function IdentityEnum(const aDef: IwbMainRecordDef): IwbEnumDef;
     function UnusedIndexIdentity(const aDef: IwbMainRecordDef; const aEnum: IwbEnumDef): string;
     function CanAddNewRecord(const aDef: IwbMainRecordDef): Boolean;
+    function InFileStreamOrder(const aFile: IwbFile; const aRecords: TArray<IwbMainRecord>): TArray<IwbMainRecord>; virtual; abstract;
     class function IdentityText(const aIdentity: string): string; static;
     class function NoIdentityKeyText(aFormIDBase: Byte; const aIdentity: string): string; static;
     function ExpandFileName(const aFileName: string): string;
