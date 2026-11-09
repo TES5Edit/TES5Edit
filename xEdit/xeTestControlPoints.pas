@@ -3868,6 +3868,45 @@ begin
   Row('batch GLOB', lRaised, lGroup);
   lGroup := nil;
 
+  var lCellFile: IwbFile := nil;
+  for var i := Low(Files) to High(Files) do
+    if SameText(Files[i].FileName, 'xedit-navcell.esp') then
+      lCellFile := Files[i];
+  if Assigned(lCellFile) then begin
+    var lExterior: IwbMainRecord := nil;
+    var lInterior: IwbMainRecord := nil;
+    for var i := 0 to Pred(lCellFile.RecordCount) do
+      if lCellFile.Records[i].EditorID = 'xedit_vm_ext' then
+        lExterior := lCellFile.Records[i]
+      else if lCellFile.Records[i].EditorID = 'xedit_vm_int' then
+        lInterior := lCellFile.Records[i];
+    TestHost.TestCheckMenusLines.Add('navcell' + #9 + 'exterior' + #9 + string.Join(',', lExterior.GetAddList));
+    TestHost.TestCheckMenusLines.Add('navcell' + #9 + 'interior' + #9 + string.Join(',', lInterior.GetAddList));
+    var lBefore := lCellFile.RecordCount;
+    Click(lExterior, 'LAND - Landscape', '', False, lRaised);
+    Row('cell LAND', lRaised, nil);
+    TestHost.TestCheckMenusLines.Add('navcount' + #9 + 'cell LAND' + #9 + IntToStr(lCellFile.RecordCount - lBefore));
+    lBefore := lCellFile.RecordCount;
+    Click(lExterior, 'LAND - Landscape', '', False, lRaised);
+    Row('cell LAND again', lRaised, nil);
+    TestHost.TestCheckMenusLines.Add('navcount' + #9 + 'cell LAND again' + #9 + IntToStr(lCellFile.RecordCount - lBefore));
+    lBefore := lCellFile.RecordCount;
+    Click(lInterior, 'LAND - Landscape', '', False, lRaised);
+    Row('cell LAND interior', lRaised, nil);
+    TestHost.TestCheckMenusLines.Add('navcount' + #9 + 'cell LAND interior' + #9 + IntToStr(lCellFile.RecordCount - lBefore));
+    lBefore := lCellFile.RecordCount;
+    Click(lInterior, 'PGRD - Path Grid', '', False, lRaised);
+    Row('cell PGRD', lRaised, nil);
+    TestHost.TestCheckMenusLines.Add('navcount' + #9 + 'cell PGRD' + #9 + IntToStr(lCellFile.RecordCount - lBefore));
+    var lCellWritten := xeTestSwitches.CheckMenusFile + '.navcell.esp';
+    var lCellStream := TFileStream.Create(lCellWritten, fmCreate);
+    try
+      lCellFile.WriteToStream(lCellStream, rmNo);
+    finally
+      lCellStream.Free;
+    end;
+  end;
+
   var lWritten := xeTestSwitches.CheckMenusFile + '.navadd.esp';
   try
     var lStream := TFileStream.Create(lWritten, fmCreate);

@@ -1545,6 +1545,7 @@ type
     procedure RefreshKnownSubRecords;
     procedure AddMembersOfNewRecord;
     procedure PrepareNewIdentity;
+    function RegisterChildOfCell(const aFile: IwbFile): IwbMainRecord;
 
     procedure MarkModifiedRecursive(const aElementTypes: TwbElementTypes); override; final;
 
@@ -17559,7 +17560,9 @@ begin
     Result.Add('PBAR');
     Result.Add('PHZD');
     if not GetIsPersistent then begin
-      if Supports(GetContainer, IwbGroupRecord, GroupRecord) and (GroupRecord.GroupType = 5) then
+      var lGrid: TwbGridCell;
+      if (Supports(GetContainer, IwbGroupRecord, GroupRecord) and (GroupRecord.GroupType = 5)) or
+         ((gcGridCellInLandAndPathgrid in GameDefObj.Capabilities) and GetGridCell(lGrid)) then
         Result.Add('LAND');
       Result.Add('PGRD');
       Result.Add('NAVM');
@@ -22476,6 +22479,11 @@ end;
 
 procedure TwbMainRecord.PrepareNewIdentity;
 begin
+  if ContextObj.BeginInternalEdit(True) then try
+    mrDef.NewRecord(Self);
+  finally
+    wbEndInternalEdit;
+  end;
   RefreshKnownSubRecords;
   var lEnum := ContextObj.IdentityEnum(mrDef);
   if not Assigned(lEnum) then
@@ -22491,6 +22499,31 @@ begin
       wbEndInternalEdit;
     end;
   end;
+end;
+
+function TwbMainRecord.RegisterChildOfCell(const aFile: IwbFile): IwbMainRecord;
+begin
+  Result := nil;
+  var lContainer := GetContainer;
+  try
+    PrepareNewIdentity;
+    mrFixedFormID := TwbFormID.Null;
+    mrLoadOrderFormID := TwbFormID.Null;
+    Result := aFile.ContainedRecordByLoadOrderFormID[GetLoadOrderFormID, False];
+    if not Assigned(Result) then
+      for var lMaster in aFile.AllMasters do begin
+        Result := lMaster.ContainedRecordByLoadOrderFormID[GetLoadOrderFormID, False];
+        if Assigned(Result) then
+          Break;
+      end;
+  except
+    lContainer.RemoveElement(Self);
+    raise;
+  end;
+  if Assigned(Result) then
+    lContainer.RemoveElement(Self)
+  else
+    RegisterWithIdentity(False);
 end;
 
 procedure TwbMainRecord.RegisterWithIdentity(aNew: Boolean);
@@ -25451,6 +25484,8 @@ begin
     end;
   end;
 
+  var lChildOfCell := ((Signature = 'LAND') or (Signature = 'PGRD')) and (gcGridCellInLandAndPathgrid in GameDefObj.Capabilities);
+
   if (Signature = 'LAND') or (Signature = 'PGRD') then begin
     if grStruct.grsGroupType <> 9 then
       raise Exception.Create(Signature + ' can only be added to groups of type 9');
@@ -25459,7 +25494,10 @@ begin
       raise Exception.Create('Can''t find MainRecord for group');
     if MainRecord.Signature <> 'CELL' then
       raise Exception.Create('Expected CELL record, but found: ' + MainRecord.Signature);
-    MainRecords := MainRecord.AllVisibleForFile[_File];
+    if lChildOfCell then
+      MainRecords := nil
+    else
+      MainRecords := MainRecord.AllVisibleForFile[_File];
     MainRecord := nil;
     for i := Low(MainRecords) to High(MainRecords) do begin
       MainRecord := MainRecords[i].ChildBySignature[Signature];
@@ -25571,7 +25609,17 @@ begin
     Group := ChildGroup;
   end;
 
-  Result := TwbMainRecord.Create(Group, Signature, FormID);
+  Result := TwbMainRecord.Create(Group, Signature, FormID, not lChildOfCell);
+  if lChildOfCell then begin
+    MainRecord := (Result as TObject as TwbMainRecord).RegisterChildOfCell(_File);
+    if Assigned(MainRecord) then begin
+      Result := nil;
+      if MainRecord._File.Equals(_File) then
+        Exit(MainRecord);
+      Exit(_File.AddCopy(MainRecord, [cfDeepCopy], wbNoCopyRules));
+    end;
+  end;
+
   if IsInjected then
     (MainRecord as IwbMainRecordInternal).YouGotAMaster(Result as IwbMainRecord);
 
@@ -26496,7 +26544,13 @@ begin
          if grStruct.grsGroupType = 9 then begin
            if Supports(GetContainer, IwbGroupRecord, GroupRecord) and (GroupRecord.GroupType = 6) and
               Supports(GroupRecord.Container, IwbGroupRecord, GroupRecord) and (GroupRecord.GroupType = 5) then
-             Result.Add('LAND');
+             Result.Add('LAND')
+           else if gcGridCellInLandAndPathgrid in GameDefObj.Capabilities then begin
+             var lCell := GetChildrenOf;
+             var lGrid: TwbGridCell;
+             if Assigned(lCell) and lCell.GetGridCell(lGrid) then
+               Result.Add('LAND');
+           end;
            Result.Add('PGRD');
            Result.Add('NAVM');
          end;

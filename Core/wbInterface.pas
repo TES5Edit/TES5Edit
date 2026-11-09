@@ -2943,6 +2943,7 @@ type
   end;
 
   TwbMainRecordGetFormIDCallback = reference to function(const aMainRecord: IwbMainRecord; out aFormID: TwbFormID): Boolean;
+  TwbMainRecordNewRecordCallback = reference to procedure(const aMainRecord: IwbMainRecord);
   TwbMainRecordIdentityCallback = reference to function(aHasGrid: Boolean; const aGrid: TwbGridCell; aHasEditorID: Boolean;
                                                         const aEditorID: string; out aIdentity: string): Boolean;
   TwbMainRecordGetEditorIDCallback = reference to function(const aSubRecord: IwbSubRecord; out aEditorID: string): Boolean;
@@ -2991,6 +2992,8 @@ type
     function IdentityFrom(aHasGrid: Boolean; const aGrid: TwbGridCell; aHasEditorID: Boolean; const aEditorID: string;
                           out aIdentity: string): Boolean;
     function SetIdentityCallback(const aCallback: TwbMainRecordIdentityCallback): IwbMainRecordDef;
+    function SetNewRecordCallback(const aCallback: TwbMainRecordNewRecordCallback): IwbMainRecordDef;
+    procedure NewRecord(const aMainRecord: IwbMainRecord);
 
     function GetEditorID(const aSubRecord: IwbSubRecord): string;
     function TryGetEditorID(const aSubRecord: IwbSubRecord; out aEditorID: string): Boolean;
@@ -9384,6 +9387,7 @@ type
     recKnownSRMembers     : TwbKnownSubRecordIndices;
     recGetFormIDCallback  : TwbMainRecordGetFormIDCallback;
     recIdentityCallback   : TwbMainRecordIdentityCallback;
+    recNewRecordCallback  : TwbMainRecordNewRecordCallback;
     recGetEditorIDCallback: TwbMainRecordGetEditorIDCallback;
     recSetEditorIDCallback: TwbMainRecordSetEditorIDCallback;
     recGetGridCellCallback: TwbMainRecordGetGridCellCallback;
@@ -9493,6 +9497,8 @@ type
     function IdentityFrom(aHasGrid: Boolean; const aGrid: TwbGridCell; aHasEditorID: Boolean; const aEditorID: string;
                           out aIdentity: string): Boolean;
     function SetIdentityCallback(const aCallback: TwbMainRecordIdentityCallback): IwbMainRecordDef;
+    function SetNewRecordCallback(const aCallback: TwbMainRecordNewRecordCallback): IwbMainRecordDef;
+    procedure NewRecord(const aMainRecord: IwbMainRecord);
 
     function GetEditorID(const aSubRecord: IwbSubRecord): string;
     function TryGetEditorID(const aSubRecord: IwbSubRecord; out aEditorID: string): Boolean;
@@ -13903,6 +13909,7 @@ begin
     Self.recGetFormIDCallback := recGetFormIDCallback;
     Self.recGetGridCellCallback := recGetGridCellCallback;
     Self.recIdentityCallback := recIdentityCallback;
+    Self.recNewRecordCallback := recNewRecordCallback;
     Self.recSetEditorIDCallback := recSetEditorIDCallback;
     Self.recSummaryDelimiter := recSummaryDelimiter;
     Self.recSummaryKey := Copy(recSummaryKey);
@@ -14292,6 +14299,21 @@ begin
 
   recGetGridCellCallback := aCallback;
   Result := Self;
+end;
+
+function TwbMainRecordDef.SetNewRecordCallback(const aCallback: TwbMainRecordNewRecordCallback): IwbMainRecordDef;
+begin
+  if defIsLocked then
+    Exit(TwbMainRecordDef(Duplicate).SetNewRecordCallback(aCallback));
+
+  recNewRecordCallback := aCallback;
+  Result := Self;
+end;
+
+procedure TwbMainRecordDef.NewRecord(const aMainRecord: IwbMainRecord);
+begin
+  if Assigned(recNewRecordCallback) then
+    recNewRecordCallback(aMainRecord);
 end;
 
 function TwbMainRecordDef.SetIdentityCallback(const aCallback: TwbMainRecordIdentityCallback): IwbMainRecordDef;

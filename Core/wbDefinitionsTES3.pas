@@ -313,6 +313,40 @@ begin
   end;
 end;
 
+procedure wbLandNewRecord(const aMainRecord: IwbMainRecord);
+var
+  lGrid : TwbGridCell;
+begin
+  if not (aMainRecord.Container as IwbGroupRecord).ChildrenOf.GetGridCell(lGrid) then
+    raise Exception.Create('LAND - Landscape can only be added to an exterior cell');
+  var lIntv := aMainRecord.ElementBySignature['INTV'] as IwbContainerElementRef;
+  lIntv.ElementNativeValues['X'] := lGrid.x;
+  lIntv.ElementNativeValues['Y'] := lGrid.y;
+end;
+
+procedure wbPathgridNewRecord(const aMainRecord: IwbMainRecord);
+var
+  lGrid : TwbGridCell;
+begin
+  var lCell := (aMainRecord.Container as IwbGroupRecord).ChildrenOf;
+  var lHasGrid := lCell.GetGridCell(lGrid);
+  var lName := lCell.EditorID;
+  if lHasGrid then begin
+    var lData := aMainRecord.ElementBySignature['DATA'] as IwbContainerElementRef;
+    lData.ElementNativeValues['Grid\X'] := lGrid.x;
+    lData.ElementNativeValues['Grid\Y'] := lGrid.y;
+    if lName = '' then begin
+      var lRegion := lCell.ElementBySignature['RGNN'];
+      if Assigned(lRegion) then
+        lName := lRegion.EditValue;
+    end;
+  end;
+  if lName <> '' then
+    aMainRecord.EditorID := lName
+  else if not (lHasGrid and ((lGrid.x <> 0) or (lGrid.y <> 0))) then
+    raise Exception.Create('PGRD - Path Grid can not be added to a cell with no name: it is identified by its cell''s name');
+end;
+
 const
   wbCellGridFormIDBase     = $A0;
   wbLandGridFormIDBase     = $C0;
@@ -1275,7 +1309,7 @@ begin
     wbEditorID,
     wbStruct(DATA, 'Data', [
       wbInteger('Dialog Type', itU8, wbDialogTypeEnum),
-      wbUnused(3)
+      wbUnused(0)
     ]).SetRequired.IncludeFlag(dfFastAssign),
     wbDeleted
   ]).SetFormIDBase($80)
@@ -1704,6 +1738,7 @@ begin
       if Result then
         aIdentity := aGrid.SortKey;
     end)
+    .SetNewRecordCallback(wbLandNewRecord)
     .IncludeFlag(dfChildRecordOnly);
 
   RegisterRecordDef(LEVC, 'Leveled Creature',
@@ -2050,6 +2085,7 @@ begin
       else
         Result := False;
     end)
+    .SetNewRecordCallback(wbPathgridNewRecord)
     .IncludeFlag(dfNoRequestedIdentity)
     .IncludeFlag(dfChildRecordOnly);
 
