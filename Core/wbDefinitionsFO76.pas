@@ -11972,7 +11972,7 @@ begin
         wbStruct(TRDA, 'Response Data', [
           wbFromVersion(86, wbFormIDCk('Emotion', [KYWD, FFFF])),
           wbBelowVersion(119, wbUnused(4)),
-          wbInteger('Response number', itU8),
+          wbInteger('Response Number', itU8),
           wbFormIDCk('Sound File', [SNDR, NULL]),
           wbByteArray('Unknown', 1),
           wbInteger('Interrupt Percentage', itU16),

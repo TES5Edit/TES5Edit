@@ -6445,6 +6445,9 @@ begin
     wbRArray('Responses',
       wbRStruct('Response', [
         wbStruct(TRDT, 'Response Data', [
+          wbEmpty('Voice Filename', cpIgnore)
+            .SetToStr(wbINFOResponseFileNameToStr)
+            .IncludeFlag(dfInternalEditOnly),
           wbInteger('Emotion Type', itU32,
             wbEnum([
             {0} 'Neutral',

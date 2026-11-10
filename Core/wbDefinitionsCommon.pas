@@ -555,6 +555,7 @@ procedure wbCrowdPropertyToStr               (var aValue: string; aBasePtr, aEnd
 procedure wbDIALQuestToStr                   (var aValue: string; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 procedure wbFactionRelationToStr             (var aValue: string; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 procedure wbItemToStr                        (var aValue: string; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
+procedure wbINFOResponseFileNameToStr        (var aValue: string; aBasePtr, aEndptr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 procedure wbLCTNUniqueNPCToStr               (var aValue: string; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 procedure wbNPCPackageToStr                  (var aValue: string; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 procedure wbNPCTemplateToStr                 (var aValue: string; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
@@ -4986,6 +4987,64 @@ begin
   case aType of
     ctToStr, ctToSummary : aValue := lDefaultTexture + ' [LTEX:00000000]';
   end;
+end;
+
+procedure wbINFOResponseFileNameToStr(var aValue: string; aBasePtr, aEndptr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
+begin
+  if not (Assigned(aElement) and (aType in [ctToStr])) then
+    Exit;
+
+  var lGameDef := aElement.ContextObj.GameDefObj;
+  if not Assigned(lGameDef) then
+    Exit;
+
+  var lContainer := aElement.Container as IwbContainerElementRef;
+  if not Assigned(lContainer) then
+    Exit;
+
+  var lINFORec := aElement.ContainingMainRecord;
+  if not Assigned(lINFORec) then
+    Exit;
+
+  var lDIALRec := lINFORec.ElementLinksTo['Topic'] as IwbMainRecord;
+  if not Assigned(lDIALRec) then
+    Exit;
+
+  var lQUSTRec :=
+  if lGameDef.IsOblivion or lGameDef.IsFallout3 then
+    lINFORec.ElementLinksTo['QSTI'] as IwbMainRecord
+  else
+    lDIALRec.ElementLinksTo['QNAM'] as IwbMainRecord;
+  if not Assigned(lQUSTRec) then
+    Exit;
+
+  var lResponseNumber := lContainer.ElementNativeValues['Response Number'];
+  var lINFOFormID := lINFORec.FormID;
+  var lDIALEditorID := lDIALRec.EditorID;
+  var lQUSTEditorID := lQUSTRec.EditorID;
+
+  var lDIALLength := Length(lDIALEditorID);
+  var lQUSTLength := Length(lQUSTEditorID);
+
+  if lDIALLength + lQUSTLength > 25 then
+  begin
+    if lQUSTLength > 10 then
+    begin
+      lQUSTLength := 10;
+      lDIALLength := 15;
+    end
+    else
+      lDIALLength := 25 - lQUSTLength;
+  end;
+
+  lDIALEditorID := Copy(lDIALEditorID, 1, lDIALLength);
+  lQUSTEditorID := Copy(lQUSTEditorID, 1, lQUSTLength);
+
+  aValue :=
+    lQUSTEditorID + '_' +
+    lDIALEditorID + '_' +
+    IntToHex((lINFOFormID.ToCardinal and $FFFFFF), 8) + '_' +
+    IntToStr(lResponseNumber) + '.fuz';
 end;
 
 procedure wbLCTNUniqueNPCToStr(var aValue: string; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
