@@ -6461,7 +6461,7 @@ begin
             ])),
           wbInteger('Emotion Value', itS32),
           wbUnused(4),
-          wbInteger('Response number', itU8),
+          wbInteger('Response Number', itU8),
           wbUnused(3),
           wbFormIDCk('Sound', [SOUN, NULL]),
           wbInteger('Use Emotion Animation', itU8, wbBoolEnum),
