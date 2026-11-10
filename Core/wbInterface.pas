@@ -1,4 +1,4 @@
-{******************************************************************************
+﻿{******************************************************************************
 
   This Source Code Form is subject to the terms of the Mozilla Public License,
   v. 2.0. If a copy of the MPL was not distributed with this file, You can obtain
@@ -3075,6 +3075,7 @@ type
     function SetIsRemovable(const aCallback: TwbIsRemovableCallback): IwbRecordMemberDef;
     function SetToStr(const aToStr : TwbToStrCallback): IwbRecordMemberDef{Self};
     function SetSummaryLinksToCallback(const aCallback: TwbLinksToCallback): IwbRecordMemberDef{Self};
+    function SetPriority(const aPriority: TwbConflictPriority): IwbRecordMemberDef;
 
     function SetRequired(const aRequired : Boolean = True): IwbRecordMemberDef{Self};
   end;
@@ -3088,6 +3089,7 @@ type
     function SetAfterSet(const aAfterSet : TwbAfterSetCallback): IwbValueDef;
     function SetDontShow(const aDontShow : TwbDontShowCallback): IwbValueDef;
     function SetGetCP(const aGetCP: TwbGetConflictPriority): IwbValueDef;
+    function SetPriority(const aPriority: TwbConflictPriority): IwbValueDef;
 
     procedure PrepareSave(const aDataContainer : IwbDataContainer);
 
@@ -9577,6 +9579,7 @@ type
     function SetToStr(const aToStr : TwbToStrCallback): IwbRecordMemberDef{Self};
     function SetSummaryLinksToCallback(const aCallback: TwbLinksToCallback): IwbRecordMemberDef{Self};
     function SetRequired(const aRequired : Boolean = True): IwbRecordMemberDef{Self};
+    function SetPriority(const aPriority: TwbConflictPriority): IwbRecordMemberDef;
 
     {---IwbSubRecordDef---}
     function GetValue: IwbValueDef;
@@ -9653,6 +9656,7 @@ type
     function SetToStr(const aToStr : TwbToStrCallback): IwbRecordMemberDef{Self};
     function SetSummaryLinksToCallback(const aCallback: TwbLinksToCallback): IwbRecordMemberDef{Self};
     function SetRequired(const aRequired : Boolean = True): IwbRecordMemberDef{Self};
+    function SetPriority(const aPriority: TwbConflictPriority): IwbRecordMemberDef; virtual;
   end;
 
   TwbSubRecordArrayDef = class(TwbRecordMemberDef, IwbSubRecordArrayDef)
@@ -9703,6 +9707,7 @@ type
 
     {---IwbRecordMemberDef---}
     function ToSummaryInternal(aDepth: Integer; const aElement: IwbElement; var aLinksTo: IwbElement): string; override; final;
+    function SetPriority(const aPriority: TwbConflictPriority): IwbRecordMemberDef; override; final;
 
     {---IwbSubRecordArrayDef---}
     function GetElement: IwbRecordMemberDef;
@@ -9797,6 +9802,7 @@ type
 
     {---IwbRecordMemberDef---}
     function ToSummaryInternal(aDepth: Integer; const aElement: IwbElement; var aLinksTo: IwbElement): string; override;
+    function SetPriority(const aPriority: TwbConflictPriority): IwbRecordMemberDef; override; final;
 
     {---IwbSubRecordStructDef---}
     function SetIsRemovable(const aCallback: TwbIsRemovableCallback): IwbSubRecordStructDef;
@@ -9874,6 +9880,9 @@ type
     function GetSkipSignature(const aSignature: TwbSignature): Boolean;
     function GetRecordHeaderStruct: IwbStructDef;
 
+    {---IwbRecordMemberDef---}
+    function SetPriority(const aPriority: TwbConflictPriority): IwbRecordMemberDef; override; final;
+
     {---IwbSubRecordUnionDef---}
     function GetHasDecider: Boolean;
     function GetMemberIndex(const aContainer: IwbContainerElementRef): Integer;
@@ -9926,6 +9935,7 @@ type
     function SetAfterSet(const aAfterSet : TwbAfterSetCallback): IwbValueDef;
     function SetDontShow(const aDontShow : TwbDontShowCallback): IwbValueDef;
     function SetGetCP(const aGetCP: TwbGetConflictPriority): IwbValueDef;
+    function SetPriority(const aPriority: TwbConflictPriority): IwbValueDef; virtual;
 
     procedure PrepareSave(const aDataContainer : IwbDataContainer); virtual;
 
@@ -10094,6 +10104,7 @@ type
     {---IwbValueDef---}
     function GetIsVariableSizeInternal: Boolean; override; final;
     function GetSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer; override; final;
+    function SetPriority(const aPriority: TwbConflictPriority): IwbValueDef; override; final;
 
     {---IwbResolvableDef---}
     function NeedsElementToResolve: Boolean; override; final;
@@ -10662,6 +10673,7 @@ type
     function GetIsVariableSizeInternal: Boolean; override; final;
     function GetCanBeZeroSize: Boolean; override; final;
     function CanAssign(const aElement: IwbElement; aIndex: Integer; const aDef: IwbDef): Boolean; override; final;
+    function SetPriority(const aPriority: TwbConflictPriority): IwbValueDef; override; final;
 
     {---IwbArrayDef---}
     function GetElement: IwbValueDef;
@@ -10746,6 +10758,7 @@ type
     function GetIsVariableSizeInternal: Boolean; override; final;
     function CanAssign(const aElement: IwbElement; aIndex: Integer; const aDef: IwbDef): Boolean; override; final;
     function GetElementMap: TDynCardinalArray; override; final;
+    function SetPriority(const aPriority: TwbConflictPriority): IwbValueDef; override; final;
 
     {---IwbStructDef---}
     function GetMemberCount: Integer;
@@ -15264,6 +15277,22 @@ begin
   Result := Self;
 end;
 
+function TwbSubRecordDef.SetPriority(
+  const aPriority: TwbConflictPriority): IwbRecordMemberDef;
+begin
+  if defIsLocked then
+    Exit(TwbSubRecordDef(Duplicate).SetPriority(aPriority));
+
+  defPriority := aPriority;
+
+  if Assigned(srValue) then begin
+    srValue := srValue.SetPriority(aPriority);
+    srValue := (srValue as IwbDefInternal).SetParent(Self, False) as IwbValueDef;
+  end;
+
+  Result := Self;
+end;
+
 function TwbSubRecordDef.SetSummaryLinksToCallback(const aCallback: TwbLinksToCallback): IwbRecordMemberDef;
 begin
   if defIsLocked then
@@ -15721,6 +15750,17 @@ begin
   CheckMaxCount;
 end;
 
+function TwbSubRecordArrayDef.SetPriority(
+  const aPriority: TwbConflictPriority): IwbRecordMemberDef;
+begin
+  if defIsLocked then
+    Exit(TwbSubRecordArrayDef(Duplicate).SetPriority(aPriority));
+
+  Result := Self;
+  defPriority := aPriority;
+  sraElement := sraElement.SetPriority(aPriority);
+end;
+
 procedure TwbSubRecordArrayDef.CheckMaxCount;
 begin
   var lCreatedCount := Max(sraCount, Length(sraDefaultEditValues));
@@ -16042,6 +16082,19 @@ begin
 
   Result := Self;
   ndIsRemovable := aCallback;
+end;
+
+function TwbSubRecordStructDef.SetPriority(
+  const aPriority: TwbConflictPriority): IwbRecordMemberDef;
+begin
+  if defIsLocked then
+    Exit(TwbSubRecordStructDef(Duplicate).SetPriority(aPriority));
+
+  Result := Self;
+  defPriority := aPriority;
+
+  for var lIndex := Low(srsMembers) to High(srsMembers) do
+    srsMembers[lIndex] := srsMembers[lIndex].SetPriority(aPriority);
 end;
 
 function TwbSubRecordStructDef.SetSummaryDelimiter(const aDelimiter: string): IwbSubRecordStructDef;
@@ -16436,6 +16489,19 @@ begin
     end;
 
   defReported := True;
+end;
+
+function TwbSubRecordUnionDef.SetPriority(
+  const aPriority: TwbConflictPriority): IwbRecordMemberDef;
+begin
+  if defIsLocked then
+    Exit(TwbSubRecordUnionDef(Duplicate).SetPriority(aPriority));
+
+  Result := Self;
+  defPriority := aPriority;
+
+  for var lIndex := Low(sruMembers) to High(sruMembers) do
+    sruMembers[lIndex] := sruMembers[lIndex].SetPriority(aPriority);
 end;
 
 function wbReadInteger24(aBasePtr: pointer): Int64;
@@ -17925,6 +17991,18 @@ begin
     end;
 end;
 
+function TwbArrayDef.SetPriority(
+  const aPriority: TwbConflictPriority): IwbValueDef;
+begin
+  if defIsLocked then
+    Exit(TwbValueDef(Duplicate).SetPriority(aPriority));
+
+  Result := Self;
+  defPriority := aPriority;
+
+  arElement := arElement.SetPriority(aPriority);
+end;
+
 function TwbArrayDef.SetShouldInclude(const aCallback: TwbShouldIncludeCallback): IwbArrayDef;
 begin
   if defIsLocked then
@@ -18394,6 +18472,21 @@ begin
 
   Result := Self;
   stOptionalFromElement := aOptionalFrom;
+end;
+
+function TwbStructDef.SetPriority(
+  const aPriority: TwbConflictPriority): IwbValueDef;
+begin
+  if defIsLocked then
+    Exit(TwbValueDef(Duplicate).SetPriority(aPriority));
+
+  Result := Self;
+  defPriority := aPriority;
+
+  for var lIndex := Low(stMembers) to High(stMembers) do
+    stMembers[lIndex] := stMembers[lIndex].SetPriority(aPriority);
+
+
 end;
 
 function TwbStructDef.SetSizeCallback(const aCallback: TwbStructSizeCallback): IwbStructDef;
@@ -23567,6 +23660,16 @@ begin
   vdLinksToCallback := aCallback;
 end;
 
+function TwbValueDef.SetPriority(
+  const aPriority: TwbConflictPriority): IwbValueDef;
+begin
+  if defIsLocked then
+    Exit(TwbValueDef(Duplicate).SetPriority(aPriority));
+
+  Result := Self;
+  defPriority := aPriority;
+end;
+
 function TwbValueDef.SetSummaryLinksToCallback(const aCallback: TwbLinksToCallback): IwbValueDef;
 begin
   if defIsLocked then
@@ -24294,6 +24397,19 @@ begin
             aElement := Element;
         end;
     end;
+end;
+
+function TwbUnionDef.SetPriority(
+  const aPriority: TwbConflictPriority): IwbValueDef;
+begin
+  if defIsLocked then
+    Exit(TwbValueDef(Duplicate).SetPriority(aPriority));
+
+  Result := Self;
+  defPriority := aPriority;
+
+  for var lIndex := Low(udMembers) to High(udMembers) do
+    udMembers[lIndex] := udMembers[lIndex].SetPriority(aPriority);
 end;
 
 procedure TwbResolvableDef.FromEditValue(aBasePtr, aEndPtr: Pointer;
@@ -28107,6 +28223,16 @@ begin
 
   Result := Self;
   ndIsRemovable := aCallback;
+end;
+
+function TwbRecordMemberDef.SetPriority(
+  const aPriority: TwbConflictPriority): IwbRecordMemberDef;
+begin
+  if defIsLocked then
+    Exit(TwbRecordMemberDef(Duplicate).SetPriority(aPriority));
+
+  Result := Self;
+  defPriority := aPriority;
 end;
 
 function TwbRecordMemberDef.SetRequired(const aRequired: Boolean): IwbRecordMemberDef;
