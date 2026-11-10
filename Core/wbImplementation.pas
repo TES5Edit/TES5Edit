@@ -27782,6 +27782,9 @@ var
 begin
   wbTick;
 
+  if (aIndex = wbAssignThis) and Assigned(aElement) and aElement.Equals(Self) then
+    Exit(Self);
+
   {$IFDEF USE_CODESITE}
   Log := (laElementAssign in wbLoggingAreas) and wbCodeSiteLoggingEnabled;
   if Log then begin
