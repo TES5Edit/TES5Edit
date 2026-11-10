@@ -679,7 +679,7 @@ begin
   if not (xeToolMode in [tmView, tmEdit]) then
     wbPrettyFormID := False;
 
-  if xeToolMode in [tmEdit, tmScript] then begin
+  if xeToolMode in [tmEdit, tmScript, tmMasterUpdate, tmMasterRestore, tmOnamUpdate] then begin
     if FindCmdLineSwitch('autoload') then
       xeAutoLoad := True;
 

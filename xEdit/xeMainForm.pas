@@ -16279,6 +16279,8 @@ begin
       end else
         if (xeToolMode in wbPluginModes) then
           AutoDone := true;
+      if xeAutoExit then
+        AutoDone := True;
 {$IFDEF XE_TEST_CONTROL_POINTS}
       if xeTestSwitches.ToolModeAuto then
         AutoDone := True;
