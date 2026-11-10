@@ -5032,7 +5032,7 @@ begin
   var lDIALLength := Length(lDIALEditorID);
   var lQUSTLength := Length(lQUSTEditorID);
 
-  if lDIALLength + lQUSTLength > 25 then
+  if (not lGameDef.IsOblivion) and (lDIALLength + lQUSTLength > 25) then
   begin
     if lQUSTLength > 10 then
     begin
