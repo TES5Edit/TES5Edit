@@ -15771,7 +15771,9 @@ begin
 
   Result := Self;
   defPriority := aPriority;
+
   sraElement := sraElement.SetPriority(aPriority);
+  sraElement := (sraElement as IwbDefInternal).SetParent(Self, False) as IwbRecordMemberDef;
 end;
 
 procedure TwbSubRecordArrayDef.CheckMaxCount;
@@ -16107,7 +16109,11 @@ begin
   defPriority := aPriority;
 
   for var lIndex := Low(srsMembers) to High(srsMembers) do
-    srsMembers[lIndex] := srsMembers[lIndex].SetPriority(aPriority);
+  if (srsMembers[lIndex] as TwbDef).defPriority <> cpIgnore then
+    begin
+      srsMembers[lIndex] := srsMembers[lIndex].SetPriority(aPriority);
+      srsMembers[lIndex] := (srsMembers[lIndex] as IwbDefInternal).SetParent(Self, False) as IwbRecordMemberDef;
+    end;
 end;
 
 function TwbSubRecordStructDef.SetSummaryDelimiter(const aDelimiter: string): IwbSubRecordStructDef;
@@ -16514,7 +16520,11 @@ begin
   defPriority := aPriority;
 
   for var lIndex := Low(sruMembers) to High(sruMembers) do
-    sruMembers[lIndex] := sruMembers[lIndex].SetPriority(aPriority);
+  if (sruMembers[lIndex] as TwbDef).defPriority <> cpIgnore then
+    begin
+      sruMembers[lIndex] := sruMembers[lIndex].SetPriority(aPriority);
+      sruMembers[lIndex] := (sruMembers[lIndex] as IwbDefInternal).SetParent(Self, False) as IwbRecordMemberDef;
+    end;
 end;
 
 function wbReadInteger24(aBasePtr: pointer): Int64;
@@ -18014,6 +18024,7 @@ begin
   defPriority := aPriority;
 
   arElement := arElement.SetPriority(aPriority);
+  arElement := (arElement as IwbDefInternal).SetParent(Self, False) as IwbValueDef;
 end;
 
 function TwbArrayDef.SetShouldInclude(const aCallback: TwbShouldIncludeCallback): IwbArrayDef;
@@ -18497,9 +18508,11 @@ begin
   defPriority := aPriority;
 
   for var lIndex := Low(stMembers) to High(stMembers) do
-    stMembers[lIndex] := stMembers[lIndex].SetPriority(aPriority);
-
-
+  if (stMembers[lIndex] as TwbDef).defPriority <> cpIgnore then
+    begin
+      stMembers[lIndex] := stMembers[lIndex].SetPriority(aPriority);
+      stMembers[lIndex] := (stMembers[lIndex] as IwbDefInternal).SetParent(Self, False) as IwbValueDef;
+    end;
 end;
 
 function TwbStructDef.SetSizeCallback(const aCallback: TwbStructSizeCallback): IwbStructDef;
@@ -24422,7 +24435,11 @@ begin
   defPriority := aPriority;
 
   for var lIndex := Low(udMembers) to High(udMembers) do
-    udMembers[lIndex] := udMembers[lIndex].SetPriority(aPriority);
+  if (udMembers[lIndex] as TwbDef).defPriority <> cpIgnore then
+    begin
+      udMembers[lIndex] := udMembers[lIndex].SetPriority(aPriority);
+      udMembers[lIndex] := (udMembers[lIndex] as IwbDefInternal).SetParent(Self, False) as IwbValueDef;
+    end;
 end;
 
 procedure TwbResolvableDef.FromEditValue(aBasePtr, aEndPtr: Pointer;
