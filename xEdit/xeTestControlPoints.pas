@@ -3898,6 +3898,18 @@ begin
     Click(lInterior, 'PGRD - Path Grid', '', False, lRaised);
     Row('cell PGRD', lRaised, nil);
     TestHost.TestCheckMenusLines.Add('navcount' + #9 + 'cell PGRD' + #9 + IntToStr(lCellFile.RecordCount - lBefore));
+    lBefore := lCellFile.RecordCount;
+    Click(lInterior, 'REFR - Placed Object', '', False, lRaised);
+    Row('cell REFR', lRaised, nil);
+    TestHost.TestCheckMenusLines.Add('navcount' + #9 + 'cell REFR' + #9 + IntToStr(lCellFile.RecordCount - lBefore));
+    lBefore := lCellFile.RecordCount;
+    Click(lInterior, 'REFR - Placed Object', '', False, lRaised);
+    Row('cell REFR second', lRaised, nil);
+    TestHost.TestCheckMenusLines.Add('navcount' + #9 + 'cell REFR second' + #9 + IntToStr(lCellFile.RecordCount - lBefore));
+    lBefore := lCellFile.RecordCount;
+    Click(lExterior, 'REFR - Placed Object', '', False, lRaised);
+    Row('cell REFR exterior', lRaised, nil);
+    TestHost.TestCheckMenusLines.Add('navcount' + #9 + 'cell REFR exterior' + #9 + IntToStr(lCellFile.RecordCount - lBefore));
     var lCellWritten := xeTestSwitches.CheckMenusFile + '.navcell.esp';
     var lCellStream := TFileStream.Create(lCellWritten, fmCreate);
     try

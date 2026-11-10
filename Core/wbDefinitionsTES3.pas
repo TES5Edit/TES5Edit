@@ -407,6 +407,11 @@ begin
   end;
 end;
 
+procedure wbReferenceNewRecord(const aMainRecord: IwbMainRecord);
+begin
+  aMainRecord.ElementNativeValues['FRMR'] := aMainRecord._File.NextReferenceNumber;
+end;
+
 procedure wbLandNewRecord(const aMainRecord: IwbMainRecord);
 var
   lGrid : TwbGridCell;
@@ -2282,7 +2287,8 @@ begin
     wbInteger(FRMR, 'Object Index', itU32, wbFRMRToString, nil, cpIgnore, True)
       .SetRequired
       .IncludeFlag(dfInternalEditOnly),
-    wbNameReference(NAME, 'Base Object', [ACTI, ALCH, APPA, ARMO, BODY, BOOK, CLOT, CONT, CREA, DOOR, INGR, LEVC, LEVI, LIGH, LOCK, MISC, NPC_, PROB, REPA, STAT, WEAP], [], 0, True),
+    wbNameReference(NAME, 'Base Object', [ACTI, ALCH, APPA, ARMO, BODY, BOOK, CLOT, CONT, CREA, DOOR, INGR, LEVC, LEVI, LIGH, LOCK, MISC, NPC_, PROB, REPA, STAT, WEAP], [], 0, True)
+      .IncludeFlag(dfInNewRecord),
     wbInteger(UNAM, 'Reference Blocked', itU8, wbEnum(['True'])),
     wbFloat(XSCL, 'Scale', cpNormal, False, 1, 2),
     wbRStructSK([], 'Owner Data', [
@@ -2306,6 +2312,8 @@ begin
     ]).SetUnordered,
     wbDeleted,
     wbVec3PosRot(DATA, 'Reference Data')
+      .SetIsRemovable(wbNotRemovable)
+      .IncludeFlag(dfInNewRecord)
   ]).SetGetFormIDCallback(function(const aMainRecord: IwbMainRecord; out aFormID: TwbFormID): Boolean begin
       var lFRMR := aMainRecord.RecordBySignature[FRMR];
       Result := Assigned(lFRMR);
@@ -2316,6 +2324,7 @@ begin
           aFormID.FileID[lLayout] := TwbFileID.CreateFull($FF);
       end;
     end)
+    .SetNewRecordCallback(wbReferenceNewRecord)
     .SetAfterLoad(wbDeletedAfterLoad);
 
   RegisterRecordDef(REGN, 'Region', [

@@ -2000,6 +2000,7 @@ type
     function FileFileIDtoLoadOrderFileID(const aFileID: TwbFileID; aNew: Boolean): TwbFileID;
 
     function NewFormID: TwbFormID;
+    function NextReferenceNumber: Cardinal;
 
     procedure GetMasters(aMasters: TStrings);
     procedure AddMasters(aMasters: TStrings; aSilent: Boolean = False);

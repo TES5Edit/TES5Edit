@@ -913,6 +913,7 @@ type
     function AddIfMissingInternal(const aElement: IwbElement; aFlags: TwbCopyFlags; const aRules: TwbCopyRules): IwbElement; override;
 
     function NewFormID: TwbFormID;
+    function NextReferenceNumber: Cardinal;
 
     function GetHighestGenerationSelfAndMasters: Integer;
 
@@ -10898,6 +10899,25 @@ begin
   SetNextObjectID(NextObjectID);
 end;
 
+function TwbFile.NextReferenceNumber: Cardinal;
+begin
+  Assert(flFormIDsSorted);
+
+  Result := 1;
+  for var i := High(flRecords) downto 0 do begin
+    var lKey := flRecords[i].FixedFormID;
+    if not IsNewRecord(lKey, True) then
+      Break;
+    if flRecords[i].Signature = 'REFR' then begin
+      Result := lKey.ObjectID[flContextObj.SlotLayout] + 1;
+      Break;
+    end;
+  end;
+
+  if Result > $00FFFFFF then
+    raise Exception.Create('File ' + GetFileName + ' has no more reference numbers');
+end;
+
 procedure TwbFile.PrepareSave;
 var
   SelfRef     : IwbContainerElementRef;
@@ -16791,7 +16811,7 @@ begin
       if mrDef.IsReference then
         if Supports(lContainer, IwbGroupRecordInternal, Group) then begin
           Cell := Group.ChildrenOf;
-          if Assigned(Cell) and not Cell.IsPersistent and Cell.GetGridCell(GridCell) then
+          if Assigned(Cell) and ((gcReferencesEmbeddedInCell in GameDefObj.Capabilities) or not Cell.IsPersistent) and Cell.GetGridCell(GridCell) then
             SetPosition(GameDefObj.GridCellToCenterPosition(GridCell));
         end;
 
