@@ -5023,6 +5023,12 @@ begin
   var lDIALEditorID := lDIALRec.EditorID;
   var lQUSTEditorID := lQUSTRec.EditorID;
 
+  var lExt := '.fuz';
+  if lGameDef.IsOblivion then
+    lExt := '.mp3';
+  if lGameDef.IsFallout3 then
+    lExt := '.ogg';
+
   var lDIALLength := Length(lDIALEditorID);
   var lQUSTLength := Length(lQUSTEditorID);
 
@@ -5044,7 +5050,7 @@ begin
     lQUSTEditorID + '_' +
     lDIALEditorID + '_' +
     IntToHex((lINFOFormID.ToCardinal and $FFFFFF), 8) + '_' +
-    IntToStr(lResponseNumber) + '.fuz';
+    IntToStr(lResponseNumber) + lExt;
 end;
 
 procedure wbLCTNUniqueNPCToStr(var aValue: string; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
