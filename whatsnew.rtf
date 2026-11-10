@@ -81,6 +81,7 @@
 \pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab Cleanup Injected skips and reports a cleanup whose target already holds the record}\par
 \pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab Follow load order for a record's winner and its next master}\par
 \pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab Copy no more entries than an array's maximum, and report lists over it in Check for Errors}\par
+\pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab A record a script assigns to itself keeps its data}\par
 \pard\sb240\sa180{\b\f0\fs28\ulth Loading and caches}\par
 \pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab Rebuild a reference cache that cannot be read or does not match its file, and save it atomically}\par
 \pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab Refuse a strings file, a record or compressed data that runs past its end}\par
@@ -104,6 +105,7 @@
 \pard\sb240\sa180{\b\f0\fs28\ulth Command line and unattended runs}\par
 \pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab An unattended run logs a failure and exits non-zero instead of showing a dialog}\par
 \pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab -autoload and -autoexit work in script mode; a missing or unreadable script fails the run}\par
+\pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab -autoload and -autoexit work in MasterUpdate, MasterRestore and OnamUpdate}\par
 \pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab MasterUpdate, MasterRestore and setESM start again, -SortAndCleanMasters is accepted, and a plugin can be named by full path or with .ghost}\par
 \pard\fi-360\li360\tx360{\f0\fs24 \bullet\tab A -M: My Games path gets its trailing backslash}\par
 \pard\sb300\sa180{\b\f0\fs32\ulth Definition Updates}\par

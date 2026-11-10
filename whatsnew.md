@@ -98,6 +98,7 @@ ElminsterAU, robertgk2017, Jonathan Ostrus (jbostrus), eckserah, fireundubh, she
 * Cleanup Injected skips and reports a cleanup whose target already holds the record
 * Follow load order for a record's winner and its next master
 * Copy no more entries than an array's maximum, and report lists over it in Check for Errors
+* A record a script assigns to itself keeps its data
 
 ### Loading and caches
 * Rebuild a reference cache that cannot be read or does not match its file, and save it atomically
@@ -125,6 +126,7 @@ ElminsterAU, robertgk2017, Jonathan Ostrus (jbostrus), eckserah, fireundubh, she
 ### Command line and unattended runs
 * An unattended run logs a failure and exits non-zero instead of showing a dialog
 * `-autoload` and `-autoexit` work in script mode; a missing or unreadable script fails the run
+* `-autoload` and `-autoexit` work in MasterUpdate, MasterRestore and OnamUpdate
 * MasterUpdate, MasterRestore and setESM start again, `-SortAndCleanMasters` is accepted, and a plugin can be named by full path or with `.ghost`
 * A `-M:` My Games path gets its trailing backslash
 
