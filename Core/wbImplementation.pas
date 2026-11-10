@@ -1122,6 +1122,8 @@ type
     constructor CreateNew(const aContext: TwbGameContext; const aFileName: string; aLoadOrder: Integer; aTemplate: PwbModuleInfo); overload;
   private
     procedure CollectMastersToAdd(const aFiles: TwbFiles; aList: TStringList);
+    function MasterSizeOnDisk(const aMaster: IwbFile; out aSize: Int64): Boolean;
+    procedure WriteMasterSizes(const aHeader: IwbMainRecord);
   public
     class function NewInstance: TObject; override; final;
     destructor Destroy; override; final;
@@ -2871,6 +2873,51 @@ begin
       SortMasters;
   finally
     Masters.Free;
+  end;
+end;
+
+function TwbFile.MasterSizeOnDisk(const aMaster: IwbFile; out aSize: Int64): Boolean;
+begin
+  aSize := 0;
+  if flContextObj.Settings.DataPath = '' then
+    Exit(False);
+  var lName := flContextObj.PendingSaveName(aMaster.FileNameOnDisk);
+  if lName = '' then
+    lName := aMaster.FileNameOnDisk;
+  var lFind: TWin32FindData;
+  var lHandle := FindFirstFile(PChar(flContextObj.Settings.DataPath + lName), lFind);
+  if lHandle = INVALID_HANDLE_VALUE then
+    Exit(False);
+  Winapi.Windows.FindClose(lHandle);
+  aSize := Int64(lFind.nFileSizeHigh) shl 32 or lFind.nFileSizeLow;
+  Result := True;
+end;
+
+procedure TwbFile.WriteMasterSizes(const aHeader: IwbMainRecord);
+var
+  lMasterFiles : IwbContainerElementRef;
+begin
+  if not Supports(aHeader.ElementByName['Master Files'], IwbContainerElementRef, lMasterFiles) then
+    Exit;
+  if flContextObj.BeginInternalEdit(True) then try
+    for var lIdx := 0 to Pred(lMasterFiles.ElementCount) do begin
+      var lEntry := lMasterFiles[lIdx] as IwbContainer;
+      var lName := lEntry.RecordBySignature['MAST'];
+      var lData := lEntry.RecordBySignature['DATA'];
+      if not Assigned(lName) then
+        Continue;
+      for var lMaster in flMasters do begin
+        var lSize: Int64;
+        if SameText(lMaster.FileName, lName.EditValue) then begin
+          if MasterSizeOnDisk(lMaster, lSize) then
+            if Assigned(lData) and (lData.NativeValue <> lSize) then
+              lData.NativeValue := lSize;
+          Break;
+        end;
+      end;
+    end;
+  finally
+    wbEndInternalEdit;
   end;
 end;
 
@@ -10914,6 +10961,9 @@ begin
       for i := Low(flModule.miMasters) to High(flModule.miMasters) do
         if flModule.miMasters[i].miExtension = meESP then
           raise Exception.CreateFmt('%s modules must never have .esp masters.', [flContextObj.GameDefObj.GameName]);
+
+    if gcMasterSizeInHeader in lGameDef.Capabilities then
+      WriteMasterSizes(FileHeader);
 
     if lGameDef.IsStarfield then begin
       if GetIsUpdateDirect and (GetIsLightDirect or GetIsMediumDirect) then

@@ -598,7 +598,7 @@ type
     gcMasterFlagFromExtension, gcResourceKeyCRC32NoExtension, gcTextureDDXAlias, gcUpdateArchiveAlwaysLoaded,
     gcWeatherExtendedColors, gcWeatherFogPower, gcWeatherFogMax, gcModelTextureFileHashList, gcCommunityShaders, gcHNVSE,
     gcVWDInTemporary, gcVWDAsQuestChildren, gcComplexFileFileID, gcCanSortINFO, gcOffsetDataPerFile,
-    gcMasterFlagInHeaderData, gcCompressedRecords
+    gcMasterFlagInHeaderData, gcCompressedRecords, gcMasterSizeInHeader
   );
   TwbGameCapabilities = set of TwbGameCapability;
 
@@ -4653,6 +4653,7 @@ type
     procedure AddFile(const aFile: IwbFile; const aFileName: string);
     function FileByName(const aFileName: string): IwbFile;
     function FileByModuleName(const aModuleName: string): IwbFile;
+    function PendingSaveName(const aTargetName: string): string;
     function AllocateFullSlot: Integer;
     function AllocateLightSlot: Integer;
     function AllocateMediumSlot: Integer;
@@ -6790,6 +6791,8 @@ begin
     Include(Result, gcHardcodedFileIsFirstMaster);
   if aGameMode in [gmTES3] then
     Include(Result, gcMasterFlagInHeaderData);
+  if aGameMode in [gmTES3] then
+    Include(Result, gcMasterSizeInHeader);
   if not (aGameMode in [gmTES3]) then
     Include(Result, gcCompressedRecords);
   if not (aGameMode in [gmTES3]) then
@@ -8507,6 +8510,15 @@ begin
     Result := IwbFile(Pointer(gcFilesMap.Objects[i]))
   else
     Result := SaveContextFileByName(aFileName);
+end;
+
+function TwbGameContext.PendingSaveName(const aTargetName: string): string;
+begin
+  Result := '';
+  if Assigned(gcRenameQueue) then
+    for var lIdx := Pred(gcRenameQueue.Count) downto 0 do
+      if SameText(gcRenameQueue[lIdx].psTargetName, aTargetName) then
+        Exit(gcRenameQueue[lIdx].psSaveName);
 end;
 
 function TwbGameContext.FileByModuleName(const aModuleName: string): IwbFile;
