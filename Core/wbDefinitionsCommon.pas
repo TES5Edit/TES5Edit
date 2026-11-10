@@ -9407,18 +9407,18 @@ begin
   Result :=
     wbStruct(OBND, 'Object Bounds', [
       IfThen(IsStarfield,
-        wbVec3('Min'),
-        wbVec3Int('Min')
+        wbVec3('Min').SetPriority(cpBenign),
+        wbVec3Int('Min').SetPriority(cpBenign)
       ),
       IfThen(IsStarfield,
-        wbVec3('Max'),
-        wbVec3Int('Max')
+        wbVec3('Max').SetPriority(cpBenign),
+        wbVec3Int('Max').SetPriority(cpBenign)
       )
-    ]).SetSummaryKeyOnValue([0, 1])
-      .SetSummaryDelimiterOnValue(', ')
-      .IncludeFlagOnValue(dfSummaryMembersNoName)
-      .SetRequired
-      .IncludeFlag(dfCollapsed, clpObjectBounds in DefineOptions.Collapse);
+    ], cpBenign).SetSummaryKeyOnValue([0, 1])
+                .SetSummaryDelimiterOnValue(', ')
+                .IncludeFlagOnValue(dfSummaryMembersNoName)
+                .SetRequired
+                .IncludeFlag(dfCollapsed, clpObjectBounds in DefineOptions.Collapse);
 end;
 
 function TwbGameDefCommon.wbOwnership(const aSkipSigs: TwbSignatures = nil): IwbRecordMemberDef;
