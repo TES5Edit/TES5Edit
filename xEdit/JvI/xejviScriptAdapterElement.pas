@@ -651,6 +651,7 @@ var
   Element: IwbElement;
 begin
   if Supports(IInterface(Args.Values[0]), IwbElement, Element) then begin
+    RequireEditable(Element);
     var TemplateName := String(Args.Values[1]);
 
     var TargetIndex := High(Integer);
