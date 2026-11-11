@@ -350,24 +350,30 @@ procedure IwbMainRecord_SetFormVCS1(var Value: Variant; Args: TJvInterpreterArgs
 var
   MainRecord: IwbMainRecord;
 begin
-  if Supports(IInterface(Args.Values[0]), IwbMainRecord, MainRecord) then
+  if Supports(IInterface(Args.Values[0]), IwbMainRecord, MainRecord) then begin
+    RequireEditable(MainRecord);
     MainRecord.VCS1 := Args.Values[1];
+  end;
 end;
 
 procedure IwbMainRecord_SetFormVCS2(var Value: Variant; Args: TJvInterpreterArgs);
 var
   MainRecord: IwbMainRecord;
 begin
-  if Supports(IInterface(Args.Values[0]), IwbMainRecord, MainRecord) then
+  if Supports(IInterface(Args.Values[0]), IwbMainRecord, MainRecord) then begin
+    RequireEditable(MainRecord);
     MainRecord.VCS2 := Args.Values[1];
+  end;
 end;
 
 procedure IwbMainRecord_SetFormVersion(var Value: Variant; Args: TJvInterpreterArgs);
 var
   MainRecord: IwbMainRecord;
 begin
-  if Supports(IInterface(Args.Values[0]), IwbMainRecord, MainRecord) then
+  if Supports(IInterface(Args.Values[0]), IwbMainRecord, MainRecord) then begin
+    RequireEditable(MainRecord);
     MainRecord.Version := Args.Values[1];
+  end;
 end;
 
 procedure IwbMainRecord_SetIsDeleted(var Value: Variant; Args: TJvInterpreterArgs);
