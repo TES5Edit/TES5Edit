@@ -121,6 +121,7 @@ ElminsterAU, robertgk2017, Jonathan Ostrus (jbostrus), eckserah, fireundubh, she
 * Stop offering Remove on a record's Record Header
 * Filtering the Referenced By list no longer leaves a row selected that you did not select, so a following command can not act on the wrong record
 * A double at its maximum or minimum shows as Default or Min
+* The navigation tree no longer sometimes paints its last row a second time on the empty row below it
 * Fix a RichEdit EOutOfResources error when adding lines (contributed by sheson)
 
 ### Command line and unattended runs
