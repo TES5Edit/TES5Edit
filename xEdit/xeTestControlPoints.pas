@@ -3406,6 +3406,161 @@ procedure TxeTestFormHelper.TestCheckMenusRunTimer(Sender: TObject);
     TestHost.TestCheckMenusLines.Add('refby' + #9 + aStage + #9 + BoolToStr(tbsReferencedBy.TabVisible, True) + #9 + IntToStr(lCount) + #9 + IntToStr(aRecord.MasterOrSelf.ReferencedByCount) + #9 + lFirst);
   end;
 
+  function CopyName(const aElement: IwbElement): string;
+  begin
+    var lRecord: IwbMainRecord;
+    var lGroup: IwbGroupRecord;
+    if Supports(aElement, IwbMainRecord, lRecord) then begin
+      Result := Trim(string(lRecord.Signature) + ' ' + lRecord.EditorID);
+      if Supports(lRecord.Container, IwbGroupRecord, lGroup) and (lGroup.GroupType <> 0) then
+        Result := Result + ' in ' + CopyName(lGroup);
+    end else if Supports(aElement, IwbGroupRecord, lGroup) then begin
+      if lGroup.GroupType = 0 then
+        Result := 'GRUP ' + string(TwbSignature(lGroup.GroupLabel))
+      else if Assigned(lGroup.ChildrenOf) then
+        Result := 'GRUP' + IntToStr(lGroup.GroupType) + ' of ' + CopyName(lGroup.ChildrenOf)
+      else
+        Result := 'GRUP' + IntToStr(lGroup.GroupType);
+    end else
+      Result := aElement.Name;
+  end;
+
+  procedure CopyCollect(const aElement: IwbElement; aList: TList<IwbElement>);
+  begin
+    var lRecord: IwbMainRecord;
+    var lGroup: IwbGroupRecord;
+    if Supports(aElement, IwbMainRecord, lRecord) then begin
+      if lRecord.Signature <> 'TES3' then
+        aList.Add(lRecord);
+    end else if Supports(aElement, IwbGroupRecord, lGroup) then begin
+      aList.Add(lGroup);
+      for var i := 0 to Pred(lGroup.ElementCount) do
+        CopyCollect(lGroup.Elements[i], aList);
+    end;
+  end;
+
+  procedure CopyLines(const aFamily, aName: string; const aItems: array of TMenuItem);
+  begin
+    for var lItem in aItems do
+      TestHost.TestCheckMenusLines.Add('copymenu' + #9 + aFamily + #9 + aName + #9 + lItem.Name + #9 + BoolToStr(lItem.Visible, True));
+  end;
+
+  procedure CopyNav(const aName: string);
+  begin
+    pmuNavPopup(nil);
+    CopyLines('nav', aName, [mniNavCopyAsOverride, mniNavCopyAsOverrideWithOverwrite, mniNavDeepCopyAsOverride,
+      mniNavDeepCopyAsOverrideWithOverwriting, mniNavCopyAsNewRecord]);
+  end;
+
+  procedure CopySelectMany(const aElements: array of IwbElement);
+  begin
+    vstNav.ClearSelection;
+    for var k := Low(aElements) to High(aElements) do begin
+      var lNode := FindNodeForElement(aElements[k]);
+      if not Assigned(lNode) then
+        raise Exception.Create('no nav node for ' + aElements[k].Name);
+      vstNav.FullyVisible[lNode] := True;
+      if k = Low(aElements) then
+        vstNav.FocusedNode := lNode;
+    end;
+    for var k := Low(aElements) to High(aElements) do
+      vstNav.Selected[FindNodeForElement(aElements[k])] := True;
+  end;
+
+  procedure CopyView(const aName: string; const aRecord: IwbMainRecord);
+  begin
+    DoSetActiveRecord(IwbMainRecord(nil));
+    DoSetActiveRecord(aRecord);
+    Application.ProcessMessages;
+    var lColumn := -1;
+    for var k := Low(ActiveRecords) to High(ActiveRecords) do
+      if Assigned(ActiveRecords[k].Element) and ActiveRecords[k].Element.Equals(aRecord) then
+        lColumn := Succ(k);
+    if lColumn < 1 then
+      raise Exception.Create('no View column for ' + aName);
+    var lColumns := vstView.Header.Columns;
+    var lRtti := TRttiContext.Create;
+    var lField := lRtti.GetType(lColumns.ClassType).GetField('FPopupIndex');
+    if not Assigned(lField) then
+      raise Exception.Create('no FPopupIndex field');
+    PInteger(PByte(lColumns) + lField.Offset)^ := lColumn;
+    if lColumns.PopupIndex <> lColumn then
+      raise Exception.Create('the View header popup column did not take ' + IntToStr(lColumn));
+    pmuViewHeaderPopup(nil);
+    CopyLines('view', aName, [mniViewHeaderCopyAsOverride, mniViewHeaderCopyAsOverrideWithOverwriting, mniViewHeaderDeepCopyAsOverride,
+      mniViewHeaderDeepCopyAsOverrideWithOverwriting, mniViewHeaderCopyAsNewRecord]);
+  end;
+
+  procedure CopyRefBy(const aName: string; const aRecord: IwbMainRecord);
+  begin
+    DoSetActiveRecord(IwbMainRecord(nil));
+    DoSetActiveRecord(aRecord);
+    Application.ProcessMessages;
+    pgMain.ActivePage := tbsReferencedBy;
+    pgMainChange(pgMain);
+    Application.ProcessMessages;
+    vstReferencedBy.SelectAll(False);
+    pmuRefByPopup(nil);
+    CopyLines('refby', aName + ' (' + IntToStr(vstReferencedBy.SelectedCount) + ' rows)', [mniRefByCopyOverrideInto,
+      mniRefByCopyOverrideIntoWithOverwriting, mniRefByDeepCopyOverrideInto, mniRefByDeepCopyOverrideIntoWithOverwriting, mniRefByCopyAsNewInto]);
+    pgMain.ActivePage := tbsMessages;
+  end;
+
+  function CopySwitch(const aSwitch: string): TArray<string>;
+  begin
+    Result := nil;
+    for var k := 1 to ParamCount do
+      if ParamStr(k).StartsWith('-' + aSwitch + ':', True) then
+        Exit(ParamStr(k).Substring(Length(aSwitch) + 2).Split([';'], TStringSplitOptions.ExcludeEmpty));
+  end;
+
+  function CopyFind(aList: TList<IwbElement>; aNames: TStringList; const aName: string): IwbElement;
+  begin
+    for var k := 0 to Pred(aNames.Count) do
+      if aNames[k] = aName then
+        Exit(aList[k]);
+    raise Exception.Create('no element named ' + aName);
+  end;
+
+  procedure CopyOffers(const aModule: IwbFile);
+  var
+    lList  : TList<IwbElement>;
+    lNames : TStringList;
+  begin
+    lList := TList<IwbElement>.Create;
+    lNames := TStringList.Create;
+    try
+      for var i := 0 to Pred(aModule.ElementCount) do
+        CopyCollect(aModule.Elements[i], lList);
+      for var lElement in lList do begin
+        var lName := CopyName(lElement);
+        lNames.Add(lName);
+        TestHost.TestCheckMenusLines.Add('copyelement' + #9 + lName);
+        Select(lElement);
+        CopyNav(lName);
+        var lRecord: IwbMainRecord;
+        if Supports(lElement, IwbMainRecord, lRecord) then
+          CopyView(lName, lRecord);
+      end;
+      for var lMix in CopySwitch('testcheckmenuscopymix') do begin
+        var lParts := lMix.Split(['+']);
+        var lElements: TArray<IwbElement>;
+        SetLength(lElements, Length(lParts));
+        for var k := Low(lParts) to High(lParts) do
+          lElements[k] := CopyFind(lList, lNames, lParts[k]);
+        CopySelectMany(lElements);
+        CopyNav(lMix + ' (' + IntToStr(Length(vstNav.GetSortedSelection(True))) + ' selected)');
+      end;
+      for var lFile in xeContext.Files do
+        lFile.BuildRef;
+      for var lTarget in CopySwitch('testcheckmenuscopyrefby') do
+        CopyRefBy(lTarget, CopyFind(lList, lNames, lTarget) as IwbMainRecord);
+    finally
+      lNames.Free;
+      lList.Free;
+    end;
+  end;
+
   procedure RunChecks;
   begin
     var lModule := Module;
@@ -3458,6 +3613,8 @@ procedure TxeTestFormHelper.TestCheckMenusRunTimer(Sender: TObject);
         RefByMenus('built');
       pgMain.ActivePage := tbsMessages;
     end;
+    if FindCmdLineSwitch('testcheckmenuscopy') then
+      CopyOffers(lModule);
     var lAllow := wbManualCleaningAllow;
     var lHide := wbManualCleaningHide;
     try

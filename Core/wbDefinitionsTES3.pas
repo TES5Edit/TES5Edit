@@ -387,6 +387,12 @@ var
 begin
   var lTopic := (aMainRecord.Container as IwbGroupRecord).ChildrenOf;
   var lFile := aMainRecord._File;
+  var lNext := aMainRecord.ElementBySignature['NNAM'];
+  if Assigned(lNext) and (lNext.EditValue <> '') then
+    lNext.EditValue := '';
+  var lPrevious := aMainRecord.ElementBySignature['PNAM'];
+  if Assigned(lPrevious) and (lPrevious.EditValue <> '') then
+    lPrevious.EditValue := '';
   lOrder := TList<string>.Create;
   lPlaces := TDictionary<string, TwbInfoPlace>.Create;
   try
@@ -1704,7 +1710,6 @@ begin
   ]).SetFormIDBase($90)
     .SetNewRecordCallback(wbInfoNewRecord)
     .IncludeFlag(dfIdentityQualifiedByTopic)
-    .IncludeFlag(dfNoRequestedIdentity)
     .IncludeFlag(dfChildRecordOnly);
 
   RegisterRecordDef(INGR, 'Ingredient',
@@ -1946,11 +1951,10 @@ begin
   RegisterRecordDef(LTEX, 'Landscape Texture', [
     wbDeleted,
     wbEditorID,
-    wbInteger(INTV, 'Texture ID', itU32).SetRequired,
+    wbInteger(INTV, 'Texture ID', itU32).SetRequired.IncludeFlag(dfUniqueInFile),
     wbStringForward(DATA, 'Texture Filename').SetRequired
   ]).SetFormIDBase($60)
-    .SetSummaryKey([3])
-    .IncludeFlag(dfNoRequestedIdentity);
+    .SetSummaryKey([3]);
 
   RegisterRecordDef(MGEF, 'Magic Effect', @wbKnownSubRecordSignaturesINDX, [
     wbInteger(INDX, 'Effect', itU32, wbMagicEffectEnum).SetIsRemovable(wbNotRemovable).IncludeFlag(dfInNewRecord),
@@ -1992,8 +1996,7 @@ begin
     wbNameReference(HVFX, 'Hit Visual', [STAT]),
     wbNameReference(AVFX, 'Area Visual', [STAT]),
     wbDescription
-  ]).SetFormIDBase($02)
-    .IncludeFlag(dfNoRequestedIdentity);
+  ]).SetFormIDBase($02);
 
   RegisterRecordDef(MISC, 'Misc. Item',
     wbFlags(wbFlagsList([
@@ -2186,7 +2189,6 @@ begin
         Result := False;
     end)
     .SetNewRecordCallback(wbPathgridNewRecord)
-    .IncludeFlag(dfNoRequestedIdentity)
     .IncludeFlag(dfChildRecordOnly);
 
   RegisterRecordDef(PROB, 'Probe',
@@ -2480,7 +2482,7 @@ begin
     ]).SetRequired,
     wbDescription
   ]).SetFormIDBase($01)
-    .IncludeFlag(dfNoRequestedIdentity);
+    .IncludeFlag(dfNoCopyAsNew);
 
   RegisterRecordDef(SNDG, 'Sound Generator', [
     wbEditorID,
@@ -2548,7 +2550,8 @@ begin
     wbStringForward(DATA, 'Numerical ID').SetRequired,
     wbNameReference(NAME, 'Script', [SCPT], [], 0, True).SetRequired
   ]).SetFormIDBase($3F)
-    .SetAfterLoad(wbDeletedAfterLoad);
+    .SetAfterLoad(wbDeletedAfterLoad)
+    .IncludeFlag(dfNoCopyAsNew);
 
   RegisterRecordDef(STAT, 'Static',
     wbFlags(wbFlagsList([

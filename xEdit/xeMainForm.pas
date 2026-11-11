@@ -943,10 +943,12 @@ type
     function SelectionIncludesNonCopyNewRecords: Boolean;
     function SelectionIncludesAnyDeepCopyRecords: Boolean;
     function SelectionIncludesOnlyDeepCopyRecords: Boolean;
+    function SelectionCopyRefused(aAsNew, aDeep: Boolean): Boolean;
 
     function ByRefSelectionIncludesNonCopyNewRecords(aSelection: TDynMainRecords): Boolean;
     function ByRefSelectionIncludesAnyDeepCopyRecords(aSelection: TDynMainRecords): Boolean;
     function ByRefSelectionIncludesOnlyDeepCopyRecords(aSelection: TDynMainRecords): Boolean;
+    function ByRefSelectionCopyRefused(const aSelection: TDynMainRecords; aAsNew, aDeep: Boolean): Boolean;
 
     function SelectionIncludesOnlyREFR(Selection: TNodeArray): Boolean;
     function SelectionIncludesAnyNotVWD(Selection: TNodeArray): Boolean;
@@ -2493,6 +2495,14 @@ begin
   Result := False;
 end;
 
+function TfrmMain.ByRefSelectionCopyRefused(const aSelection: TDynMainRecords; aAsNew, aDeep: Boolean): Boolean;
+begin
+  Result := False;
+  for var lRecord in aSelection do
+    if xeContext.CopyOfferRefusal(lRecord, aAsNew, aDeep) <> '' then
+      Exit(True);
+end;
+
 function TfrmMain.ByRefSelectionIncludesOnlyDeepCopyRecords(aSelection: TDynMainRecords): Boolean;
 begin
   Result := False;
@@ -2735,6 +2745,12 @@ begin
           end);
 
         Multiple := TwbCopyOptions.IsMultiple(Elements);
+        var lNoIdentity := AsNew and xeContext.GameDefObj.IsMorrowind;
+        for var lElement in Elements do begin
+          var lRecord: IwbMainRecord;
+          if lNoIdentity and (not Supports(lElement, IwbMainRecord, lRecord) or lRecord.Def.IsKeyedByIdentity) then
+            lNoIdentity := False;
+        end;
         EditorID := '';
         EditorIDPrefixRemove := '';
         EditorIDSuffixRemove := '';
@@ -2761,7 +2777,7 @@ begin
                       end;
                   end;
                 end);
-          end else begin
+          end else if not lNoIdentity then begin
             EditorID := MainRecord.EditorID;
             repeat
               if AsWrapper then begin
@@ -2793,7 +2809,7 @@ begin
             if Elements[0].ElementType <> etMainRecord then
               raise Exception.Create('Can not wrap complete groups');
 
-          if AsNew or AsWrapper then
+          if (AsNew or AsWrapper) and not lNoIdentity then
             repeat
               // skip asking for changes if holding shift
               if AsNew and (GetKeyState(VK_SHIFT) < 0) then
@@ -13463,6 +13479,14 @@ begin
   mniNavDeepCopyAsOverrideWithOverwriting.Visible := mniNavDeepCopyAsOverride.Visible;
   mniNavCopyAsNewRecord.Visible := mniNavCopyAsOverride.Visible and not SelectionIncludesNonCopyNewRecords;
 
+  if lGameDef.IsMorrowind and mniNavCopyAsOverride.Visible then begin
+    mniNavCopyAsOverride.Visible := not SelectionCopyRefused(False, False);
+    mniNavCopyAsOverrideWithOverwrite.Visible := mniNavCopyAsOverride.Visible;
+    mniNavDeepCopyAsOverride.Visible := mniNavDeepCopyAsOverride.Visible and not SelectionCopyRefused(False, True);
+    mniNavDeepCopyAsOverrideWithOverwriting.Visible := mniNavDeepCopyAsOverride.Visible;
+    mniNavCopyAsNewRecord.Visible := not SelectionCopyRefused(True, False);
+  end;
+
   if mniNavDeepCopyAsOverride.Visible and SelectionIncludesOnlyDeepCopyRecords then begin
     mniNavCopyAsOverride.Visible := False;
     mniNavCopyAsOverrideWithOverwrite.Visible := False;
@@ -13603,6 +13627,14 @@ begin
   mniRefByRemove.Visible := mniRefByCopyOverrideInto.Visible;
   mniRefByMarkModified.Visible := mniRefByCopyOverrideInto.Visible;
 
+  if xeContext.GameDefObj.IsMorrowind and mniRefByCopyOverrideInto.Visible then begin
+    mniRefByCopyOverrideInto.Visible := not ByRefSelectionCopyRefused(Selected, False, False);
+    mniRefByCopyOverrideIntoWithOverwriting.Visible := mniRefByCopyOverrideInto.Visible;
+    mniRefByDeepCopyOverrideInto.Visible := mniRefByDeepCopyOverrideInto.Visible and not ByRefSelectionCopyRefused(Selected, False, True);
+    mniRefByDeepCopyOverrideIntoWithOverwriting.Visible := mniRefByDeepCopyOverrideInto.Visible;
+    mniRefByCopyAsNewInto.Visible := not ByRefSelectionCopyRefused(Selected, True, False);
+  end;
+
   if mniRefByDeepCopyOverrideInto.Visible and ByRefSelectionIncludesOnlyDeepCopyRecords(Selected) then
     mniRefByCopyOverrideInto.Visible := False;
 
@@ -13711,6 +13743,13 @@ begin
     (MainRecord.Signature = 'LAND') or
     (MainRecord.Signature = 'ROAD')
   );
+  if xeContext.GameDefObj.IsMorrowind then begin
+    mniViewHeaderCopyAsOverride.Visible := xeContext.CopyOfferRefusal(MainRecord, False, False) = '';
+    mniViewHeaderCopyAsOverrideWithOverwriting.Visible := mniViewHeaderCopyAsOverride.Visible;
+    mniViewHeaderDeepCopyAsOverride.Visible := mniViewHeaderDeepCopyAsOverride.Visible and (xeContext.CopyOfferRefusal(MainRecord, False, True) = '');
+    mniViewHeaderDeepCopyAsOverrideWithOverwriting.Visible := mniViewHeaderDeepCopyAsOverride.Visible;
+    mniViewHeaderCopyAsNewRecord.Visible := xeContext.CopyOfferRefusal(MainRecord, True, False) = '';
+  end;
   mniViewHeaderCopyAsWrapper.Visible := (MainRecord.Signature = 'LVLC') or (MainRecord.Signature = 'LVLI') or (MainRecord.Signature = 'LVSP') or (MainRecord.Signature = 'LVLN');
 
   mniViewHeaderJumpTo.Visible := True;
@@ -14625,6 +14664,17 @@ begin
     end;
   end;
   Result := False;
+end;
+
+function TfrmMain.SelectionCopyRefused(aAsNew, aDeep: Boolean): Boolean;
+begin
+  Result := False;
+  for var lNode in vstNav.GetSortedSelection(True) do begin
+    var lNodeData: PNavNodeData := vstNav.GetNodeData(lNode);
+    if Assigned(lNodeData) and Assigned(lNodeData.Element) and (lNodeData.Element.ElementType in [etMainRecord, etGroupRecord]) then
+      if xeContext.CopyOfferRefusal(lNodeData.Element, aAsNew, aDeep) <> '' then
+        Exit(True);
+  end;
 end;
 
 function TfrmMain.SelectionIncludesOnlyDeepCopyRecords: Boolean;
