@@ -36063,6 +36063,11 @@ end;
 constructor TwbMultipleElements.Create(const aElements: IwbElements);
 begin
   meElements := aElements;
+  for var lElement in aElements do
+    if Assigned(lElement) and ((lElement as TObject) is TwbElement) then begin
+      eContextObj := TwbElement(lElement as TObject).ContextObj;
+      Break;
+    end;
 end;
 
 function TwbMultipleElements.GetElement(aIndex: Integer): IwbElement;
