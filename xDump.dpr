@@ -1004,13 +1004,12 @@ begin
         lDefineOptions.SimpleRecords := True;
 
       case HostGameMode of
-        gmFNV, gmFO3, gmTES4, gmTES4R, gmTES5, gmEnderal, gmTES5VR, gmSSE, gmEnderalSE: ;
+        gmFNV, gmFO3, gmTES4, gmTES4R, gmTES5, gmEnderal, gmTES5VR, gmSSE,
+        gmEnderalSE, gmFO4, gmFO4VR, gmFO76, gmSF1: ;
         gmTES3: begin
           lSettings.LoadBSAs := False;
           tms := [tmDump];
         end;
-        gmFO4, gmFO4VR, gmFO76, gmSF1:
-          lSettings.CreateContainedIn := False;
       else begin
         s := '';
         for gm := Low(TwbGameMode) to High(TwbGameMode) do
