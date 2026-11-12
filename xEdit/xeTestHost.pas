@@ -238,6 +238,7 @@ type
     ViewTreeTime          : Integer;
     ViewTreeHeader        : Boolean;
     ViewTreeModal         : Boolean;
+    ViewTreeProtected     : Boolean;
     ViewTreeWalk          : Boolean;
     ViewTreeIdle          : Boolean;
     ViewTreeRemove        : Boolean;
@@ -596,6 +597,7 @@ begin
     ViewTreeTranslate := FindCmdLineSwitch('testviewtreetranslate');
     ViewTreeHeader := FindCmdLineSwitch('testviewtreeheader');
     ViewTreeModal := FindCmdLineSwitch('testviewtreemodal');
+    ViewTreeProtected := FindCmdLineSwitch('testviewtreeprotected');
     ViewTreeWalk := FindCmdLineSwitch('testviewtreewalk');
     ViewTreeIdle := FindCmdLineSwitch('testviewtreeidle');
     ViewTreeRemove := FindCmdLineSwitch('testviewtreeremove');

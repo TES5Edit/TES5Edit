@@ -1959,7 +1959,8 @@ var
 
     procedure Run(const aName: string; aSwitch, aCopy: Boolean);
     begin
-      Restore;
+      if not xeTestSwitches.ViewTreeProtected then
+        Restore;
       if aCopy then
         SelectInNav;
       Build([aRecord]);
@@ -1974,6 +1975,7 @@ var
         lLines.Add(Format('# modal %d'#9'%s'#9'no EDID row', [aEntry, aName]));
         Exit;
       end;
+      var lTargetBefore := Digest(aTarget) + ', modified ' + BoolToStr(aTarget.Modified, True);
       var lDelay, lFocused: Integer;
       BeginGesture(aName, lRow, Length(ActiveRecords), aSwitch, lDelay, lFocused);
       var lResult := 'returned';
@@ -1989,6 +1991,9 @@ var
       EndGesture(aName, lResult, lDelay, lFocused);
       if aCopy then
         lLines.Add(Format('# modal %d'#9'%s'#9'target %s', [aEntry, aName, Digest(aTarget)]));
+      if xeTestSwitches.ViewTreeProtected then
+        lLines.Add(Format('# protected %d'#9'%s'#9'target before %s'#9'after %s, modified %s',
+          [aEntry, aName, lTargetBefore, Digest(aTarget), BoolToStr(aTarget.Modified, True)]));
     end;
 
     procedure RunMemo(const aName: string);
@@ -2034,6 +2039,8 @@ var
     mgEditStruct     = 5;
     mgRemove         = 6;
     mgHeaderDropped  = 7;
+    mgCopyProtected  = 8;
+    mgCopyMissing    = 9;
 
     function CompareRow(aGesture: Integer): PVirtualNode;
     begin
@@ -2067,6 +2074,11 @@ var
             lFound := Assigned(lFirst) and Assigned(lSecond) and lFirst.IsRemovable and lSecond.IsRemovable;
           mgHeaderDropped:
             lFound := True;
+          mgCopyProtected:
+            lFound := Assigned(lFirst) and Assigned(lSecond) and not lFirst.Name.StartsWith('EDID') and
+              (lCells[0].ConflictAll > caNoConflict);
+          mgCopyMissing:
+            lFound := Assigned(lFirst) and not Assigned(lSecond) and not lFirst.Name.StartsWith('EDID');
         end;
         if lFound then
           Exit(lNode);
@@ -2075,7 +2087,8 @@ var
 
     procedure RunCompare(const aName: string; aSwitch: Boolean; aGesture: Integer);
     begin
-      Restore;
+      if not (aGesture in [mgCopyProtected, mgCopyMissing]) then
+        Restore;
       Build([aRecord, aTarget]);
       if Length(ActiveRecords) <> 2 then begin
         lLines.Add(Format('# modal %d'#9'%s'#9'no compare view', [aEntry, aName]));
@@ -2087,7 +2100,7 @@ var
         Exit;
       end;
       var lColumn := 2;
-      if (aGesture in [mgCopyToSelected, mgDrop, mgRemove, mgHeaderDropped]) or
+      if (aGesture in [mgCopyToSelected, mgDrop, mgRemove, mgHeaderDropped, mgCopyProtected, mgCopyMissing]) or
          (aGesture = mgAdd) and not Assigned(ViewCells(lRow)[0].Element) then
         lColumn := 1;
       var lSource := ViewCells(lRow)[0].Element;
@@ -2096,12 +2109,13 @@ var
       for var c := 0 to 1 do
         if (lRowName = '') and Assigned(ViewCells(lRow)[c].Element) then
           lRowName := ViewCells(lRow)[c].Element.Name;
+      var lTargetBefore := Digest(aTarget) + ', modified ' + BoolToStr(aTarget.Modified, True);
       var lDelay, lFocused: Integer;
       BeginGesture(aName, lRow, lColumn, aSwitch, lDelay, lFocused);
       var lResult := 'returned';
       try
         case aGesture of
-          mgCopyToSelected:
+          mgCopyToSelected, mgCopyProtected, mgCopyMissing:
             mniViewCopyToSelectedRecordsClick(nil);
           mgSetToDefault:
             mniViewSetToDefaultClick(nil);
@@ -2128,6 +2142,9 @@ var
           lResult := E.ClassName + ': ' + E.Message;
       end;
       EndGesture(aName, lResult, lDelay, lFocused);
+      if aGesture in [mgCopyProtected, mgCopyMissing] then
+        lLines.Add(Format('# protected %d'#9'%s'#9'row %s'#9'target before %s'#9'after %s, modified %s',
+          [aEntry, aName, lRowName, lTargetBefore, Digest(aTarget), BoolToStr(aTarget.Modified, True)]));
       var lRefs := '';
       for var i := 0 to Pred(aTarget.ReferencesCount) do
         lRefs := lRefs + ' ' + aTarget.References[i].Signature + ':' + IntToHex64(Cardinal(aTarget.References[i].LoadOrderFormID), 8);
@@ -2140,6 +2157,20 @@ var
     end;
 
   begin
+    if xeTestSwitches.ViewTreeProtected then begin
+      var lAllowEditGameMaster := xeContext.Settings.AllowEditGameMaster;
+      try
+        xeContext.Settings.AllowEditGameMaster := False;
+        RunCompare('copy to selected, protected target', False, mgCopyProtected);
+        RunCompare('copy to selected, protected missing', False, mgCopyMissing);
+        Run('copy multiple, protected target', False, True);
+        xeContext.Settings.AllowEditGameMaster := True;
+        Run('copy multiple, game master editable', False, True);
+      finally
+        xeContext.Settings.AllowEditGameMaster := lAllowEditGameMaster;
+      end;
+      Exit;
+    end;
     RunCompare('set to default', False, mgSetToDefault);
     RunCompare('set to default, switched', True, mgSetToDefault);
     RunCompare('drop', False, mgDrop);

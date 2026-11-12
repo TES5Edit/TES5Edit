@@ -7180,8 +7180,13 @@ begin
 
     for i := Low(ActiveRecords) to High(ActiveRecords) do
       if i <> Pred(SourceColumn) then
-        if Assigned(ActiveRecords[i].Element) then
+        if Assigned(ActiveRecords[i].Element) and Targets[i].Found and (Targets[i].Element <> SourceElement) and
+           Targets[i].Element.CanAssign(Targets[i].Index, SourceElement, True) then
           CheckListBox1.AddItem(ActiveRecords[i].Element.Name, Pointer(i));
+    if CheckListBox1.Count < 1 then begin
+      ShowMessage('None of the compared records can receive this copy.');
+      Exit;
+    end;
     CheckListBox1.CheckAll(cbChecked);
 
     if ShowModal <> mrOk then
@@ -7253,8 +7258,10 @@ begin
       MainRecords := MainRecords + [MainRecord];
   end;
   MainRecords := lPlan.Targets(MainRecords);
-  if Length(MainRecords) < 1 then
+  if Length(MainRecords) < 1 then begin
+    ShowMessage('None of the selected records can receive this copy.');
     Exit;
+  end;
 
   with TfrmFileSelect.Create(Self) do try
 

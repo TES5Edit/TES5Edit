@@ -99,6 +99,7 @@ ElminsterAU, robertgk2017, Jonathan Ostrus (jbostrus), eckserah, fireundubh, she
 * Follow load order for a record's winner and its next master
 * Copy no more entries than an array's maximum, and report lists over it in Check for Errors
 * A record a script assigns to itself keeps its data
+* Copy to Selected and Copy multiple rows to selected records no longer write into a record that is not editable (a game master's, a Compare To copy's, the hardcoded file's), which could empty its keyword and other lists; with no target left they show a message
 
 ### Loading and caches
 * Rebuild a reference cache that cannot be read or does not match its file, and save it atomically
