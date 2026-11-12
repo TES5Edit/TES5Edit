@@ -1399,6 +1399,12 @@ var
   begin
     Result := nil;
     var lParts := Trim(aFormID).Split(['@']);
+    if (Length(lParts) = 2) and SameText(lParts[0], 'HEADER') then begin
+      for var i := High(Files) downto Low(Files) do
+        if SameText(Files[i].FileName, lParts[1]) then
+          Exit(Files[i].Header);
+      raise Exception.Create('no module ' + lParts[1]);
+    end;
     var lFormID := TwbFormID.FromStr(lParts[0]);
     for var i := High(Files) downto Low(Files) do
       if (Length(lParts) = 1) or SameText(Files[i].FileName, lParts[1]) then begin
@@ -1959,7 +1965,8 @@ var
 
     procedure Run(const aName: string; aSwitch, aCopy: Boolean);
     begin
-      Restore;
+      if not xeTestSwitches.ViewTreeProtected then
+        Restore;
       if aCopy then
         SelectInNav;
       Build([aRecord]);
@@ -1974,6 +1981,7 @@ var
         lLines.Add(Format('# modal %d'#9'%s'#9'no EDID row', [aEntry, aName]));
         Exit;
       end;
+      var lTargetBefore := Digest(aTarget) + ', modified ' + BoolToStr(aTarget.Modified, True);
       var lDelay, lFocused: Integer;
       BeginGesture(aName, lRow, Length(ActiveRecords), aSwitch, lDelay, lFocused);
       var lResult := 'returned';
@@ -1989,6 +1997,9 @@ var
       EndGesture(aName, lResult, lDelay, lFocused);
       if aCopy then
         lLines.Add(Format('# modal %d'#9'%s'#9'target %s', [aEntry, aName, Digest(aTarget)]));
+      if xeTestSwitches.ViewTreeProtected then
+        lLines.Add(Format('# protected %d'#9'%s'#9'target before %s'#9'after %s, modified %s',
+          [aEntry, aName, lTargetBefore, Digest(aTarget), BoolToStr(aTarget.Modified, True)]));
     end;
 
     procedure RunMemo(const aName: string);
@@ -2034,6 +2045,8 @@ var
     mgEditStruct     = 5;
     mgRemove         = 6;
     mgHeaderDropped  = 7;
+    mgCopyProtected  = 8;
+    mgCopyMissing    = 9;
 
     function CompareRow(aGesture: Integer): PVirtualNode;
     begin
@@ -2067,6 +2080,11 @@ var
             lFound := Assigned(lFirst) and Assigned(lSecond) and lFirst.IsRemovable and lSecond.IsRemovable;
           mgHeaderDropped:
             lFound := True;
+          mgCopyProtected:
+            lFound := Assigned(lFirst) and Assigned(lSecond) and not lFirst.Name.StartsWith('EDID') and
+              (lCells[0].ConflictAll > caNoConflict);
+          mgCopyMissing:
+            lFound := Assigned(lFirst) and not Assigned(lSecond) and not lFirst.Name.StartsWith('EDID');
         end;
         if lFound then
           Exit(lNode);
@@ -2075,7 +2093,8 @@ var
 
     procedure RunCompare(const aName: string; aSwitch: Boolean; aGesture: Integer);
     begin
-      Restore;
+      if not (aGesture in [mgCopyProtected, mgCopyMissing]) then
+        Restore;
       Build([aRecord, aTarget]);
       if Length(ActiveRecords) <> 2 then begin
         lLines.Add(Format('# modal %d'#9'%s'#9'no compare view', [aEntry, aName]));
@@ -2087,7 +2106,7 @@ var
         Exit;
       end;
       var lColumn := 2;
-      if (aGesture in [mgCopyToSelected, mgDrop, mgRemove, mgHeaderDropped]) or
+      if (aGesture in [mgCopyToSelected, mgDrop, mgRemove, mgHeaderDropped, mgCopyProtected, mgCopyMissing]) or
          (aGesture = mgAdd) and not Assigned(ViewCells(lRow)[0].Element) then
         lColumn := 1;
       var lSource := ViewCells(lRow)[0].Element;
@@ -2096,12 +2115,13 @@ var
       for var c := 0 to 1 do
         if (lRowName = '') and Assigned(ViewCells(lRow)[c].Element) then
           lRowName := ViewCells(lRow)[c].Element.Name;
+      var lTargetBefore := Digest(aTarget) + ', modified ' + BoolToStr(aTarget.Modified, True);
       var lDelay, lFocused: Integer;
       BeginGesture(aName, lRow, lColumn, aSwitch, lDelay, lFocused);
       var lResult := 'returned';
       try
         case aGesture of
-          mgCopyToSelected:
+          mgCopyToSelected, mgCopyProtected, mgCopyMissing:
             mniViewCopyToSelectedRecordsClick(nil);
           mgSetToDefault:
             mniViewSetToDefaultClick(nil);
@@ -2128,6 +2148,9 @@ var
           lResult := E.ClassName + ': ' + E.Message;
       end;
       EndGesture(aName, lResult, lDelay, lFocused);
+      if aGesture in [mgCopyProtected, mgCopyMissing] then
+        lLines.Add(Format('# protected %d'#9'%s'#9'row %s'#9'target before %s'#9'after %s, modified %s',
+          [aEntry, aName, lRowName, lTargetBefore, Digest(aTarget), BoolToStr(aTarget.Modified, True)]));
       var lRefs := '';
       for var i := 0 to Pred(aTarget.ReferencesCount) do
         lRefs := lRefs + ' ' + aTarget.References[i].Signature + ':' + IntToHex64(Cardinal(aTarget.References[i].LoadOrderFormID), 8);
@@ -2139,7 +2162,103 @@ var
          lRefs]));
     end;
 
+    procedure HeaderDropProbe;
+
+      function MasterList(const aHeader: IwbMainRecord): string;
+      var
+        lList  : IwbContainerElementRef;
+        lEntry : IwbContainerElementRef;
+      begin
+        Result := Format('masters %d, %s', [aHeader._File.MasterCount[True], Digest(aHeader)]);
+        var lHedr: IwbContainerElementRef;
+        if Supports(aHeader.ElementBySignature['HEDR'], IwbContainerElementRef, lHedr) then
+          Result := Result + Format(', HEDR %s / %s', [lHedr.ElementEditValues['Number of Records'],
+            lHedr.ElementEditValues['Next Object ID']]);
+        if not Supports(aHeader.ElementByName['Master Files'], IwbContainerElementRef, lList) then
+          Exit(Result + ', no list');
+        Result := Result + Format(', list %d:', [lList.ElementCount]);
+        for var i := 0 to Pred(lList.ElementCount) do begin
+          var lName: string := '?';
+          if Supports(lList.Elements[i], IwbContainerElementRef, lEntry) and Assigned(lEntry.ElementBySignature['MAST']) then
+            lName := lEntry.ElementBySignature['MAST'].EditValue;
+          Result := Result + ' "' + lName + '"';
+        end;
+      end;
+
+    begin
+      Build([aRecord, aTarget]);
+      if Length(ActiveRecords) <> 2 then begin
+        lLines.Add(Format('# headers %d'#9'no compare view', [aEntry]));
+        Exit;
+      end;
+      lLines.Add(Format('# headers %d'#9'before'#9'source %s'#9'target %s, modified %s',
+        [aEntry, MasterList(aRecord), MasterList(aTarget), BoolToStr(aTarget.Modified, True)]));
+      var lRow: PVirtualNode := nil;
+      for var lNode in vstView.Nodes(False) do
+        if (lNode.Parent = vstView.RootNode) and Assigned(ViewCells(lNode)[0].Element) and
+           SameText(ViewCells(lNode)[0].Element.Name, 'Master Files') then begin
+          lRow := lNode;
+          Break;
+        end;
+      var lDelay, lFocused: Integer;
+      if Assigned(lRow) and not Assigned(ViewCells(lRow)[1].Element) then begin
+        var lSource := ViewCells(lRow)[0].Element;
+        var lDropNode := lRow;
+        var lIndex, lAligned: Integer;
+        var lTargetElement: IwbElement;
+        var lOffered := GetTargetElement(vstView, lDropNode, 2, lIndex, lTargetElement, lAligned) and
+          (lTargetElement <> lSource) and lTargetElement.CanAssign(lIndex, lSource, True);
+        var lResult := 'not offered';
+        if lOffered then begin
+          BeginGesture('member drop', lRow, 2, False, lDelay, lFocused);
+          lResult := 'returned';
+          try
+            PerformDrop(vstView, lRow, 2, lSource);
+          except
+            on E: Exception do
+              lResult := E.ClassName + ': ' + E.Message;
+          end;
+          EndGesture('member drop', lResult, lDelay, lFocused);
+        end;
+        lLines.Add(Format('# headers %d'#9'member drop'#9'offered %s'#9'%s'#9'target %s, modified %s',
+          [aEntry, BoolToStr(lOffered, True), lResult, MasterList(aTarget), BoolToStr(aTarget.Modified, True)]));
+      end;
+      Build([aRecord, aTarget]);
+      begin
+        BeginGesture('header drop', vstView.GetFirst, 1, False, lDelay, lFocused);
+        var lResult := 'returned';
+        try
+          var lHandled := False;
+          vstViewHeaderDropped(vstView.Header, 1, 2, lHandled);
+        except
+          on E: Exception do
+            lResult := E.ClassName + ': ' + E.Message;
+        end;
+        EndGesture('header drop', lResult, lDelay, lFocused);
+        lLines.Add(Format('# headers %d'#9'header drop'#9'%s'#9'target %s, modified %s',
+          [aEntry, lResult, MasterList(aTarget), BoolToStr(aTarget.Modified, True)]));
+      end;
+    end;
+
   begin
+    if xeTestSwitches.ViewTreeHeaderDrop then begin
+      HeaderDropProbe;
+      Exit;
+    end;
+    if xeTestSwitches.ViewTreeProtected then begin
+      var lAllowEditGameMaster := xeContext.Settings.AllowEditGameMaster;
+      try
+        xeContext.Settings.AllowEditGameMaster := False;
+        RunCompare('copy to selected, protected target', False, mgCopyProtected);
+        RunCompare('copy to selected, protected missing', False, mgCopyMissing);
+        Run('copy multiple, protected target', False, True);
+        xeContext.Settings.AllowEditGameMaster := True;
+        Run('copy multiple, game master editable', False, True);
+      finally
+        xeContext.Settings.AllowEditGameMaster := lAllowEditGameMaster;
+      end;
+      Exit;
+    end;
     RunCompare('set to default', False, mgSetToDefault);
     RunCompare('set to default, switched', True, mgSetToDefault);
     RunCompare('drop', False, mgDrop);
@@ -3406,6 +3525,161 @@ procedure TxeTestFormHelper.TestCheckMenusRunTimer(Sender: TObject);
     TestHost.TestCheckMenusLines.Add('refby' + #9 + aStage + #9 + BoolToStr(tbsReferencedBy.TabVisible, True) + #9 + IntToStr(lCount) + #9 + IntToStr(aRecord.MasterOrSelf.ReferencedByCount) + #9 + lFirst);
   end;
 
+  function CopyName(const aElement: IwbElement): string;
+  begin
+    var lRecord: IwbMainRecord;
+    var lGroup: IwbGroupRecord;
+    if Supports(aElement, IwbMainRecord, lRecord) then begin
+      Result := Trim(string(lRecord.Signature) + ' ' + lRecord.EditorID);
+      if Supports(lRecord.Container, IwbGroupRecord, lGroup) and (lGroup.GroupType <> 0) then
+        Result := Result + ' in ' + CopyName(lGroup);
+    end else if Supports(aElement, IwbGroupRecord, lGroup) then begin
+      if lGroup.GroupType = 0 then
+        Result := 'GRUP ' + string(TwbSignature(lGroup.GroupLabel))
+      else if Assigned(lGroup.ChildrenOf) then
+        Result := 'GRUP' + IntToStr(lGroup.GroupType) + ' of ' + CopyName(lGroup.ChildrenOf)
+      else
+        Result := 'GRUP' + IntToStr(lGroup.GroupType);
+    end else
+      Result := aElement.Name;
+  end;
+
+  procedure CopyCollect(const aElement: IwbElement; aList: TList<IwbElement>);
+  begin
+    var lRecord: IwbMainRecord;
+    var lGroup: IwbGroupRecord;
+    if Supports(aElement, IwbMainRecord, lRecord) then begin
+      if lRecord.Signature <> 'TES3' then
+        aList.Add(lRecord);
+    end else if Supports(aElement, IwbGroupRecord, lGroup) then begin
+      aList.Add(lGroup);
+      for var i := 0 to Pred(lGroup.ElementCount) do
+        CopyCollect(lGroup.Elements[i], aList);
+    end;
+  end;
+
+  procedure CopyLines(const aFamily, aName: string; const aItems: array of TMenuItem);
+  begin
+    for var lItem in aItems do
+      TestHost.TestCheckMenusLines.Add('copymenu' + #9 + aFamily + #9 + aName + #9 + lItem.Name + #9 + BoolToStr(lItem.Visible, True));
+  end;
+
+  procedure CopyNav(const aName: string);
+  begin
+    pmuNavPopup(nil);
+    CopyLines('nav', aName, [mniNavCopyAsOverride, mniNavCopyAsOverrideWithOverwrite, mniNavDeepCopyAsOverride,
+      mniNavDeepCopyAsOverrideWithOverwriting, mniNavCopyAsNewRecord]);
+  end;
+
+  procedure CopySelectMany(const aElements: array of IwbElement);
+  begin
+    vstNav.ClearSelection;
+    for var k := Low(aElements) to High(aElements) do begin
+      var lNode := FindNodeForElement(aElements[k]);
+      if not Assigned(lNode) then
+        raise Exception.Create('no nav node for ' + aElements[k].Name);
+      vstNav.FullyVisible[lNode] := True;
+      if k = Low(aElements) then
+        vstNav.FocusedNode := lNode;
+    end;
+    for var k := Low(aElements) to High(aElements) do
+      vstNav.Selected[FindNodeForElement(aElements[k])] := True;
+  end;
+
+  procedure CopyView(const aName: string; const aRecord: IwbMainRecord);
+  begin
+    DoSetActiveRecord(IwbMainRecord(nil));
+    DoSetActiveRecord(aRecord);
+    Application.ProcessMessages;
+    var lColumn := -1;
+    for var k := Low(ActiveRecords) to High(ActiveRecords) do
+      if Assigned(ActiveRecords[k].Element) and ActiveRecords[k].Element.Equals(aRecord) then
+        lColumn := Succ(k);
+    if lColumn < 1 then
+      raise Exception.Create('no View column for ' + aName);
+    var lColumns := vstView.Header.Columns;
+    var lRtti := TRttiContext.Create;
+    var lField := lRtti.GetType(lColumns.ClassType).GetField('FPopupIndex');
+    if not Assigned(lField) then
+      raise Exception.Create('no FPopupIndex field');
+    PInteger(PByte(lColumns) + lField.Offset)^ := lColumn;
+    if lColumns.PopupIndex <> lColumn then
+      raise Exception.Create('the View header popup column did not take ' + IntToStr(lColumn));
+    pmuViewHeaderPopup(nil);
+    CopyLines('view', aName, [mniViewHeaderCopyAsOverride, mniViewHeaderCopyAsOverrideWithOverwriting, mniViewHeaderDeepCopyAsOverride,
+      mniViewHeaderDeepCopyAsOverrideWithOverwriting, mniViewHeaderCopyAsNewRecord]);
+  end;
+
+  procedure CopyRefBy(const aName: string; const aRecord: IwbMainRecord);
+  begin
+    DoSetActiveRecord(IwbMainRecord(nil));
+    DoSetActiveRecord(aRecord);
+    Application.ProcessMessages;
+    pgMain.ActivePage := tbsReferencedBy;
+    pgMainChange(pgMain);
+    Application.ProcessMessages;
+    vstReferencedBy.SelectAll(False);
+    pmuRefByPopup(nil);
+    CopyLines('refby', aName + ' (' + IntToStr(vstReferencedBy.SelectedCount) + ' rows)', [mniRefByCopyOverrideInto,
+      mniRefByCopyOverrideIntoWithOverwriting, mniRefByDeepCopyOverrideInto, mniRefByDeepCopyOverrideIntoWithOverwriting, mniRefByCopyAsNewInto]);
+    pgMain.ActivePage := tbsMessages;
+  end;
+
+  function CopySwitch(const aSwitch: string): TArray<string>;
+  begin
+    Result := nil;
+    for var k := 1 to ParamCount do
+      if ParamStr(k).StartsWith('-' + aSwitch + ':', True) then
+        Exit(ParamStr(k).Substring(Length(aSwitch) + 2).Split([';'], TStringSplitOptions.ExcludeEmpty));
+  end;
+
+  function CopyFind(aList: TList<IwbElement>; aNames: TStringList; const aName: string): IwbElement;
+  begin
+    for var k := 0 to Pred(aNames.Count) do
+      if aNames[k] = aName then
+        Exit(aList[k]);
+    raise Exception.Create('no element named ' + aName);
+  end;
+
+  procedure CopyOffers(const aModule: IwbFile);
+  var
+    lList  : TList<IwbElement>;
+    lNames : TStringList;
+  begin
+    lList := TList<IwbElement>.Create;
+    lNames := TStringList.Create;
+    try
+      for var i := 0 to Pred(aModule.ElementCount) do
+        CopyCollect(aModule.Elements[i], lList);
+      for var lElement in lList do begin
+        var lName := CopyName(lElement);
+        lNames.Add(lName);
+        TestHost.TestCheckMenusLines.Add('copyelement' + #9 + lName);
+        Select(lElement);
+        CopyNav(lName);
+        var lRecord: IwbMainRecord;
+        if Supports(lElement, IwbMainRecord, lRecord) then
+          CopyView(lName, lRecord);
+      end;
+      for var lMix in CopySwitch('testcheckmenuscopymix') do begin
+        var lParts := lMix.Split(['+']);
+        var lElements: TArray<IwbElement>;
+        SetLength(lElements, Length(lParts));
+        for var k := Low(lParts) to High(lParts) do
+          lElements[k] := CopyFind(lList, lNames, lParts[k]);
+        CopySelectMany(lElements);
+        CopyNav(lMix + ' (' + IntToStr(Length(vstNav.GetSortedSelection(True))) + ' selected)');
+      end;
+      for var lFile in xeContext.Files do
+        lFile.BuildRef;
+      for var lTarget in CopySwitch('testcheckmenuscopyrefby') do
+        CopyRefBy(lTarget, CopyFind(lList, lNames, lTarget) as IwbMainRecord);
+    finally
+      lNames.Free;
+      lList.Free;
+    end;
+  end;
+
   procedure RunChecks;
   begin
     var lModule := Module;
@@ -3458,6 +3732,8 @@ procedure TxeTestFormHelper.TestCheckMenusRunTimer(Sender: TObject);
         RefByMenus('built');
       pgMain.ActivePage := tbsMessages;
     end;
+    if FindCmdLineSwitch('testcheckmenuscopy') then
+      CopyOffers(lModule);
     var lAllow := wbManualCleaningAllow;
     var lHide := wbManualCleaningHide;
     try

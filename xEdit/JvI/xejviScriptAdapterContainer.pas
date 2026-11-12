@@ -83,6 +83,7 @@ var
   Container: IwbContainerElementRef;
 begin
   if Supports(IInterface(Args.Values[0]), IwbContainerElementRef, Container) then begin
+    RequireEditable(Container);
     var lName: string := Args.Values[1];
     var lMainRecord: IwbMainRecord;
     if IsKeywordsMember(lName) and Supports(Container, IwbMainRecord, lMainRecord) then begin

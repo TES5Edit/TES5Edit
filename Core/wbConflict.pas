@@ -75,6 +75,7 @@ type
     Source  : IwbMainRecord;
     Records : TDynMainRecords;
     Rows    : TArray<TwbRowCopyRow>;
+    function Shows(const aRecord: IwbMainRecord): Boolean;
     function Targets(const aRecords: TDynMainRecords): TDynMainRecords;
     function Apply(const aTargets: TDynMainRecords; const aCanEdit: TFunc<Boolean>): Boolean;
   end;
@@ -2672,7 +2673,8 @@ begin
         if Assigned(lElement) then
           Break;
       end;
-    if Assigned(lElement) and (lElement.Name <> 'Record Header') and not lElement.Name.StartsWith('EDID') then begin
+    if Assigned(lElement) and (lElement.Name <> 'Record Header') and not lElement.Name.StartsWith('EDID') and
+       (wbIsInternalEdit or not (dfInternalEditOnly in lElement.Def.DefFlags)) then begin
       lRow := Default(TwbRowCopyRow);
       lRow.Name := lElement.Name;
       SetLength(lRow.Cells, Length(lDatas));
@@ -2686,16 +2688,22 @@ end;
 
 { TwbRowCopyPlan }
 
+function TwbRowCopyPlan.Shows(const aRecord: IwbMainRecord): Boolean;
+begin
+  Result := False;
+  if Source.Equals(aRecord) then
+    Exit;
+  for var lShown in Records do
+    if Assigned(lShown) and lShown.Equals(aRecord) then
+      Exit(True);
+end;
+
 function TwbRowCopyPlan.Targets(const aRecords: TDynMainRecords): TDynMainRecords;
 begin
   Result := nil;
   for var lRecord in aRecords do
-    if not Source.Equals(lRecord) then
-      for var lShown in Records do
-        if Assigned(lShown) and lShown.Equals(lRecord) then begin
-          Result := Result + [lRecord];
-          Break;
-        end;
+    if Shows(lRecord) and lRecord.IsEditable then
+      Result := Result + [lRecord];
 end;
 
 function TwbRowCopyPlan.Apply(const aTargets: TDynMainRecords; const aCanEdit: TFunc<Boolean>): Boolean;
@@ -2706,7 +2714,13 @@ var
   lHolder  : IwbMainRecord;
 begin
   Result := False;
-  lTargets := Targets(aTargets);
+  lTargets := nil;
+  for var lRecord in aTargets do
+    if Shows(lRecord) then
+      if lRecord.IsEditable then
+        lTargets := lTargets + [lRecord]
+      else
+        wbProgress('Skipped %s: is not editable', [lRecord.FullPath]);
   for var lRow in Rows do
     if lRow.Selected then begin
       lCells := Copy(lRow.Cells);

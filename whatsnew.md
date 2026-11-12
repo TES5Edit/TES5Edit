@@ -99,6 +99,8 @@ ElminsterAU, robertgk2017, Jonathan Ostrus (jbostrus), eckserah, fireundubh, she
 * Follow load order for a record's winner and its next master
 * Copy no more entries than an array's maximum, and report lists over it in Check for Errors
 * A record a script assigns to itself keeps its data
+* Copy to Selected and Copy multiple rows to selected records no longer write into a record that is not editable (a game master's, a Compare To copy's, the hardcoded file's), which could empty its keyword and other lists; with no target left they show a message
+* Dropping or row-copying one plugin's Master Files onto another file header, or dropping a whole file header onto another, no longer writes a master with an empty name, which left a plugin that could not be loaded
 
 ### Loading and caches
 * Rebuild a reference cache that cannot be read or does not match its file, and save it atomically
@@ -121,6 +123,7 @@ ElminsterAU, robertgk2017, Jonathan Ostrus (jbostrus), eckserah, fireundubh, she
 * Stop offering Remove on a record's Record Header
 * Filtering the Referenced By list no longer leaves a row selected that you did not select, so a following command can not act on the wrong record
 * A double at its maximum or minimum shows as Default or Min
+* The navigation tree no longer sometimes paints its last row a second time on the empty row below it
 * Fix a RichEdit EOutOfResources error when adding lines (contributed by sheson)
 
 ### Command line and unattended runs
@@ -167,7 +170,7 @@ ElminsterAU, robertgk2017, Jonathan Ostrus (jbostrus), eckserah, fireundubh, she
 * Resolve a script's units relative to the running script, so a script in a subfolder can use its own units (#1496, contributed by fireundubh)
 * Add functions for an array's aligned rows and an aligned add
 * Add `GetIsUpdate` and `SetIsUpdate`, and argument count checks on the file type getters and setters and the element value setters (contributed by robertgk2017)
-* A script can no longer write to a record that is not editable
+* A script can no longer write to a record or a file that is not editable
 * Script functions refuse a wrong list, object or index with a message instead of crashing
 * `KWDA` and `KSIZ` resolve for scripts on wrapped keywords
 * Add scaling to the UI of the Find cell in worldspace script (contributed by Jonathan Ostrus)

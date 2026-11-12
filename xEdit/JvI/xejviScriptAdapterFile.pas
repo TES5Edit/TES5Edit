@@ -25,6 +25,7 @@ uses
 
   wbInterface,
 
+  xejviScriptAdapterContainer,
   xejviScriptArguments;
 
 const
@@ -270,8 +271,10 @@ var
   _File: IwbFile;
 begin
   Value := 0;
-  if Supports(IInterface(Args.Values[0]), IwbFile, _File) then
+  if Supports(IInterface(Args.Values[0]), IwbFile, _File) then begin
+    RequireEditable(_File);
     Value := _File.NewFormID.ToCardinal;
+  end;
 end;
 
 procedure IwbFile_GroupBySignature(var Value: Variant; Args: TJvInterpreterArgs);

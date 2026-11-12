@@ -519,10 +519,10 @@ type
     dfMergeIfMultiple,
     dfMustBeUnion,
     dfNeedsPrepareSave,
+    dfNoCopyAsNew,
     dfNoCopyAsOverride,
     dfNoMove,
     dfNoReport,
-    dfNoRequestedIdentity,
     dfNotAlignable,
     dfRemoveLastOnly,
     dfSkipImplicitEdit,
@@ -538,6 +538,7 @@ type
     dfSummaryShowIgnore,
     dfTemplate,
     dfTranslatable,
+    dfUniqueInFile,
     dfUnionStaticResolve,
     dfUseLoadOrder,
     dfZeroSortKey, // not implemented for all Defs!!!
@@ -4679,6 +4680,7 @@ type
     function IsKnownIdentity(aFormIDNameBase: Byte; const aIdentity: string): Boolean;
     function UnusedIdentity(aFormIDNameBase: Byte; const aPrefix: string; const aQualifier: string = ''): string;
     function IdentityHolder(aFormIDNameBase: Byte; const aIdentity: string): IwbMainRecord; virtual; abstract;
+    function CopyOfferRefusal(const aItem: IwbElement; aAsNew, aDeep: Boolean): string; virtual; abstract;
     function IdentityEnum(const aDef: IwbMainRecordDef): IwbEnumDef;
     function UnusedIndexIdentity(const aDef: IwbMainRecordDef; const aEnum: IwbEnumDef): string;
     function CanAddNewRecord(const aDef: IwbMainRecordDef): Boolean;

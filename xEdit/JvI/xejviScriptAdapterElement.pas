@@ -731,8 +731,10 @@ var
   MainRecord: IwbMainRecord;
 begin
   if Supports(IInterface(Args.Values[0]), IwbElement, Element) then
-    if Supports(IInterface(Args.Values[1]), IwbMainRecord, MainRecord) then
+    if Supports(IInterface(Args.Values[1]), IwbMainRecord, MainRecord) then begin
+      RequireEditable(MainRecord);
       Value := MainRecord.AddCopy(Element, CopyFlags(Args.Values[2], Args.Values[3]));
+    end;
 end;
 
 
