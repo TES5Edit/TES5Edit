@@ -17360,6 +17360,11 @@ begin
   if not Assigned(TargetElement) then
     Exit;
 
+  var lTargetRecord: IwbMainRecord;
+  if Supports(TargetElement, IwbMainRecord, lTargetRecord) and Assigned(lTargetRecord._File) and
+     lTargetRecord.Equals(lTargetRecord._File.Header) then
+    Exit;
+
   if TargetElement.CanAssign(Low(Integer), SourceElement, False) then begin
     var lTargetCell := ActiveRecords[Pred(TargetColumn)];
 

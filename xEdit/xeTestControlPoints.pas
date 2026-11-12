@@ -1399,6 +1399,12 @@ var
   begin
     Result := nil;
     var lParts := Trim(aFormID).Split(['@']);
+    if (Length(lParts) = 2) and SameText(lParts[0], 'HEADER') then begin
+      for var i := High(Files) downto Low(Files) do
+        if SameText(Files[i].FileName, lParts[1]) then
+          Exit(Files[i].Header);
+      raise Exception.Create('no module ' + lParts[1]);
+    end;
     var lFormID := TwbFormID.FromStr(lParts[0]);
     for var i := High(Files) downto Low(Files) do
       if (Length(lParts) = 1) or SameText(Files[i].FileName, lParts[1]) then begin
@@ -2156,7 +2162,89 @@ var
          lRefs]));
     end;
 
+    procedure HeaderDropProbe;
+
+      function MasterList(const aHeader: IwbMainRecord): string;
+      var
+        lList  : IwbContainerElementRef;
+        lEntry : IwbContainerElementRef;
+      begin
+        Result := Format('masters %d, %s', [aHeader._File.MasterCount[True], Digest(aHeader)]);
+        var lHedr: IwbContainerElementRef;
+        if Supports(aHeader.ElementBySignature['HEDR'], IwbContainerElementRef, lHedr) then
+          Result := Result + Format(', HEDR %s / %s', [lHedr.ElementEditValues['Number of Records'],
+            lHedr.ElementEditValues['Next Object ID']]);
+        if not Supports(aHeader.ElementByName['Master Files'], IwbContainerElementRef, lList) then
+          Exit(Result + ', no list');
+        Result := Result + Format(', list %d:', [lList.ElementCount]);
+        for var i := 0 to Pred(lList.ElementCount) do begin
+          var lName: string := '?';
+          if Supports(lList.Elements[i], IwbContainerElementRef, lEntry) and Assigned(lEntry.ElementBySignature['MAST']) then
+            lName := lEntry.ElementBySignature['MAST'].EditValue;
+          Result := Result + ' "' + lName + '"';
+        end;
+      end;
+
+    begin
+      Build([aRecord, aTarget]);
+      if Length(ActiveRecords) <> 2 then begin
+        lLines.Add(Format('# headers %d'#9'no compare view', [aEntry]));
+        Exit;
+      end;
+      lLines.Add(Format('# headers %d'#9'before'#9'source %s'#9'target %s, modified %s',
+        [aEntry, MasterList(aRecord), MasterList(aTarget), BoolToStr(aTarget.Modified, True)]));
+      var lRow: PVirtualNode := nil;
+      for var lNode in vstView.Nodes(False) do
+        if (lNode.Parent = vstView.RootNode) and Assigned(ViewCells(lNode)[0].Element) and
+           SameText(ViewCells(lNode)[0].Element.Name, 'Master Files') then begin
+          lRow := lNode;
+          Break;
+        end;
+      var lDelay, lFocused: Integer;
+      if Assigned(lRow) and not Assigned(ViewCells(lRow)[1].Element) then begin
+        var lSource := ViewCells(lRow)[0].Element;
+        var lDropNode := lRow;
+        var lIndex, lAligned: Integer;
+        var lTargetElement: IwbElement;
+        var lOffered := GetTargetElement(vstView, lDropNode, 2, lIndex, lTargetElement, lAligned) and
+          (lTargetElement <> lSource) and lTargetElement.CanAssign(lIndex, lSource, True);
+        var lResult := 'not offered';
+        if lOffered then begin
+          BeginGesture('member drop', lRow, 2, False, lDelay, lFocused);
+          lResult := 'returned';
+          try
+            PerformDrop(vstView, lRow, 2, lSource);
+          except
+            on E: Exception do
+              lResult := E.ClassName + ': ' + E.Message;
+          end;
+          EndGesture('member drop', lResult, lDelay, lFocused);
+        end;
+        lLines.Add(Format('# headers %d'#9'member drop'#9'offered %s'#9'%s'#9'target %s, modified %s',
+          [aEntry, BoolToStr(lOffered, True), lResult, MasterList(aTarget), BoolToStr(aTarget.Modified, True)]));
+      end;
+      Build([aRecord, aTarget]);
+      begin
+        BeginGesture('header drop', vstView.GetFirst, 1, False, lDelay, lFocused);
+        var lResult := 'returned';
+        try
+          var lHandled := False;
+          vstViewHeaderDropped(vstView.Header, 1, 2, lHandled);
+        except
+          on E: Exception do
+            lResult := E.ClassName + ': ' + E.Message;
+        end;
+        EndGesture('header drop', lResult, lDelay, lFocused);
+        lLines.Add(Format('# headers %d'#9'header drop'#9'%s'#9'target %s, modified %s',
+          [aEntry, lResult, MasterList(aTarget), BoolToStr(aTarget.Modified, True)]));
+      end;
+    end;
+
   begin
+    if xeTestSwitches.ViewTreeHeaderDrop then begin
+      HeaderDropProbe;
+      Exit;
+    end;
     if xeTestSwitches.ViewTreeProtected then begin
       var lAllowEditGameMaster := xeContext.Settings.AllowEditGameMaster;
       try

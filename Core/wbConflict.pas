@@ -2673,7 +2673,8 @@ begin
         if Assigned(lElement) then
           Break;
       end;
-    if Assigned(lElement) and (lElement.Name <> 'Record Header') and not lElement.Name.StartsWith('EDID') then begin
+    if Assigned(lElement) and (lElement.Name <> 'Record Header') and not lElement.Name.StartsWith('EDID') and
+       (wbIsInternalEdit or not (dfInternalEditOnly in lElement.Def.DefFlags)) then begin
       lRow := Default(TwbRowCopyRow);
       lRow.Name := lElement.Name;
       SetLength(lRow.Cells, Length(lDatas));

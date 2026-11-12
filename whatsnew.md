@@ -100,6 +100,7 @@ ElminsterAU, robertgk2017, Jonathan Ostrus (jbostrus), eckserah, fireundubh, she
 * Copy no more entries than an array's maximum, and report lists over it in Check for Errors
 * A record a script assigns to itself keeps its data
 * Copy to Selected and Copy multiple rows to selected records no longer write into a record that is not editable (a game master's, a Compare To copy's, the hardcoded file's), which could empty its keyword and other lists; with no target left they show a message
+* Dropping or row-copying one plugin's Master Files onto another file header, or dropping a whole file header onto another, no longer writes a master with an empty name, which left a plugin that could not be loaded
 
 ### Loading and caches
 * Rebuild a reference cache that cannot be read or does not match its file, and save it atomically

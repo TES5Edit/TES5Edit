@@ -16595,6 +16595,9 @@ begin
         );
       if Result and aCheckDontShow then
         Result := not mrDef.Members[aIndex].DontShow[Self];
+      if Result and not wbIsInternalEdit then
+        if dfInternalEditOnly in mrDef.Members[aIndex].DefFlags then
+          Result := False;
     end;
   end else
     Result := False;
