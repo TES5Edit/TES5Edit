@@ -8265,12 +8265,18 @@ begin
   if xeContext.Settings.TranslationMode then
     Exit;
 
-  if not EditWarn then
-    Exit;
-
   MainRecords := GetRefBySelectionAsMainRecords;
 
   if Length(MainRecords) < 1 then
+    Exit;
+
+  for i := Low(MainRecords) to High(MainRecords) do
+    if not MainRecords[i].IsRemovable then begin
+      ShowMessage(MainRecords[i].Name + ' in "' + MainRecords[i]._File.FileName + '" can not be removed.');
+      Exit;
+    end;
+
+  if not EditWarn then
     Exit;
 
   if Length(MainRecords) = 1 then

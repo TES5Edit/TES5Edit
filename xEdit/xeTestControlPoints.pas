@@ -2337,7 +2337,109 @@ var
         lLines.Add(Format('# hremove %d'#9'write'#9'%s', [aEntry, Written(lFile)]));
     end;
 
+    procedure RefByRemoveProbe;
+
+      function State(const aFile: IwbFile): string;
+      begin
+        var lHeader := aFile.Header;
+        if Assigned(lHeader) then begin
+          Result := 'header ' + Digest(lHeader);
+          var lHedr: IwbContainerElementRef;
+          if Supports(lHeader.ElementBySignature['HEDR'], IwbContainerElementRef, lHedr) then
+            Result := Result + Format(', HEDR %s / %s / %s', [lHedr.ElementEditValues['Version'],
+              lHedr.ElementEditValues['Number of Records'], lHedr.ElementEditValues['Next Object ID']]);
+        end else
+          Result := 'no header';
+        Result := Format('%s: %s, %d records, modified %s', [aFile.FileName, Result, aFile.RecordCount, BoolToStr(aFile.Modified, True)]);
+      end;
+
+      function Where(const aRecord: IwbMainRecord; const aFile: IwbFile): string;
+      begin
+        Result := 'removed';
+        if Assigned(aRecord.Container) and Assigned(aRecord._File) and aRecord._File.Equals(aFile) then
+          Result := 'in its file';
+        Result := Format('%s in %s: %s, chain overrides %d', [aRecord.Name, aFile.FileName, Result,
+          aRecord.MasterOrSelf.OverrideCount]);
+      end;
+
+    begin
+      DoSetActiveRecord(IwbMainRecord(nil));
+      DoSetActiveRecord(aRecord);
+      Application.ProcessMessages;
+      pgMain.ActivePage := tbsReferencedBy;
+      pgMainChange(pgMain);
+      Application.ProcessMessages;
+      vstReferencedBy.SelectAll(False);
+      var lAll := GetRefBySelectionAsMainRecords;
+      if Length(lAll) <> Integer(vstReferencedBy.SelectedCount) then
+        raise Exception.Create(Format('Referenced By maps %d records to %d rows', [Length(lAll), vstReferencedBy.SelectedCount]));
+      vstReferencedBy.ClearSelection;
+      var lOrder := '';
+      var k := 0;
+      var lNode := vstReferencedBy.GetFirst;
+      while Assigned(lNode) do begin
+        for var j := 1 to High(lRecords) do
+          if lAll[k].Equals(lRecords[j]) then begin
+            vstReferencedBy.Selected[lNode] := True;
+            lOrder := lOrder + ' ' + lAll[k].EditorID + '@' + lAll[k]._File.FileName;
+            Break;
+          end;
+        Inc(k);
+        lNode := vstReferencedBy.GetNext(lNode);
+      end;
+      var lSelected := GetRefBySelectionAsMainRecords;
+      lLines.Add(Format('# refby %d'#9'selection'#9'rows %d, selected %d:%s', [aEntry, Length(lAll), Length(lSelected), lOrder]));
+      var lFiles: TArray<IwbFile> := [];
+      for var lRec in lSelected do begin
+        var lKnown := False;
+        for var lFile in lFiles do
+          lKnown := lKnown or lFile.Equals(lRec._File);
+        if not lKnown then
+          lFiles := lFiles + [lRec._File];
+      end;
+      var lRecFiles: TArray<IwbFile> := [];
+      for var lRec in lSelected do
+        lRecFiles := lRecFiles + [lRec._File];
+      for var i := Low(lSelected) to High(lSelected) do
+        lLines.Add(Format('# refby %d'#9'record %d before'#9'%s', [aEntry, i, Where(lSelected[i], lRecFiles[i])]));
+      for var i := Low(lFiles) to High(lFiles) do
+        lLines.Add(Format('# refby %d'#9'file %d before'#9'%s', [aEntry, i, State(lFiles[i])]));
+      var lMasters: TArray<IwbMainRecord> := [];
+      var lMasterNames: TArray<string> := [];
+      for var lRec in lSelected do begin
+        lMasters := lMasters + [lRec.MasterOrSelf];
+        lMasterNames := lMasterNames + [lRec.MasterOrSelf.Name + ' in ' + lRec.MasterOrSelf._File.FileName];
+      end;
+      for var i := Low(lMasters) to High(lMasters) do
+        lLines.Add(Format('# refby %d'#9'chain %d before'#9'%s: overrides %d', [aEntry, i, lMasterNames[i],
+          lMasters[i].OverrideCount]));
+      pmuRefByPopup(nil);
+      lLines.Add(Format('# refby %d'#9'offer'#9'Remove visible %s', [aEntry, BoolToStr(mniRefByRemove.Visible, True)]));
+      var lDelay, lFocused: Integer;
+      BeginGesture('refby remove', nil, 0, False, lDelay, lFocused);
+      var lResult := 'returned';
+      try
+        mniRefByRemoveClick(nil);
+      except
+        on E: Exception do
+          lResult := E.ClassName + ': ' + E.Message;
+      end;
+      EndGesture('refby remove', lResult, lDelay, lFocused);
+      for var i := Low(lSelected) to High(lSelected) do
+        lLines.Add(Format('# refby %d'#9'record %d after'#9'%s', [aEntry, i, Where(lSelected[i], lRecFiles[i])]));
+      for var i := Low(lFiles) to High(lFiles) do
+        lLines.Add(Format('# refby %d'#9'file %d after'#9'%s', [aEntry, i, State(lFiles[i])]));
+      for var i := Low(lMasters) to High(lMasters) do
+        lLines.Add(Format('# refby %d'#9'chain %d after'#9'%s: overrides %d', [aEntry, i, lMasterNames[i],
+          lMasters[i].OverrideCount]));
+      pgMain.ActivePage := tbsMessages;
+    end;
+
   begin
+    if xeTestSwitches.ViewTreeRefByRemove then begin
+      RefByRemoveProbe;
+      Exit;
+    end;
     if xeTestSwitches.ViewTreeHeaderRemove then begin
       HeaderRemoveProbe;
       Exit;
