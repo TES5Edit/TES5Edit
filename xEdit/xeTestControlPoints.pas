@@ -1734,6 +1734,31 @@ var
     Build(aRecords);
   end;
 
+  procedure PopupProbe(aEntry: Integer);
+  begin
+    var lRow := 0;
+    for var lNode in vstView.Nodes(False) do begin
+      if lNode.Parent <> vstView.RootNode then
+        Continue;
+      var lCells: PViewNodeDatas := ViewCells(lNode);
+      var lName: string := '-';
+      if Assigned(lCells) and Assigned(lCells[0].Element) then
+        lName := lCells[0].Element.Name;
+      vstViewFocusedNode := lNode;
+      vstView.FocusedColumn := 1;
+      var lResult: string;
+      try
+        pmuViewPopup(Self);
+        lResult := 'Remove visible ' + BoolToStr(mniViewRemove.Visible, True);
+      except
+        on E: Exception do
+          lResult := 'RAISED ' + E.ClassName + ': ' + E.Message;
+      end;
+      lLines.Add(Format('# popup %d'#9'row %d'#9'%s'#9'%s', [aEntry, lRow, lName, lResult]));
+      Inc(lRow);
+    end;
+  end;
+
   procedure RemoveProbe(aEntry: Integer);
   var
     lRecord : IwbMainRecord;
@@ -2448,6 +2473,8 @@ begin
           TimeProbe(lEntry, lRecords);
         if xeTestSwitches.ViewTreeRemove then
           RemoveProbe(lEntry);
+        if xeTestSwitches.ViewTreePopup then
+          PopupProbe(lEntry);
       end;
       DoSetActiveRecord(IwbMainRecord(nil));
       if xeTestSwitches.ViewTreeHeader then

@@ -244,6 +244,7 @@ type
     ViewTreeWalk          : Boolean;
     ViewTreeIdle          : Boolean;
     ViewTreeRemove        : Boolean;
+    ViewTreePopup         : Boolean;
     Options               : Boolean;
     OptionsNav            : string;
     OptionsPath           : string;
@@ -609,6 +610,7 @@ begin
     ViewTreeWalk := FindCmdLineSwitch('testviewtreewalk');
     ViewTreeIdle := FindCmdLineSwitch('testviewtreeidle');
     ViewTreeRemove := FindCmdLineSwitch('testviewtreeremove');
+    ViewTreePopup := FindCmdLineSwitch('testviewtreepopup');
     var lFocus: string;
     if wbFindCmdLineParam('testviewtreefocus', lFocus) then
       ViewTreeFocus := StrToIntDef(lFocus, 0);
