@@ -261,6 +261,23 @@ begin
     Value := Container.LastElement;
 end;
 
+function RemoveContainedElement(const aContainer: IwbContainerElementRef; const aElement: IwbElement; aMarkModified: Boolean): IwbElement;
+begin
+  if Assigned(aElement) and (Supports(aElement, IwbMainRecord) or Supports(aElement, IwbGroupRecord)) and Assigned(aElement.Container) and aElement.Container.Equals(aContainer) then begin
+    aElement.Remove;
+    Exit(aElement);
+  end;
+  Result := aContainer.RemoveElement(aElement, aMarkModified);
+end;
+
+function RemoveContainedIndex(const aContainer: IwbContainerElementRef; aIndex: Integer; aMarkModified: Boolean): IwbElement;
+begin
+  if (Supports(aContainer, IwbGroupRecord) or Supports(aContainer, IwbFile)) and (aIndex >= 0) and (aIndex < aContainer.ElementCount) then
+    Result := RemoveContainedElement(aContainer, aContainer.Elements[aIndex], aMarkModified)
+  else
+    Result := aContainer.RemoveElement(aIndex, aMarkModified);
+end;
+
 procedure IwbContainer_RemoveByIndex(var Value: Variant; Args: TJvInterpreterArgs);
 var
   Container: IwbContainerElementRef;
@@ -270,7 +287,7 @@ begin
     var lIndex := integer(Args.Values[1]);
     if Supports(Container, IwbFile) and (lIndex >= 0) and (lIndex < Container.ElementCount) then
       RequireNotFileHeader(Container.Elements[lIndex]);
-    Value := Container.RemoveElement(lIndex, boolean(Args.Values[2]));
+    Value := RemoveContainedIndex(Container, lIndex, boolean(Args.Values[2]));
   end;
 end;
 
@@ -288,7 +305,7 @@ begin
         var lIndex := integer(Args.Values[1]);
         if Supports(Container, IwbFile) and (lIndex >= 0) and (lIndex < Container.ElementCount) then
           RequireNotFileHeader(Container.Elements[lIndex]);
-        Value := Container.RemoveElement(lIndex, True);
+        Value := RemoveContainedIndex(Container, lIndex, True);
       end;
       varString, varUString: begin
         RequireNotFileHeader(Container.ElementByPath[string(Args.Values[1])]);
@@ -297,7 +314,7 @@ begin
     else
       if Supports(IInterface(Args.Values[1]), IwbElement, Element) then begin
         RequireNotFileHeader(Element);
-        Value := Container.RemoveElement(Element, True);
+        Value := RemoveContainedElement(Container, Element, True);
       end;
     end;
   end;

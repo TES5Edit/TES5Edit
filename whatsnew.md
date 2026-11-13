@@ -176,6 +176,7 @@ ElminsterAU, robertgk2017, Jonathan Ostrus (jbostrus), eckserah, fireundubh, she
 * Add `GetIsUpdate` and `SetIsUpdate`, and argument count checks on the file type getters and setters and the element value setters (contributed by robertgk2017)
 * A script can no longer write to a record or a file that is not editable
 * A script's Remove, RemoveElement and RemoveByIndex can no longer remove a plugin's file header, which left a plugin that could not be saved
+* A script's RemoveElement by index or by element, and RemoveByIndex, now remove a main record or a group the way Remove does; before, the removed record stayed listed and a later removal could crash
 * Script functions refuse a wrong list, object or index with a message instead of crashing
 * `KWDA` and `KSIZ` resolve for scripts on wrapped keywords
 * Add scaling to the UI of the Find cell in worldspace script (contributed by Jonathan Ostrus)
