@@ -11204,7 +11204,7 @@ begin
                        (Signature = 'PBAR') or {>>> Skyrim <<<}
                        (Signature = 'PHZD') or {>>> Skyrim <<<}
                        // Fallout 4 (and later games?)
-                       ((lGameDef.IsFallout4  or lGameDef.IsStarfield) and (
+                       ((lGameDef.IsSkyrimSE or lGameDef.IsFallout4 or lGameDef.IsStarfield) and (
                          (Signature = 'SCEN') or
                          (Signature = 'DLBR') or
                          (Signature = 'DIAL') or

@@ -175,6 +175,8 @@ const
   AVSG : TwbSignature = 'AVSG'; { New To Starfield }
   AVSK : TwbSignature = 'AVSK'; { New to Skyrim }
   AVTR : TwbSignature = 'AVTR'; { New To Fallout 76 }
+  AWPB : TwbSignature = 'AWPB'; { New To Fallout 76 }
+  AWPC : TwbSignature = 'AWPC'; { New To Fallout 76 }
   AWSD : TwbSignature = 'AWSD'; { New To Fallout 76 }
   B0TX : TwbSignature = 'B0TX';
   BAMT : TwbSignature = 'BAMT'; { New to Skyrim }
@@ -275,6 +277,9 @@ const
   CLOT : TwbSignature = 'CLOT';
   CLRL : TwbSignature = 'CLRL';
   CLSZ : TwbSignature = 'CLSZ'; { New to Fallout 4 }
+  CMDI : TwbSignature = 'CMDI'; { New To Fallout 76 }
+  CMDN : TwbSignature = 'CMDN'; { New To Fallout 76 }
+  CMDT : TwbSignature = 'CMDT'; { New To Fallout 76 }
   CMIC : TwbSignature = 'CMIC'; { New To Fallout 76 }
   CMNY : TwbSignature = 'CMNY';
   CMPI : TwbSignature = 'CMPI'; { New to Fallout 76 }

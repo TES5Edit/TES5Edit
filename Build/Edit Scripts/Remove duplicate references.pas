@@ -33,6 +33,12 @@ function IsSpecial(e: IInterface): Boolean;
 var
   i: Integer;
 begin
+  if ReferencedByCount(e) <> 0 then
+  begin  
+    Result := True;
+    Exit;
+  end;
+  
   // check if ref has any of special data fields
   Result :=
     ElementExists(e, 'EDID') or

@@ -555,6 +555,7 @@ procedure wbCrowdPropertyToStr               (var aValue: string; aBasePtr, aEnd
 procedure wbDIALQuestToStr                   (var aValue: string; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 procedure wbFactionRelationToStr             (var aValue: string; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 procedure wbItemToStr                        (var aValue: string; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
+procedure wbINFOResponseFileNameToStr        (var aValue: string; aBasePtr, aEndptr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 procedure wbLCTNUniqueNPCToStr               (var aValue: string; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 procedure wbNPCPackageToStr                  (var aValue: string; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 procedure wbNPCTemplateToStr                 (var aValue: string; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
@@ -4988,6 +4989,70 @@ begin
   end;
 end;
 
+procedure wbINFOResponseFileNameToStr(var aValue: string; aBasePtr, aEndptr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
+begin
+  if not (Assigned(aElement) and (aType in [ctToStr])) then
+    Exit;
+
+  var lGameDef := aElement.ContextObj.GameDefObj;
+  if not Assigned(lGameDef) then
+    Exit;
+
+  var lContainer := aElement.Container as IwbContainerElementRef;
+  if not Assigned(lContainer) then
+    Exit;
+
+  var lINFORec := aElement.ContainingMainRecord;
+  if not Assigned(lINFORec) then
+    Exit;
+
+  var lDIALRec := lINFORec.ElementLinksTo['Topic'] as IwbMainRecord;
+  if not Assigned(lDIALRec) then
+    Exit;
+
+  var lQUSTRec :=
+  if lGameDef.IsOblivion or lGameDef.IsFallout3 then
+    lINFORec.ElementLinksTo['QSTI'] as IwbMainRecord
+  else
+    lDIALRec.ElementLinksTo['QNAM'] as IwbMainRecord;
+  if not Assigned(lQUSTRec) then
+    Exit;
+
+  var lResponseNumber := lContainer.ElementNativeValues['Response Number'];
+  var lINFOFormID := lINFORec.FormID;
+  var lDIALEditorID := lDIALRec.EditorID;
+  var lQUSTEditorID := lQUSTRec.EditorID;
+
+  var lExt := '.fuz';
+  if lGameDef.IsOblivion then
+    lExt := '.mp3';
+  if lGameDef.IsFallout3 then
+    lExt := '.ogg';
+
+  var lDIALLength := Length(lDIALEditorID);
+  var lQUSTLength := Length(lQUSTEditorID);
+
+  if (not lGameDef.IsOblivion) and (lDIALLength + lQUSTLength > 25) then
+  begin
+    if lQUSTLength > 10 then
+    begin
+      lQUSTLength := 10;
+      lDIALLength := 15;
+    end
+    else
+      lDIALLength := 25 - lQUSTLength;
+  end;
+
+  lDIALEditorID := Copy(lDIALEditorID, 1, lDIALLength);
+  lQUSTEditorID := Copy(lQUSTEditorID, 1, lQUSTLength);
+
+  aValue :=
+    lQUSTEditorID + '_' +
+    lDIALEditorID + '_' +
+    IntToHex((lINFOFormID.ToCardinal and $FFFFFF), 8) + '_' +
+    IntToStr(lResponseNumber) + lExt;
+end;
+
 procedure wbLCTNUniqueNPCToStr(var aValue: string; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 begin
   if not (Assigned(aElement) and (aType in [ctCheck, ctToStr])) then
@@ -9342,18 +9407,18 @@ begin
   Result :=
     wbStruct(OBND, 'Object Bounds', [
       IfThen(IsStarfield,
-        wbVec3('Min'),
-        wbVec3Int('Min')
+        wbVec3('Min').SetPriority(cpBenign),
+        wbVec3Int('Min').SetPriority(cpBenign)
       ),
       IfThen(IsStarfield,
-        wbVec3('Max'),
-        wbVec3Int('Max')
+        wbVec3('Max').SetPriority(cpBenign),
+        wbVec3Int('Max').SetPriority(cpBenign)
       )
-    ]).SetSummaryKeyOnValue([0, 1])
-      .SetSummaryDelimiterOnValue(', ')
-      .IncludeFlagOnValue(dfSummaryMembersNoName)
-      .SetRequired
-      .IncludeFlag(dfCollapsed, clpObjectBounds in DefineOptions.Collapse);
+    ], cpBenign).SetSummaryKeyOnValue([0, 1])
+                .SetSummaryDelimiterOnValue(', ')
+                .IncludeFlagOnValue(dfSummaryMembersNoName)
+                .SetRequired
+                .IncludeFlag(dfCollapsed, clpObjectBounds in DefineOptions.Collapse);
 end;
 
 function TwbGameDefCommon.wbOwnership(const aSkipSigs: TwbSignatures = nil): IwbRecordMemberDef;

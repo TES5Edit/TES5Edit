@@ -9668,7 +9668,7 @@ begin
       wbRStruct('Response', [
         wbStruct(TRDA, 'Response Data', [
           wbFormIDCk('Emotion', [KYWD,FFFF]),
-          wbInteger('Response number', itU8),
+          wbInteger('Response Number', itU8),
           wbFormIDCk('Sound File', [SNDR,NULL]),
           wbByteArray('Unknown', 1),
           wbInteger('Interrupt Percentage', itU16),

@@ -7799,7 +7799,8 @@ begin
       wbStruct('Text Offset' , [
         wbInteger('X', itS32),
         wbInteger('Y', itS32)
-      ])
+      ]),
+      wbUnknown
     ], cpNormal, True),
     wbLStringKC(CNAM, 'Description', 0, cpTranslate),
     wbFormIDCk(INAM, 'Inventory Art', [STAT]),
@@ -8573,6 +8574,7 @@ begin
     wbObjectBounds,
     wbOPDSs,
     wbFULL,
+    wbKeywords,
     wbStruct(ENIT, 'Effect Data', [
       wbInteger('Enchantment Cost', itS32),
       wbInteger('Flags', itU32, wbFlags([
@@ -11972,7 +11974,7 @@ begin
         wbStruct(TRDA, 'Response Data', [
           wbFromVersion(86, wbFormIDCk('Emotion', [KYWD, FFFF])),
           wbBelowVersion(119, wbUnused(4)),
-          wbInteger('Response number', itU8),
+          wbInteger('Response Number', itU8),
           wbFormIDCk('Sound File', [SNDR, NULL]),
           wbByteArray('Unknown', 1),
           wbInteger('Interrupt Percentage', itU16),
@@ -12983,6 +12985,10 @@ begin
     ]),
     wbFormIDCk(FTST, 'Head Texture', [TXST], False, cpNormal, False),
     wbFloatRGBA(QNAM),
+    wbUnknown(AWPB),
+    wbUnknown(AWPC),
+    wbCITC,
+    wbConditions,
     wbArray(MSDK, 'Morph Keys', wbInteger('Key', itU32, wbMorphValueToStr, wbHexStrToInt)),
     wbArray(MSDV, 'Morph Values', wbFloat('Value')),
     wbRArrayS('Face Tinting Layers',
@@ -14341,7 +14347,13 @@ begin
     wbFormIDCk(QSTI, 'Dialogue Quest', [QUST]),
     wbBSMPSequence,
     wbLString(SNAM, 'Comments'),
-    wbUnknown(TSLT)
+    wbUnknown(TSLT),
+    wbRArray('Unknown',
+      wbRStruct('Unknown', [
+        wbUnknown(CMDT),
+        wbUnknown(CMDN),
+        wbUnknown(CMDI)
+      ]))
   ]);
 
 
@@ -15311,6 +15323,8 @@ begin
       .SetRequired,
     wbInteger(STXF, 'Disable Optimization', itU8, wbBoolEnum),
     wbNVNM,
+    wbUnknown(SNAM),
+    wbUnknown(ANLD),
     wbStruct(MNAM, 'Distant LOD', [ {>>> Contains null-terminated mesh FileName followed by random data up to 260 bytes <<<}
       wbStringForward('Level 0', 260),
       wbStringForward('Level 1', 260),
@@ -15930,7 +15944,8 @@ begin
     wbByteArray(NAM2, 'Unused', 0),
     wbArray(NAM3, 'Attribute Descriptor Keywords', wbFormIDCk('Keyword', [KYWD])).IncludeFlag(dfCollapsed, clpKeywords in DefineOptions.Collapse),
     wbFLTR,
-    wbString(OBST, 'Obstacle')
+    wbString(OBST, 'Obstacle'),
+    wbUnknown(MNAM)
   ]);
 
   RegisterRecordDef(OVIS, 'Object Visibility Manager', [
@@ -16761,6 +16776,7 @@ begin
       {0x00000200}  9, 'Unknown 9'
     ])), [
     wbEDID,
+    wbXALG,
     wbFTAGs,
     wbFormIDCk(ANAM, 'Parent Quest', [QUST]),
     wbInteger(RWDS, 'Rewards Count', itU32),

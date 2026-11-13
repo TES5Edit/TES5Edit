@@ -7788,10 +7788,13 @@ begin
     wbRArray('Responses',
       wbRStruct('Response', [
         wbStruct(TRDT, 'Response Data', [
+          wbEmpty('Voice Filename', cpIgnore)
+            .SetToStr(wbINFOResponseFileNameToStr)
+            .IncludeFlag(dfInternalEditOnly),
           wbInteger('Emotion Type', itU32, wbEmotionTypeEnum),
           wbInteger('Emotion Value', itU32),
           wbUnused(4),
-          wbInteger('Response number', itU8),
+          wbInteger('Response Number', itU8),
           wbUnused(3),
           wbFormIDCk('Sound', [SNDR,NULL]),
           wbInteger('Use Emotion Animation', itU8, wbBoolEnum),
@@ -10131,10 +10134,16 @@ begin
       wbStringForward(MAST, 'FileName', 0, cpNormal, True),
       wbByteArray(DATA, 'Unknown', 8, cpIgnore, True)
     ], [ONAM])).IncludeFlag(dfInternalEditOnly, not DefineOptions.AllowMasterFilesEdit),
-    wbArray(ONAM, 'Overridden Forms',
-      wbFormIDCk('Form', [ACHR,LAND,NAVM,PARW,PBAR,PBEA,PCON,PFLA,PGRE,PHZD,PMIS,REFR])
-    ).IncludeFlag(dfExcludeFromBuildRef)
-     .IncludeFlag(dfCollapsed, clpOther in DefineOptions.Collapse),
+    IsSSE(
+      wbArray(ONAM, 'Overridden Forms',
+        wbFormIDCk('Form', [ACHR,DIAL,DLBR,INFO,LAND,NAVM,PARW,PBAR,PBEA,PCON,PFLA,PGRE,PHZD,PMIS,REFR,SCEN])
+      ).IncludeFlag(dfExcludeFromBuildRef)
+       .IncludeFlag(dfCollapsed, clpOther in DefineOptions.Collapse),
+      wbArray(ONAM, 'Overridden Forms',
+        wbFormIDCk('Form', [ACHR,LAND,NAVM,PARW,PBAR,PBEA,PCON,PFLA,PGRE,PHZD,PMIS,REFR])
+      ).IncludeFlag(dfExcludeFromBuildRef)
+       .IncludeFlag(dfCollapsed, clpOther in DefineOptions.Collapse)
+    ),
     wbByteArray(SCRN, 'Screenshot'),
     wbUnknown(INTV),
     wbInteger(INCC, 'Interior Cell Count', itU32).SetRequired
