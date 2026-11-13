@@ -2240,7 +2240,83 @@ var
       end;
     end;
 
+    procedure HeaderRemoveProbe;
+
+      function State(const aFile: IwbFile): string;
+      begin
+        var lHeader := aFile.Header;
+        if Assigned(lHeader) then begin
+          Result := 'header ' + lHeader.Signature + ' ' + Digest(lHeader);
+          var lHedr: IwbContainerElementRef;
+          if Supports(lHeader.ElementBySignature['HEDR'], IwbContainerElementRef, lHedr) then
+            Result := Result + Format(', HEDR %s / %s / %s', [lHedr.ElementEditValues['Version'],
+              lHedr.ElementEditValues['Number of Records'], lHedr.ElementEditValues['Next Object ID']]);
+        end else
+          Result := 'no header';
+        Result := Format('%s, %d records, modified %s', [Result, aFile.RecordCount, BoolToStr(aFile.Modified, True)]);
+      end;
+
+      function Written(const aFile: IwbFile): string;
+      begin
+        Result := 'writes';
+        var lStream := TMemoryStream.Create;
+        try
+          try
+            aFile.WriteToStream(lStream, rmNo);
+          except
+            on E: Exception do
+              Result := 'write refused: ' + E.Message;
+          end;
+        finally
+          lStream.Free;
+        end;
+      end;
+
+    begin
+      Build([aRecord, aTarget]);
+      if Length(ActiveRecords) <> 2 then begin
+        lLines.Add(Format('# hremove %d'#9'no compare view', [aEntry]));
+        Exit;
+      end;
+      var lRtti := TRttiContext.Create;
+      var lField := lRtti.GetType(vstView.Header.Columns.ClassType).GetField('FPopupIndex');
+      for var lColumn := 1 to 2 do begin
+        lField.SetValue(vstView.Header.Columns, lColumn);
+        pmuViewHeaderPopup(nil);
+        lLines.Add(Format('# hremove %d'#9'offer %d'#9'%s'#9'Remove visible %s', [aEntry, lColumn,
+          ActiveRecords[Pred(lColumn)].Element._File.FileName, BoolToStr(mniViewHeaderRemove.Visible, True)]));
+      end;
+      var lClick := 2;
+      if not ActiveRecords[0].Element._File.IsEditable then
+        lClick := 1;
+      var lRecord := ActiveRecords[Pred(lClick)].Element as IwbMainRecord;
+      var lFile := lRecord._File;
+      lLines.Add(Format('# hremove %d'#9'before'#9'column %d: %s in %s'#9'%s', [aEntry, lClick, lRecord.Name, lFile.FileName,
+        State(lFile)]));
+      lField.SetValue(vstView.Header.Columns, lClick);
+      var lDelay, lFocused: Integer;
+      BeginGesture('header remove', vstView.GetFirst, lClick, False, lDelay, lFocused);
+      var lResult := 'returned';
+      try
+        mniViewHeaderRemoveClick(nil);
+      except
+        on E: Exception do
+          lResult := E.ClassName + ': ' + E.Message;
+      end;
+      EndGesture('header remove', lResult, lDelay, lFocused);
+      var lWhere := 'removed';
+      if Assigned(lRecord.Container) and Assigned(lRecord._File) and lRecord._File.Equals(lFile) then
+        lWhere := 'in its file';
+      lLines.Add(Format('# hremove %d'#9'remove'#9'%s'#9'%s'#9'%s', [aEntry, lResult, lWhere, State(lFile)]));
+      if lFile.IsEditable then
+        lLines.Add(Format('# hremove %d'#9'write'#9'%s', [aEntry, Written(lFile)]));
+    end;
+
   begin
+    if xeTestSwitches.ViewTreeHeaderRemove then begin
+      HeaderRemoveProbe;
+      Exit;
+    end;
     if xeTestSwitches.ViewTreeHeaderDrop then begin
       HeaderDropProbe;
       Exit;

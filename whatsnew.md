@@ -121,6 +121,7 @@ ElminsterAU, robertgk2017, Jonathan Ostrus (jbostrus), eckserah, fireundubh, she
 * Check for Errors no longer loops on a cyclic parent chain or NPC template chain
 * Fix an access violation in condition-alias resolution for INFO records
 * Stop offering Remove on a record's Record Header
+* The View tab's column header menu no longer offers Remove on a file header, which left a plugin that could not be saved
 * Filtering the Referenced By list no longer leaves a row selected that you did not select, so a following command can not act on the wrong record
 * A double at its maximum or minimum shows as Default or Min
 * The navigation tree no longer sometimes paints its last row a second time on the empty row below it

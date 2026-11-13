@@ -9330,6 +9330,8 @@ begin
   Element := ActiveRecords[Column].Element;
   if not Supports(Element, IwbMainRecord, MainRecord) then
     Exit;
+  if not MainRecord.IsRemovable then
+    Exit;
 
   if not EditWarn then
     Exit;
@@ -13773,9 +13775,7 @@ begin
       end;
   mniViewHeaderUnhideAll.Visible := AnyHidden;
 
-  if not ActiveRecords[Column].Element._File.IsEditable then
-    Exit;
-  mniViewHeaderRemove.Visible := True;
+  mniViewHeaderRemove.Visible := ActiveRecords[Column].Element.IsRemovable;
 end;
 
 procedure TfrmMain.pmuViewPopup(Sender: TObject);

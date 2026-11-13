@@ -240,6 +240,7 @@ type
     ViewTreeModal         : Boolean;
     ViewTreeProtected     : Boolean;
     ViewTreeHeaderDrop    : Boolean;
+    ViewTreeHeaderRemove  : Boolean;
     ViewTreeWalk          : Boolean;
     ViewTreeIdle          : Boolean;
     ViewTreeRemove        : Boolean;
@@ -601,6 +602,9 @@ begin
     ViewTreeProtected := FindCmdLineSwitch('testviewtreeprotected');
     ViewTreeHeaderDrop := FindCmdLineSwitch('testviewtreeheaderdrop');
     if ViewTreeHeaderDrop then
+      ViewTreeModal := True;
+    ViewTreeHeaderRemove := FindCmdLineSwitch('testviewtreeheaderremove');
+    if ViewTreeHeaderRemove then
       ViewTreeModal := True;
     ViewTreeWalk := FindCmdLineSwitch('testviewtreewalk');
     ViewTreeIdle := FindCmdLineSwitch('testviewtreeidle');
