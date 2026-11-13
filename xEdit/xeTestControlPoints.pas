@@ -2435,7 +2435,112 @@ var
       pgMain.ActivePage := tbsMessages;
     end;
 
+    procedure NavVWDProbe;
+
+      function State(const aFile: IwbFile): string;
+      begin
+        var lHeader := aFile.Header;
+        if Assigned(lHeader) then begin
+          Result := 'header ' + Digest(lHeader);
+          var lHedr: IwbContainerElementRef;
+          if Supports(lHeader.ElementBySignature['HEDR'], IwbContainerElementRef, lHedr) then
+            Result := Result + Format(', HEDR %s / %s / %s', [lHedr.ElementEditValues['Version'],
+              lHedr.ElementEditValues['Number of Records'], lHedr.ElementEditValues['Next Object ID']]);
+        end else
+          Result := 'no header';
+        Result := Format('%s, %d records, modified %s', [Result, aFile.RecordCount, BoolToStr(aFile.Modified, True)]);
+      end;
+
+      function RefState(const aRecord: IwbMainRecord): string;
+      begin
+        var lType := -1;
+        var lLabel: Cardinal := 0;
+        var lGroup: IwbGroupRecord;
+        if Supports(aRecord.Container, IwbGroupRecord, lGroup) then begin
+          lType := lGroup.GroupType;
+          lLabel := lGroup.GroupLabel;
+        end;
+        Result := Format('VWD %s, group %d, modified %s, editable %s, flags %.8x, label %.8x',
+          [BoolToStr(aRecord.IsVisibleWhenDistant, True), lType, BoolToStr(aRecord.Modified, True),
+          BoolToStr(aRecord.IsEditable, True), aRecord.Flags._Flags, lLabel]);
+      end;
+
+      function NodeName(aNode: PVirtualNode): string;
+      begin
+        Result := '?';
+        var lData := PNavNodeData(vstNav.GetNodeData(aNode));
+        var lRec: IwbMainRecord;
+        if Assigned(lData) and Supports(lData.Element, IwbMainRecord, lRec) then
+          Result := lRec.EditorID + '@' + lRec._File.FileName;
+      end;
+
+    begin
+      var lSelected: TArray<IwbMainRecord> := [];
+      var lNames: TArray<string> := [];
+      for var j := 1 to High(lRecords) do begin
+        lSelected := lSelected + [lRecords[j]];
+        lNames := lNames + [lRecords[j].EditorID + '@' + lRecords[j]._File.FileName];
+      end;
+      var lFiles: TArray<IwbFile> := [];
+      var lFileNames: TArray<string> := [];
+      for var i := Low(Files) to High(Files) do begin
+        lFiles := lFiles + [Files[i]];
+        lFileNames := lFileNames + [Files[i].FileName];
+      end;
+      vstNav.ClearSelection;
+      var lFocus: PVirtualNode := nil;
+      for var i := Low(lSelected) to High(lSelected) do begin
+        var lNode := FindNodeForElement(lSelected[i]);
+        if not Assigned(lNode) then
+          raise Exception.Create('no nav node for ' + lNames[i]);
+        vstNav.Selected[lNode] := True;
+        lFocus := lNode;
+      end;
+      vstNav.FocusedNode := lFocus;
+      if tmrPendingSetActive.Enabled then
+        tmrPendingSetActiveTimer(tmrPendingSetActive);
+      for var i := Low(lSelected) to High(lSelected) do
+        vstNav.Selected[FindNodeForElement(lSelected[i])] := True;
+      var lOrder := '';
+      for var lNode in vstNav.GetSortedSelection(True) do
+        lOrder := lOrder + ' ' + NodeName(lNode);
+      lLines.Add(Format('# navvwd %d'#9'selection'#9'selected %d:%s'#9'focused %s', [aEntry, vstNav.SelectedCount, lOrder,
+        NodeName(vstNav.FocusedNode)]));
+      for var i := Low(lSelected) to High(lSelected) do
+        lLines.Add(Format('# navvwd %d'#9'record %d before'#9'%s: %s', [aEntry, i, lNames[i], RefState(lSelected[i])]));
+      for var i := Low(lFiles) to High(lFiles) do
+        lLines.Add(Format('# navvwd %d'#9'file %s before'#9'%s', [aEntry, lFileNames[i], State(lFiles[i])]));
+      pmuNavPopup(nil);
+      lLines.Add(Format('# navvwd %d'#9'offer'#9'VWD visible %s, Not VWD visible %s', [aEntry,
+        BoolToStr(mniNavCellChildVWD.Visible, True), BoolToStr(mniNavCellChildNotVWD.Visible, True)]));
+      var lItem := mniNavCellChildVWD;
+      var lGesture := 'nav vwd';
+      if lSelected[0].IsVisibleWhenDistant then begin
+        lItem := mniNavCellChildNotVWD;
+        lGesture := 'nav not vwd';
+      end;
+      var lDelay, lFocused: Integer;
+      BeginGesture(lGesture, nil, 0, False, lDelay, lFocused);
+      var lResult := 'returned';
+      try
+        mniNavCellChild(lItem);
+      except
+        on E: Exception do
+          lResult := E.ClassName + ': ' + E.Message;
+      end;
+      EndGesture(lGesture, lResult, lDelay, lFocused);
+      for var i := Low(lSelected) to High(lSelected) do
+        lLines.Add(Format('# navvwd %d'#9'record %d after'#9'%s: %s', [aEntry, i, lNames[i], RefState(lSelected[i])]));
+      for var i := Low(lFiles) to High(lFiles) do
+        lLines.Add(Format('# navvwd %d'#9'file %s after'#9'%s', [aEntry, lFileNames[i], State(lFiles[i])]));
+      pgMain.ActivePage := tbsMessages;
+    end;
+
   begin
+    if xeTestSwitches.ViewTreeNavVWD then begin
+      NavVWDProbe;
+      Exit;
+    end;
     if xeTestSwitches.ViewTreeRefByRemove then begin
       RefByRemoveProbe;
       Exit;

@@ -242,6 +242,8 @@ type
     ViewTreeHeaderDrop    : Boolean;
     ViewTreeHeaderRemove  : Boolean;
     ViewTreeRefByRemove   : Boolean;
+    ViewTreeNavVWD        : Boolean;
+    ViewTreeCompareTo     : string;
     ViewTreeWalk          : Boolean;
     ViewTreeIdle          : Boolean;
     ViewTreeRemove        : Boolean;
@@ -611,6 +613,10 @@ begin
     ViewTreeRefByRemove := FindCmdLineSwitch('testviewtreerefbyremove');
     if ViewTreeRefByRemove then
       ViewTreeModal := True;
+    ViewTreeNavVWD := FindCmdLineSwitch('testviewtreenavvwd');
+    if ViewTreeNavVWD then
+      ViewTreeModal := True;
+    wbFindCmdLineParam('testviewtreecompareto', ViewTreeCompareTo);
     ViewTreeWalk := FindCmdLineSwitch('testviewtreewalk');
     ViewTreeIdle := FindCmdLineSwitch('testviewtreeidle');
     ViewTreeRemove := FindCmdLineSwitch('testviewtreeremove');
