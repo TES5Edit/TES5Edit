@@ -3822,7 +3822,7 @@ begin
   if xeContext.Settings.TranslationMode then
     Exit;
 
-  if not EditWarn then
+  if not xeContext.LoaderDone then
     Exit;
 
   SelectedNodes := vstNav.GetSortedSelection(True);
@@ -3834,6 +3834,15 @@ begin
   lPlan := TwbCleanupInjectedPlan.Plan(Elements);
   Elements := nil;
   if Length(lPlan.Records) < 1 then
+    Exit;
+
+  for var lRecord in lPlan.Records do
+    if not lRecord.IsEditable then begin
+      ShowMessage(lRecord.Name + ' in "' + lRecord._File.FileName + '" is not editable.');
+      Exit;
+    end;
+
+  if not EditWarn then
     Exit;
 
   sl := TStringList.Create;

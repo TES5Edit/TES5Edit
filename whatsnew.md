@@ -124,6 +124,7 @@ ElminsterAU, robertgk2017, Jonathan Ostrus (jbostrus), eckserah, fireundubh, she
 * The View tab's column header menu no longer offers Remove on a file header, which left a plugin that could not be saved
 * Remove in the Referenced By tab no longer removes a record of a file that can not be edited, such as the game master's; a selection that includes one is refused with a message
 * Visible When Distant and Not Visible When Distant in the navigation tree no longer change a reference of a file that can not be edited, such as the game master's; a selection that includes one is refused with a message
+* Cleanup Injected no longer changes a record of a file that can not be edited, such as a Compare To copy's
 * Filtering the Referenced By list no longer leaves a row selected that you did not select, so a following command can not act on the wrong record
 * A double at its maximum or minimum shows as Default or Min
 * The navigation tree no longer sometimes paints its last row a second time on the empty row below it
