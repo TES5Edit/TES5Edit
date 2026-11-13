@@ -6,6 +6,10 @@ xEdit is crucial to our shared modding community and your contribution - no matt
 
 # What's New in xEdit 4.1.5r?
 
+## Skyrim Special Edition: save ESM-flagged plugins again
+
+Since game version 1.7, Bethesda's Update.esm lists overridden INFO, DIAL, DLBR and SCEN records in its file header's ONAM. xEdit now accepts these and writes them into the ONAM of the ESM-flagged plugins it saves, for Skyrim Special Edition, Skyrim VR and Enderal SE. An ESM-flagged plugin that overrides such records and was saved by an earlier xEdit has no ONAM entries for them: load it and save it again with this version.
+
 ## TL;DR
 
 About 1,250 commits since 4.1.5q. The Merged Patch is rebuilt as a three-way merge, Create Delta Patch and Merge into Master now round-trip, world space offset tables are written on save, Morrowind gains NAME links and Referenced By, and hundreds of crashes, data-loss paths and malformed-archive failures are fixed. Underneath, the engine no longer depends on the user interface or on one global game, and xEdit builds with Delphi 13.
@@ -149,6 +153,8 @@ ElminsterAU, robertgk2017, Jonathan Ostrus (jbostrus), eckserah, fireundubh, she
 * ACHR / REFR \ Persist Location - Add an error check (contributed by robertgk2017)
 * Array definitions can now state a maximum count: leveled lists are limited to 255 on TES5 / SSE, FO4, FO76 and SF1
 * Partial Form support finished; a definition flag says what a partial form keeps (contributed by robertgk2017)
+* OBND - Object Bounds are compared as benign: a difference in them alone is no longer a conflict (contributed by robertgk2017)
+* INFO - Responses show their voice file name in TES4, FO3, FNV and TES5 / SSE, and Response Number is named alike in every game (contributed by robertgk2017)
 
 ### FO3/FNV
 * FNV - Fix the group order to what the GECK writes, and add a cell region conflict check that follows hNVSE (contributed by robertgk2017)
@@ -158,11 +164,13 @@ ElminsterAU, robertgk2017, Jonathan Ostrus (jbostrus), eckserah, fireundubh, she
 * PERK - Num Ranks must be non-zero, confirmed by Cobb (contributed by robertgk2017)
 * ALCH, SCRL, AMMO - Add VMAD, from Cobb (contributed by robertgk2017)
 * NIF - Community Shaders PBR shader type and features (contributed by robertgk2017)
+* TES4 \ ONAM - Accept INFO, DIAL, DLBR and SCEN overrides, which the 1.7 Update.esm lists, in Skyrim SE, Skyrim VR and Enderal SE (contributed by robertgk2017)
 
 ### FO4/FO76
 * Fix object mod properties using the count as their count callback (contributed by robertgk2017)
 * FO4 VR - Support for Daytripper4.dll light files (contributed by robertgk2017)
 * Fallout 76 - Update Form Version to 209 and HEDR to 266, with many newly decoded fields (contributed by eckserah and robertgk2017)
+* Fallout 76 - Fields and signatures for the latest game files (contributed by robertgk2017)
 
 ### SF1
 * Soundbank handling reworked: Wwise GUID indexing and lookup, additional soundbank files, and a switch or state shown with its group (contributed by Jonathan Ostrus and robertgk2017)
@@ -180,6 +188,8 @@ ElminsterAU, robertgk2017, Jonathan Ostrus (jbostrus), eckserah, fireundubh, she
 * Script functions refuse a wrong list, object or index with a message instead of crashing
 * `KWDA` and `KSIZ` resolve for scripts on wrapped keywords
 * Add scaling to the UI of the Find cell in worldspace script (contributed by Jonathan Ostrus)
+* Remove duplicate references - a reference that anything references is kept (contributed by robertgk2017)
+* Remove identical to previous override records - skip NAVI and handle LCTN records better (contributed by robertgk2017)
 
 ## SNIFF
 
@@ -206,6 +216,7 @@ ElminsterAU, robertgk2017, Jonathan Ostrus (jbostrus), eckserah, fireundubh, she
 
 * Skyrim saves are no longer misparsed after their header, and a crash on New Vegas saves is fixed
 * Finds a game's install folder, reads its ini and picks its language the same way the editor does
+* Fallout 4, Fallout 4 VR, Fallout 76 and Starfield references are dumped with the cell they are in, as the editor shows them (contributed by robertgk2017)
 
 # What's New in xEdit 4.1.5q?
 
