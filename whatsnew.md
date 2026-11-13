@@ -175,6 +175,7 @@ ElminsterAU, robertgk2017, Jonathan Ostrus (jbostrus), eckserah, fireundubh, she
 * Add functions for an array's aligned rows and an aligned add
 * Add `GetIsUpdate` and `SetIsUpdate`, and argument count checks on the file type getters and setters and the element value setters (contributed by robertgk2017)
 * A script can no longer write to a record or a file that is not editable
+* A script's Remove, RemoveElement and RemoveByIndex can no longer remove a plugin's file header, which left a plugin that could not be saved
 * Script functions refuse a wrong list, object or index with a message instead of crashing
 * `KWDA` and `KSIZ` resolve for scripts on wrapped keywords
 * Add scaling to the UI of the Find cell in worldspace script (contributed by Jonathan Ostrus)
