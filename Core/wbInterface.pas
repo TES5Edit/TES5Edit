@@ -10085,7 +10085,7 @@ type
   TwbRecursiveDef = class(TwbResolvableDef, IwbRecursiveDef)
   protected {private}
     rdLevelsUp: Integer;
-    rdCached: IwbValueDef;
+    [Unsafe] rdCached: IwbValueDef;
   protected
     constructor Clone(const aSource: TwbDef); override; final;
     constructor Create(aPriority : TwbConflictPriority;
