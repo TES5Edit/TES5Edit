@@ -10756,7 +10756,16 @@ begin
   if Assigned(aElement) then
     case aElement.ElementType of
       etMainRecord: Result := (aElement as IwbMainRecord).Signature <> flContextObj.GameDefObj.HeaderSignature; {can't remove the file header}
-      etGroupRecord: Result := True;
+      etGroupRecord: begin
+        Result := True;
+        var lGroup := aElement as IwbGroupRecord;
+        var lRecordDef: PwbMainRecordDef;
+        if not wbIsInternalEdit and (lGroup.GroupType = 0) and (lGroup.ElementCount > 0) and
+           flContextObj.GameDefObj.FindRecordDef(TwbSignature(lGroup.GroupLabel), lRecordDef) and
+           (dfInternalEditOnly in lRecordDef.DefFlags)
+        then
+          Result := False;
+      end;
     else
       Assert(False);
     end;

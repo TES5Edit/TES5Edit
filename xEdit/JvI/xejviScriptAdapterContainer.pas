@@ -19,6 +19,7 @@ uses
 procedure RegisterJvInterpreterAdapter(JvInterpreterAdapter: TJvInterpreterAdapter);
 procedure RequireEditable(const aElement: IwbElement);
 procedure RequireNotFileHeader(const aElement: IwbElement);
+procedure RequireRemovable(const aElement: IwbElement);
 procedure RefuseFileHeader(const aElement: IwbElement; const aWhat: string);
 procedure RequireNotInFileHeader(const aElement: IwbElement; const aWhat: string);
 
@@ -93,6 +94,18 @@ begin
   RefuseFileHeader(aElement, 'removed');
   if IsFileHeader(aElement.ContainingMainRecord) and not aElement.IsRemovable then
     raise Exception.Create(aElement.Path + ': A file header''s ' + aElement.Name + ' can not be removed');
+end;
+
+procedure RequireRemovable(const aElement: IwbElement);
+begin
+  if wbAllowUnsafeScripts or not Assigned(aElement) then
+    Exit;
+  case aElement.ElementType of
+    etMainRecord: RequireEditable(aElement);
+    etGroupRecord:
+      if not aElement.IsRemovable then
+        raise Exception.Create(aElement.Path + ': Holds records that can not be removed');
+  end;
 end;
 
 function IsFileOrInFileHeader(const aContainer: IwbContainerElementRef): Boolean;
@@ -339,6 +352,7 @@ begin
   var lElement := aContainer.Elements[aIndex];
   if IsFileOrInFileHeader(aContainer) then
     RequireNotFileHeader(lElement);
+  RequireRemovable(lElement);
   Result := RemoveContainedElement(aContainer, lElement, aMarkModified);
 end;
 
@@ -366,12 +380,15 @@ begin
         Value := RemoveContainedIndex(Container, integer(Args.Values[1]), True);
       end;
       varString, varUString: begin
-        RequireNotFileHeader(Container.ElementByPath[string(Args.Values[1])]);
+        var lNamed := Container.ElementByPath[string(Args.Values[1])];
+        RequireNotFileHeader(lNamed);
+        RequireRemovable(lNamed);
         Value := Container.RemoveElement(string(Args.Values[1]));
       end;
     else
       if Supports(IInterface(Args.Values[1]), IwbElement, Element) then begin
         RequireNotFileHeader(Element);
+        RequireRemovable(Element);
         Value := RemoveContainedElement(Container, Element, True);
       end;
     end;
