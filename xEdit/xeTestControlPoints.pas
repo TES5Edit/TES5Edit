@@ -1734,6 +1734,31 @@ var
     Build(aRecords);
   end;
 
+  procedure PopupProbe(aEntry: Integer);
+  begin
+    var lRow := 0;
+    for var lNode in vstView.Nodes(False) do begin
+      if lNode.Parent <> vstView.RootNode then
+        Continue;
+      var lCells: PViewNodeDatas := ViewCells(lNode);
+      var lName: string := '-';
+      if Assigned(lCells) and Assigned(lCells[0].Element) then
+        lName := lCells[0].Element.Name;
+      vstViewFocusedNode := lNode;
+      vstView.FocusedColumn := 1;
+      var lResult: string;
+      try
+        pmuViewPopup(Self);
+        lResult := 'Remove visible ' + BoolToStr(mniViewRemove.Visible, True);
+      except
+        on E: Exception do
+          lResult := 'RAISED ' + E.ClassName + ': ' + E.Message;
+      end;
+      lLines.Add(Format('# popup %d'#9'row %d'#9'%s'#9'%s', [aEntry, lRow, lName, lResult]));
+      Inc(lRow);
+    end;
+  end;
+
   procedure RemoveProbe(aEntry: Integer);
   var
     lRecord : IwbMainRecord;
@@ -2240,7 +2265,290 @@ var
       end;
     end;
 
+    procedure HeaderRemoveProbe;
+
+      function State(const aFile: IwbFile): string;
+      begin
+        var lHeader := aFile.Header;
+        if Assigned(lHeader) then begin
+          Result := 'header ' + lHeader.Signature + ' ' + Digest(lHeader);
+          var lHedr: IwbContainerElementRef;
+          if Supports(lHeader.ElementBySignature['HEDR'], IwbContainerElementRef, lHedr) then
+            Result := Result + Format(', HEDR %s / %s / %s', [lHedr.ElementEditValues['Version'],
+              lHedr.ElementEditValues['Number of Records'], lHedr.ElementEditValues['Next Object ID']]);
+        end else
+          Result := 'no header';
+        Result := Format('%s, %d records, modified %s', [Result, aFile.RecordCount, BoolToStr(aFile.Modified, True)]);
+      end;
+
+      function Written(const aFile: IwbFile): string;
+      begin
+        Result := 'writes';
+        var lStream := TMemoryStream.Create;
+        try
+          try
+            aFile.WriteToStream(lStream, rmNo);
+          except
+            on E: Exception do
+              Result := 'write refused: ' + E.Message;
+          end;
+        finally
+          lStream.Free;
+        end;
+      end;
+
+    begin
+      Build([aRecord, aTarget]);
+      if Length(ActiveRecords) <> 2 then begin
+        lLines.Add(Format('# hremove %d'#9'no compare view', [aEntry]));
+        Exit;
+      end;
+      var lRtti := TRttiContext.Create;
+      var lField := lRtti.GetType(vstView.Header.Columns.ClassType).GetField('FPopupIndex');
+      for var lColumn := 1 to 2 do begin
+        lField.SetValue(vstView.Header.Columns, lColumn);
+        pmuViewHeaderPopup(nil);
+        lLines.Add(Format('# hremove %d'#9'offer %d'#9'%s'#9'Remove visible %s', [aEntry, lColumn,
+          ActiveRecords[Pred(lColumn)].Element._File.FileName, BoolToStr(mniViewHeaderRemove.Visible, True)]));
+      end;
+      var lClick := 2;
+      if not ActiveRecords[0].Element._File.IsEditable then
+        lClick := 1;
+      var lRecord := ActiveRecords[Pred(lClick)].Element as IwbMainRecord;
+      var lFile := lRecord._File;
+      lLines.Add(Format('# hremove %d'#9'before'#9'column %d: %s in %s'#9'%s', [aEntry, lClick, lRecord.Name, lFile.FileName,
+        State(lFile)]));
+      lField.SetValue(vstView.Header.Columns, lClick);
+      var lDelay, lFocused: Integer;
+      BeginGesture('header remove', vstView.GetFirst, lClick, False, lDelay, lFocused);
+      var lResult := 'returned';
+      try
+        mniViewHeaderRemoveClick(nil);
+      except
+        on E: Exception do
+          lResult := E.ClassName + ': ' + E.Message;
+      end;
+      EndGesture('header remove', lResult, lDelay, lFocused);
+      var lWhere := 'removed';
+      if Assigned(lRecord.Container) and Assigned(lRecord._File) and lRecord._File.Equals(lFile) then
+        lWhere := 'in its file';
+      lLines.Add(Format('# hremove %d'#9'remove'#9'%s'#9'%s'#9'%s', [aEntry, lResult, lWhere, State(lFile)]));
+      if lFile.IsEditable then
+        lLines.Add(Format('# hremove %d'#9'write'#9'%s', [aEntry, Written(lFile)]));
+    end;
+
+    procedure RefByRemoveProbe;
+
+      function State(const aFile: IwbFile): string;
+      begin
+        var lHeader := aFile.Header;
+        if Assigned(lHeader) then begin
+          Result := 'header ' + Digest(lHeader);
+          var lHedr: IwbContainerElementRef;
+          if Supports(lHeader.ElementBySignature['HEDR'], IwbContainerElementRef, lHedr) then
+            Result := Result + Format(', HEDR %s / %s / %s', [lHedr.ElementEditValues['Version'],
+              lHedr.ElementEditValues['Number of Records'], lHedr.ElementEditValues['Next Object ID']]);
+        end else
+          Result := 'no header';
+        Result := Format('%s: %s, %d records, modified %s', [aFile.FileName, Result, aFile.RecordCount, BoolToStr(aFile.Modified, True)]);
+      end;
+
+      function Where(const aRecord: IwbMainRecord; const aFile: IwbFile): string;
+      begin
+        Result := 'removed';
+        if Assigned(aRecord.Container) and Assigned(aRecord._File) and aRecord._File.Equals(aFile) then
+          Result := 'in its file';
+        Result := Format('%s in %s: %s, chain overrides %d', [aRecord.Name, aFile.FileName, Result,
+          aRecord.MasterOrSelf.OverrideCount]);
+      end;
+
+    begin
+      DoSetActiveRecord(IwbMainRecord(nil));
+      DoSetActiveRecord(aRecord);
+      Application.ProcessMessages;
+      pgMain.ActivePage := tbsReferencedBy;
+      pgMainChange(pgMain);
+      Application.ProcessMessages;
+      vstReferencedBy.SelectAll(False);
+      var lAll := GetRefBySelectionAsMainRecords;
+      if Length(lAll) <> Integer(vstReferencedBy.SelectedCount) then
+        raise Exception.Create(Format('Referenced By maps %d records to %d rows', [Length(lAll), vstReferencedBy.SelectedCount]));
+      vstReferencedBy.ClearSelection;
+      var lOrder := '';
+      var k := 0;
+      var lNode := vstReferencedBy.GetFirst;
+      while Assigned(lNode) do begin
+        for var j := 1 to High(lRecords) do
+          if lAll[k].Equals(lRecords[j]) then begin
+            vstReferencedBy.Selected[lNode] := True;
+            lOrder := lOrder + ' ' + lAll[k].EditorID + '@' + lAll[k]._File.FileName;
+            Break;
+          end;
+        Inc(k);
+        lNode := vstReferencedBy.GetNext(lNode);
+      end;
+      var lSelected := GetRefBySelectionAsMainRecords;
+      lLines.Add(Format('# refby %d'#9'selection'#9'rows %d, selected %d:%s', [aEntry, Length(lAll), Length(lSelected), lOrder]));
+      var lFiles: TArray<IwbFile> := [];
+      for var lRec in lSelected do begin
+        var lKnown := False;
+        for var lFile in lFiles do
+          lKnown := lKnown or lFile.Equals(lRec._File);
+        if not lKnown then
+          lFiles := lFiles + [lRec._File];
+      end;
+      var lRecFiles: TArray<IwbFile> := [];
+      for var lRec in lSelected do
+        lRecFiles := lRecFiles + [lRec._File];
+      for var i := Low(lSelected) to High(lSelected) do
+        lLines.Add(Format('# refby %d'#9'record %d before'#9'%s', [aEntry, i, Where(lSelected[i], lRecFiles[i])]));
+      for var i := Low(lFiles) to High(lFiles) do
+        lLines.Add(Format('# refby %d'#9'file %d before'#9'%s', [aEntry, i, State(lFiles[i])]));
+      var lMasters: TArray<IwbMainRecord> := [];
+      var lMasterNames: TArray<string> := [];
+      for var lRec in lSelected do begin
+        lMasters := lMasters + [lRec.MasterOrSelf];
+        lMasterNames := lMasterNames + [lRec.MasterOrSelf.Name + ' in ' + lRec.MasterOrSelf._File.FileName];
+      end;
+      for var i := Low(lMasters) to High(lMasters) do
+        lLines.Add(Format('# refby %d'#9'chain %d before'#9'%s: overrides %d', [aEntry, i, lMasterNames[i],
+          lMasters[i].OverrideCount]));
+      pmuRefByPopup(nil);
+      lLines.Add(Format('# refby %d'#9'offer'#9'Remove visible %s', [aEntry, BoolToStr(mniRefByRemove.Visible, True)]));
+      var lDelay, lFocused: Integer;
+      BeginGesture('refby remove', nil, 0, False, lDelay, lFocused);
+      var lResult := 'returned';
+      try
+        mniRefByRemoveClick(nil);
+      except
+        on E: Exception do
+          lResult := E.ClassName + ': ' + E.Message;
+      end;
+      EndGesture('refby remove', lResult, lDelay, lFocused);
+      for var i := Low(lSelected) to High(lSelected) do
+        lLines.Add(Format('# refby %d'#9'record %d after'#9'%s', [aEntry, i, Where(lSelected[i], lRecFiles[i])]));
+      for var i := Low(lFiles) to High(lFiles) do
+        lLines.Add(Format('# refby %d'#9'file %d after'#9'%s', [aEntry, i, State(lFiles[i])]));
+      for var i := Low(lMasters) to High(lMasters) do
+        lLines.Add(Format('# refby %d'#9'chain %d after'#9'%s: overrides %d', [aEntry, i, lMasterNames[i],
+          lMasters[i].OverrideCount]));
+      pgMain.ActivePage := tbsMessages;
+    end;
+
+    procedure NavVWDProbe;
+
+      function State(const aFile: IwbFile): string;
+      begin
+        var lHeader := aFile.Header;
+        if Assigned(lHeader) then begin
+          Result := 'header ' + Digest(lHeader);
+          var lHedr: IwbContainerElementRef;
+          if Supports(lHeader.ElementBySignature['HEDR'], IwbContainerElementRef, lHedr) then
+            Result := Result + Format(', HEDR %s / %s / %s', [lHedr.ElementEditValues['Version'],
+              lHedr.ElementEditValues['Number of Records'], lHedr.ElementEditValues['Next Object ID']]);
+        end else
+          Result := 'no header';
+        Result := Format('%s, %d records, modified %s', [Result, aFile.RecordCount, BoolToStr(aFile.Modified, True)]);
+      end;
+
+      function RefState(const aRecord: IwbMainRecord): string;
+      begin
+        var lType := -1;
+        var lLabel: Cardinal := 0;
+        var lGroup: IwbGroupRecord;
+        if Supports(aRecord.Container, IwbGroupRecord, lGroup) then begin
+          lType := lGroup.GroupType;
+          lLabel := lGroup.GroupLabel;
+        end;
+        Result := Format('VWD %s, group %d, modified %s, editable %s, flags %.8x, label %.8x',
+          [BoolToStr(aRecord.IsVisibleWhenDistant, True), lType, BoolToStr(aRecord.Modified, True),
+          BoolToStr(aRecord.IsEditable, True), aRecord.Flags._Flags, lLabel]);
+      end;
+
+      function NodeName(aNode: PVirtualNode): string;
+      begin
+        Result := '?';
+        var lData := PNavNodeData(vstNav.GetNodeData(aNode));
+        var lRec: IwbMainRecord;
+        if Assigned(lData) and Supports(lData.Element, IwbMainRecord, lRec) then
+          Result := lRec.EditorID + '@' + lRec._File.FileName;
+      end;
+
+    begin
+      var lSelected: TArray<IwbMainRecord> := [];
+      var lNames: TArray<string> := [];
+      for var j := 1 to High(lRecords) do begin
+        lSelected := lSelected + [lRecords[j]];
+        lNames := lNames + [lRecords[j].EditorID + '@' + lRecords[j]._File.FileName];
+      end;
+      var lFiles: TArray<IwbFile> := [];
+      var lFileNames: TArray<string> := [];
+      for var i := Low(Files) to High(Files) do begin
+        lFiles := lFiles + [Files[i]];
+        lFileNames := lFileNames + [Files[i].FileName];
+      end;
+      vstNav.ClearSelection;
+      var lFocus: PVirtualNode := nil;
+      for var i := Low(lSelected) to High(lSelected) do begin
+        var lNode := FindNodeForElement(lSelected[i]);
+        if not Assigned(lNode) then
+          raise Exception.Create('no nav node for ' + lNames[i]);
+        vstNav.Selected[lNode] := True;
+        lFocus := lNode;
+      end;
+      vstNav.FocusedNode := lFocus;
+      if tmrPendingSetActive.Enabled then
+        tmrPendingSetActiveTimer(tmrPendingSetActive);
+      for var i := Low(lSelected) to High(lSelected) do
+        vstNav.Selected[FindNodeForElement(lSelected[i])] := True;
+      var lOrder := '';
+      for var lNode in vstNav.GetSortedSelection(True) do
+        lOrder := lOrder + ' ' + NodeName(lNode);
+      lLines.Add(Format('# navvwd %d'#9'selection'#9'selected %d:%s'#9'focused %s', [aEntry, vstNav.SelectedCount, lOrder,
+        NodeName(vstNav.FocusedNode)]));
+      for var i := Low(lSelected) to High(lSelected) do
+        lLines.Add(Format('# navvwd %d'#9'record %d before'#9'%s: %s', [aEntry, i, lNames[i], RefState(lSelected[i])]));
+      for var i := Low(lFiles) to High(lFiles) do
+        lLines.Add(Format('# navvwd %d'#9'file %s before'#9'%s', [aEntry, lFileNames[i], State(lFiles[i])]));
+      pmuNavPopup(nil);
+      lLines.Add(Format('# navvwd %d'#9'offer'#9'VWD visible %s, Not VWD visible %s', [aEntry,
+        BoolToStr(mniNavCellChildVWD.Visible, True), BoolToStr(mniNavCellChildNotVWD.Visible, True)]));
+      var lItem := mniNavCellChildVWD;
+      var lGesture := 'nav vwd';
+      if lSelected[0].IsVisibleWhenDistant then begin
+        lItem := mniNavCellChildNotVWD;
+        lGesture := 'nav not vwd';
+      end;
+      var lDelay, lFocused: Integer;
+      BeginGesture(lGesture, nil, 0, False, lDelay, lFocused);
+      var lResult := 'returned';
+      try
+        mniNavCellChild(lItem);
+      except
+        on E: Exception do
+          lResult := E.ClassName + ': ' + E.Message;
+      end;
+      EndGesture(lGesture, lResult, lDelay, lFocused);
+      for var i := Low(lSelected) to High(lSelected) do
+        lLines.Add(Format('# navvwd %d'#9'record %d after'#9'%s: %s', [aEntry, i, lNames[i], RefState(lSelected[i])]));
+      for var i := Low(lFiles) to High(lFiles) do
+        lLines.Add(Format('# navvwd %d'#9'file %s after'#9'%s', [aEntry, lFileNames[i], State(lFiles[i])]));
+      pgMain.ActivePage := tbsMessages;
+    end;
+
   begin
+    if xeTestSwitches.ViewTreeNavVWD then begin
+      NavVWDProbe;
+      Exit;
+    end;
+    if xeTestSwitches.ViewTreeRefByRemove then begin
+      RefByRemoveProbe;
+      Exit;
+    end;
+    if xeTestSwitches.ViewTreeHeaderRemove then begin
+      HeaderRemoveProbe;
+      Exit;
+    end;
     if xeTestSwitches.ViewTreeHeaderDrop then begin
       HeaderDropProbe;
       Exit;
@@ -2372,6 +2680,8 @@ begin
           TimeProbe(lEntry, lRecords);
         if xeTestSwitches.ViewTreeRemove then
           RemoveProbe(lEntry);
+        if xeTestSwitches.ViewTreePopup then
+          PopupProbe(lEntry);
       end;
       DoSetActiveRecord(IwbMainRecord(nil));
       if xeTestSwitches.ViewTreeHeader then

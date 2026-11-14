@@ -121,6 +121,10 @@ ElminsterAU, robertgk2017, Jonathan Ostrus (jbostrus), eckserah, fireundubh, she
 * Check for Errors no longer loops on a cyclic parent chain or NPC template chain
 * Fix an access violation in condition-alias resolution for INFO records
 * Stop offering Remove on a record's Record Header
+* The View tab's column header menu no longer offers Remove on a file header, which left a plugin that could not be saved
+* Remove in the Referenced By tab no longer removes a record of a file that can not be edited, such as the game master's; a selection that includes one is refused with a message
+* Visible When Distant and Not Visible When Distant in the navigation tree no longer change a reference of a file that can not be edited, such as the game master's; a selection that includes one is refused with a message
+* Cleanup Injected no longer changes a record of a file that can not be edited, such as a Compare To copy's
 * Filtering the Referenced By list no longer leaves a row selected that you did not select, so a following command can not act on the wrong record
 * A double at its maximum or minimum shows as Default or Min
 * The navigation tree no longer sometimes paints its last row a second time on the empty row below it
@@ -171,6 +175,8 @@ ElminsterAU, robertgk2017, Jonathan Ostrus (jbostrus), eckserah, fireundubh, she
 * Add functions for an array's aligned rows and an aligned add
 * Add `GetIsUpdate` and `SetIsUpdate`, and argument count checks on the file type getters and setters and the element value setters (contributed by robertgk2017)
 * A script can no longer write to a record or a file that is not editable
+* A script's Remove, RemoveElement and RemoveByIndex can no longer remove a plugin's file header, which left a plugin that could not be saved
+* A script's RemoveElement by index or by element, and RemoveByIndex, now remove a main record or a group the way Remove does; before, the removed record stayed listed and a later removal could crash
 * Script functions refuse a wrong list, object or index with a message instead of crashing
 * `KWDA` and `KSIZ` resolve for scripts on wrapped keywords
 * Add scaling to the UI of the Find cell in worldspace script (contributed by Jonathan Ostrus)

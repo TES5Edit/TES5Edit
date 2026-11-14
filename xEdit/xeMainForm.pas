@@ -3822,7 +3822,7 @@ begin
   if xeContext.Settings.TranslationMode then
     Exit;
 
-  if not EditWarn then
+  if not xeContext.LoaderDone then
     Exit;
 
   SelectedNodes := vstNav.GetSortedSelection(True);
@@ -3834,6 +3834,15 @@ begin
   lPlan := TwbCleanupInjectedPlan.Plan(Elements);
   Elements := nil;
   if Length(lPlan.Records) < 1 then
+    Exit;
+
+  for var lRecord in lPlan.Records do
+    if not lRecord.IsEditable then begin
+      ShowMessage(lRecord.Name + ' in "' + lRecord._File.FileName + '" is not editable.');
+      Exit;
+    end;
+
+  if not EditWarn then
     Exit;
 
   sl := TStringList.Create;
@@ -8265,12 +8274,21 @@ begin
   if xeContext.Settings.TranslationMode then
     Exit;
 
-  if not EditWarn then
+  if not xeContext.LoaderDone then
     Exit;
 
   MainRecords := GetRefBySelectionAsMainRecords;
 
   if Length(MainRecords) < 1 then
+    Exit;
+
+  for i := Low(MainRecords) to High(MainRecords) do
+    if not MainRecords[i].IsRemovable then begin
+      ShowMessage(MainRecords[i].Name + ' in "' + MainRecords[i]._File.FileName + '" can not be removed.');
+      Exit;
+    end;
+
+  if not EditWarn then
     Exit;
 
   if Length(MainRecords) = 1 then
@@ -8723,7 +8741,7 @@ begin
   if xeContext.Settings.TranslationMode then
     Exit;
 
-  if not EditWarn then
+  if not xeContext.LoaderDone then
     Exit;
 
   SelectedNodes := vstNav.GetSortedSelection(True);
@@ -8773,6 +8791,15 @@ begin
     CellNodes[High(CellNodes)] := Node;
   end;
   SetLength(MainRecords, k);
+
+  for i := Low(MainRecords) to High(MainRecords) do
+    if not MainRecords[i].IsEditable then begin
+      ShowMessage(MainRecords[i].Name + ' in "' + MainRecords[i]._File.FileName + '" is not editable.');
+      Exit;
+    end;
+
+  if not EditWarn then
+    Exit;
 
   for i := Low(MainRecords) to High(MainRecords) do begin
     MainRecord := MainRecords[i];
@@ -9329,6 +9356,8 @@ begin
     Exit;
   Element := ActiveRecords[Column].Element;
   if not Supports(Element, IwbMainRecord, MainRecord) then
+    Exit;
+  if not MainRecord.IsRemovable then
     Exit;
 
   if not EditWarn then
@@ -13773,9 +13802,7 @@ begin
       end;
   mniViewHeaderUnhideAll.Visible := AnyHidden;
 
-  if not ActiveRecords[Column].Element._File.IsEditable then
-    Exit;
-  mniViewHeaderRemove.Visible := True;
+  mniViewHeaderRemove.Visible := ActiveRecords[Column].Element.IsRemovable;
 end;
 
 procedure TfrmMain.pmuViewPopup(Sender: TObject);
@@ -19640,11 +19667,14 @@ begin
             tmrShutdown.Enabled := True;
         end;
 
-        if xeTestSwitches.ViewTree then begin
-          DoTestViewTree;
-          if xeAutoExit then
-            tmrShutdown.Enabled := True;
-        end;
+        if xeTestSwitches.ViewTree then
+          if xeTestSwitches.ViewTreeCompareTo <> '' then
+            TLoaderThread.Create(xeTestSwitches.ViewTreeCompareTo, Files[High(Files)])
+          else begin
+            DoTestViewTree;
+            if xeAutoExit then
+              tmrShutdown.Enabled := True;
+          end;
 
         if xeTestSwitches.Options then
           DoTestOptions;
@@ -19807,6 +19837,16 @@ begin
             tmrShutdown.Enabled := True;
         end else
           DoTestChangeFormID;
+
+      if xeTestSwitches.ViewTree and (xeTestSwitches.ViewTreeCompareTo <> '') then begin
+        if xeContext.LoaderError or wbForceTerminate then begin
+          wbProgress('Test View Tree mode FAILED: the compare to module did not load');
+          CheckResult := 255;
+        end else
+          DoTestViewTree;
+        if xeAutoExit then
+          tmrShutdown.Enabled := True;
+      end;
 
       if xeTestSwitches.SaveContexts then begin
         if xeContext.LoaderError then begin

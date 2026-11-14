@@ -539,6 +539,7 @@ var
 begin
   if Supports(IInterface(Args.Values[0]), IwbElement, Element) then begin
     RequireEditable(Element);
+    RequireNotFileHeader(Element);
     Element.Remove;
   end;
 end;

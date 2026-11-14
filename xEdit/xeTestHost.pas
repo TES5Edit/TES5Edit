@@ -240,9 +240,14 @@ type
     ViewTreeModal         : Boolean;
     ViewTreeProtected     : Boolean;
     ViewTreeHeaderDrop    : Boolean;
+    ViewTreeHeaderRemove  : Boolean;
+    ViewTreeRefByRemove   : Boolean;
+    ViewTreeNavVWD        : Boolean;
+    ViewTreeCompareTo     : string;
     ViewTreeWalk          : Boolean;
     ViewTreeIdle          : Boolean;
     ViewTreeRemove        : Boolean;
+    ViewTreePopup         : Boolean;
     Options               : Boolean;
     OptionsNav            : string;
     OptionsPath           : string;
@@ -602,9 +607,20 @@ begin
     ViewTreeHeaderDrop := FindCmdLineSwitch('testviewtreeheaderdrop');
     if ViewTreeHeaderDrop then
       ViewTreeModal := True;
+    ViewTreeHeaderRemove := FindCmdLineSwitch('testviewtreeheaderremove');
+    if ViewTreeHeaderRemove then
+      ViewTreeModal := True;
+    ViewTreeRefByRemove := FindCmdLineSwitch('testviewtreerefbyremove');
+    if ViewTreeRefByRemove then
+      ViewTreeModal := True;
+    ViewTreeNavVWD := FindCmdLineSwitch('testviewtreenavvwd');
+    if ViewTreeNavVWD then
+      ViewTreeModal := True;
+    wbFindCmdLineParam('testviewtreecompareto', ViewTreeCompareTo);
     ViewTreeWalk := FindCmdLineSwitch('testviewtreewalk');
     ViewTreeIdle := FindCmdLineSwitch('testviewtreeidle');
     ViewTreeRemove := FindCmdLineSwitch('testviewtreeremove');
+    ViewTreePopup := FindCmdLineSwitch('testviewtreepopup');
     var lFocus: string;
     if wbFindCmdLineParam('testviewtreefocus', lFocus) then
       ViewTreeFocus := StrToIntDef(lFocus, 0);

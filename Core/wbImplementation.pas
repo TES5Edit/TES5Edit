@@ -20273,7 +20273,9 @@ end;
 
 function TwbMainRecord.IsElementRemovable(const aElement: IwbElement): Boolean;
 begin
-  Result := IsElementEditable(aElement) and not aElement.Def.Required;
+  Result := IsElementEditable(aElement);
+  if Result and Assigned(aElement.Def) then
+    Result := not aElement.Def.Required;
 end;
 
 function TwbMainRecord.IsSameData(aBase, aEnd: Pointer): Boolean;

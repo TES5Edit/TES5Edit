@@ -18,6 +18,7 @@ uses
 
 procedure RegisterJvInterpreterAdapter(JvInterpreterAdapter: TJvInterpreterAdapter);
 procedure RequireEditable(const aElement: IwbElement);
+procedure RequireNotFileHeader(const aElement: IwbElement);
 
 implementation
 
@@ -39,6 +40,13 @@ begin
   end else if Assigned(aElement._File) and aElement._File.IsEditable then
     Exit;
   raise Exception.Create(aElement.Path + ': Does not support editing');
+end;
+
+procedure RequireNotFileHeader(const aElement: IwbElement);
+begin
+  if Assigned(aElement) and (aElement.ElementType = etMainRecord) and Supports(aElement.Container, IwbFile) and
+     ((aElement as IwbMainRecord).Signature = aElement.GameDefObj.HeaderSignature) then
+    raise Exception.Create(aElement.Path + ': A file header can not be removed');
 end;
 
 function IsKeywordsMember(const aName: string): Boolean;
@@ -253,13 +261,33 @@ begin
     Value := Container.LastElement;
 end;
 
+function RemoveContainedElement(const aContainer: IwbContainerElementRef; const aElement: IwbElement; aMarkModified: Boolean): IwbElement;
+begin
+  if Assigned(aElement) and (Supports(aElement, IwbMainRecord) or Supports(aElement, IwbGroupRecord)) and Assigned(aElement.Container) and aElement.Container.Equals(aContainer) then begin
+    aElement.Remove;
+    Exit(aElement);
+  end;
+  Result := aContainer.RemoveElement(aElement, aMarkModified);
+end;
+
+function RemoveContainedIndex(const aContainer: IwbContainerElementRef; aIndex: Integer; aMarkModified: Boolean): IwbElement;
+begin
+  if (Supports(aContainer, IwbGroupRecord) or Supports(aContainer, IwbFile)) and (aIndex >= 0) and (aIndex < aContainer.ElementCount) then
+    Result := RemoveContainedElement(aContainer, aContainer.Elements[aIndex], aMarkModified)
+  else
+    Result := aContainer.RemoveElement(aIndex, aMarkModified);
+end;
+
 procedure IwbContainer_RemoveByIndex(var Value: Variant; Args: TJvInterpreterArgs);
 var
   Container: IwbContainerElementRef;
 begin
   if Supports(IInterface(Args.Values[0]), IwbContainerElementRef, Container) then begin
     RequireEditable(Container);
-    Value := Container.RemoveElement(integer(Args.Values[1]), boolean(Args.Values[2]));
+    var lIndex := integer(Args.Values[1]);
+    if Supports(Container, IwbFile) and (lIndex >= 0) and (lIndex < Container.ElementCount) then
+      RequireNotFileHeader(Container.Elements[lIndex]);
+    Value := RemoveContainedIndex(Container, lIndex, boolean(Args.Values[2]));
   end;
 end;
 
@@ -273,13 +301,21 @@ begin
     RequireEditable(Container);
     vtyp := VarType(Args.Values[1]);
     case vtyp of
-      varInteger, varInt64, varWord, varLongWord, varShortInt:
-         Value := Container.RemoveElement(integer(Args.Values[1]), True);
-      varString, varUString:
-         Value := Container.RemoveElement(string(Args.Values[1]));
+      varInteger, varInt64, varWord, varLongWord, varShortInt: begin
+        var lIndex := integer(Args.Values[1]);
+        if Supports(Container, IwbFile) and (lIndex >= 0) and (lIndex < Container.ElementCount) then
+          RequireNotFileHeader(Container.Elements[lIndex]);
+        Value := RemoveContainedIndex(Container, lIndex, True);
+      end;
+      varString, varUString: begin
+        RequireNotFileHeader(Container.ElementByPath[string(Args.Values[1])]);
+        Value := Container.RemoveElement(string(Args.Values[1]));
+      end;
     else
-      if Supports(IInterface(Args.Values[1]), IwbElement, Element) then
-        Value := Container.RemoveElement(Element, True);
+      if Supports(IInterface(Args.Values[1]), IwbElement, Element) then begin
+        RequireNotFileHeader(Element);
+        Value := RemoveContainedElement(Container, Element, True);
+      end;
     end;
   end;
 end;
