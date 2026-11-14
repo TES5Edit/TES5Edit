@@ -6318,7 +6318,7 @@ uses
 
   wbHalfFloat,
   wbSort,
-  wbSteamVDFParser;
+  wbSteamTools;
 
 procedure TwbConflictNodeData.UpdateRefs;
 begin
@@ -7873,11 +7873,16 @@ begin
   end;
 
   if lInstallPath = '' then
+  try
     for var lID in lIdentity.SteamID.Split([',']) do begin
       lInstallPath := GetInstallPathBySteamID(lID);
       if lInstallPath <> '' then
         Break;
     end;
+  finally
+    // Only here to just prevent crash if parser Excepts.
+    // We can't really do anything about it so we'll fall back to old methods.
+  end;
 
   if lInstallPath = '' then begin
     var lRegistryInfo := wbInstallRegistries[lLocation.InstallRegistry];
