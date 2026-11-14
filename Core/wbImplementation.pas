@@ -681,6 +681,7 @@ type
     function IsElementEditable(const aElement: IwbElement): Boolean; virtual;
 
     function IndexOf(const aElement: IwbElement): Integer;
+    function ElementByPosition(aPos: Integer): IwbElement;
 
     function ReleaseElements: TDynElementInternals;
     procedure ElementChanged(const aElement: IwbElement; aContainer: Pointer); virtual;
@@ -12969,6 +12970,17 @@ begin
   NotifyChanged(eContainer);
 end;
 
+function TwbContainer.ElementByPosition(aPos: Integer): IwbElement;
+var
+  SelfRef : IwbContainerElementRef;
+begin
+  SelfRef := Self as IwbContainerElementRef;
+  DoInit(False);
+  if (aPos < Low(cntElements)) or (aPos > High(cntElements)) then
+    Exit(nil);
+  Result := IInterface(cntElements[aPos]) as IwbElement;
+end;
+
 function TwbContainer.IndexOf(const aElement: IwbElement): Integer;
 var
   i: Integer;
@@ -24235,6 +24247,8 @@ begin
   SelfRef := Self;
 
   inherited;
+
+  DoInit(False);
 
   var lArrayDef: IwbArrayDef;
 

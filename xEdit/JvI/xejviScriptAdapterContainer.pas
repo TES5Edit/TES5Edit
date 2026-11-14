@@ -323,7 +323,7 @@ end;
 
 function RemoveContainedElement(const aContainer: IwbContainerElementRef; const aElement: IwbElement; aMarkModified: Boolean): IwbElement;
 begin
-  if Assigned(aElement) and (Supports(aElement, IwbMainRecord) or Supports(aElement, IwbGroupRecord)) and Assigned(aElement.Container) and aElement.Container.Equals(aContainer) then begin
+  if Assigned(aElement) and Assigned(aElement.Container) and aElement.Container.Equals(aContainer) then begin
     aElement.Remove;
     Exit(aElement);
   end;
@@ -332,10 +332,10 @@ end;
 
 function RemoveContainedIndex(const aContainer: IwbContainerElementRef; aIndex: Integer; aMarkModified: Boolean): IwbElement;
 begin
-  if (Supports(aContainer, IwbGroupRecord) or Supports(aContainer, IwbFile)) and (aIndex >= 0) and (aIndex < aContainer.ElementCount) then
-    Result := RemoveContainedElement(aContainer, aContainer.Elements[aIndex], aMarkModified)
-  else
-    Result := aContainer.RemoveElement(aIndex, aMarkModified);
+  var lElement := aContainer.ElementByPosition(aIndex);
+  if IsFileOrInFileHeader(aContainer) then
+    RequireNotFileHeader(lElement);
+  Result := RemoveContainedElement(aContainer, lElement, aMarkModified);
 end;
 
 procedure IwbContainer_RemoveByIndex(var Value: Variant; Args: TJvInterpreterArgs);
@@ -344,10 +344,7 @@ var
 begin
   if Supports(IInterface(Args.Values[0]), IwbContainerElementRef, Container) then begin
     RequireEditable(Container);
-    var lIndex := integer(Args.Values[1]);
-    if IsFileOrInFileHeader(Container) and (lIndex >= 0) and (lIndex < Container.ElementCount) then
-      RequireNotFileHeader(Container.Elements[lIndex]);
-    Value := RemoveContainedIndex(Container, lIndex, boolean(Args.Values[2]));
+    Value := RemoveContainedIndex(Container, integer(Args.Values[1]), boolean(Args.Values[2]));
   end;
 end;
 
@@ -362,10 +359,7 @@ begin
     vtyp := VarType(Args.Values[1]);
     case vtyp of
       varInteger, varInt64, varWord, varLongWord, varShortInt: begin
-        var lIndex := integer(Args.Values[1]);
-        if IsFileOrInFileHeader(Container) and (lIndex >= 0) and (lIndex < Container.ElementCount) then
-          RequireNotFileHeader(Container.Elements[lIndex]);
-        Value := RemoveContainedIndex(Container, lIndex, True);
+        Value := RemoveContainedIndex(Container, integer(Args.Values[1]), True);
       end;
       varString, varUString: begin
         RequireNotFileHeader(Container.ElementByPath[string(Args.Values[1])]);

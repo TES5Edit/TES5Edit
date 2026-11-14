@@ -1561,6 +1561,7 @@ type
     function IsElementEditable(const aElement: IwbElement): Boolean;
 
     function IndexOf(const aElement: IwbElement): Integer;
+    function ElementByPosition(aPos: Integer): IwbElement;
 
     function CanElementReset: Boolean;
 
