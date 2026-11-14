@@ -1201,6 +1201,7 @@ type
     function GetDataBytes: TBytes;
     procedure NotifyIfDataChanged(const aOldData: TBytes);
     function IsFlags: Boolean; virtual;
+    procedure RecreateFlags;
 
     function GetEditType: TwbEditType; override; final;
     function GetEditInfo: TArray<string>; override; final;
@@ -12944,6 +12945,9 @@ procedure StructDoInit(const aValueDef: IwbValueDef; const aContainer: IwbContai
 function UnionDoInit(const aValueDef: IwbValueDef; const aContainer: IwbContainer; var aBasePtr: Pointer; aEndPtr: Pointer; var aResolvedDef : IwbValueDef): TwbUnionFlags; forward
 function ValueDoInit(const aValueDef: IwbValueDef; const aContainer: IwbContainer; var aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; const aPrevFlags: TDynElementInternals; var aResolvedDef: IwbValueDef): Boolean; forward;
 
+threadvar
+  _PrevFlags : TDynElementInternals;
+
 { TwbContainer }
 
 function TwbContainer.Add(const aName: string; aSilent: Boolean): IwbElement;
@@ -24585,7 +24589,10 @@ var
   BasePtr           : Pointer;
   Element           : IwbElement;
   HasUnusedData     : Boolean;
+  PrevFlags         : TDynElementInternals;
 begin
+  PrevFlags := _PrevFlags;
+  _PrevFlags := nil;
   inherited;
 
   if GetSkipped then
@@ -24625,7 +24632,7 @@ begin
           end;
         end;
       else
-        if ValueDoInit(ValueDef, Self, BasePtr, dcDataEndPtr, Self, nil, srResolvedDef) then begin
+        if ValueDoInit(ValueDef, Self, BasePtr, dcDataEndPtr, Self, PrevFlags, srResolvedDef) then begin
           Include(srStates, srsIsFlags);
           Include(srStates, srsSorted);
         end;
@@ -25363,10 +25370,8 @@ begin
         DoAfterSet(OldValue, NewValue);
       end else
         raise Exception.Create(GetName + ' can not be edited');
-      if (srsIsFlags in srStates) and (csInit in cntStates) then begin
-        Reset;
-        Init;
-      end;
+      if (srsIsFlags in srStates) and (csInit in cntStates) then
+        RecreateFlags;
       NotifyChanged(eContainer);
     end;
   finally
@@ -25408,10 +25413,8 @@ begin
         DoAfterSet(OldValue, NewValue);
       end else
         raise Exception.Create(GetName + ' can not be edited');
-      if (srsIsFlags in srStates) and (csInit in cntStates) then begin
-        Reset;
-        Init;
-      end;
+      if (srsIsFlags in srStates) and (csInit in cntStates) then
+        RecreateFlags;
       NotifyChanged(eContainer);
     end;
   finally
@@ -25452,10 +25455,8 @@ begin
       DoAfterSet(OldValue, NewValue);
     end else
       raise Exception.Create(GetName + ' can not be edited');
-    if (srsIsFlags in srStates) and (csInit in cntStates) then begin
-      Reset;
-      Init;
-    end;
+    if (srsIsFlags in srStates) and (csInit in cntStates) then
+      RecreateFlags;
     NotifyChanged(eContainer);
   finally
     EndUpdate;
@@ -32490,17 +32491,16 @@ begin
     Inc(PByte(aBasePtr), i);
 end;
 
-threadvar
-  _PrevFlags : TDynElementInternals;
-
 procedure TwbValue.Init;
 var
   BasePtr: Pointer;
+  PrevFlags: TDynElementInternals;
 begin
+  PrevFlags := _PrevFlags;
+  _PrevFlags := nil;
   inherited;
   BasePtr := GetDataBasePtr;
-  vIsFlags := ValueDoInit(vbValueDef, Self, BasePtr, dcDataEndPtr, Self, _PrevFlags, vResolvedDef);
-  _PrevFlags := nil;
+  vIsFlags := ValueDoInit(vbValueDef, Self, BasePtr, dcDataEndPtr, Self, PrevFlags, vResolvedDef);
 end;
 
 function TwbValue.IsFlags: Boolean;
@@ -32647,18 +32647,6 @@ begin
 end;
 
 procedure TwbValue.SetEditValue(const aValue: string);
-
-  procedure RecreateFlags;
-  begin
-    _PrevFlags := ReleaseElements;
-    try
-      Reset;
-      Init;
-    finally
-      _PrevFlags := nil;
-    end;
-  end;
-
 var
   OldValue, NewValue: Variant;
 begin
@@ -32705,17 +32693,13 @@ begin
     OldValue := GetNativeValue;
     vbValueDef.NativeValue[GetDataBasePtr, dcDataEndPtr, Self] := aValue;
     SetModified(True);
-    if vIsFlags and (csInit in cntStates) then begin
-      Reset;
-      Init;
-    end;
+    if vIsFlags and (csInit in cntStates) then
+      RecreateFlags;
     NewValue := GetNativeValue;
     DoAfterSet(OldValue, NewValue);
     NotifyChanged(eContainer);
-    if vIsFlags and (csInit in cntStates) then begin
-      Reset;
-      Init;
-    end;
+    if vIsFlags and (csInit in cntStates) then
+      RecreateFlags;
   finally
     EndUpdate;
   end;
@@ -34664,6 +34648,17 @@ begin
   inherited SetModified(aValue);
 end;
 
+procedure TwbDataContainer.RecreateFlags;
+begin
+  _PrevFlags := ReleaseElements;
+  try
+    Reset;
+    Init;
+  finally
+    _PrevFlags := nil;
+  end;
+end;
+
 procedure TwbDataContainer.SetToDefaultInternal;
 var
   SelfRef            : IwbContainerElementRef;
@@ -34682,10 +34677,8 @@ begin
       DoAfterSet(OldValue, NewValue);
       NotifyChanged(eContainer);
 
-      if IsFlags and (csInit in cntStates) then begin
-        Reset;
-        Init;
-      end;
+      if IsFlags and (csInit in cntStates) then
+        RecreateFlags;
     end
   end;
 
