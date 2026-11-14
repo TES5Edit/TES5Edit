@@ -33970,6 +33970,8 @@ function TwbFlag.GetEditValue: string;
 var
   s: string;
 begin
+  if not Assigned(eContainer) then
+    Exit('0');
   s := GetContainer.EditValue;
   if Length(s) >= Succ(fIndex) then
     Result := s[Succ(fIndex)]
@@ -33999,6 +34001,8 @@ function TwbFlag.GetIsEditable: Boolean;
 var
   FlagsDef: IwbFlagsDef;
 begin
+  if not Assigned(eContainer) then
+    Exit(False);
   Result := wbIsInternalEdit or GetContainer.IsEditable;
   FlagsDef := GetFlagsDef;
   if Assigned(FlagsDef) and (dfInternalEditOnly in FlagsDef.DefFlags) then
@@ -34008,7 +34012,7 @@ end;
 
 function TwbFlag.GetIsRemovable: Boolean;
 begin
-  Result := wbIsInternalEdit or GetContainer.IsEditable;
+  Result := Assigned(eContainer) and (wbIsInternalEdit or GetContainer.IsEditable);
 end;
 
 function TwbFlag.GetName: string;
@@ -34020,6 +34024,8 @@ function TwbFlag.GetNativeValue: Variant;
 var
   s: string;
 begin
+  if not Assigned(eContainer) then
+    Exit(False);
   s := GetContainer.EditValue;
   if Length(s) >= Succ(fIndex) then
     Result := s[Succ(fIndex)] = '1'
@@ -34126,6 +34132,12 @@ var
   s: string;
   c: Char;
 begin
+  if not Assigned(eContainer) then begin
+    if aValue = '1' then
+      raise Exception.Create(GetName + ' is not part of a flags value and can not be set.');
+    Exit;
+  end;
+
   if not wbIsInternalEdit then begin
     if not ContextObj.Settings.EditAllowed then
       raise Exception.Create(GetName + ' can not be edited.');
@@ -34149,6 +34161,12 @@ var
   s: string;
   c: Char;
 begin
+  if not Assigned(eContainer) then begin
+    if aValue = True then
+      raise Exception.Create(GetName + ' is not part of a flags value and can not be set.');
+    Exit;
+  end;
+
   if not wbIsInternalEdit then begin
     if not ContextObj.Settings.EditAllowed then
       raise Exception.Create(GetName + ' can not be edited.');

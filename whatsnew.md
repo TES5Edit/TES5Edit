@@ -11,6 +11,7 @@ xEdit is crucial to our shared modding community and your contribution - no matt
 * A script's AddElement or InsertElement of an element that still belongs to a container is refused instead of leaving it in both.
 * A script's RemoveElement or RemoveByIndex of an element the container holds directly now removes it the way Remove does: an array subrecord's count field (such as KSIZ for KWDA) is set to 0, and the removal is kept when the plugin is saved, also with RemoveByIndex(..., False). A script's Remove of an array subrecord such as KWDA on a record loaded from a plugin now also sets its count field to 0.
 * A script's RemoveElement or RemoveByIndex with an index now removes the entry that ElementByIndex gives for that index; in a sorted list such as keywords whose stored order differs from the sorted one, it could remove a different entry. IndexOf now gives the index ElementByIndex uses.
+* A script that still holds a flag element after the flag was cleared no longer gets an access violation reading its value or whether it can be edited: it reads as cleared and can not be edited.
 
 # What's New in xEdit 4.1.5r?
 
