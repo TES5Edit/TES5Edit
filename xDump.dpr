@@ -1049,6 +1049,19 @@ begin
         Exit;
       end;
 
+      var SourceName := DumpSourceName;
+      if SourceName = 'Plugins' then
+        SourceName := '';
+
+      HostApplicationTitle := HostContext.GameDefObj.AppName + HostToolName + SourceName +  ' ' + VersionString;
+      {$IFDEF WIN64}
+      HostApplicationTitle := HostApplicationTitle + ' x64';
+      {$ENDIF WIN64}
+
+      {$IFDEF EXCEPTION_LOGGING_ENABLED}
+      nxEHAppVersion := HostApplicationTitle;
+      {$ENDIF}
+
       if DumpSaves then begin
         HostSaveContextRef := wbCreateSaveContext(HostContextRef);
         HostSaveContext := HostSaveContextRef as TwbSaveContext;
@@ -1103,19 +1116,6 @@ begin
       end;
 
       ShowFlagEnumValue := wbReportMode;
-
-     var SourceName := DumpSourceName;
-     if SourceName = 'Plugins' then
-       SourceName := '';
-
-     HostApplicationTitle := HostContext.GameDefObj.AppName + HostToolName + SourceName +  ' ' + VersionString;
-     {$IFDEF WIN64}
-     HostApplicationTitle := HostApplicationTitle + ' x64';
-     {$ENDIF WIN64}
-
-     {$IFDEF EXCEPTION_LOGGING_ENABLED}
-     nxEHAppVersion := HostApplicationTitle;
-     {$ENDIF}
 
       if not FindCmdLineSwitch('q') and not wbReportMode then begin
         WriteLn(ErrOutput, HostApplicationTitle);
