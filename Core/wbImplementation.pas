@@ -35298,6 +35298,10 @@ begin
           if MainRecordInternal.Signature <> GameDefObj.HeaderSignature then
             Flags.SetESM(False);
 
+        if Flags.IsDeleted and not MainRecordInternal.GetFlagsPtr.IsDeleted then
+          if MainRecordInternal.Signature = GameDefObj.HeaderSignature then
+            Flags.SetDeleted(False);
+
         if Flags.IsDeleted <> MainRecordInternal.GetFlagsPtr.IsDeleted then begin
           Flags.SetDeleted(MainRecordInternal.GetFlagsPtr.IsDeleted);
           ToggleDeleted := True;

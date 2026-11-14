@@ -85,6 +85,9 @@ begin
   if Supports(IInterface(Args.Values[0]), IwbElement, Element) then
     if (V2O(Args.Values[2]) = nil) or Supports(IInterface(Args.Values[2]), IwbElement, Element2) then begin
       RequireEditable(Element);
+      if Supports(Element, IwbFile) then
+        raise Exception.Create(Element.Name + ': A file can not be assigned');
+      RequireNotInFileHeader(Element, 'assigned');
       Value := Element.Assign(Args.Values[1], Element2, Args.Values[3]);
     end;
 end;
@@ -625,6 +628,7 @@ var
 begin
   if Supports(IInterface(Args.Values[0]), IwbElement, Element) then begin
     RequireEditable(Element);
+    RequireNotInFileHeader(Element, 'reset to default');
     Element.SetToDefault;
   end;
 end;
@@ -653,6 +657,7 @@ var
 begin
   if Supports(IInterface(Args.Values[0]), IwbElement, Element) then begin
     RequireEditable(Element);
+    RequireNotInFileHeader(Element, 'assigned');
     var TemplateName := String(Args.Values[1]);
 
     var TargetIndex := High(Integer);
@@ -734,6 +739,7 @@ begin
   if Supports(IInterface(Args.Values[0]), IwbElement, Element) then
     if Supports(IInterface(Args.Values[1]), IwbMainRecord, MainRecord) then begin
       RequireEditable(MainRecord);
+      RefuseFileHeader(MainRecord, 'copied into');
       Value := MainRecord.AddCopy(Element, CopyFlags(Args.Values[2], Args.Values[3]));
     end;
 end;

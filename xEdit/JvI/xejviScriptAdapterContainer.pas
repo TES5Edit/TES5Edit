@@ -19,6 +19,8 @@ uses
 procedure RegisterJvInterpreterAdapter(JvInterpreterAdapter: TJvInterpreterAdapter);
 procedure RequireEditable(const aElement: IwbElement);
 procedure RequireNotFileHeader(const aElement: IwbElement);
+procedure RefuseFileHeader(const aElement: IwbElement; const aWhat: string);
+procedure RequireNotInFileHeader(const aElement: IwbElement; const aWhat: string);
 
 implementation
 
@@ -42,11 +44,60 @@ begin
   raise Exception.Create(aElement.Path + ': Does not support editing');
 end;
 
+function IsFileHeader(const aElement: IwbElement): Boolean;
+begin
+  Result := Assigned(aElement) and (aElement.ElementType = etMainRecord) and Supports(aElement.Container, IwbFile) and
+    ((aElement as IwbMainRecord).Signature = aElement.GameDefObj.HeaderSignature);
+end;
+
+procedure RefuseFileHeader(const aElement: IwbElement; const aWhat: string);
+begin
+  if IsFileHeader(aElement) then
+    raise Exception.Create(aElement.Path + ': A file header can not be ' + aWhat);
+end;
+
+procedure RequireNotInFileHeader(const aElement: IwbElement; const aWhat: string);
+begin
+  if Assigned(aElement) and IsFileHeader(aElement.ContainingMainRecord) then
+    raise Exception.Create(aElement.Path + ': A file header''s data can not be ' + aWhat);
+end;
+
+procedure RequireAddableInFileHeader(const aContainer: IwbContainerElementRef; const aName: string);
+var
+  lMainRecord: IwbMainRecord;
+begin
+  if not IsFileHeader(aContainer.ContainingMainRecord) then
+    Exit;
+  var lElement: IwbElement := aContainer;
+  while Assigned(lElement) do begin
+    if (Assigned(lElement.Def) and (dfInternalEditOnly in lElement.Def.DefFlags)) or
+       (Assigned(lElement.ValueDef) and (dfInternalEditOnly in lElement.ValueDef.DefFlags)) then
+      raise Exception.Create(aContainer.Path + ': A file header''s data can not be extended');
+    if lElement.ElementType = etMainRecord then
+      Break;
+    lElement := lElement.Container;
+  end;
+  if Supports(aContainer, IwbMainRecord, lMainRecord) and Assigned(lMainRecord.Def) and not lMainRecord.IsDeleted then
+    for var i := 0 to Pred(lMainRecord.Def.MemberCount) do
+      if SameText(lMainRecord.Def.Members[i].Name, aName) or SameText(lMainRecord.Def.Members[i].DefaultSignature, aName) then begin
+        if (dfInternalEditOnly in lMainRecord.Def.Members[i].DefFlags) and not Assigned(aContainer.ElementBySortOrder[i + aContainer.AdditionalElementCount]) then
+          raise Exception.Create(aContainer.Path + ': A file header''s ' + lMainRecord.Def.Members[i].Name + ' can not be added');
+        Exit;
+      end;
+end;
+
 procedure RequireNotFileHeader(const aElement: IwbElement);
 begin
-  if Assigned(aElement) and (aElement.ElementType = etMainRecord) and Supports(aElement.Container, IwbFile) and
-     ((aElement as IwbMainRecord).Signature = aElement.GameDefObj.HeaderSignature) then
-    raise Exception.Create(aElement.Path + ': A file header can not be removed');
+  if not Assigned(aElement) then
+    Exit;
+  RefuseFileHeader(aElement, 'removed');
+  if IsFileHeader(aElement.ContainingMainRecord) and not aElement.IsRemovable then
+    raise Exception.Create(aElement.Path + ': A file header''s ' + aElement.Name + ' can not be removed');
+end;
+
+function IsFileOrInFileHeader(const aContainer: IwbContainerElementRef): Boolean;
+begin
+  Result := Supports(aContainer, IwbFile) or IsFileHeader(aContainer.ContainingMainRecord);
 end;
 
 function IsKeywordsMember(const aName: string): Boolean;
@@ -93,6 +144,7 @@ begin
   if Supports(IInterface(Args.Values[0]), IwbContainerElementRef, Container) then begin
     RequireEditable(Container);
     var lName: string := Args.Values[1];
+    RequireAddableInFileHeader(Container, lName);
     var lMainRecord: IwbMainRecord;
     if IsKeywordsMember(lName) and Supports(Container, IwbMainRecord, lMainRecord) then begin
       var lKeywords := KeywordsStruct(Container);
@@ -115,6 +167,9 @@ begin
   if Supports(IInterface(Args.Values[0]), IwbContainerElementRef, Container) then
     if Supports(IInterface(Args.Values[1]), IwbElement, Element) then begin
       RequireEditable(Container);
+      if Assigned(Element.Container) then
+        raise Exception.Create(Element.Path + ': The element is held by ' + Element.Container.Path + '; remove it first');
+      RequireNotInFileHeader(Container, 'extended');
       Container.AddElement(Element);
     end;
 end;
@@ -240,6 +295,11 @@ begin
   if Supports(IInterface(Args.Values[0]), IwbContainerElementRef, Container) then
     if Supports(IInterface(Args.Values[2]), IwbElement, Element) then begin
       RequireEditable(Container);
+      if Assigned(Element.Container) then
+        raise Exception.Create(Element.Path + ': The element is held by ' + Element.Container.Path + '; remove it first');
+      RequireNotInFileHeader(Container, 'extended');
+      if Supports(Container, IwbFile) and (integer(Args.Values[1]) <= 0) then
+        raise Exception.Create(Container.Name + ': Nothing can be inserted before a file''s header');
       Container.InsertElement(integer(Args.Values[1]), Element);
     end;
 end;
@@ -285,7 +345,7 @@ begin
   if Supports(IInterface(Args.Values[0]), IwbContainerElementRef, Container) then begin
     RequireEditable(Container);
     var lIndex := integer(Args.Values[1]);
-    if Supports(Container, IwbFile) and (lIndex >= 0) and (lIndex < Container.ElementCount) then
+    if IsFileOrInFileHeader(Container) and (lIndex >= 0) and (lIndex < Container.ElementCount) then
       RequireNotFileHeader(Container.Elements[lIndex]);
     Value := RemoveContainedIndex(Container, lIndex, boolean(Args.Values[2]));
   end;
@@ -303,7 +363,7 @@ begin
     case vtyp of
       varInteger, varInt64, varWord, varLongWord, varShortInt: begin
         var lIndex := integer(Args.Values[1]);
-        if Supports(Container, IwbFile) and (lIndex >= 0) and (lIndex < Container.ElementCount) then
+        if IsFileOrInFileHeader(Container) and (lIndex >= 0) and (lIndex < Container.ElementCount) then
           RequireNotFileHeader(Container.Elements[lIndex]);
         Value := RemoveContainedIndex(Container, lIndex, True);
       end;
@@ -326,6 +386,9 @@ var
 begin
   if Supports(IInterface(Args.Values[0]), IwbContainerElementRef, Container) then begin
     RequireEditable(Container);
+    if Supports(Container, IwbFile) then
+      raise Exception.Create(Container.Name + ': The elements of a file can not be reversed');
+    RequireNotInFileHeader(Container, 'reordered');
     Container.ReverseElements;
   end;
 end;
@@ -342,6 +405,7 @@ begin
   end;
   if not (wbAllowUnsafeScripts or aParent.IsEditable) then
     raise Exception.Create(aParent.Path + ': Does not support editing');
+  RequireAddableInFileHeader(aParent, aName);
   Result := True;
 end;
 

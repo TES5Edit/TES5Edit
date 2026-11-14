@@ -75,6 +75,7 @@ var
 begin
   if Supports(IInterface(Args.Values[0]), IwbMainRecord, MainRecord) then begin
     RequireEditable(MainRecord);
+    RefuseFileHeader(MainRecord, 'given another signature');
     Signature := StrToSignature(Args.Values[1]);
     MainRecord.ChangeFormSignature(Signature);
   end;
@@ -382,6 +383,8 @@ var
 begin
   if Supports(IInterface(Args.Values[0]), IwbMainRecord, MainRecord) then begin
     RequireEditable(MainRecord);
+    if Args.Values[1] then
+      RefuseFileHeader(MainRecord, 'deleted');
     MainRecord.IsDeleted := Args.Values[1];
   end;
 end;
