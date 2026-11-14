@@ -4,6 +4,12 @@ If you share your mods on Nexus Mods and use xEdit as a major component in devel
 
 xEdit is crucial to our shared modding community and your contribution - no matter the size - is invaluable and deeply appreciated.
 
+# What's New in xEdit 4.1.5s?
+
+## Scripting
+* The checked script editing functions now refuse to delete a plugin's file header, change its signature, assign or copy into it (ElementAssign, TemplateAssign, wbCopyElementToRecord), assign a whole plugin (ElementAssign), reverse or reset it, attach an element into it (AddElement / InsertElement), insert anything before it, add a master entry outside the master functions while master editing is off (Add, or a value setter naming a missing Master Files), or remove the parts of it the editor itself does not remove (such as its HEDR, Author, Interior Cell Count, or a master entry while master editing is off); setting the deleted flag on a file header that is not deleted (named Temp ID Owner on Skyrim) no longer deletes it.
+* A script's AddElement or InsertElement of an element that still belongs to a container is refused instead of leaving it in both.
+
 # What's New in xEdit 4.1.5r?
 
 ## Skyrim Special Edition: save ESM-flagged plugins again
