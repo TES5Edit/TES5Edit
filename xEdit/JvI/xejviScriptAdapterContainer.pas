@@ -284,7 +284,11 @@ begin
   Value := -1;
   if Supports(IInterface(Args.Values[0]), IwbContainerElementRef, Container) then
     if Supports(IInterface(Args.Values[1]), IwbElement, Element) then
-      Value := Container.IndexOf(Element);
+      for var i := 0 to Pred(Container.ElementCount) do
+        if Element.Equals(Container.Elements[i]) then begin
+          Value := i;
+          Exit;
+        end;
 end;
 
 procedure IwbContainer_InsertElement(var Value: Variant; Args: TJvInterpreterArgs);
@@ -332,7 +336,7 @@ end;
 
 function RemoveContainedIndex(const aContainer: IwbContainerElementRef; aIndex: Integer; aMarkModified: Boolean): IwbElement;
 begin
-  var lElement := aContainer.ElementByPosition(aIndex);
+  var lElement := aContainer.Elements[aIndex];
   if IsFileOrInFileHeader(aContainer) then
     RequireNotFileHeader(lElement);
   Result := RemoveContainedElement(aContainer, lElement, aMarkModified);
