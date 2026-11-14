@@ -5839,6 +5839,9 @@ begin
     wbRArray('Responses',
       wbRStruct('Response', [
         wbStruct(TRDT, 'Response Data', [
+          wbEmpty('Voice Filename', cpIgnore)
+            .SetToStr(wbINFOResponseFileNameToStr)
+            .IncludeFlag(dfInternalEditOnly),
           wbInteger('Emotion Type', itU32,
             wbEnum([
             {0} 'Neutral',
@@ -5852,7 +5855,7 @@ begin
             ])),
           wbInteger('Emotion Value', itS32),
           wbUnused(4),
-          wbInteger('Response number', itU8),
+          wbInteger('Response Number', itU8),
           wbUnused(3),
           wbFormIDCk('Sound', [SOUN,NULL]),
           wbInteger('Use Emotion Animation', itU8, wbBoolEnum),

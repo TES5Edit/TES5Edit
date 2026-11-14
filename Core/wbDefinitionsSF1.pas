@@ -12845,9 +12845,8 @@ begin
             wbFloat('Emotion Out')
           ])),
         wbFormIDCk(TROI, 'Original INFO', [INFO]),
-        wbLStringKC(NAM1, 'Response Text', 0, cpTranslate).IncludeFlagOnValue(dfStringTrim)
-          //.SetAfterLoad(wbDialogueTextAfterLoad)
-          //.SetAfterSet(wbDialogueTextAfterSet)
+        wbLStringKC(NAM1, 'Response Text', 0, cpTranslate)
+          .IncludeFlagOnValue(dfStringTrim)
           .SetRequired,
         wbString(NAM2, 'Script Notes').SetRequired,
         wbString(NAM3, 'Edits').SetRequired,
