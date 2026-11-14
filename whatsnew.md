@@ -111,6 +111,7 @@ ElminsterAU, robertgk2017, Jonathan Ostrus (jbostrus), eckserah, fireundubh, she
 * Refuse a strings file, a record or compressed data that runs past its end
 * Skip .git folders when listing a loose data folder
 * Unregister a failed plugin's records from its masters
+* A game's Steam install folder is found with a full reader for Steam's library and app manifest files: it no longer depends on how they are laid out, checks every library, and a missing or malformed file no longer stops the search (contributed by Jonathan Ostrus)
 
 ### Closing, cancelling and background work
 * The editor is safe against close requests, shortcuts and timers arriving while a nested operation runs; a close during a cancellable operation asks first, then stops it
@@ -165,6 +166,7 @@ ElminsterAU, robertgk2017, Jonathan Ostrus (jbostrus), eckserah, fireundubh, she
 * ALCH, SCRL, AMMO - Add VMAD, from Cobb (contributed by robertgk2017)
 * NIF - Community Shaders PBR shader type and features (contributed by robertgk2017)
 * TES4 \ ONAM - Accept INFO, DIAL, DLBR and SCEN overrides, which the 1.7 Update.esm lists, in Skyrim SE, Skyrim VR and Enderal SE (contributed by robertgk2017)
+* SNDR \ CNAM - Descriptor Type is required and defaults to Standard; the game crashes without it (contributed by robertgk2017)
 
 ### FO4/FO76
 * Fix object mod properties using the count as their count callback (contributed by robertgk2017)
