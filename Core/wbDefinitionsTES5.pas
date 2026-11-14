@@ -7491,9 +7491,12 @@ begin
 
   RegisterRecordDef(SNDR, 'Sound Descriptor', [
     wbEDID,
-    wbInteger(CNAM, 'Descriptor Type', itU32, wbEnum([], [
+    wbInteger(CNAM, 'Descriptor Type', itU32,
+      wbEnum([], [
       Int64($1EEF540A), 'Standard'
-    ])),
+      ])
+    ).SetDefaultNativeValue($1EEF540A)
+     .SetRequired,
     wbFormIDCk(GNAM, 'Category', [SNCT]),
     wbFormIDCk(SNAM, 'Alternate Sound For', [SNDR,NULL]),
     wbSoundDescriptorSounds,
