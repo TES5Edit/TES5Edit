@@ -73,7 +73,7 @@
         <DCC_FOR_VARIABLE>error</DCC_FOR_VARIABLE>
         <DCC_GenerateStackFrames>true</DCC_GenerateStackFrames>
         <DCC_Namespace>System;Xml;Data;Datasnap;Web;Soap;Vcl;Vcl.Imaging;Vcl.Touch;Vcl.Samples;Vcl.Shell;$(DCC_Namespace)</DCC_Namespace>
-        <DCC_UnitSearchPath>.\Core;.\BSArch;.\External\ImagingLib\Source\;.\External\ImagingLib\Source\zlib;.\External\libdeflate-pas;.\External\lz4-delphi;.\External\FileContainer;.\External\JsonDataObjects\Source;.\External\VirtualTrees\Source;.\External\vcl-styles-utils\Common;.\External\delphi-detours-library\Source;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+        <DCC_UnitSearchPath>.\Core;.\BSArch;.\External\ImagingLib\Source\;.\External\ImagingLib\Source\Libs;.\External\libdeflate-pas;.\External\lz4-delphi;.\External\FileContainer;.\External\JsonDataObjects\Source;.\External\VirtualTrees\Source;.\External\vcl-styles-utils\Common;.\External\delphi-detours-library\Source;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
         <DCC_WIDECHAR_REDUCED>false</DCC_WIDECHAR_REDUCED>
         <Icon_MainIcon>$(BDS)\bin\delphi_PROJECTICON.ico</Icon_MainIcon>
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
