@@ -10,6 +10,7 @@ xEdit is crucial to our shared modding community and your contribution - no matt
 * Remove is no longer offered for a plugin's Player Reference (PLYR) group while it holds a record: the record can not be removed on its own, and removing the group removed it anyway.
 * Setting Persistent or Visible When Distant on a reference whose position names no cell is refused without changing the flag; the flag used to stay changed while the reference stayed in its old group.
 * Cleanup Injected no longer asks to add masters that only a record it then skips would need, because its target already holds its own override of that record.
+* Starfield: Cleanup Injected no longer removes a record's injected references when the record can not be copied into the injecting plugin (such as a record holding Reflection); the record is left as it was and reported as not cleaned.
 
 ## Scripting
 * A script can no longer remove a Player Reference (PLYR) record by removing it through its group (RemoveElement, RemoveByIndex) or by removing the group itself (Remove, RemoveElement, RemoveByIndex); Remove of the record itself already refused it.

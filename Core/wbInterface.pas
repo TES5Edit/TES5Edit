@@ -28061,7 +28061,11 @@ begin
         aReport(lRecord.Name + ' was not cleaned: ' + Target.FileName + ' already has its own override.');
       Continue;
     end;
-    Target.AddCopy(lRecord, [cfDeepCopy], wbNoCopyRules);
+    if not Assigned(Target.AddCopy(lRecord, [cfDeepCopy], wbNoCopyRules)) then begin
+      if Assigned(aReport) then
+        aReport(lRecord.Name + ' was not cleaned: it could not be copied into ' + Target.FileName + '.');
+      Continue;
+    end;
     if lRecord.RemoveInjected(False) and Assigned(aReport) then
       aReport('Injected references in ' + lRecord.Name + ' could not all be removed automatically.');
   end;
