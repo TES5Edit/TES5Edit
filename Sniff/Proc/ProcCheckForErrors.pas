@@ -1211,34 +1211,19 @@ begin
       if (Textures.Count > 5) and (Textures[5].EditValue <> '') then
         if (ShaderType <> 'Environment Map') and
            (ShaderType <> 'MultiLayer Parallax') and
-           (ShaderType <> 'Eye Envmap') and
-           (ShaderType <> 'PBR')
+           (ShaderType <> 'Eye Envmap')
         then
           Log.Add(#9 + texset.Name + ': Has texture assigned in slot 5, but is not used');
 
       if (Textures.Count > 6) and (Textures[6].EditValue <> '') then
         if (ShaderType <> 'Facegen') and
-           (ShaderType <> 'MultiLayer Parallax') and
-           (
-             (ShaderType <> 'PBR') or
-             (
-               (not Shader.NativeValues['PBR Material Data\Feature Flags\Two Layer']) and
-               (not Shader.NativeValues['PBR Material Data\Feature Flags\Fuzz'])
-             )
-           )
+           (ShaderType <> 'MultiLayer Parallax')
         then
           Log.Add(#9 + texset.Name + ': Has texture assigned in slot 6, but is not used');
 
       if (Textures.Count > 7) and (Textures[7].EditValue <> '') then
         if (not Shader.NativeValues['Shader Flags 2\Back_Lighting']) and
-           (not Shader.NativeValues['Shader Flags 1\Model_Space_Normals']) and
-           (
-             (ShaderType <> 'PBR') or
-             (
-               (not Shader.NativeValues['PBR Material Data\Feature Flags\Two Layer']) and
-               (not Shader.NativeValues['PBR Material Data\Feature Flags\Subsurface'])
-             )
-           )
+           (not Shader.NativeValues['Shader Flags 1\Model_Space_Normals'])
         then
           Log.Add(#9 + texset.Name + ': Has texture assigned in slot 7, but is not used');
     end;
@@ -1565,34 +1550,6 @@ begin
         else
           if Shader.NativeValues['Shader Flags 2\LOD_Objects'] then
             Log.Add(#9 + Shader.Name + ': LOD_Objects shader flag is set but shader type is not LOD Object');
-
-        if ShaderType = 'PBR' then begin
-          if texset.EditValues['Textures\[5]'] = '' then
-            Log.Add(#9 + texset.Name + ': RMAOS Texture [Slot 5] must be set for PBR shader');
-
-          if Shader.NativeValues['PBR Material Data\Feature Flags\Two Layer'] then
-          begin
-            if Shader.NativeValues['PBR Material Data\Feature Flags\Fuzz'] then
-              Log.Add(#9 + Shader.Name + ': PBR Features Two Layer and Fuzz can not be used together');
-
-            if Shader.NativeValues['PBR Material Data\Feature Flags\Subsurface'] then
-              Log.Add(#9 + Shader.Name + ': PBR Features Two Layer and Subsurface can not be used together');
-
-            if texset.EditValues['Textures\[6]'] = '' then
-              Log.Add(#9 + texset.Name + ': PBR Two Layer Normal texture [Slot 6] must be set for PBR Two Layer feature');
-
-            if texset.EditValues['Textures\[7]'] = '' then
-              Log.Add(#9 + texset.Name + ': PBR Two Layer Diffuse texture [slot 7] must be set for PBR Two Layer feature');
-          end;
-
-          if Shader.NativeValues['PBR Material Data\Feature Flags\Fuzz'] then
-            if texset.EditValues['Textures\[6]'] = '' then
-              Log.Add(#9 + texset.Name + ': PBR Fuzz Texture [Slot 6] must be set for PBR Fuzz feature');
-
-          if Shader.NativeValues['PBR Material Data\Feature Flags\Subsurface'] then
-            if texset.EditValues['Textures\[7]'] = '' then
-              Log.Add(#9 + texset.Name + ': PBR Subsurface texture [Slot 7] must be set for PBR Subsurface feature');
-        end;
 
         // Back_Lighting flag
         if Shader.NativeValues['Shader Flags 2\Back_Lighting'] then
