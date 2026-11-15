@@ -5766,7 +5766,7 @@ begin
         var lBFCB := lComponentStruct.ElementBySignature[BFCB];
         if Assigned(lBFCB) and (lBFCB.Value = 'Blueprint_Component') then begin
           var lItems: IwbContainerElementRef;
-          if Supports(lComponentStruct.ElementByPath['Component Data\BUO4 - Blue Print Components'], IwbContainerElementRef, lItems) then begin
+          if Supports(lComponentStruct.ElementByPath['Component Data - Blue Print Components\BUO4 - Blue Print Components'], IwbContainerElementRef, lItems) then begin
             var lItemIdx := lElementValue;
             var lElementCount := lItems.ElementCount;
             lItemIdx := Min(lItemIdx, Pred(lElementCount));
@@ -5776,7 +5776,7 @@ begin
               if Supports(lItems[lItemIdx], IwbContainerElementRef, lItem) then begin
                 var lPart := lItem.ElementByName['Part ID'];
                 if Assigned(lPart) then begin
-                  var lPartValue: Integer := lPart.NativeValue;
+                  var lPartValue: Int64 := lPart.NativeValue;
                   var lDiff := lElementValue - lPartValue;
                   if lDiff = 0 then
                     Exit(lItem);
@@ -5794,7 +5794,8 @@ begin
                   lItemIdx := lItemIdx + lMoveBy;
                   if (lItemIdx < 0) or (lItemIdx >= lElementCount) then
                     Exit(nil);
-                end;
+                end else
+                  Exit(nil);
               end else
                 Exit(nil);
             until False;

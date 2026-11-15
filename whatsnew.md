@@ -11,6 +11,7 @@ xEdit is crucial to our shared modding community and your contribution - no matt
 * Setting Persistent or Visible When Distant on a reference whose position names no cell is refused without changing the flag; the flag used to stay changed while the reference stayed in its old group.
 * Cleanup Injected no longer asks to add masters that only a record it then skips would need, because its target already holds its own override of that record.
 * Starfield: Cleanup Injected no longer removes a record's injected references when the record can not be copied into the injecting plugin (such as a record holding Reflection); the record is left as it was and reported as not cleaned.
+* Starfield: a ship's Weapon Slot 1 - 3 show the blueprint part they name again, instead of only its number.
 
 ## Scripting
 * A script can no longer remove a Player Reference (PLYR) record by removing it through its group (RemoveElement, RemoveByIndex) or by removing the group itself (Remove, RemoveElement, RemoveByIndex); Remove of the record itself already refused it.
