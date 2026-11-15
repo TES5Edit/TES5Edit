@@ -22447,9 +22447,16 @@ begin
   end;
   NeedUpdate := CheckChildOfCell;
   MakeHeaderWriteable;
+  var lGroup := GetContainer;
   GetFlagsPtr.SetPersistent(aValue);
   if NeedUpdate then
-    UpdateCellChildGroup;
+    try
+      UpdateCellChildGroup;
+    except
+      if Assigned(lGroup) and lGroup.Equals(GetContainer) then
+        GetFlagsPtr.SetPersistent(not aValue);
+      raise;
+    end;
 end;
 
 procedure TwbMainRecord.SetIsVisibleWhenDistant(aValue: Boolean);
@@ -22461,9 +22468,16 @@ begin
   if aValue <> GetIsVisibleWhenDistant then begin
     NeedUpdate := CheckChildOfCell;
     MakeHeaderWriteable;
+    var lGroup := GetContainer;
     GetFlagsPtr.SetVisibleWhenDistant(aValue);
     if NeedUpdate then
-      UpdateCellChildGroup;
+      try
+        UpdateCellChildGroup;
+      except
+        if Assigned(lGroup) and lGroup.Equals(GetContainer) then
+          GetFlagsPtr.SetVisibleWhenDistant(not aValue);
+        raise;
+      end;
   end;
 end;
 
