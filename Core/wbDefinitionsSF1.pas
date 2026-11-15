@@ -5740,6 +5740,7 @@ begin
   ]);
 
   var wbBaseFormComponents: IwbRecordMemberDef;
+  var [Unsafe] wbBaseFormComponentsUnsafe: IwbRecordMemberDef;
 
   var wbLinksToBluePrintComponent:TwbLinksToCallback  := function(const aElement: IwbElement): IwbElement
   begin
@@ -5753,7 +5754,7 @@ begin
       var lDef := lContainer.Def;
       if not Assigned(lDef) or (lDef.DefType = dtRecord) then
         Exit(nil);
-      if lDef.Root.Equals(wbBaseFormComponents.Root) then
+      if lDef.Root.Equals(wbBaseFormComponentsUnsafe.Root) then
         Break;
       lContainer := lContainer.Container;
     end;
@@ -6852,6 +6853,7 @@ begin
     ])
     .IncludeFlag(dfCollapsed, clpBaseFormComponent in DefineOptions.Collapse)
   );
+  wbBaseFormComponentsUnsafe := wbBaseFormComponents;
 
   var wbMNAMFurnitureMarker := wbInteger(MNAM, 'Active Markers / Flags', itU32, wbFlags([
     {0x00000001} 'Interaction Point 0',
@@ -19373,6 +19375,9 @@ begin
     'SFBGS047.esm', 'SFBGS050.esm', 'BlueprintShips-Starfield.esm', 'BlueprintShips-SFBGS050.esm'];
   gdNewFileMasters := ['Starfield.esm'{, 'BlueprintShips-Starfield.esm'}];
   gdCreationClubContentFileName := 'Starfield.ccc';
+
+  wbVMAD := nil;
+  wbBaseFormComponents := nil;
 end;
 
 initialization
