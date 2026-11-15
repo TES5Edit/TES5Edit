@@ -5795,6 +5795,10 @@ var
   OldSize : Integer;
   Font    : TFont;
 begin
+{$IFDEF XE_TEST_CONTROL_POINTS}
+  if xeTestSwitches.ScalePPI > 0 then
+    aForm.ScaleForPPI(xeTestSwitches.ScalePPI);
+{$ENDIF}
   OldSize := aForm.Font.Size;
   if Screen.IconFont.Size <> OldSize then begin
     Font := TFont.Create;
