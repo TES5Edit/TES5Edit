@@ -7804,11 +7804,19 @@ begin
       AllowESPMasters := True;
       AllowESPMastersOnSave := True;
     end;
-    gmTES5, gmEnderal, gmTES5VR, gmSSE, gmEnderalSE: begin
+    gmTES5, gmEnderal: begin
       LoadBSAs := True;  // localization won't work otherwise
       HideIgnored := False; // to show Form Version
       AllowESPMasters := True;
       AllowESPMastersOnSave := True;
+    end;
+    gmTES5VR, gmSSE, gmEnderalSE: begin
+      LoadBSAs := True;  // localization won't work otherwise
+      HideIgnored := False;  // to show Form Version
+      AllowESPMasters := True;
+      AllowESPMastersOnSave := True;
+      AlwaysSaveOnam := True;
+      AlwaysSaveOnamForce := True;
     end;
     gmFO4, gmFO4VR: begin
       LoadBSAs := True;  // localization won't work otherwise
