@@ -1201,6 +1201,7 @@ type
     function GetDataBytes: TBytes;
     procedure NotifyIfDataChanged(const aOldData: TBytes);
     function IsFlags: Boolean; virtual;
+    procedure RecreateFlags;
 
     function GetEditType: TwbEditType; override; final;
     function GetEditInfo: TArray<string>; override; final;
@@ -10755,7 +10756,16 @@ begin
   if Assigned(aElement) then
     case aElement.ElementType of
       etMainRecord: Result := (aElement as IwbMainRecord).Signature <> flContextObj.GameDefObj.HeaderSignature; {can't remove the file header}
-      etGroupRecord: Result := True;
+      etGroupRecord: begin
+        Result := True;
+        var lGroup := aElement as IwbGroupRecord;
+        var lRecordDef: PwbMainRecordDef;
+        if not wbIsInternalEdit and (lGroup.GroupType = 0) and (lGroup.ElementCount > 0) and
+           flContextObj.GameDefObj.FindRecordDef(TwbSignature(lGroup.GroupLabel), lRecordDef) and
+           (dfInternalEditOnly in lRecordDef.DefFlags)
+        then
+          Result := False;
+      end;
     else
       Assert(False);
     end;
@@ -12943,6 +12953,9 @@ function ArrayDoInit(const aValueDef: IwbValueDef; const aContainer: IwbContaine
 procedure StructDoInit(const aValueDef: IwbValueDef; const aContainer: IwbContainer; var aBasePtr: Pointer; aEndPtr: Pointer); forward;
 function UnionDoInit(const aValueDef: IwbValueDef; const aContainer: IwbContainer; var aBasePtr: Pointer; aEndPtr: Pointer; var aResolvedDef : IwbValueDef): TwbUnionFlags; forward
 function ValueDoInit(const aValueDef: IwbValueDef; const aContainer: IwbContainer; var aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; const aPrevFlags: TDynElementInternals; var aResolvedDef: IwbValueDef): Boolean; forward;
+
+threadvar
+  _PrevFlags : TDynElementInternals;
 
 { TwbContainer }
 
@@ -22434,9 +22447,16 @@ begin
   end;
   NeedUpdate := CheckChildOfCell;
   MakeHeaderWriteable;
+  var lGroup := GetContainer;
   GetFlagsPtr.SetPersistent(aValue);
   if NeedUpdate then
-    UpdateCellChildGroup;
+    try
+      UpdateCellChildGroup;
+    except
+      if Assigned(lGroup) and lGroup.Equals(GetContainer) then
+        GetFlagsPtr.SetPersistent(not aValue);
+      raise;
+    end;
 end;
 
 procedure TwbMainRecord.SetIsVisibleWhenDistant(aValue: Boolean);
@@ -22448,9 +22468,16 @@ begin
   if aValue <> GetIsVisibleWhenDistant then begin
     NeedUpdate := CheckChildOfCell;
     MakeHeaderWriteable;
+    var lGroup := GetContainer;
     GetFlagsPtr.SetVisibleWhenDistant(aValue);
     if NeedUpdate then
-      UpdateCellChildGroup;
+      try
+        UpdateCellChildGroup;
+      except
+        if Assigned(lGroup) and lGroup.Equals(GetContainer) then
+          GetFlagsPtr.SetVisibleWhenDistant(not aValue);
+        raise;
+      end;
   end;
 end;
 
@@ -24236,6 +24263,8 @@ begin
 
   inherited;
 
+  DoInit(False);
+
   var lArrayDef: IwbArrayDef;
 
   if Assigned(srResolvedDef) then
@@ -24583,7 +24612,10 @@ var
   BasePtr           : Pointer;
   Element           : IwbElement;
   HasUnusedData     : Boolean;
+  PrevFlags         : TDynElementInternals;
 begin
+  PrevFlags := _PrevFlags;
+  _PrevFlags := nil;
   inherited;
 
   if GetSkipped then
@@ -24623,7 +24655,7 @@ begin
           end;
         end;
       else
-        if ValueDoInit(ValueDef, Self, BasePtr, dcDataEndPtr, Self, nil, srResolvedDef) then begin
+        if ValueDoInit(ValueDef, Self, BasePtr, dcDataEndPtr, Self, PrevFlags, srResolvedDef) then begin
           Include(srStates, srsIsFlags);
           Include(srStates, srsSorted);
         end;
@@ -25361,10 +25393,8 @@ begin
         DoAfterSet(OldValue, NewValue);
       end else
         raise Exception.Create(GetName + ' can not be edited');
-      if (srsIsFlags in srStates) and (csInit in cntStates) then begin
-        Reset;
-        Init;
-      end;
+      if (srsIsFlags in srStates) and (csInit in cntStates) then
+        RecreateFlags;
       NotifyChanged(eContainer);
     end;
   finally
@@ -25406,10 +25436,8 @@ begin
         DoAfterSet(OldValue, NewValue);
       end else
         raise Exception.Create(GetName + ' can not be edited');
-      if (srsIsFlags in srStates) and (csInit in cntStates) then begin
-        Reset;
-        Init;
-      end;
+      if (srsIsFlags in srStates) and (csInit in cntStates) then
+        RecreateFlags;
       NotifyChanged(eContainer);
     end;
   finally
@@ -25450,10 +25478,8 @@ begin
       DoAfterSet(OldValue, NewValue);
     end else
       raise Exception.Create(GetName + ' can not be edited');
-    if (srsIsFlags in srStates) and (csInit in cntStates) then begin
-      Reset;
-      Init;
-    end;
+    if (srsIsFlags in srStates) and (csInit in cntStates) then
+      RecreateFlags;
     NotifyChanged(eContainer);
   finally
     EndUpdate;
@@ -32488,17 +32514,16 @@ begin
     Inc(PByte(aBasePtr), i);
 end;
 
-threadvar
-  _PrevFlags : TDynElementInternals;
-
 procedure TwbValue.Init;
 var
   BasePtr: Pointer;
+  PrevFlags: TDynElementInternals;
 begin
+  PrevFlags := _PrevFlags;
+  _PrevFlags := nil;
   inherited;
   BasePtr := GetDataBasePtr;
-  vIsFlags := ValueDoInit(vbValueDef, Self, BasePtr, dcDataEndPtr, Self, _PrevFlags, vResolvedDef);
-  _PrevFlags := nil;
+  vIsFlags := ValueDoInit(vbValueDef, Self, BasePtr, dcDataEndPtr, Self, PrevFlags, vResolvedDef);
 end;
 
 function TwbValue.IsFlags: Boolean;
@@ -32645,18 +32670,6 @@ begin
 end;
 
 procedure TwbValue.SetEditValue(const aValue: string);
-
-  procedure RecreateFlags;
-  begin
-    _PrevFlags := ReleaseElements;
-    try
-      Reset;
-      Init;
-    finally
-      _PrevFlags := nil;
-    end;
-  end;
-
 var
   OldValue, NewValue: Variant;
 begin
@@ -32703,17 +32716,13 @@ begin
     OldValue := GetNativeValue;
     vbValueDef.NativeValue[GetDataBasePtr, dcDataEndPtr, Self] := aValue;
     SetModified(True);
-    if vIsFlags and (csInit in cntStates) then begin
-      Reset;
-      Init;
-    end;
+    if vIsFlags and (csInit in cntStates) then
+      RecreateFlags;
     NewValue := GetNativeValue;
     DoAfterSet(OldValue, NewValue);
     NotifyChanged(eContainer);
-    if vIsFlags and (csInit in cntStates) then begin
-      Reset;
-      Init;
-    end;
+    if vIsFlags and (csInit in cntStates) then
+      RecreateFlags;
   finally
     EndUpdate;
   end;
@@ -33968,6 +33977,8 @@ function TwbFlag.GetEditValue: string;
 var
   s: string;
 begin
+  if not Assigned(eContainer) then
+    Exit('0');
   s := GetContainer.EditValue;
   if Length(s) >= Succ(fIndex) then
     Result := s[Succ(fIndex)]
@@ -33997,6 +34008,8 @@ function TwbFlag.GetIsEditable: Boolean;
 var
   FlagsDef: IwbFlagsDef;
 begin
+  if not Assigned(eContainer) then
+    Exit(False);
   Result := wbIsInternalEdit or GetContainer.IsEditable;
   FlagsDef := GetFlagsDef;
   if Assigned(FlagsDef) and (dfInternalEditOnly in FlagsDef.DefFlags) then
@@ -34006,7 +34019,7 @@ end;
 
 function TwbFlag.GetIsRemovable: Boolean;
 begin
-  Result := wbIsInternalEdit or GetContainer.IsEditable;
+  Result := Assigned(eContainer) and (wbIsInternalEdit or GetContainer.IsEditable);
 end;
 
 function TwbFlag.GetName: string;
@@ -34018,6 +34031,8 @@ function TwbFlag.GetNativeValue: Variant;
 var
   s: string;
 begin
+  if not Assigned(eContainer) then
+    Exit(False);
   s := GetContainer.EditValue;
   if Length(s) >= Succ(fIndex) then
     Result := s[Succ(fIndex)] = '1'
@@ -34124,6 +34139,12 @@ var
   s: string;
   c: Char;
 begin
+  if not Assigned(eContainer) then begin
+    if aValue = '1' then
+      raise Exception.Create(GetName + ' is not part of a flags value and can not be set.');
+    Exit;
+  end;
+
   if not wbIsInternalEdit then begin
     if not ContextObj.Settings.EditAllowed then
       raise Exception.Create(GetName + ' can not be edited.');
@@ -34147,6 +34168,12 @@ var
   s: string;
   c: Char;
 begin
+  if not Assigned(eContainer) then begin
+    if aValue = True then
+      raise Exception.Create(GetName + ' is not part of a flags value and can not be set.');
+    Exit;
+  end;
+
   if not wbIsInternalEdit then begin
     if not ContextObj.Settings.EditAllowed then
       raise Exception.Create(GetName + ' can not be edited.');
@@ -34644,6 +34671,17 @@ begin
   inherited SetModified(aValue);
 end;
 
+procedure TwbDataContainer.RecreateFlags;
+begin
+  _PrevFlags := ReleaseElements;
+  try
+    Reset;
+    Init;
+  finally
+    _PrevFlags := nil;
+  end;
+end;
+
 procedure TwbDataContainer.SetToDefaultInternal;
 var
   SelfRef            : IwbContainerElementRef;
@@ -34662,10 +34700,8 @@ begin
       DoAfterSet(OldValue, NewValue);
       NotifyChanged(eContainer);
 
-      if IsFlags and (csInit in cntStates) then begin
-        Reset;
-        Init;
-      end;
+      if IsFlags and (csInit in cntStates) then
+        RecreateFlags;
     end
   end;
 
@@ -35297,6 +35333,10 @@ begin
         if Flags.IsESM then
           if MainRecordInternal.Signature <> GameDefObj.HeaderSignature then
             Flags.SetESM(False);
+
+        if Flags.IsDeleted and not MainRecordInternal.GetFlagsPtr.IsDeleted then
+          if MainRecordInternal.Signature = GameDefObj.HeaderSignature then
+            Flags.SetDeleted(False);
 
         if Flags.IsDeleted <> MainRecordInternal.GetFlagsPtr.IsDeleted then begin
           Flags.SetDeleted(MainRecordInternal.GetFlagsPtr.IsDeleted);

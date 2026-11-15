@@ -180,6 +180,8 @@ type
     TestPumpBrowseNode       : PVirtualNode;
     TestPumpBrowseCount      : Integer;
     TestPumpClosePosted      : Boolean;
+    TestPumpCloseEntered     : Boolean;
+    TestPumpLastNote         : string;
     TestPumpWalkFile         : Integer;
     TestPumpWalkIndex        : Integer;
     TestPumpWalkReads        : Int64;
@@ -225,6 +227,7 @@ type
     ToolModeAuto          : Boolean;
     ToolModeFault         : Boolean;
     LoaderHold            : Boolean;
+    ScalePPI              : Integer;
     ViewTree              : Boolean;
     ViewTreeFile          : string;
     ViewTreeList          : string;
@@ -498,7 +501,16 @@ begin
 end;
 
 function TxeTestSwitches.ParseToolMode: Boolean;
+var
+  s: string;
 begin
+  if wbFindCmdLineParam('testscaleppi', s) then begin
+    ScalePPI := StrToIntDef(s, 0);
+    if ScalePPI <= 0 then begin
+      ShowMessage('testscaleppi requires a DPI, as -testscaleppi:<pixels per inch>');
+      Exit(False);
+    end;
+  end;
   if wbFindCmdLineParam('testfilelists', FileLists) and (FileLists = '') then begin
     ShowMessage('testfilelists requires an output file, as -testfilelists:<filename>');
     Exit(False);

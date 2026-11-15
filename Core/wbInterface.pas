@@ -62,7 +62,7 @@ var
     Major   : 4;
     Minor   : 1;
     Release : 5;
-    Build   : 'r';
+    Build   : 's';
     Title   : '';
   );
 
@@ -10093,7 +10093,7 @@ type
   TwbRecursiveDef = class(TwbResolvableDef, IwbRecursiveDef)
   protected {private}
     rdLevelsUp: Integer;
-    rdCached: IwbValueDef;
+    [Unsafe] rdCached: IwbValueDef;
   protected
     constructor Clone(const aSource: TwbDef); override; final;
     constructor Create(aPriority : TwbConflictPriority;
@@ -28052,7 +28052,8 @@ begin
   lMasters := TwbFilesSet.Create;
   try
     for var lRecord in Result.Records do
-      lRecord.ReportRequiredMastersForCopy(lMasters, False, False, Result.Target);
+      if not Assigned(Result.Target.ContainedRecordByLoadOrderFormID[lRecord.LoadOrderFormID, False]) then
+        lRecord.ReportRequiredMastersForCopy(lMasters, False, False, Result.Target);
     for var lFile in lMasters do
       Result.NewMasters := Result.NewMasters + [lFile];
   finally
@@ -28068,7 +28069,11 @@ begin
         aReport(lRecord.Name + ' was not cleaned: ' + Target.FileName + ' already has its own override.');
       Continue;
     end;
-    Target.AddCopy(lRecord, [cfDeepCopy], wbNoCopyRules);
+    if not Assigned(Target.AddCopy(lRecord, [cfDeepCopy], wbNoCopyRules)) then begin
+      if Assigned(aReport) then
+        aReport(lRecord.Name + ' was not cleaned: it could not be copied into ' + Target.FileName + '.');
+      Continue;
+    end;
     if lRecord.RemoveInjected(False) and Assigned(aReport) then
       aReport('Injected references in ' + lRecord.Name + ' could not all be removed automatically.');
   end;

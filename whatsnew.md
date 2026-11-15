@@ -4,6 +4,25 @@ If you share your mods on Nexus Mods and use xEdit as a major component in devel
 
 xEdit is crucial to our shared modding community and your contribution - no matter the size - is invaluable and deeply appreciated.
 
+# What's New in xEdit 4.1.5s?
+
+## Bugfixes
+* Remove is no longer offered for a plugin's Player Reference (PLYR) group while it holds a record: the record can not be removed on its own, and removing the group removed it anyway.
+* Setting Persistent or Visible When Distant on a reference whose position names no cell is refused without changing the flag; the flag used to stay changed while the reference stayed in its old group.
+* Cleanup Injected no longer asks to add masters that only a record it then skips would need, because its target already holds its own override of that record.
+* Starfield: Cleanup Injected no longer removes a record's injected references when the record can not be copied into the injecting plugin (such as a record holding Reflection); the record is left as it was and reported as not cleaned.
+* Starfield: a ship's Weapon Slot 1 - 3 show the blueprint part they name again, instead of only its number.
+* A list no longer grows past its window's edge when Windows rescales the window after it was created (seen at 150% display scaling: the Module Selection list covered the OK button).
+
+## Scripting
+* A script can no longer remove a Player Reference (PLYR) record by removing it through its group (RemoveElement, RemoveByIndex) or by removing the group itself (Remove, RemoveElement, RemoveByIndex); Remove of the record itself already refused it.
+* The checked script editing functions now refuse to delete a plugin's file header, change its signature, assign or copy into it (ElementAssign, TemplateAssign, wbCopyElementToRecord), assign a whole plugin (ElementAssign), reverse or reset it, attach an element into it (AddElement / InsertElement), insert anything before it, add a master entry outside the master functions while master editing is off (Add, or a value setter naming a missing Master Files), or remove the parts of it the editor itself does not remove (such as its HEDR, Author, Interior Cell Count, or a master entry while master editing is off); setting the deleted flag on a file header that is not deleted (named Temp ID Owner on Skyrim) no longer deletes it.
+* A script's AddElement or InsertElement of an element that still belongs to a container is refused instead of leaving it in both.
+* A script's RemoveElement or RemoveByIndex of an element the container holds directly now removes it the way Remove does: an array subrecord's count field (such as KSIZ for KWDA) is set to 0, and the removal is kept when the plugin is saved, also with RemoveByIndex(..., False). A script's Remove of an array subrecord such as KWDA on a record loaded from a plugin now also sets its count field to 0.
+* A script's RemoveElement or RemoveByIndex with an index now removes the entry that ElementByIndex gives for that index; in a sorted list such as keywords whose stored order differs from the sorted one, it could remove a different entry. IndexOf now gives the index ElementByIndex uses.
+* A script that still holds a flag element after the flag was cleared no longer gets an access violation reading its value or whether it can be edited: it reads as cleared and can not be edited.
+* A script that holds a flag element no longer gets an access violation reading it after another flag of the same value changed: while its own flag stays set, the element keeps answering it.
+
 # What's New in xEdit 4.1.5r?
 
 ## Skyrim Special Edition: save ESM-flagged plugins again

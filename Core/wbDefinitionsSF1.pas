@@ -5740,6 +5740,7 @@ begin
   ]);
 
   var wbBaseFormComponents: IwbRecordMemberDef;
+  var [Unsafe] wbBaseFormComponentsUnsafe: IwbRecordMemberDef;
 
   var wbLinksToBluePrintComponent:TwbLinksToCallback  := function(const aElement: IwbElement): IwbElement
   begin
@@ -5753,7 +5754,7 @@ begin
       var lDef := lContainer.Def;
       if not Assigned(lDef) or (lDef.DefType = dtRecord) then
         Exit(nil);
-      if lDef.Root.Equals(wbBaseFormComponents.Root) then
+      if lDef.Root.Equals(wbBaseFormComponentsUnsafe.Root) then
         Break;
       lContainer := lContainer.Container;
     end;
@@ -5765,7 +5766,7 @@ begin
         var lBFCB := lComponentStruct.ElementBySignature[BFCB];
         if Assigned(lBFCB) and (lBFCB.Value = 'Blueprint_Component') then begin
           var lItems: IwbContainerElementRef;
-          if Supports(lComponentStruct.ElementByPath['Component Data\BUO4 - Blue Print Components'], IwbContainerElementRef, lItems) then begin
+          if Supports(lComponentStruct.ElementByPath['Component Data - Blue Print Components\BUO4 - Blue Print Components'], IwbContainerElementRef, lItems) then begin
             var lItemIdx := lElementValue;
             var lElementCount := lItems.ElementCount;
             lItemIdx := Min(lItemIdx, Pred(lElementCount));
@@ -5775,7 +5776,7 @@ begin
               if Supports(lItems[lItemIdx], IwbContainerElementRef, lItem) then begin
                 var lPart := lItem.ElementByName['Part ID'];
                 if Assigned(lPart) then begin
-                  var lPartValue: Integer := lPart.NativeValue;
+                  var lPartValue: Int64 := lPart.NativeValue;
                   var lDiff := lElementValue - lPartValue;
                   if lDiff = 0 then
                     Exit(lItem);
@@ -5793,7 +5794,8 @@ begin
                   lItemIdx := lItemIdx + lMoveBy;
                   if (lItemIdx < 0) or (lItemIdx >= lElementCount) then
                     Exit(nil);
-                end;
+                end else
+                  Exit(nil);
               end else
                 Exit(nil);
             until False;
@@ -6852,6 +6854,7 @@ begin
     ])
     .IncludeFlag(dfCollapsed, clpBaseFormComponent in DefineOptions.Collapse)
   );
+  wbBaseFormComponentsUnsafe := wbBaseFormComponents;
 
   var wbMNAMFurnitureMarker := wbInteger(MNAM, 'Active Markers / Flags', itU32, wbFlags([
     {0x00000001} 'Interaction Point 0',
@@ -19373,6 +19376,9 @@ begin
     'SFBGS047.esm', 'SFBGS050.esm', 'BlueprintShips-Starfield.esm', 'BlueprintShips-SFBGS050.esm'];
   gdNewFileMasters := ['Starfield.esm'{, 'BlueprintShips-Starfield.esm'}];
   gdCreationClubContentFileName := 'Starfield.ccc';
+
+  wbVMAD := nil;
+  wbBaseFormComponents := nil;
 end;
 
 initialization
