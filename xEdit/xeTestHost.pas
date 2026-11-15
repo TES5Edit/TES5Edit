@@ -180,6 +180,8 @@ type
     TestPumpBrowseNode       : PVirtualNode;
     TestPumpBrowseCount      : Integer;
     TestPumpClosePosted      : Boolean;
+    TestPumpCloseEntered     : Boolean;
+    TestPumpLastNote         : string;
     TestPumpWalkFile         : Integer;
     TestPumpWalkIndex        : Integer;
     TestPumpWalkReads        : Int64;

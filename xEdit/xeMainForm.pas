@@ -5612,6 +5612,7 @@ procedure TfrmMain.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
 {$IFDEF XE_TEST_CONTROL_POINTS}
   if xeTestSwitches.Pump <> '' then begin
+    TestHost.TestPumpCloseEntered := True;
     var lShown := '';
     if Assigned(ActiveRecord) then
       lShown := ', the View tab shows ' + ActiveRecord.Name;
@@ -16132,7 +16133,7 @@ begin
   if xeTestSwitches.Pump <> '' then
     TestPumpNote('generator tick: closed down ' + BoolToStr(ClosedDown, True) + ', generator started ' + BoolToStr(GeneratorStarted, True) +
       ', close in progress ' + BoolToStr(CloseInProgress, True) + ', close deferred ' + BoolToStr(CloseDeferred, True) +
-      ', session end pending ' + BoolToStr(SessionEndPending, True));
+      ', session end pending ' + BoolToStr(SessionEndPending, True), True);
 {$ENDIF}
   if CloseInProgress or CloseDeferred or SessionEndPending or ClosedDown then
     Exit;

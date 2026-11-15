@@ -73,7 +73,7 @@ type
     procedure TestPumpInitWalkStep;
     function TestPumpRefDigest: string;
     function TestPumpInside: Boolean;
-    procedure TestPumpNote(const aText: string);
+    procedure TestPumpNote(const aText: string; aDropRepeat: Boolean = False);
     procedure TestPumpSetCtrl(aDown: Boolean);
     procedure TestPumpTimerTimer(Sender: TObject);
     procedure TestPumpShortCutExecute(Sender: TObject);
@@ -10818,8 +10818,11 @@ begin
   TestPumpNote('the shortcut action ran ' + IfThen(TestPumpInside, 'inside the nested loop', 'outside any nested loop'));
 end;
 
-procedure TxeTestFormHelper.TestPumpNote(const aText: string);
+procedure TxeTestFormHelper.TestPumpNote(const aText: string; aDropRepeat: Boolean);
 begin
+  if aDropRepeat and (aText = TestHost.TestPumpLastNote) then
+    Exit;
+  TestHost.TestPumpLastNote := aText;
   TFile.AppendAllText(xeTestSwitches.PumpFile, aText + sLineBreak);
 end;
 
@@ -10858,6 +10861,7 @@ begin
   TestHost.TestPumpBrowseNode := nil;
   TestHost.TestPumpBrowseCount := 0;
   TestHost.TestPumpClosePosted := False;
+  TestHost.TestPumpCloseEntered := False;
   TestHost.TestPumpWalkFile := 0;
   TestHost.TestPumpWalkIndex := 0;
   TestHost.TestPumpWalkReads := 0;
@@ -11189,7 +11193,8 @@ begin
     TestHost.TestPumpWalkPos := nil;
     if xeTestSwitches.PumpDuringLoad <> '' then
       TestPumpNote('after loading: ' + TestPumpRefDigest);
-    TestPumpNote('observation ended');
+    if not TestHost.TestPumpCloseEntered then
+      TestPumpNote('observation ended');
     if xeTestSwitches.PumpDuringLoad <> '' then
       tmrShutdown.Enabled := True;
     Exit;
@@ -11208,9 +11213,9 @@ begin
     TestHost.TestPumpFocus := GetFocus;
     lCtrl := FindControl(TestHost.TestPumpFocus);
     if Assigned(lCtrl) then
-      TestPumpNote('focus now ' + lCtrl.Name + ' (' + lCtrl.ClassName + ') ' + lWhere)
+      TestPumpNote('focus now ' + lCtrl.Name + ' (' + lCtrl.ClassName + ') ' + lWhere, True)
     else
-      TestPumpNote('focus now $' + IntToHex(TestHost.TestPumpFocus, 8) + ' ' + lWhere);
+      TestPumpNote('focus now $' + IntToHex(TestHost.TestPumpFocus, 8) + ' ' + lWhere, True);
   end;
 
   if TestPumpInside then
