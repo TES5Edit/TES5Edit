@@ -28044,7 +28044,8 @@ begin
   lMasters := TwbFilesSet.Create;
   try
     for var lRecord in Result.Records do
-      lRecord.ReportRequiredMastersForCopy(lMasters, False, False, Result.Target);
+      if not Assigned(Result.Target.ContainedRecordByLoadOrderFormID[lRecord.LoadOrderFormID, False]) then
+        lRecord.ReportRequiredMastersForCopy(lMasters, False, False, Result.Target);
     for var lFile in lMasters do
       Result.NewMasters := Result.NewMasters + [lFile];
   finally
