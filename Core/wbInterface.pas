@@ -24837,10 +24837,32 @@ begin
 end;
 
 function TwbResolvableDef.Assign(const aTarget: IwbElement; aIndex: Integer; const aSource: IwbElement; aOnlySK: Boolean): IwbElement;
+
+  function FormIDDefOf(const aElement: IwbElement): IwbValueDef;
+  var
+    lDataContainer : IwbDataContainer;
+    lResolvable    : IwbResolvableDef;
+    lIntegerDef    : IwbIntegerDef;
+  begin
+    Result := aElement.ValueDef;
+    if Supports(Result, IwbResolvableDef, lResolvable) and Supports(aElement, IwbDataContainer, lDataContainer) then
+      Result := lResolvable.ResolveDef(lDataContainer.DataBasePtr, lDataContainer.DataEndPtr, aElement);
+    if not Supports(Result, IwbIntegerDef, lIntegerDef) then
+      Exit(nil);
+    var lFormater := lIntegerDef.Formater[aElement];
+    if not (Supports(lFormater, IwbFormID) and not (dfUseLoadOrder in lFormater.DefFlags)) then
+      Result := nil;
+  end;
+
 begin
   if dfCanContainNameReference in defFlags then begin
     var lResolved := aTarget.ResolvedValueDef;
     if Supports(lResolved, IwbNameReferenceDef) then
+      Exit(lResolved.Assign(aTarget, aIndex, aSource, aOnlySK));
+  end;
+  if (dfCanContainFormID in defFlags) and Assigned(aSource) and Assigned(FormIDDefOf(aSource)) then begin
+    var lResolved := FormIDDefOf(aTarget);
+    if Assigned(lResolved) then
       Exit(lResolved.Assign(aTarget, aIndex, aSource, aOnlySK));
   end;
   Result := inherited Assign(aTarget, aIndex, aSource, aOnlySK);
