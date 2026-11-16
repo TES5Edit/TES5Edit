@@ -6067,7 +6067,12 @@ begin
       vstNav.Header.Options := vstNav.Header.Options + [hoAutoSpring];
   end;
 
-  if (Shift = [ssAlt]) and (Key in [VK_UP, VK_DOWN, VK_LEFT, VK_RIGHT])then begin
+  if (
+       (Shift = [ssAlt]) or
+       ((GetKeyState(VK_RMENU) < 0) and (Shift = [ssAlt, ssCtrl]))
+     ) and
+     (Key in [VK_UP, VK_DOWN, VK_LEFT, VK_RIGHT])
+  then begin
     if not Assigned(vstView) then
       Exit;
     if not Assigned(vstNav) then
