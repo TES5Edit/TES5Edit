@@ -128,7 +128,7 @@ end;
 //======================================================================
 procedure DoPack;
 const
-  GB = 1024 * 1024 * 1024;
+  MB = 1024 * 1024;
 var
   bsa: TwbMultiSourcePacker;
   atype: TwbBSArchiveType;
@@ -172,8 +172,8 @@ begin
 
     if wbFindCmdLineParam('split', s) and (s <> '') then begin
       var split := StrToIntDef(s, 0);
-      if split > 8 then split := 8;
-      bsa.SplitSize := Int64(split) * GB;
+      if split > 8192 then split := 8192;
+      bsa.SplitSize := Int64(split) * MB;
     end else
       if atype < baFO4 then bsa.SplitSize := bsa.BSA_MAX_OFFSET;
 
@@ -397,9 +397,9 @@ begin
                  Always compress using -z parameter, game crashes otherwise
     -sf1         Starfield General archive format
     -sf1dds      Starfield DDS archive format (streamed DDS textures mipmaps)
-    -split:N     Split archives by N GB, 0 disables splitting
+    -split:N     Split archives by N MB, 0 disables splitting
                  Don't use values larger than available free memory
-                 When not set BSA archives are split by 2 GB, BA2 aren't split
+                 When not set BSA archives are split by 2048 MB, BA2 aren't split
                  Games before Fallout 4 have hardcoded 2 GB limit!
     -z:type      Compress files in archive using provided compression type:
                  zlib, lz4 or lz4f
@@ -437,7 +437,7 @@ begin
     * Create Fallout NV uncompressed archive from multiple folders using custom flags, split by 2 GB
         BSArch pack "c:\FNV files\meshes"+d:\new\textures "d:\somewhere\mod.bsa" -fnv -af:0x83 -ff:0x113
     * Merge archives and overwrite with files from folder, compress with lz4, split by 4 GB
-        BSArch pack "d:\mod\main.ba2"+"d:\mod\update.ba2"+"d:\mod\data" "d:\mod\new.ba2" -sf1 -z:lz4 -split:4
+        BSArch pack "d:\mod\main.ba2"+"d:\mod\update.ba2"+"d:\mod\data" "d:\mod\new.ba2" -sf1 -z:lz4 -split:4096
     * Decompress archive (repack without compression)
         BSArch pack "e:\Oblivion\Data\Textures - Compressed.bsa" "e:\Oblivion\Data\Textures.bsa" -tes4
     * Unpack archive into the same folder where archive is located

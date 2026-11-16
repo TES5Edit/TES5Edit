@@ -887,6 +887,8 @@ begin
   MultiThreaded := Settings.ReadBool('General', 'MultiThreaded', True);
   SharedData := Settings.ReadBool('General', 'SharedData', True);
   Split := Settings.ReadInteger('General', 'Split', -1);
+  // legacy values were in GB, convert to MB
+  if (Split > 0) and (Split <= 8) then Split := Split * 1024;
   CompressionType := Settings.ReadString('General', 'CompressionType', '');
 
   TStyleManager.TrySetStyle(Settings.ReadString('UI', 'Theme', TStyleManager.ActiveStyle.Name), False);
@@ -1150,6 +1152,8 @@ begin
       MultiThreaded := p.B['MultiThreaded'];
       SharedData := p.B['SharedData'];
       if p.IndexOf('Split') <> -1 then Split := p.I['Split'] else Split := -1;
+      // legacy values were in GB, convert to MB
+      if (Split > 0) and (Split <= 8) then Split := Split * 1024;
       CompressionType := p.S['CompressionType'];
     end;
 
@@ -1927,7 +1931,7 @@ begin
   if Split = -1 then
     bsa.SplitSize := bsa.DefaultSplitSize(ArchiveType)
   else
-    bsa.SplitSize := Int64(Split) * 1024 * 1024 * 1024;
+    bsa.SplitSize := Int64(Split) * 1024 * 1024;
 
   bsa.CompressionType := TwbCompression.TypeByName(CompressionType);
   if not bsa.SupportsCompression(ArchiveType, bsa.CompressionType) then

@@ -89,7 +89,7 @@
         <DCC_RemoteDebug>false</DCC_RemoteDebug>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2_Win64)'!=''">
-        <Debugger_RunParams>pack d:\2\a.bsa+&quot;d:\1\data&quot; d:\1\aaa.bsa -tes5 -z -mt:no -split:3</Debugger_RunParams>
+        <Debugger_RunParams>pack d:\2\a.bsa+&quot;d:\1\data&quot; d:\1\aaa.bsa -tes5 -z -mt:no -split:3072</Debugger_RunParams>
     </PropertyGroup>
     <ItemGroup>
         <DelphiCompile Include="$(MainSource)">

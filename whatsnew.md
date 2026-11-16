@@ -435,7 +435,7 @@ robertgk2017, Jonathan Ostrus (jbostrus), eckserah, Bobbyclue, fireundubh, Cecel
 * Add a Find Identical Assets function (find duplicate files)
 * Account for and show shared-file count and saved space when packing; sort identical files first
 * Support packing from multiple sources combined with '+' (including existing .BSA/.BA2 archives), enabling archive merge/override workflows
-* Support split archive packing by size (-split:N GB), producing numbered archives when the limit is exceeded
+* Support split archive packing by size (-split:N MB), producing numbered archives when the limit is exceeded
 * Add a Filter argument to selectively pack assets by name or extension
 * Set Compressed where applicable; fix the compression type per game mode; handle empty and NOR error texture paths in .nifs
 * The pack '-z' flag now accepts a compression type (-z:zlib|lz4|lz4f); omitting the type uses the game default

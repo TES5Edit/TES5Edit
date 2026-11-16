@@ -241,7 +241,7 @@ object FormPack: TFormPack
   object cmbSplit: TComboBox
     Left = 80
     Top = 251
-    Width = 81
+    Width = 100
     Height = 21
     Style = csDropDownList
     TabOrder = 10

@@ -273,10 +273,10 @@ begin
 
   cmbSplit.Items.AddObject('Auto', TObject(-1));
   cmbSplit.Items.AddObject('None', TObject(0));
-  cmbSplit.Items.AddObject('2 GB', TObject(2));
-  cmbSplit.Items.AddObject('4 GB', TObject(4));
-  cmbSplit.Items.AddObject('6 GB', TObject(6));
-  cmbSplit.Items.AddObject('8 GB', TObject(8));
+  cmbSplit.Items.AddObject('2048 MB', TObject(2048));
+  cmbSplit.Items.AddObject('4096 MB', TObject(4096));
+  cmbSplit.Items.AddObject('6144 MB', TObject(6144));
+  cmbSplit.Items.AddObject('8192 MB', TObject(8192));
   i := cmbSplit.Items.IndexOfObject(TObject(Split));
   if i = -1 then i := 0;
   cmbSplit.ItemIndex := i;
