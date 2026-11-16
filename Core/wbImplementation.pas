@@ -24077,6 +24077,37 @@ var
   i             : Integer;
   SelfRef       : IwbContainerElementRef;
   p, q          : Pointer;
+
+  function SameFileFormIDs(const aSource: IwbElement): Boolean;
+  begin
+    var lSource := aSource._File;
+    Result := Assigned(lSource) and lSource.Equals(GetFile) and (aSource.MastersUpdated = GetMastersUpdated);
+  end;
+
+  procedure ClearFormIDs(const aElement: IwbElement);
+  var
+    lContainer  : IwbContainer;
+    lResolvable : IwbResolvableDef;
+    lData       : IwbDataContainer;
+    lInteger    : IwbIntegerDef;
+  begin
+    if not aElement.CanContainFormIDs then
+      Exit;
+    if Supports(aElement, IwbContainer, lContainer) and (lContainer.ElementCount > 0) then begin
+      for var lIndex := 0 to Pred(lContainer.ElementCount) do
+        ClearFormIDs(lContainer.Elements[lIndex]);
+      Exit;
+    end;
+    var lDef := aElement.ValueDef;
+    if Supports(lDef, IwbResolvableDef, lResolvable) and Supports(aElement, IwbDataContainer, lData) then
+      lDef := lResolvable.ResolveDef(lData.DataBasePtr, lData.DataEndPtr, aElement);
+    if not Supports(lDef, IwbIntegerDef, lInteger) then
+      Exit;
+    var lFormater := lInteger.Formater[aElement];
+    if Supports(lFormater, IwbFormID) and not (dfUseLoadOrder in lFormater.DefFlags) then
+      aElement.NativeValue := 0;
+  end;
+
 begin
   Result := nil;
 
@@ -24160,8 +24191,12 @@ begin
             Move(lDataContainer.DataBasePtr^, dcDataBasePtr^, lSize);
             DoReset(True);
             Assert(GetElementCount = Container.ElementCount);
-            for i := 0 to Pred(Container.ElementCount) do
+            var lClearFormIDs := CanContainFormIDs and not SameFileFormIDs(aElement);
+            for i := 0 to Pred(Container.ElementCount) do begin
+              if lClearFormIDs then
+                ClearFormIDs(cntElements[i]);
               cntElements[i].Assign(wbAssignThis, Container.Elements[i], aOnlySK);
+            end;
           end else if ArrayDef.IsVariableSize then begin
             SetModified(True);
             InvalidateStorage;

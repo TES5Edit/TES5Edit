@@ -25,6 +25,7 @@ xEdit is crucial to our shared modding community and your contribution - no matt
 * A script's RemoveElement or RemoveByIndex with an index now removes the entry that ElementByIndex gives for that index; in a sorted list such as keywords whose stored order differs from the sorted one, it could remove a different entry. IndexOf now gives the index ElementByIndex uses.
 * A script that still holds a flag element after the flag was cleared no longer gets an access violation reading its value or whether it can be edited: it reads as cleared and can not be edited.
 * A script that holds a flag element no longer gets an access violation reading it after another flag of the same value changed: while its own flag stays set, the element keeps answering it.
+* Starfield: a script that copies a cell or reference into a plugin without first adding the masters it needs (such as wbCopyElementToFile without AddRequiredElementMasters) no longer leaves a traversal naming a record in a different master when the traversal's own master is missing: it is left null, with an "Error assigning" message, as other references are.
 
 # What's New in xEdit 4.1.5r?
 
