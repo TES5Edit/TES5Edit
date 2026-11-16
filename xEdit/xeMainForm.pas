@@ -896,6 +896,7 @@ type
     function PerformDrop(TargetTree: TBaseVirtualTree; TargetNode: PVirtualNode; TargetColumn: Integer; const SourceElement: IwbElement): Boolean; overload;
     function PerformDrop(const TargetElement: IwbElement; TargetIndex, AlignedMemoryIndex: Integer; TargetCell: TViewNodeData; const SourceElement: IwbElement): Boolean; overload;
     function GetSourceElement(Source: TObject; out SourceElement: IwbElement): Boolean;
+    procedure SpreadSheetDrop(const aTarget, aSource: IwbElement);
 
     function GetAddElement(out TargetNode: PVirtualNode; out TargetIndex: Integer; out TargetElement: IwbElement; out aAlignedMemoryIndex: Integer): Boolean;
 
@@ -918,6 +919,8 @@ type
     function AddRequiredMaster(const aMasterFile: IwbFile; const aTargetFile: IwbFile): Boolean;
     function AddRequiredMasters(const aSourceElement: IwbElement; const aTargetFile: IwbFile; aAsNew: Boolean; aSilent: Boolean = False): Boolean; overload;
     function AddRequiredMasters(aMasters: TStrings; const aTargetFile: IwbFile; aSilent: Boolean = False): Boolean; overload;
+    function AddRequiredMasters(const aTarget: IwbElement; aIndex: Integer; const aSource: IwbElement): Boolean; overload;
+    function AskAddMasters(const aPlanned: TwbFiles; const aTargetFile: IwbFile; aSilent: Boolean = False): Boolean;
   protected
 
     function NewFileLoadOrder: Integer;
@@ -2120,6 +2123,21 @@ begin
   end;
 end;
 
+function TfrmMain.AddRequiredMasters(const aTarget: IwbElement; aIndex: Integer; const aSource: IwbElement): Boolean;
+var
+  lNeeded : TwbFiles;
+begin
+  try
+    lNeeded := wbRequiredMastersForAssign(aTarget, aIndex, aSource);
+  except
+    on E: Exception do begin
+      AddMessage(E.Message);
+      Exit(False);
+    end;
+  end;
+  Result := AskAddMasters(lNeeded, aTarget._File);
+end;
+
 function TfrmMain.AddRequiredMasters(const aSourceElement: IwbElement; const aTargetFile: IwbFile; aAsNew: Boolean; aSilent: Boolean = False): Boolean;
 var
   lPlanned : TwbFiles;
@@ -2132,14 +2150,19 @@ begin
     lMasters.Free;
   end;
 
-  if Length(lPlanned) = 0 then
+  Result := AskAddMasters(lPlanned, aTargetFile, aSilent);
+end;
+
+function TfrmMain.AskAddMasters(const aPlanned: TwbFiles; const aTargetFile: IwbFile; aSilent: Boolean): Boolean;
+begin
+  if Length(aPlanned) = 0 then
     Exit(True);
 
   var lRequiredMasters := TStringList.Create;
   try
     lRequiredMasters.Sorted := True;
     lRequiredMasters.Duplicates := dupIgnore;
-    for var lFile in lPlanned do
+    for var lFile in aPlanned do
       lRequiredMasters.AddObject(lFile.FileName, Pointer(lFile));
 
     Result := aSilent or (MessageDlg('To continue the following files need to be added to "' +
@@ -7315,6 +7338,22 @@ begin
     for i := Low(MainRecords) to High(MainRecords) do
       if CheckListBox1.Checked[i] then
         CheckedTargets := CheckedTargets + [MainRecords[i]];
+
+    if Length(CheckedTargets) < 1 then
+      Exit;
+    if not EditWarn then
+      Exit;
+    CheckedTargets := lPlan.TargetsWithMasters(CheckedTargets,
+      function(aFile: IwbFile; aNeeded: TwbFiles): Boolean
+      begin
+        Result := AskAddMasters(aNeeded, aFile);
+      end,
+      procedure(aText: string)
+      begin
+        AddMessage(aText);
+      end);
+    if Length(CheckedTargets) < 1 then
+      Exit;
 
     LockProcessMessages;
     try
@@ -13161,7 +13200,7 @@ begin
   if not EditWarn then
     Exit;
 
-  if not AddRequiredMasters(SourceElement, TargetElement._File, False) then
+  if not AddRequiredMasters(TargetElement, TargetIndex, SourceElement) then
     Exit;
 
   vstView.BeginUpdate;
@@ -17403,7 +17442,7 @@ begin
     if not EditWarn then
       Exit;
 
-    if not AddRequiredMasters(SourceElement, TargetElement._File, False) then
+    if not AddRequiredMasters(TargetElement, Low(Integer), SourceElement) then
       Exit;
 
     vstView.BeginUpdate;
@@ -18983,16 +19022,24 @@ begin
   if not Assigned(SourceElement) then
     Exit;
 
-  if TargetElement.Equals(SourceElement) then
+  SpreadSheetDrop(TargetElement, SourceElement);
+end;
+
+procedure TfrmMain.SpreadSheetDrop(const aTarget, aSource: IwbElement);
+begin
+  if aTarget.Equals(aSource) then
     Exit;
 
-  if not TargetElement.CanAssign(Low(Integer), SourceElement, True) then
+  if not aTarget.CanAssign(Low(Integer), aSource, True) then
     Exit;
 
   if not EditWarn then
     Exit;
 
-  TargetElement.Assign(Low(Integer), SourceElement, False);
+  if not AddRequiredMasters(aTarget, Low(Integer), aSource) then
+    Exit;
+
+  aTarget.Assign(Low(Integer), aSource, False);
 end;
 
 procedure TfrmMain.vstSpreadSheetDragOver(Sender: TBaseVirtualTree; Source: TObject; Shift: TShiftState; State: TDragState; Pt: TPoint; Mode: TDropMode; var Effect: Integer; var Accept: Boolean);

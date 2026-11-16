@@ -13,6 +13,7 @@ xEdit is crucial to our shared modding community and your contribution - no matt
 * Starfield: Cleanup Injected no longer removes a record's injected references when the record can not be copied into the injecting plugin (such as a record holding Reflection); the record is left as it was and reported as not cleaned.
 * Starfield: a ship's Weapon Slot 1 - 3 show the blueprint part they name again, instead of only its number.
 * A list no longer grows past its window's edge when Windows rescales the window after it was created (seen at 150% display scaling: the Module Selection list covered the OK button).
+* Copy multiple rows to selected records and a drop of one spreadsheet cell onto another now ask to add the masters the copied values need, as a drop onto the View tab does; they used to write a null reference, or nothing. A record dropped onto a field of the View tab now asks only for the plugin that defines it, not for every master its own contents need.
 
 ## Scripting
 * A script can no longer remove a Player Reference (PLYR) record by removing it through its group (RemoveElement, RemoveByIndex) or by removing the group itself (Remove, RemoveElement, RemoveByIndex); Remove of the record itself already refused it.

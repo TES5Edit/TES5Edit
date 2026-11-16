@@ -1953,6 +1953,19 @@ var
       Result := Format('%d elements, %d chars, hash %.8x', [aMainRecord.ElementCount, Length(lText), lHash]);
     end;
 
+    function Leaves(const aElement: IwbElement): string;
+    var
+      lContainer : IwbContainerElementRef;
+    begin
+      if Supports(aElement, IwbContainerElementRef, lContainer) and (lContainer.ElementCount > 0) then begin
+        Result := '';
+        for var i := 0 to Pred(lContainer.ElementCount) do
+          if lContainer.Elements[i].Name <> 'Record Header' then
+            Result := Result + Leaves(lContainer.Elements[i]);
+      end else
+        Result := aElement.Name + '=' + aElement.EditValue + '; ';
+    end;
+
     procedure BeginGesture(const aName: string; aRow: PVirtualNode; aColumn: Integer; aSwitch: Boolean; out aDelay, aFocused: Integer);
     begin
       TFile.AppendAllText(xeTestSwitches.ViewTreeFile + '.progress', Format('%d'#9'%s', [aEntry, aName]) + sLineBreak);
@@ -1990,7 +2003,7 @@ var
 
     procedure Run(const aName: string; aSwitch, aCopy: Boolean);
     begin
-      if not xeTestSwitches.ViewTreeProtected then
+      if not xeTestSwitches.ViewTreeProtected and (xeTestSwitches.ViewTreeMasters = '') then
         Restore;
       if aCopy then
         SelectInNav;
@@ -2025,6 +2038,13 @@ var
       if xeTestSwitches.ViewTreeProtected then
         lLines.Add(Format('# protected %d'#9'%s'#9'target before %s'#9'after %s, modified %s',
           [aEntry, aName, lTargetBefore, Digest(aTarget), BoolToStr(aTarget.Modified, True)]));
+      if xeTestSwitches.ViewTreeMasters <> '' then begin
+        var lMasters := '';
+        for var i := 0 to Pred(aTarget._File.MasterCount[True]) do
+          lMasters := lMasters + ' ' + aTarget._File.Masters[i, True].FileName;
+        lLines.Add(Format('# masters %d'#9'%s'#9'target masters [%s]'#9'target %s'#9'modified %s',
+          [aEntry, aName, lMasters.Trim, Leaves(aTarget).Trim, BoolToStr(aTarget.Modified, True)]));
+      end;
     end;
 
     procedure RunMemo(const aName: string);
@@ -2059,6 +2079,75 @@ var
       TestHost.TestViewModalMemo := '';
       lLines.Add(Format('# modal %d'#9'%s'#9'value before %s'#9'after %s'#9'record %s',
         [aEntry, aName, lBefore, lEdited.EditValue, aRecord.EditorID]));
+    end;
+
+    function FirstLink(const aElement: IwbElement): IwbElement;
+    var
+      lContainer : IwbContainerElementRef;
+      lLinked    : IwbMainRecord;
+    begin
+      Result := nil;
+      if Supports(aElement, IwbContainerElementRef, lContainer) and (lContainer.ElementCount > 0) then begin
+        for var i := 0 to Pred(lContainer.ElementCount) do
+          if lContainer.Elements[i].Name <> 'Record Header' then begin
+            Result := FirstLink(lContainer.Elements[i]);
+            if Assigned(Result) then
+              Exit;
+          end;
+      end else if Supports(aElement.LinksTo, IwbMainRecord, lLinked) then
+        Result := aElement;
+    end;
+
+    procedure RunMasters(const aGesture: string);
+    begin
+      var lName := aGesture + ', masters ' + xeTestSwitches.ViewTreeMasters;
+      var lSource := FirstLink(aRecord);
+      var lTargetLeaf := FirstLink(aTarget);
+      if not (Assigned(lSource) and Assigned(lTargetLeaf)) then begin
+        lLines.Add(Format('# modal %d'#9'%s'#9'no record-naming leaf', [aEntry, lName]));
+        Exit;
+      end;
+      Build([aRecord, aTarget]);
+      vstView.FullExpand;
+      var lRow: PVirtualNode := nil;
+      for var lNode in vstView.Nodes(False) do
+        if Assigned(ViewCells(lNode)) and Assigned(ViewCells(lNode)[1].Element) and ViewCells(lNode)[1].Element.Equals(lTargetLeaf) then begin
+          lRow := lNode;
+          Break;
+        end;
+      if not Assigned(lRow) then begin
+        lLines.Add(Format('# modal %d'#9'%s'#9'no view row for %s', [aEntry, lName, lTargetLeaf.Path]));
+        Exit;
+      end;
+      var lNamed := lSource.LinksTo as IwbMainRecord;
+      var lRefsBefore := lNamed.ReferencedByCount;
+      var lDelay, lFocused: Integer;
+      BeginGesture(lName, lRow, 2, False, lDelay, lFocused);
+      var lResult := 'returned';
+      try
+        if SameText(aGesture, 'sheet') then
+          SpreadSheetDrop(lTargetLeaf, lSource)
+        else if SameText(aGesture, 'drop') then
+          lResult := 'returned ' + BoolToStr(PerformDrop(vstView, lRow, 2, lSource.LinksTo), True)
+        else
+          lResult := 'unknown gesture';
+      except
+        on E: Exception do
+          lResult := E.ClassName + ': ' + E.Message;
+      end;
+      EndGesture(lName, lResult, lDelay, lFocused);
+      var lMasters := '';
+      for var i := 0 to Pred(aTarget._File.MasterCount[True]) do
+        lMasters := lMasters + ' ' + aTarget._File.Masters[i, True].FileName;
+      lLines.Add(Format('# masters %d'#9'%s'#9'target masters [%s]'#9'target %s'#9'modified %s',
+        [aEntry, lName, lMasters.Trim, Leaves(aTarget).Trim, BoolToStr(aTarget.Modified, True)]));
+      var lHolds := False;
+      for var i := 0 to Pred(lNamed.ReferencedByCount) do
+        if lNamed.ReferencedBy[i].Equals(aTarget) then
+          lHolds := True;
+      lLines.Add(Format('# refs %d'#9'%s'#9'%s referenced by %d before, %d after; the target among them %s; target file refs built %s',
+        [aEntry, lName, lNamed.EditorID, lRefsBefore, lNamed.ReferencedByCount, BoolToStr(lHolds, True),
+         BoolToStr(fsRefsBuild in aTarget._File.FileStates, True)]));
     end;
 
   const
@@ -2551,6 +2640,14 @@ var
     end;
     if xeTestSwitches.ViewTreeHeaderDrop then begin
       HeaderDropProbe;
+      Exit;
+    end;
+    if (xeTestSwitches.ViewTreeMasters <> '') and (xeTestSwitches.ViewTreeGesture <> '') then begin
+      RunMasters(xeTestSwitches.ViewTreeGesture);
+      Exit;
+    end;
+    if xeTestSwitches.ViewTreeMasters <> '' then begin
+      Run('copy multiple, masters ' + xeTestSwitches.ViewTreeMasters, False, True);
       Exit;
     end;
     if xeTestSwitches.ViewTreeProtected then begin
@@ -3066,7 +3163,10 @@ begin
       GetWindowText(lWnd, lCaption, Length(lCaption));
       TestHost.TestViewModalSeen := TestHost.TestViewModalSeen + ' "' + string(lCaption) + '"' + IfThen(lReplaced, ':replaced', ':kept') +
         IfThen(IsWindowEnabled(Handle), ':main-enabled', ':main-disabled');
-      SendMessage(lWnd, WM_USER + 102, IDYES, 0);
+      if SameText(xeTestSwitches.ViewTreeMasters, 'no') then
+        SendMessage(lWnd, WM_USER + 102, IDNO, 0)
+      else
+        SendMessage(lWnd, WM_USER + 102, IDYES, 0);
       Exit;
     end;
   until lWnd = 0;

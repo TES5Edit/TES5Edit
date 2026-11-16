@@ -4669,6 +4669,7 @@ type
     function BeginInternalEdit(aForce: Boolean = False): Boolean;
     procedure DetachFilesFromModules; virtual;
     function SlotLayout: TwbSlotLayout;
+    function ReferenceMasterFor(const aTarget: IwbElement; const aRecord: IwbMainRecord): IwbFile;
     function FormIDFromIdentity(aFormIDBase, aFormIDNameBase: Byte; aIdentity: string): TwbFormID;
     function InternIdentityLocked(aFormIDBase, aFormIDNameBase: Byte; const aIdentity: string): Cardinal;
     function ReserveIdentities(const aRequests: array of TwbIdentityRequest): string;
@@ -6568,6 +6569,19 @@ end;
 function IntToSignature(aInt: Cardinal): TwbSignature; inline;
 begin
   Result := PwbSignature(@aInt)^;
+end;
+
+function TwbGameContext.ReferenceMasterFor(const aTarget: IwbElement; const aRecord: IwbMainRecord): IwbFile;
+var
+  lSelected : IwbMainRecord;
+  lIdentity : string;
+begin
+  if gcMasterSlotsInFormID in gcGameDefObj.Capabilities then
+    Exit(aRecord.ReferenceFile);
+  if NameKeyIdentity(aTarget, aRecord.FixedFormID, lSelected, lIdentity) = ntNone then
+    Result := NameProvider(aRecord)
+  else
+    Result := nil;
 end;
 
 function TwbGameContext.SlotLayout: TwbSlotLayout;
