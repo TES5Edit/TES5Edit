@@ -77,6 +77,9 @@ type
     Rows    : TArray<TwbRowCopyRow>;
     function Shows(const aRecord: IwbMainRecord): Boolean;
     function Targets(const aRecords: TDynMainRecords): TDynMainRecords;
+    function RequiredMasters(const aTargetFile: IwbFile): TwbFiles;
+    function TargetsWithMasters(const aTargets: TDynMainRecords; const aAddMasters: TFunc<IwbFile, TwbFiles, Boolean>;
+      const aReport: TProc<string>): TDynMainRecords;
     function Apply(const aTargets: TDynMainRecords; const aCanEdit: TFunc<Boolean>): Boolean;
   end;
 
@@ -233,6 +236,7 @@ procedure wbConflictInitChildren(const aNodeDatas: PwbConflictNodeDatas; aNodeCo
 
 function wbConflictAlignedGap(const aParentData: TwbConflictNodeData; aRow: Integer; out aMemoryIndex: Integer): Boolean;
 
+function wbRequiredMastersForAssign(const aTarget: IwbElement; aIndex: Integer; const aSource: IwbElement): TwbFiles;
 function wbConflictAssignAligned(const aContainer: IwbContainerElementRef; aIndex, aMemoryIndex: Integer; const aSource: IwbElement; aOnlySK: Boolean): IwbElement;
 
 function wbConflictLevelForChildNodeDatas(const aNodeDatas: TwbDynConflictNodeDatas; aSiblingCompare, aInjected: Boolean; aView: TwbConflictView; const aOnMessage: TwbConflictMessageProc; const aOnField: TwbFieldConflictProc = nil): TConflictAll;
@@ -1062,6 +1066,42 @@ begin
 
   aMemoryIndex := lBefore;
   Result := True;
+end;
+
+function wbRequiredMastersForAssign(const aTarget: IwbElement; aIndex: Integer; const aSource: IwbElement): TwbFiles;
+var
+  lMasters : TwbFilesSet;
+
+  procedure Item(const aItem: IwbElement);
+  var
+    lRecord : IwbMainRecord;
+  begin
+    if not Assigned(aItem) then
+      Exit;
+    if Supports(aItem, IwbMainRecord, lRecord) and not ((aIndex = wbAssignThis) and Supports(aTarget, IwbMainRecord)) then
+      begin
+        var lFile := aTarget.ContextObj.ReferenceMasterFor(aTarget, lRecord);
+        if Assigned(lFile) then
+          lMasters.Add(lFile);
+      end
+    else
+      aItem.ReportRequiredMasters(lMasters, False);
+  end;
+
+var
+  lMultiple : IwbMultipleElements;
+begin
+  lMasters := TwbFilesSet.Create;
+  try
+    if Supports(aSource, IwbMultipleElements, lMultiple) then begin
+      for var i := 0 to Pred(lMultiple.ElementCount) do
+        Item(lMultiple.Elements[i]);
+    end else
+      Item(aSource);
+    Result := aTarget._File.RequiredMastersFor(lMasters);
+  finally
+    lMasters.Free;
+  end;
 end;
 
 function wbConflictAssignAligned(const aContainer: IwbContainerElementRef; aIndex, aMemoryIndex: Integer; const aSource: IwbElement; aOnlySK: Boolean): IwbElement;
@@ -2704,6 +2744,53 @@ begin
   for var lRecord in aRecords do
     if Shows(lRecord) and lRecord.IsEditable then
       Result := Result + [lRecord];
+end;
+
+function TwbRowCopyPlan.RequiredMasters(const aTargetFile: IwbFile): TwbFiles;
+begin
+  var lMasters := TwbFilesSet.Create;
+  try
+    for var lRow in Rows do
+      if lRow.Selected and Assigned(lRow.Cells[Column]) then
+        lRow.Cells[Column].ReportRequiredMasters(lMasters, False);
+    Result := aTargetFile.RequiredMastersFor(lMasters);
+  finally
+    lMasters.Free;
+  end;
+end;
+
+function TwbRowCopyPlan.TargetsWithMasters(const aTargets: TDynMainRecords; const aAddMasters: TFunc<IwbFile, TwbFiles, Boolean>;
+  const aReport: TProc<string>): TDynMainRecords;
+var
+  lFiles  : TwbFiles;
+  lKeep   : TArray<Boolean>;
+  lNeeded : TwbFiles;
+  lIndex  : Integer;
+begin
+  Result := nil;
+  lFiles := nil;
+  lKeep := nil;
+  for var lTarget in aTargets do begin
+    var lFile := lTarget._File;
+    lIndex := -1;
+    for var i := Low(lFiles) to High(lFiles) do
+      if lFiles[i].Equals(lFile) then
+        lIndex := i;
+    if lIndex < 0 then begin
+      lIndex := Length(lFiles);
+      lFiles := lFiles + [lFile];
+      lKeep := lKeep + [False];
+      try
+        lNeeded := RequiredMasters(lFile);
+        lKeep[lIndex] := (Length(lNeeded) = 0) or aAddMasters(lFile, lNeeded);
+      except
+        on E: Exception do
+          aReport(E.Message);
+      end;
+    end;
+    if lKeep[lIndex] then
+      Result := Result + [lTarget];
+  end;
 end;
 
 function TwbRowCopyPlan.Apply(const aTargets: TDynMainRecords; const aCanEdit: TFunc<Boolean>): Boolean;
