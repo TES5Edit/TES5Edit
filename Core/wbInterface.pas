@@ -3122,6 +3122,7 @@ type
     function MastersUpdated(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aOld, aNew: TwbFileIDs; aOldCount, aNewCount: TwbSlotCounts): Boolean;
     procedure FindUsedMasters(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aMasters: PwbUsedMasters);
     function ReportValueMasters(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aMasters: TwbFilesSet): Boolean;
+    procedure ReportUnresolvedMasters(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aMasters: TwbFilesSet);
     function CompareExchangeFormID(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aOldFormID: TwbFormID; aNewFormID: TwbFormID): Boolean;
 
     function GetElementMap: TDynCardinalArray;
@@ -3611,6 +3612,7 @@ type
 
     function MastersUpdated(aInt: Int64; const aOld, aNew: TwbFileIDs; aOldCount, aNewCount: TwbSlotCounts; const aElement: IwbElement): Int64;
     procedure FindUsedMasters(aInt: Int64; aMasters: PwbUsedMasters; const aElement: IwbElement);
+    procedure ReportUnresolvedMasters(aInt: Int64; const aElement: IwbElement; aMasters: TwbFilesSet);
     function CompareExchangeFormID(var aInt: Int64; aOldFormID: TwbFormID; aNewFormID: TwbFormID; const aElement: IwbElement): Boolean;
 
     function GetRequiresKey: Boolean;
@@ -4670,6 +4672,7 @@ type
     procedure DetachFilesFromModules; virtual;
     function SlotLayout: TwbSlotLayout;
     function ReferenceMasterFor(const aTarget: IwbElement; const aRecord: IwbMainRecord): IwbFile;
+    function FileByLoadOrderFileID(const aFileID: TwbFileID): IwbFile;
     function FormIDFromIdentity(aFormIDBase, aFormIDNameBase: Byte; aIdentity: string): TwbFormID;
     function InternIdentityLocked(aFormIDBase, aFormIDNameBase: Byte; const aIdentity: string): Cardinal;
     function ReserveIdentities(const aRequests: array of TwbIdentityRequest): string;
@@ -8978,6 +8981,14 @@ begin
     end;
 end;
 
+function TwbGameContext.FileByLoadOrderFileID(const aFileID: TwbFileID): IwbFile;
+begin
+  for var i := Low(gcFiles) to High(gcFiles) do
+    if gcFiles[i].HasLoadOrderFileID and (gcFiles[i].LoadOrderFileID = aFileID) then
+      Exit(gcFiles[i]);
+  Result := nil;
+end;
+
 function TwbGameContext.FindWinningMainRecordByEditorID(const aSignature: TwbSignature; const aEditorID: string): IwbMainRecord;
 var
   i     : Integer;
@@ -10012,6 +10023,7 @@ type
     function MastersUpdated(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aOld, aNew: TwbFileIDs; aOldCount, aNewCount: TwbSlotCounts): Boolean; virtual;
     procedure FindUsedMasters(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aMasters: PwbUsedMasters); virtual;
     function ReportValueMasters(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aMasters: TwbFilesSet): Boolean; virtual;
+    procedure ReportUnresolvedMasters(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aMasters: TwbFilesSet); virtual;
     function CompareExchangeFormID(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aOldFormID: TwbFormID; aNewFormID: TwbFormID): Boolean; virtual;
   end;
 
@@ -10086,6 +10098,7 @@ type
     function GetIsVariableSizeInternal: Boolean; override;
     function GetSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer; override;
     function ReportValueMasters(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aMasters: TwbFilesSet): Boolean; override;
+    procedure ReportUnresolvedMasters(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aMasters: TwbFilesSet); override;
 
     {---IwbDef---}
     function Assign(const aTarget: IwbElement; aIndex: Integer; const aSource: IwbElement; aOnlySK: Boolean): IwbElement; override;
@@ -10574,6 +10587,7 @@ type
 
     function MastersUpdated(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aOld, aNew: TwbFileIDs; aOldCount, aNewCount: TwbSlotCounts): Boolean; override; final;
     procedure FindUsedMasters(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aMasters: PwbUsedMasters); override; final;
+    procedure ReportUnresolvedMasters(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aMasters: TwbFilesSet); override; final;
     function CompareExchangeFormID(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aOldFormID: TwbFormID; aNewFormID: TwbFormID): Boolean; override; final;
 
     {---IwbIntegerDef---}
@@ -10873,6 +10887,7 @@ type
 
     function MastersUpdated(aInt: Int64; const aOld, aNew: TwbFileIDs; aOldCount, aNewCount: TwbSlotCounts; const aElement: IwbElement): Int64; virtual;
     procedure FindUsedMasters(aInt: Int64; aMasters: PwbUsedMasters; const aElement: IwbElement); virtual;
+    procedure ReportUnresolvedMasters(aInt: Int64; const aElement: IwbElement; aMasters: TwbFilesSet); virtual;
     function CompareExchangeFormID(var aInt: Int64; aOldFormID: TwbFormID; aNewFormID: TwbFormID; const aElement: IwbElement): Boolean; virtual;
 
     function GetRequiresKey: Boolean; virtual;
@@ -10915,6 +10930,7 @@ type
 
     function MastersUpdated(aInt: Int64; const aOld, aNew: TwbFileIDs; aOldCount, aNewCount: TwbSlotCounts; const aElement: IwbElement): Int64; override; final;
     procedure FindUsedMasters(aInt: Int64; aMasters: PwbUsedMasters; const aElement: IwbElement); override; final;
+    procedure ReportUnresolvedMasters(aInt: Int64; const aElement: IwbElement; aMasters: TwbFilesSet); override; final;
     function CompareExchangeFormID(var aInt: Int64; aOldFormID: TwbFormID; aNewFormID: TwbFormID; const aElement: IwbElement): Boolean; override; final;
 
     {---IwbIntegerDefFormaterUnion---}
@@ -10977,6 +10993,7 @@ type
 
     function MastersUpdated(aInt: Int64; const aOld, aNew: TwbFileIDs; aOldCount, aNewCount: TwbSlotCounts; const aElement: IwbElement): Int64; override; final;
     procedure FindUsedMasters(aInt: Int64; aMasters: PwbUsedMasters; const aElement: IwbElement); override; final;
+    procedure ReportUnresolvedMasters(aInt: Int64; const aElement: IwbElement; aMasters: TwbFilesSet); override; final;
     function CompareExchangeFormID(var aInt: Int64; aOldFormID: TwbFormID; aNewFormID: TwbFormID; const aElement: IwbElement): Boolean; override; final;
 
     {---IwbFormID---}
@@ -16793,6 +16810,12 @@ begin
     inherited FindUsedMasters(aBasePtr, aEndPtr, aElement, aMasters);
 end;
 
+procedure TwbIntegerDef.ReportUnresolvedMasters(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aMasters: TwbFilesSet);
+begin
+  if Assigned(inFormater) then
+    inFormater.ReportUnresolvedMasters(ToInt(aBasePtr, aEndPtr, aElement), aElement, aMasters);
+end;
+
 procedure TwbIntegerDef.FromEditValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aValue: string);
 var
   i: Int64;
@@ -21565,6 +21588,27 @@ begin
     aMasters[lMasterIndex] := True;
 end;
 
+procedure TwbFormIDDefFormater.ReportUnresolvedMasters(aInt: Int64; const aElement: IwbElement; aMasters: TwbFilesSet);
+begin
+  var lFormID := TwbFormID.FromCardinal(aInt);
+  if lFormID.IsHardcoded or lFormID.IsNone then
+    Exit;
+  var lFile := aElement._File;
+  if not Assigned(lFile) then
+    Exit;
+  var lLayout := defSlotLayout(aElement);
+  try
+    lFormID := lFile.FileFormIDtoLoadOrderFormID(lFormID, aElement.MastersUpdated);
+  except
+    Exit;
+  end;
+  if lFormID.IsHardcoded or lFormID.IsNone then
+    Exit;
+  var lMaster := aElement.ContextObj.FileByLoadOrderFileID(lFormID.FileID[lLayout]);
+  if Assigned(lMaster) then
+    aMasters.Add(lMaster);
+end;
+
 function TwbFormIDDefFormater.FromEditValue(const aValue: string; const aElement: IwbElement): Int64;
 var
   _File     : IwbFile;
@@ -23547,6 +23591,10 @@ begin
   Result := False;
 end;
 
+procedure TwbValueDef.ReportUnresolvedMasters(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aMasters: TwbFilesSet);
+begin
+end;
+
 procedure TwbValueDef.FromEditValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aValue: string);
 begin
   raise Exception.Create(GetName + ' is not editable.');
@@ -24261,6 +24309,10 @@ begin
   {can be overriden}
 end;
 
+procedure TwbIntegerDefFormater.ReportUnresolvedMasters(aInt: Int64; const aElement: IwbElement; aMasters: TwbFilesSet);
+begin
+end;
+
 function TwbIntegerDefFormater.FromEditValue(const aValue: string;
   const aElement: IwbElement): Int64;
 begin
@@ -24773,6 +24825,15 @@ begin
     var lResolved := ResolveDef(aBasePtr, aEndPtr, aElement);
     Result := Assigned(lResolved) and lResolved.ReportValueMasters(aBasePtr, aEndPtr, aElement, aMasters);
   end;
+end;
+
+procedure TwbResolvableDef.ReportUnresolvedMasters(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aMasters: TwbFilesSet);
+begin
+  if not (dfCanContainFormID in defFlags) then
+    Exit;
+  var lResolved := ResolveDef(aBasePtr, aEndPtr, aElement);
+  if Assigned(lResolved) then
+    lResolved.ReportUnresolvedMasters(aBasePtr, aEndPtr, aElement, aMasters);
 end;
 
 function TwbResolvableDef.Assign(const aTarget: IwbElement; aIndex: Integer; const aSource: IwbElement; aOnlySK: Boolean): IwbElement;
@@ -26832,6 +26893,13 @@ begin
   IntegerDef := Decide(aElement);
   if Assigned(IntegerDef) then
     IntegerDef.FindUsedMasters(aInt, aMasters, aElement);
+end;
+
+procedure TwbIntegerDefFormaterUnion.ReportUnresolvedMasters(aInt: Int64; const aElement: IwbElement; aMasters: TwbFilesSet);
+begin
+  var lFormater := Decide(aElement);
+  if Assigned(lFormater) then
+    lFormater.ReportUnresolvedMasters(aInt, aElement, aMasters);
 end;
 
 function TwbIntegerDefFormaterUnion.FromEditValue(const aValue   : string;

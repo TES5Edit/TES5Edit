@@ -351,6 +351,7 @@ type
     function GetSummary: string; virtual;
     function GetSummaryAndLink(var aLinksTo: IwbElement; aIntoField: Boolean): string; virtual;
     function ReportValueMasters(const aValueDef: IwbValueDef; aMasters: TwbFilesSet): Boolean; virtual;
+    procedure ReportUnresolvedValueMasters(const aValueDef: IwbValueDef; aMasters: TwbFilesSet); virtual;
     function GetCheck: string; virtual;
     function CheckIn(const aRun: TwbCheckRun): string; virtual;
     function GetSortKey(aExtended: Boolean): string;
@@ -1184,6 +1185,7 @@ type
 
     function GetResolvedValueDef: IwbValueDef; override;
     function ReportValueMasters(const aValueDef: IwbValueDef; aMasters: TwbFilesSet): Boolean; override; final;
+    procedure ReportUnresolvedValueMasters(const aValueDef: IwbValueDef; aMasters: TwbFilesSet); override; final;
 
     function ContentIsAllZero: Boolean; override; final;
 
@@ -29130,6 +29132,10 @@ begin
   Result := False;
 end;
 
+procedure TwbElement.ReportUnresolvedValueMasters(const aValueDef: IwbValueDef; aMasters: TwbFilesSet);
+begin
+end;
+
 function TwbElement.GetSummaryLinksTo: IwbElement;
 begin
   if (wbParallelRefBuilds <> 0) and not _RefBuilder then
@@ -29443,7 +29449,8 @@ begin
       ReferenceFile := Element.ReferenceFile;
       if Assigned(ReferenceFile) then
         aMasters.Add(ReferenceFile);
-    end;
+    end else
+      ReportUnresolvedValueMasters(ValueDef, aMasters);
   end;
 
   eReportMastersGen := aMasters.Generation;
@@ -34476,6 +34483,12 @@ end;
 function TwbDataContainer.ReportValueMasters(const aValueDef: IwbValueDef; aMasters: TwbFilesSet): Boolean;
 begin
   Result := Assigned(aValueDef) and aValueDef.ReportValueMasters(dcDataBasePtr, dcDataEndPtr, Self, aMasters);
+end;
+
+procedure TwbDataContainer.ReportUnresolvedValueMasters(const aValueDef: IwbValueDef; aMasters: TwbFilesSet);
+begin
+  if Assigned(aValueDef) then
+    aValueDef.ReportUnresolvedMasters(dcDataBasePtr, dcDataEndPtr, Self, aMasters);
 end;
 
 function TwbDataContainer.GetDataPrefixSize: Integer;

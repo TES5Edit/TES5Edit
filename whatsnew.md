@@ -14,6 +14,7 @@ xEdit is crucial to our shared modding community and your contribution - no matt
 * Starfield: a ship's Weapon Slot 1 - 3 show the blueprint part they name again, instead of only its number.
 * A list no longer grows past its window's edge when Windows rescales the window after it was created (seen at 150% display scaling: the Module Selection list covered the OK button).
 * Copy multiple rows to selected records and a drop of one spreadsheet cell onto another now ask to add the masters the copied values need, as a drop onto the View tab does; they used to write a null reference, or nothing. A record dropped onto a field of the View tab now asks only for the plugin that defines it, not for every master its own contents need.
+* Copying a value that names a record its master does not hold (a reference Check for Errors reports as unresolved) now asks to add that master, as for any other reference; the copy used to ask nothing and then keep the target's old value or, for a list such as keywords, drop the target's entries and write a null entry.
 
 ## Scripting
 * A script can no longer remove a Player Reference (PLYR) record by removing it through its group (RemoveElement, RemoveByIndex) or by removing the group itself (Remove, RemoveElement, RemoveByIndex); Remove of the record itself already refused it.
