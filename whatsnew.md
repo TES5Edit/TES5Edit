@@ -6,6 +6,9 @@ xEdit is crucial to our shared modding community and your contribution - no matt
 
 # What's New in xEdit 4.1.5s?
 
+## Improvements
+* The What's New tab shows these notes with their formatting: code in a monospaced font on a shaded box, a rule under the main headings, italics, strike-through, links, and nested and numbered lists, in colours taken from the active theme, dark or light.
+
 ## Bugfixes
 * Remove is no longer offered for a plugin's Player Reference (PLYR) group while it holds a record: the record can not be removed on its own, and removing the group removed it anyway.
 * Setting Persistent or Visible When Distant on a reference whose position names no cell is refused without changing the flag; the flag used to stay changed while the reference stayed in its old group.

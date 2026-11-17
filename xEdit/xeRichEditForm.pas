@@ -16,6 +16,8 @@ uses
   VirtualTrees.Types,
   System.Classes,
 
+  Winapi.Messages,
+
   Vcl.ComCtrls,
   Vcl.Controls,
   Vcl.ExtCtrls,
@@ -67,10 +69,13 @@ type
     NeedRebuildTOC : Boolean;
     NeedToggleTOC : Boolean;
     InRedirectKey: Integer;
+    RichText: string;
     procedure BuildTOC;
     procedure TOCSelected(aNode: PVirtualNode);
+    procedure ShowRichText;
+    procedure CMStyleChanged(var aMessage: TMessage); message CM_STYLECHANGED;
   public
-    { Public declarations }
+    procedure LoadRichText(aStream: TStream);
   end;
 
 implementation
@@ -78,11 +83,15 @@ implementation
 {$R *.dfm}
 
 uses
+  Winapi.RichEdit,
+
   System.SysUtils,
+  System.UITypes,
 
+  Vcl.Graphics,
   Vcl.Styles.Utils.SystemMenu,
+  Vcl.Themes,
 
-  Winapi.Messages,
   Winapi.Windows,
 
   TOM2,
@@ -90,6 +99,90 @@ uses
   wbInterface,
 
   xeMainForm;
+
+function BlendColor(aFrom, aTo: TColor; aWeight: Integer): TColor;
+begin
+  var lFrom := ColorToRGB(aFrom);
+  var lTo := ColorToRGB(aTo);
+  Result := RGB(
+    (GetRValue(lFrom) * (256 - aWeight) + GetRValue(lTo) * aWeight) shr 8,
+    (GetGValue(lFrom) * (256 - aWeight) + GetGValue(lTo) * aWeight) shr 8,
+    (GetBValue(lFrom) * (256 - aWeight) + GetBValue(lTo) * aWeight) shr 8);
+end;
+
+function RelativeLuminance(aColor: TColor): Double;
+
+  function Channel(aValue: Byte): Double;
+  begin
+    Result := aValue / 255;
+    if Result <= 0.03928 then
+      Result := Result / 12.92
+    else
+      Result := Exp(2.4 * Ln((Result + 0.055) / 1.055));
+  end;
+
+begin
+  var lColor := ColorToRGB(aColor);
+  Result := 0.2126 * Channel(GetRValue(lColor)) + 0.7152 * Channel(GetGValue(lColor)) + 0.0722 * Channel(GetBValue(lColor));
+end;
+
+function ContrastRatio(aFirst, aSecond: TColor): Double;
+begin
+  var lFirst := RelativeLuminance(aFirst);
+  var lSecond := RelativeLuminance(aSecond);
+  if lFirst < lSecond then
+    Result := (lSecond + 0.05) / (lFirst + 0.05)
+  else
+    Result := (lFirst + 0.05) / (lSecond + 0.05);
+end;
+
+function RtfColor(aColor: TColor): string;
+begin
+  var lColor := ColorToRGB(aColor);
+  Result := Format('\red%d\green%d\blue%d;', [GetRValue(lColor), GetGValue(lColor), GetBValue(lColor)]);
+end;
+
+function RtfWithColors(const aRtf: string; aText, aBackground: TColor): string;
+begin
+  var lStart := aRtf.IndexOf('{\colortbl');
+  if lStart < 0 then
+    Exit(aRtf);
+  var lEnd := aRtf.IndexOf('}', lStart);
+  if lEnd < 0 then
+    Exit(aRtf);
+
+  var lBlue: TColor;
+  if RelativeLuminance(aBackground) >= 0.18 then
+    lBlue := RGB(9, 105, 218)
+  else
+    lBlue := RGB(88, 166, 255);
+  var lLink := lBlue;
+  var lWeight := 0;
+  while (ContrastRatio(lLink, aBackground) < 4.5) and (lWeight < 256) do begin
+    Inc(lWeight, 16);
+    lLink := BlendColor(lBlue, aText, lWeight);
+  end;
+
+  var lCodeContrast := ContrastRatio(aText, aBackground);
+  if lCodeContrast > 4.5 then
+    lCodeContrast := 4.5;
+  var lCodeBox := BlendColor(aBackground, aText, 24);
+  if ContrastRatio(aText, lCodeBox) < lCodeContrast then
+    if RelativeLuminance(aText) > RelativeLuminance(aBackground) then
+      lCodeBox := BlendColor(aBackground, clBlack, 24)
+    else
+      lCodeBox := BlendColor(aBackground, clWhite, 24);
+
+  Result := aRtf.Substring(0, lStart) +
+    '{\colortbl;' +
+      RtfColor(aText) +
+      RtfColor(lCodeBox) +
+      RtfColor(lLink) +
+      RtfColor(BlendColor(aBackground, aText, 64)) +
+      RtfColor(aText) +
+    '}' +
+    aRtf.Substring(Succ(lEnd));
+end;
 
 procedure TfrmRichEdit.btnTOCClick(Sender: TObject);
 begin
@@ -160,6 +253,20 @@ begin
   finally
     vstTOC.EndUpdate;
   end;
+end;
+
+procedure TfrmRichEdit.CMStyleChanged(var aMessage: TMessage);
+begin
+  inherited;
+  if (RichText = '') or (csDestroying in ComponentState) then
+    Exit;
+  var lFirstLine := reMain.Perform(EM_GETFIRSTVISIBLELINE, 0, 0);
+  var lSelStart := reMain.SelStart;
+  var lSelLength := reMain.SelLength;
+  ShowRichText;
+  reMain.SelStart := lSelStart;
+  reMain.SelLength := lSelLength;
+  reMain.Perform(EM_LINESCROLL, 0, lFirstLine - reMain.Perform(EM_GETFIRSTVISIBLELINE, 0, 0));
 end;
 
 procedure TfrmRichEdit.edSearchKeyPress(Sender: TObject; var Key: Char);
@@ -309,6 +416,53 @@ begin
   end;
   BuildTOC;
   NeedToggleTOC := True;
+end;
+
+procedure TfrmRichEdit.LoadRichText(aStream: TStream);
+begin
+  var lBytes: TBytes;
+  SetLength(lBytes, aStream.Size - aStream.Position);
+  if Length(lBytes) > 0 then
+    aStream.ReadBuffer(lBytes[0], Length(lBytes));
+  var lLatin1 := TEncoding.GetEncoding(28591);
+  try
+    RichText := lLatin1.GetString(lBytes);
+  finally
+    lLatin1.Free;
+  end;
+  ShowRichText;
+end;
+
+procedure TfrmRichEdit.ShowRichText;
+begin
+  var lText := ColorToRGB(reMain.Font.Color);
+  var lBackground := ColorToRGB(reMain.Color);
+  reMain.Perform(EM_SETBKGNDCOLOR, 0, lBackground);
+
+  vstTOC.Clear;
+  var lHasPalette := RichText.Contains('{\*\xeditcolors}');
+  var lRtf := RichText;
+  if lHasPalette then
+    lRtf := RtfWithColors(RichText, lText, lBackground);
+  var lLatin1 := TEncoding.GetEncoding(28591);
+  try
+    var lStream := TBytesStream.Create(lLatin1.GetBytes(lRtf));
+    try
+      reMain.Lines.LoadFromStream(lStream);
+    finally
+      lStream.Free;
+    end;
+  finally
+    lLatin1.Free;
+  end;
+  reMain.Zoom := tbrZoom.Position;
+  if not lHasPalette and TStyleManager.IsCustomStyleActive then begin
+    reMain.SelectAll;
+    reMain.SelAttributes.Color := clWindowText;
+    reMain.SelStart := 0;
+    reMain.SelLength := 0;
+  end;
+  NeedRebuildTOC := True;
 end;
 
 procedure TfrmRichEdit.splTOCMoved(Sender: TObject);

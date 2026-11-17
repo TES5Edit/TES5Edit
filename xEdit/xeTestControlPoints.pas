@@ -135,6 +135,7 @@ type
     procedure DoTestConflictsDump;
     procedure DoTestNavCopy;
     procedure DoTestViewText;
+    procedure DoTestWhatsNew;
     procedure DoTestViewTree;
     procedure DoTestOptions;
     procedure DoTestCopyIntoGap;
@@ -232,6 +233,9 @@ procedure TestSaveAfterRename(aAnyError: Boolean);
 implementation
 
 uses
+  JvRichEdit,
+  Winapi.RichEdit,
+
   StateManifest,
   StateManifestValues,
   System.Diagnostics,
@@ -252,6 +256,7 @@ uses
 {$ENDIF VER220}
 
   Vcl.ClipBrd,
+  Vcl.Imaging.pngimage,
   Vcl.Styles,
   Vcl.Styles.Utils.SystemMenu,
   Vcl.Themes,
@@ -1381,6 +1386,121 @@ begin
     if not MoveFileEx(PChar(lTmp), PChar(xeTestSwitches.ViewTextFile), MOVEFILE_REPLACE_EXISTING) then
       RaiseLastOSError;
     AddMessage(Format('[Test View Text] %d rows written to %s', [lLines.Count, xeTestSwitches.ViewTextFile]));
+  finally
+    lLines.Free;
+  end;
+end;
+
+procedure TxeTestFormHelper.DoTestWhatsNew;
+
+  function CharColors(aEdit: TJvRichEdit; const aText: string): string;
+  var
+    lFormat : TCharFormat2;
+  begin
+    var lAt := aEdit.FindText(aText, 0, MaxInt, [stMatchCase]);
+    if lAt < 0 then
+      Exit('<not found>');
+    aEdit.SelStart := lAt;
+    aEdit.SelLength := 1;
+    FillChar(lFormat, SizeOf(lFormat), 0);
+    lFormat.cbSize := SizeOf(lFormat);
+    lFormat.dwMask := CFM_COLOR or CFM_BACKCOLOR or CFM_FACE or CFM_LINK;
+    aEdit.Perform(EM_GETCHARFORMAT, SCF_SELECTION, LPARAM(@lFormat));
+    aEdit.SelLength := 0;
+    Result := Format('text %.6x%s back %.6x%s font %s%s', [lFormat.crTextColor,
+      IfThen(lFormat.dwEffects and CFE_AUTOCOLOR <> 0, ' auto', ''), lFormat.crBackColor,
+      IfThen(lFormat.dwEffects and CFE_AUTOBACKCOLOR <> 0, ' auto', ''), string(lFormat.szFaceName),
+      IfThen(lFormat.dwEffects and CFE_LINK <> 0, ' link', '')]);
+  end;
+
+  procedure Render(aEdit: TJvRichEdit; aFirst: Integer; aBackground: TColor; const aFile: string);
+  var
+    lRange : TFormatRange;
+  begin
+    var lBitmap := Vcl.Graphics.TBitmap.Create;
+    try
+      lBitmap.PixelFormat := pf24bit;
+      lBitmap.SetSize(aEdit.ClientWidth, aEdit.ClientHeight);
+      lBitmap.Canvas.Brush.Color := aBackground;
+      lBitmap.Canvas.FillRect(Rect(0, 0, lBitmap.Width, lBitmap.Height));
+      FillChar(lRange, SizeOf(lRange), 0);
+      lRange.hdc := lBitmap.Canvas.Handle;
+      lRange.hdcTarget := lRange.hdc;
+      lRange.rc := Rect(0, 0, MulDiv(lBitmap.Width, 1440, GetDeviceCaps(lRange.hdc, LOGPIXELSX)),
+        MulDiv(lBitmap.Height, 1440, GetDeviceCaps(lRange.hdc, LOGPIXELSY)));
+      lRange.rcPage := lRange.rc;
+      lRange.chrg.cpMin := aFirst;
+      lRange.chrg.cpMax := -1;
+      aEdit.Perform(EM_FORMATRANGE, 1, LPARAM(@lRange));
+      aEdit.Perform(EM_FORMATRANGE, 0, 0);
+      var lPng := TPngImage.Create;
+      try
+        lPng.Assign(lBitmap);
+        lPng.SaveToFile(aFile);
+      finally
+        lPng.Free;
+      end;
+    finally
+      lBitmap.Free;
+    end;
+  end;
+
+var
+  lForm  : TfrmRichEdit;
+  lLines : TStringList;
+begin
+  lForm := nil;
+  for var i := 0 to Pred(tbsWhatsNew.ControlCount) do
+    if tbsWhatsNew.Controls[i] is TfrmRichEdit then
+      lForm := TfrmRichEdit(tbsWhatsNew.Controls[i]);
+  lLines := TStringList.Create;
+  try
+    lLines.Add('# xEdit What''s New render probe');
+    lLines.Add('# ' + xeApplicationTitle);
+    lLines.Add('# per style: whether it was set, the active style, the style''s edit colours, clWindow / clWindowText as the process resolves them, ' +
+      'the background the RichEdit paints, and the colours of a body, a code, a heading and a link character');
+    ForceDirectories(xeTestSwitches.WhatsNewDir);
+    if not Assigned(lForm) then
+      lLines.Add('# NO WHAT''S NEW FORM')
+    else begin
+      var lStyles := TStringList.Create;
+      try
+        lStyles.Delimiter := ',';
+        lStyles.StrictDelimiter := True;
+        lStyles.DelimitedText := xeTestSwitches.WhatsNewStyles;
+        if lStyles.Count = 0 then
+          lStyles.Add(TStyleManager.ActiveStyle.Name);
+        for var lStyle in lStyles do begin
+          var lSet := TStyleManager.TrySetStyle(lStyle, False);
+          for var lPump := 1 to 10 do
+            Application.ProcessMessages;
+          var lEdit := lForm.reMain;
+          lEdit.HandleNeeded;
+          var lBackground := TColor(lEdit.Perform(EM_SETBKGNDCOLOR, 0, 0));
+          lEdit.Perform(EM_SETBKGNDCOLOR, 0, lBackground);
+          var lName := lStyle.Replace(' ', '_');
+          Render(lEdit, 0, ColorToRGB(lBackground), TPath.Combine(xeTestSwitches.WhatsNewDir, lName + '-top.png'));
+          var lAt := lEdit.FindText('What''s New in xEdit 4.1.5r?', 0, MaxInt, [stMatchCase]);
+          if lAt >= 0 then
+            Render(lEdit, lAt, ColorToRGB(lBackground), TPath.Combine(xeTestSwitches.WhatsNewDir, lName + '-415r.png'));
+          lAt := lEdit.FindText('https://moiman100', 0, MaxInt, [stMatchCase]);
+          if lAt >= 0 then
+            Render(lEdit, lEdit.Perform(EM_LINEINDEX, lEdit.Perform(EM_LINEFROMCHAR, lAt, 0), 0), ColorToRGB(lBackground),
+              TPath.Combine(xeTestSwitches.WhatsNewDir, lName + '-link.png'));
+          lLines.Add(Format('%s set=%s active=%s custom=%s scedit=%.6x edittext=%.6x window=%.6x windowtext=%.6x ' +
+            'background=%.6x body=[%s] code=[%s] heading=[%s] link=[%s]', [lStyle,
+            BoolToStr(lSet, True), TStyleManager.ActiveStyle.Name, BoolToStr(TStyleManager.IsCustomStyleActive, True),
+            ColorToRGB(StyleServices.GetStyleColor(scEdit)), ColorToRGB(StyleServices.GetStyleFontColor(sfEditBoxTextNormal)),
+            ColorToRGB(clWindow), ColorToRGB(clWindowText),
+            ColorToRGB(lBackground), CharColors(lEdit, 'If you share your mods'), CharColors(lEdit, 'ElminsterAU'),
+            CharColors(lEdit, 'Request for Mod Authors'), CharColors(lEdit, 'https://moiman100')]));
+        end;
+      finally
+        lStyles.Free;
+      end;
+    end;
+    lLines.SaveToFile(TPath.Combine(xeTestSwitches.WhatsNewDir, 'report.txt'), TEncoding.UTF8);
+    AddMessage(Format('[Test What''s New] %d lines written to %s', [lLines.Count, xeTestSwitches.WhatsNewDir]));
   finally
     lLines.Free;
   end;
