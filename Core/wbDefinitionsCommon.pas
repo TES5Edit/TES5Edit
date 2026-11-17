@@ -1169,11 +1169,14 @@ begin
   if not Assigned(aElement) then
     Exit;
 
-  if aElement.ContextObj.BeginInternalEdit then try
-    var lMainRecord : IwbMainRecord;
-    if not Supports(aElement, IwbMainRecord, lMainRecord) then
-      Exit;
+  var lMainRecord : IwbMainRecord;
+  if not Supports(aElement, IwbMainRecord, lMainRecord) then
+    Exit;
 
+  if lMainRecord.IsDeleted then
+    Exit;
+
+  if aElement.ContextObj.BeginInternalEdit then try
     var lCNAM := lMainRecord.ElementBySignature['CNAM'] as IwbContainerElementRef;
     var lEOVR := lMainRecord.ElementBySignature['EOVR'] as IwbContainerElementRef;
 
@@ -1181,11 +1184,15 @@ begin
       if not Assigned(lCNAM) then
         lCNAM := lMainRecord.Add('CNAM', True) as IwbContainerElementRef;
 
-      for var i := Pred(lCNAM.ElementCount) downto 0 do begin
-        var lWorldspace := lCNAM.Elements[i] as IwbContainerElementRef;
-        if lWorldspace.Elements[1].NativeValue = 0 then
-          lCNAM.Elements[i].Remove
-      end;
+      if Assigned(lCNAM) then
+        for var lIndex := Pred(lCNAM.ElementCount) downto 0 do begin
+          var lWorldspace := lCNAM.Elements[lIndex] as IwbContainerElementRef;
+          if Assigned(lWorldspace) and
+             (lWorldspace.ElementCount > 1) and
+             (lWorldspace.Elements[1].NativeValue = 0)
+          then
+           lWorldspace.Remove
+        end;
 
       if Assigned(lEOVR) then
         lEOVR.Remove;
@@ -1193,11 +1200,15 @@ begin
       if not Assigned(lEOVR) then
         lEOVR := lMainRecord.Add('EOVR', True) as IwbContainerElementRef;
 
-      for var i := Pred(lEOVR.ElementCount) downto 0 do begin
-        var lWorldspace := lEOVR.Elements[i] as IwbContainerElementRef;
-        if lWorldspace.Elements[1].NativeValue = 0 then
-          lEOVR.Elements[i].Remove;
-      end;
+      if Assigned(lEOVR) then
+        for var lIndex := Pred(lEOVR.ElementCount) downto 0 do begin
+          var lWorldspace := lEOVR.Elements[lIndex] as IwbContainerElementRef;
+          if Assigned(lWorldspace) and
+             (lWorldspace.ElementCount > 1) and
+             (lWorldspace.Elements[1].NativeValue = 0)
+          then
+            lWorldspace.Remove;
+        end;
 
       if Assigned(lCNAM) then
         lCNAM.Remove;
