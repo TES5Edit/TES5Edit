@@ -3327,6 +3327,7 @@ type
     function GetMember(aIndex: Integer): IwbRecordMemberDef;
     function GetMemberCount: Integer;
     function GetMemberIndex(const aContainer: IwbContainerElementRef): Integer;
+    function GetDecidedMember(const aContainer: IwbContainerElementRef): IwbRecordMemberDef;
 
     property HasDecider: Boolean read GetHasDecider;
     property Members[aIndex: Integer]: IwbRecordMemberDef read GetMember;
@@ -9931,6 +9932,7 @@ type
     {---IwbSubRecordUnionDef---}
     function GetHasDecider: Boolean;
     function GetMemberIndex(const aContainer: IwbContainerElementRef): Integer;
+    function GetDecidedMember(const aContainer: IwbContainerElementRef): IwbRecordMemberDef;
   end;
 
   TwbSubRecordStructSKDef = class(TwbSubRecordStructDef, IwbHasSortKeyDef)
@@ -16414,6 +16416,16 @@ begin
       if sruMembers[lMemberIndx].CanHandle(aContainer, aSignature, aDataContainer) then
         Exit(sruMembers[lMemberIndx]);
   Result := nil;
+end;
+
+function TwbSubRecordUnionDef.GetDecidedMember(const aContainer: IwbContainerElementRef): IwbRecordMemberDef;
+begin
+  Result := nil;
+  if Assigned(sruDecider) then begin
+    var lDecidedMemberIdx := sruDecider(aContainer);
+    if (lDecidedMemberIdx >= Low(sruMembers)) and (lDecidedMemberIdx <= High(sruMembers)) then
+      Result := sruMembers[lDecidedMemberIdx];
+  end;
 end;
 
 function TwbSubRecordUnionDef.GetMemberIndex(const aContainer: IwbContainerElementRef): Integer;

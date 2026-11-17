@@ -29963,37 +29963,63 @@ begin
   SelfRef := Self as IwbContainerElementRef;
   DoInit(True);
 
+  Result := nil;
   Assert(Assigned(aElement.Def));
-  Assert(arcDef.Element.Equals(aElement.Def));
+  var lElementDef := arcDef.Element;
+  var lIsAlternative := not lElementDef.Equals(aElement.Def);
+  if lIsAlternative then begin
+    Assert(Assigned(aElement.Def.Parent) and aElement.Def.Parent.Equals(lElementDef));
+    Assert(not (lElementDef as IwbSubRecordUnionDef).HasDecider);
+    lElementDef := aElement.Def as IwbRecordMemberDef;
+  end;
 
   if arcSorted and not (cfAsNew in aFlags) then begin
     Assert(not arcSortInvalid);
-    if FindBySortKey(aElement.SortKey[False], False,i) then begin
-      Result := cntElements[i];
-      if cfDeepCopy in aFlags then
-        Result.Assign(wbAssignThis, aElement, False);
-      Exit;
+    var lSortKey := aElement.SortKey[False];
+    if FindBySortKey(lSortKey, False, i) then begin
+      if lIsAlternative and not lElementDef.Equals(cntElements[i].Def) then begin
+        var lCandidate := i;
+        i := -1;
+        while (lCandidate > Low(cntElements)) and (cntElements[Pred(lCandidate)].SortKey[False] = lSortKey) do
+          Dec(lCandidate);
+        while (i < 0) and (lCandidate <= High(cntElements)) and (cntElements[lCandidate].SortKey[False] = lSortKey) do begin
+          if lElementDef.Equals(cntElements[lCandidate].Def) then
+            i := lCandidate;
+          Inc(lCandidate);
+        end;
+      end;
+      if i >= 0 then begin
+        Result := cntElements[i];
+        if cfDeepCopy in aFlags then
+          Result.Assign(wbAssignThis, aElement, False);
+        Exit;
+      end;
     end;
   end;
 
+  var lPlaceholder: IwbElement := nil;
   if (csAsCreatedEmpty in cntStates) then begin
     SetModified(True);
     Assert(Length(cntElements)=1);
-    Result := cntElements[0];
+    if lIsAlternative and not lElementDef.Equals(cntElements[0].Def) then
+      lPlaceholder := cntElements[0]
+    else
+      Result := cntElements[0];
     Exclude(cntStates, csAsCreatedEmpty);
-  end else begin
+  end else
     RefuseEntryAtMaxCount;
-    case arcDef.Element.DefType of
+
+  if not Assigned(Result) then
+    case lElementDef.DefType of
       dtSubRecord:
-        Result := TwbSubRecord.Create(Self, arcDef.Element as IwbSubRecordDef);
+        Result := TwbSubRecord.Create(Self, lElementDef as IwbSubRecordDef);
       dtSubRecordArray:
-        Result := TwbSubRecordArray.Create(Self, nil, wbAssignThis, arcDef.Element as IwbSubRecordArrayDef);
+        Result := TwbSubRecordArray.Create(Self, nil, wbAssignThis, lElementDef as IwbSubRecordArrayDef);
       dtSubRecordStruct:
-        Result := TwbSubRecordStruct.Create(Self, nil, wbAssignThis, arcDef.Element as IwbSubRecordStructDef);
+        Result := TwbSubRecordStruct.Create(Self, nil, wbAssignThis, lElementDef as IwbSubRecordStructDef);
     else
       Assert(False);
     end;
-  end;
 
   try
     Result.Assign(wbAssignThis, aElement, not (cfDeepCopy in aFlags));
@@ -30002,6 +30028,8 @@ begin
     Result := nil;
     raise;
   end;
+  if Assigned(lPlaceholder) then
+    RemoveElement(lPlaceholder);
 end;
 
 function TwbSubRecordArray.AssignInternal(aIndex: Integer; const aElement: IwbElement; aOnlySK: Boolean): IwbElement;
@@ -30647,19 +30675,66 @@ begin
 
   Assert(aElement.SortOrder >= 0);
   Assert(aElement.SortOrder < srcDef.MemberCount);
+  Result := nil;
   Assert(Assigned(aElement.Def));
-  Assert(aElement.Def.Equals(srcDef.Members[aElement.SortOrder]));
+  var lMemberDef := srcDef.Members[aElement.SortOrder];
+  var lIsAlternative := not aElement.Def.Equals(lMemberDef);
+  if lIsAlternative then begin
+    Assert(Assigned(aElement.Def.Parent) and aElement.Def.Parent.Equals(lMemberDef));
+    var lUnionDef := lMemberDef as IwbSubRecordUnionDef;
+    if lUnionDef.HasDecider then begin
+      var lDecided := lUnionDef.GetDecidedMember(SelfRef);
+      if not Assigned(lDecided) then
+        raise Exception.CreateFmt('%s can not be assigned to %s, whose %s is not decided', [aElement.Name, GetName, lMemberDef.Name]);
+      if not aElement.Def.Equals(lDecided) then
+        raise Exception.CreateFmt('%s can not be assigned to %s, whose %s is %s', [aElement.Name, GetName, lMemberDef.Name,
+          lDecided.Name]);
+    end;
+  end;
 
-  Result := GetElementBySortOrder(aElement.SortOrder + GetAdditionalElementCount);
-  if not Assigned(Result) then begin
-    Assign(aElement.SortOrder, aElement, not (cfDeepCopy in aFlags));
-    Result := GetElementBySortOrder(aElement.SortOrder + GetAdditionalElementCount);
+  var lHeld := GetElementBySortOrder(aElement.SortOrder + GetAdditionalElementCount);
+  var lReplace := lIsAlternative and Assigned(lHeld) and not lHeld.Def.Equals(aElement.Def);
+  if (lReplace or not Assigned(lHeld)) and aElement.ContainsReflection then
+    raise Exception.Create(aElement.Name + ' contains Reflection and can not be assigned');
+  if lReplace then begin
+    case aElement.Def.DefType of
+      dtSubRecord:
+        Result := TwbSubRecord.Create(Self, aElement.Def as IwbSubRecordDef);
+      dtSubRecordArray:
+        Result := TwbSubRecordArray.Create(Self, nil, Low(Integer), aElement.Def as IwbSubRecordArrayDef);
+      dtSubRecordStruct:
+        Result := TwbSubRecordStruct.Create(Self, nil, Low(Integer), aElement.Def as IwbSubRecordStructDef);
+    else
+      Assert(False);
+    end;
+    try
+      Result.SortOrder := aElement.SortOrder;
+      if aElement.ElementType <> etTemplate then
+        Result.Assign(wbAssignThis, aElement, not (cfDeepCopy in aFlags));
+    except
+      Result.Container.RemoveElement(Result);
+      Result := nil;
+      raise;
+    end;
+    RemoveElement(lHeld);
+    SortBySortOrder;
+    if ContextObj.Settings.SortSubRecords and (Length(cntElements) > 1) then
+      wbMergeSortPtr(@cntElements[0], Length(cntElements), CompareSubRecords);
+    Exit;
+  end;
+
+  if not Assigned(lHeld) then begin
+    Result := Assign(aElement.SortOrder, aElement, not (cfDeepCopy in aFlags));
     Assert(Assigned(Result));
+    if not ContextObj.Settings.SortSubRecords then
+      SortBySortOrder;
 
     if ContextObj.Settings.SortSubRecords and (Length(cntElements) > 1) then
       wbMergeSortPtr(@cntElements[0], Length(cntElements), CompareSubRecords);
-  end else
+  end else begin
+    Result := lHeld;
     Result.Assign(wbAssignThis, aElement, not (cfDeepCopy in aFlags));
+  end;
 end;
 
 procedure TwbSubRecordStruct.AddRequiredElements;
