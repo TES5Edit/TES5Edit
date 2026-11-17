@@ -15712,8 +15712,11 @@ begin
 
       if ContextObj.Settings.SortSubRecords and (Length(cntElements) > 1) then
         wbMergeSortPtr(@cntElements[0], Length(cntElements), CompareSubRecords);
-    end else
+    end else begin
       Result.Assign(wbAssignThis, aElement, not (cfDeepCopy in aFlags));
+      if not Assigned(Result.Container) then
+        Result := GetElementBySortOrder(aElement.SortOrder + GetAdditionalElementCount);
+    end;
   end;
 end;
 
