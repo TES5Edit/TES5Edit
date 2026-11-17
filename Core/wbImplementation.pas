@@ -15706,6 +15706,8 @@ begin
     end;
 
     if not Assigned(Result) then begin
+      if aElement.ContainsReflection then
+        raise Exception.Create(aElement.Name + ' contains Reflection and can not be assigned');
       Assign(aElement.SortOrder, aElement, not (cfDeepCopy in aFlags));
       Result := GetElementBySortOrder(aElement.SortOrder + GetAdditionalElementCount);
       Assert(Assigned(Result));
@@ -29996,6 +29998,9 @@ begin
       end;
     end;
   end;
+
+  if aElement.ContainsReflection then
+    raise Exception.Create(aElement.Name + ' contains Reflection and can not be assigned');
 
   var lPlaceholder: IwbElement := nil;
   if (csAsCreatedEmpty in cntStates) then begin
