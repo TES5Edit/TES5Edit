@@ -883,6 +883,7 @@ type
       const aRules: TwbCopyRules): string; static;
     function CopyAsNewIdentity(const aSource: IwbMainRecord; const aRules: TwbCopyRules; out aIdentity: string): string;
     function ReferenceMasterRefusal(const aItem: IwbElement): string;
+    function RefusesRecordCopy(const aRecord: IwbMainRecord; out aReason: string): Boolean;
     function AddCopyAlongPath(const aSource: IwbElement; aFlags: TwbCopyFlags; const aRules: TwbCopyRules): IwbElement;
     class function CurrentIdentityIs(const aRecord: IwbMainRecord; const aLowerValue: string): Boolean; static;
     function HoldsCurrentIdentityAtNameKey(const aKey: TwbFormID; const aLowerValue: string): Boolean;
@@ -4511,6 +4512,26 @@ begin
       [lRecord.Name, GetFileName, (lRecord as TObject as TwbMainRecord).DefiningFile.FileName]);
 end;
 
+function TwbFile.RefusesRecordCopy(const aRecord: IwbMainRecord; out aReason: string): Boolean;
+begin
+  aReason := '';
+  if flContextObj.GameDefObj.IsStarfield then begin
+    if aRecord.LoadOrderFormID.ToCardinal = $25 then
+      Exit(True);
+    if aRecord.ContainsReflection then begin
+      aReason := 'Source contains Reflection and can not be copied';
+      Exit(True);
+    end;
+  end;
+  if aRecord.ContainsUnmappedFormID and (GetFileStates * [fsIsGameMaster, fsIsHardcoded] = []) and
+     ((GetMasterCount(True) < 1) or (GetMaster(0, True).FileStates * [fsIsGameMaster] = [])) then begin
+    aReason := 'Source contains Unmapped FormID and can not be copied into a module which does not have the game master as its ' +
+      'first master';
+    Exit(True);
+  end;
+  Result := False;
+end;
+
 function TwbFile.CopyRefusal(const aItem: IwbElement; aAsNew, aDeep: Boolean; const aRules: TwbCopyRules): string;
 begin
   Result := CopyRefusalOf(flContextObj, Self, aItem, aAsNew, aDeep, aRules);
@@ -4816,6 +4837,7 @@ var
   lSelfRef    : IwbFile;
   lMainRecord : IwbMainRecord;
   lContainer  : IwbContainer;
+  lGroup      : IwbGroupRecord;
   lTarget     : IwbElement;
 begin
   lSelfRef := Self;
@@ -4823,6 +4845,15 @@ begin
   try
     wbTick;
     lContainer := aSource.Container;
+    if Supports(aSource, IwbMainRecord, lMainRecord) and Supports(lContainer, IwbGroupRecord, lGroup) and
+       Assigned(lGroup.ChildrenOf) then begin
+      var lRefusal: string;
+      if RefusesRecordCopy(lMainRecord, lRefusal) then begin
+        if lRefusal <> '' then
+          wbProgress('Error adding [%s] to [%s]: %s', [aSource.FullPath, GetFullPath, lRefusal]);
+        Exit(nil);
+      end;
+    end;
     if Assigned(lContainer) then begin
       if Supports(lContainer, IwbMainRecord, lMainRecord) then
         lContainer := lMainRecord.HighestOverrideVisibleForFile[lSelfRef];
@@ -25994,26 +26025,12 @@ var
   begin
     Result := nil;
 
-    if GameDefObj.IsStarfield then begin
-      if aSource.LoadOrderFormID.ToCardinal = $25 then
-        Exit;
-
-      if aElement.ContainsReflection then begin
-        var lSourceName := aElement.FullPath;
-        var lTargetName := GetFullPath;
-        wbProgress('Error adding [%s] to [%s]: %s', [lSourceName, lTargetName, 'Source contains Reflection and can not be copied']);
-        Exit;
-      end;
+    var lRefusal: string;
+    if (_File as TObject as TwbFile).RefusesRecordCopy(aSource, lRefusal) then begin
+      if lRefusal <> '' then
+        wbProgress('Error adding [%s] to [%s]: %s', [aElement.FullPath, GetFullPath, lRefusal]);
+      Exit;
     end;
-
-    if aElement.ContainsUnmappedFormID then
-      if Assigned(_File) and (_File.FileStates * [fsIsGameMaster, fsIsHardcoded] = []) then
-        if (_File.MasterCount[True] < 1) or (_File.Masters[0, True].FileStates * [fsIsGameMaster] = []) then begin
-          var lSourceName := aElement.FullPath;
-          var lTargetName := GetFullPath;
-          wbProgress('Error adding [%s] to [%s]: %s', [lSourceName, lTargetName, 'Source contains Unmapped FormID and can not be copied into a module which does not have the game master as its first master']);
-          Exit;
-        end;
 
     var lFormID := TwbFormID.Null;
     if cfAsNew in aFlags then
