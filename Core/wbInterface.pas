@@ -3327,6 +3327,7 @@ type
     function GetMember(aIndex: Integer): IwbRecordMemberDef;
     function GetMemberCount: Integer;
     function GetMemberIndex(const aContainer: IwbContainerElementRef): Integer;
+    function GetDecidedMember(const aContainer: IwbContainerElementRef): IwbRecordMemberDef;
 
     property HasDecider: Boolean read GetHasDecider;
     property Members[aIndex: Integer]: IwbRecordMemberDef read GetMember;
@@ -9939,6 +9940,7 @@ type
     {---IwbSubRecordUnionDef---}
     function GetHasDecider: Boolean;
     function GetMemberIndex(const aContainer: IwbContainerElementRef): Integer;
+    function GetDecidedMember(const aContainer: IwbContainerElementRef): IwbRecordMemberDef;
   end;
 
   TwbSubRecordStructSKDef = class(TwbSubRecordStructDef, IwbHasSortKeyDef)
@@ -16422,6 +16424,16 @@ begin
       if sruMembers[lMemberIndx].CanHandle(aContainer, aSignature, aDataContainer) then
         Exit(sruMembers[lMemberIndx]);
   Result := nil;
+end;
+
+function TwbSubRecordUnionDef.GetDecidedMember(const aContainer: IwbContainerElementRef): IwbRecordMemberDef;
+begin
+  Result := nil;
+  if Assigned(sruDecider) then begin
+    var lDecidedMemberIdx := sruDecider(aContainer);
+    if (lDecidedMemberIdx >= Low(sruMembers)) and (lDecidedMemberIdx <= High(sruMembers)) then
+      Result := sruMembers[lDecidedMemberIdx];
+  end;
 end;
 
 function TwbSubRecordUnionDef.GetMemberIndex(const aContainer: IwbContainerElementRef): Integer;
@@ -24845,10 +24857,32 @@ begin
 end;
 
 function TwbResolvableDef.Assign(const aTarget: IwbElement; aIndex: Integer; const aSource: IwbElement; aOnlySK: Boolean): IwbElement;
+
+  function FormIDDefOf(const aElement: IwbElement): IwbValueDef;
+  var
+    lDataContainer : IwbDataContainer;
+    lResolvable    : IwbResolvableDef;
+    lIntegerDef    : IwbIntegerDef;
+  begin
+    Result := aElement.ValueDef;
+    if Supports(Result, IwbResolvableDef, lResolvable) and Supports(aElement, IwbDataContainer, lDataContainer) then
+      Result := lResolvable.ResolveDef(lDataContainer.DataBasePtr, lDataContainer.DataEndPtr, aElement);
+    if not Supports(Result, IwbIntegerDef, lIntegerDef) then
+      Exit(nil);
+    var lFormater := lIntegerDef.Formater[aElement];
+    if not (Supports(lFormater, IwbFormID) and not (dfUseLoadOrder in lFormater.DefFlags)) then
+      Result := nil;
+  end;
+
 begin
   if dfCanContainNameReference in defFlags then begin
     var lResolved := aTarget.ResolvedValueDef;
     if Supports(lResolved, IwbNameReferenceDef) then
+      Exit(lResolved.Assign(aTarget, aIndex, aSource, aOnlySK));
+  end;
+  if (dfCanContainFormID in defFlags) and Assigned(aSource) and Assigned(FormIDDefOf(aSource)) then begin
+    var lResolved := FormIDDefOf(aTarget);
+    if Assigned(lResolved) then
       Exit(lResolved.Assign(aTarget, aIndex, aSource, aOnlySK));
   end;
   Result := inherited Assign(aTarget, aIndex, aSource, aOnlySK);

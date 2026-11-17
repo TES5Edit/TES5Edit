@@ -222,6 +222,9 @@ type
     ViewText              : Boolean;
     ViewTextFile          : string;
     ViewTextRecord        : string;
+    WhatsNew              : Boolean;
+    WhatsNewDir           : string;
+    WhatsNewStyles        : string;
     StateManifest         : string;
     FileLists             : string;
     ToolModeAuto          : Boolean;
@@ -600,6 +603,16 @@ begin
     var lValue: string;
     if wbFindCmdLineParam('testviewrecord', lValue) and (lValue <> '') then
       ViewTextRecord := lValue;
+  end;
+
+  if wbFindCmdLineParam('testwhatsnew', WhatsNewDir) then begin
+    if WhatsNewDir = '' then begin
+      ShowMessage('testwhatsnew requires an output folder, as -testwhatsnew:<folder>');
+      Exit(False);
+    end;
+    WhatsNew := True;
+    xeAutoLoad := True;
+    wbFindCmdLineParam('testwhatsnewstyles', WhatsNewStyles);
   end;
 
   if wbFindCmdLineParam('testviewtree', ViewTreeFile) then begin
@@ -982,7 +995,7 @@ end;
 
 function TxeTestSwitches.Any: Boolean;
 begin
-  Result := Conflicts or NavCopy or ViewText or ViewTree or Options or CopyIntoGap or NewFile or GameLink or CheckMenus or FormIDSearch or SplitTreeLOD or DropMaster or DeltaPatch or Merge or MergedPatch or CopyInto or
+  Result := Conflicts or NavCopy or ViewText or WhatsNew or ViewTree or Options or CopyIntoGap or NewFile or GameLink or CheckMenus or FormIDSearch or SplitTreeLOD or DropMaster or DeltaPatch or Merge or MergedPatch or CopyInto or
     Renumber or ChangeFormID or Hide or Filter or SaveContexts or EndSession or Save or (Pump <> '') or (StateManifest <> '');
 end;
 

@@ -883,6 +883,7 @@ type
       const aRules: TwbCopyRules): string; static;
     function CopyAsNewIdentity(const aSource: IwbMainRecord; const aRules: TwbCopyRules; out aIdentity: string): string;
     function ReferenceMasterRefusal(const aItem: IwbElement): string;
+    function RefusesRecordCopy(const aRecord: IwbMainRecord; out aReason: string): Boolean;
     function AddCopyAlongPath(const aSource: IwbElement; aFlags: TwbCopyFlags; const aRules: TwbCopyRules): IwbElement;
     class function CurrentIdentityIs(const aRecord: IwbMainRecord; const aLowerValue: string): Boolean; static;
     function HoldsCurrentIdentityAtNameKey(const aKey: TwbFormID; const aLowerValue: string): Boolean;
@@ -4511,6 +4512,26 @@ begin
       [lRecord.Name, GetFileName, (lRecord as TObject as TwbMainRecord).DefiningFile.FileName]);
 end;
 
+function TwbFile.RefusesRecordCopy(const aRecord: IwbMainRecord; out aReason: string): Boolean;
+begin
+  aReason := '';
+  if flContextObj.GameDefObj.IsStarfield then begin
+    if aRecord.LoadOrderFormID.ToCardinal = $25 then
+      Exit(True);
+    if aRecord.ContainsReflection then begin
+      aReason := 'Source contains Reflection and can not be copied';
+      Exit(True);
+    end;
+  end;
+  if aRecord.ContainsUnmappedFormID and (GetFileStates * [fsIsGameMaster, fsIsHardcoded] = []) and
+     ((GetMasterCount(True) < 1) or (GetMaster(0, True).FileStates * [fsIsGameMaster] = [])) then begin
+    aReason := 'Source contains Unmapped FormID and can not be copied into a module which does not have the game master as its ' +
+      'first master';
+    Exit(True);
+  end;
+  Result := False;
+end;
+
 function TwbFile.CopyRefusal(const aItem: IwbElement; aAsNew, aDeep: Boolean; const aRules: TwbCopyRules): string;
 begin
   Result := CopyRefusalOf(flContextObj, Self, aItem, aAsNew, aDeep, aRules);
@@ -4816,6 +4837,7 @@ var
   lSelfRef    : IwbFile;
   lMainRecord : IwbMainRecord;
   lContainer  : IwbContainer;
+  lGroup      : IwbGroupRecord;
   lTarget     : IwbElement;
 begin
   lSelfRef := Self;
@@ -4823,6 +4845,15 @@ begin
   try
     wbTick;
     lContainer := aSource.Container;
+    if Supports(aSource, IwbMainRecord, lMainRecord) and Supports(lContainer, IwbGroupRecord, lGroup) and
+       Assigned(lGroup.ChildrenOf) then begin
+      var lRefusal: string;
+      if RefusesRecordCopy(lMainRecord, lRefusal) then begin
+        if lRefusal <> '' then
+          wbProgress('Error adding [%s] to [%s]: %s', [aSource.FullPath, GetFullPath, lRefusal]);
+        Exit(nil);
+      end;
+    end;
     if Assigned(lContainer) then begin
       if Supports(lContainer, IwbMainRecord, lMainRecord) then
         lContainer := lMainRecord.HighestOverrideVisibleForFile[lSelfRef];
@@ -15681,8 +15712,11 @@ begin
 
       if ContextObj.Settings.SortSubRecords and (Length(cntElements) > 1) then
         wbMergeSortPtr(@cntElements[0], Length(cntElements), CompareSubRecords);
-    end else
+    end else begin
       Result.Assign(wbAssignThis, aElement, not (cfDeepCopy in aFlags));
+      if not Assigned(Result.Container) then
+        Result := GetElementBySortOrder(aElement.SortOrder + GetAdditionalElementCount);
+    end;
   end;
 end;
 
@@ -24077,6 +24111,37 @@ var
   i             : Integer;
   SelfRef       : IwbContainerElementRef;
   p, q          : Pointer;
+
+  function SameFileFormIDs(const aSource: IwbElement): Boolean;
+  begin
+    var lSource := aSource._File;
+    Result := Assigned(lSource) and lSource.Equals(GetFile) and (aSource.MastersUpdated = GetMastersUpdated);
+  end;
+
+  procedure ClearFormIDs(const aElement: IwbElement);
+  var
+    lContainer  : IwbContainer;
+    lResolvable : IwbResolvableDef;
+    lData       : IwbDataContainer;
+    lInteger    : IwbIntegerDef;
+  begin
+    if not aElement.CanContainFormIDs then
+      Exit;
+    if Supports(aElement, IwbContainer, lContainer) and (lContainer.ElementCount > 0) then begin
+      for var lIndex := 0 to Pred(lContainer.ElementCount) do
+        ClearFormIDs(lContainer.Elements[lIndex]);
+      Exit;
+    end;
+    var lDef := aElement.ValueDef;
+    if Supports(lDef, IwbResolvableDef, lResolvable) and Supports(aElement, IwbDataContainer, lData) then
+      lDef := lResolvable.ResolveDef(lData.DataBasePtr, lData.DataEndPtr, aElement);
+    if not Supports(lDef, IwbIntegerDef, lInteger) then
+      Exit;
+    var lFormater := lInteger.Formater[aElement];
+    if Supports(lFormater, IwbFormID) and not (dfUseLoadOrder in lFormater.DefFlags) then
+      aElement.NativeValue := 0;
+  end;
+
 begin
   Result := nil;
 
@@ -24160,8 +24225,12 @@ begin
             Move(lDataContainer.DataBasePtr^, dcDataBasePtr^, lSize);
             DoReset(True);
             Assert(GetElementCount = Container.ElementCount);
-            for i := 0 to Pred(Container.ElementCount) do
+            var lClearFormIDs := CanContainFormIDs and not SameFileFormIDs(aElement);
+            for i := 0 to Pred(Container.ElementCount) do begin
+              if lClearFormIDs then
+                ClearFormIDs(cntElements[i]);
               cntElements[i].Assign(wbAssignThis, Container.Elements[i], aOnlySK);
+            end;
           end else if ArrayDef.IsVariableSize then begin
             SetModified(True);
             InvalidateStorage;
@@ -25959,26 +26028,12 @@ var
   begin
     Result := nil;
 
-    if GameDefObj.IsStarfield then begin
-      if aSource.LoadOrderFormID.ToCardinal = $25 then
-        Exit;
-
-      if aElement.ContainsReflection then begin
-        var lSourceName := aElement.FullPath;
-        var lTargetName := GetFullPath;
-        wbProgress('Error adding [%s] to [%s]: %s', [lSourceName, lTargetName, 'Source contains Reflection and can not be copied']);
-        Exit;
-      end;
+    var lRefusal: string;
+    if (_File as TObject as TwbFile).RefusesRecordCopy(aSource, lRefusal) then begin
+      if lRefusal <> '' then
+        wbProgress('Error adding [%s] to [%s]: %s', [aElement.FullPath, GetFullPath, lRefusal]);
+      Exit;
     end;
-
-    if aElement.ContainsUnmappedFormID then
-      if Assigned(_File) and (_File.FileStates * [fsIsGameMaster, fsIsHardcoded] = []) then
-        if (_File.MasterCount[True] < 1) or (_File.Masters[0, True].FileStates * [fsIsGameMaster] = []) then begin
-          var lSourceName := aElement.FullPath;
-          var lTargetName := GetFullPath;
-          wbProgress('Error adding [%s] to [%s]: %s', [lSourceName, lTargetName, 'Source contains Unmapped FormID and can not be copied into a module which does not have the game master as its first master']);
-          Exit;
-        end;
 
     var lFormID := TwbFormID.Null;
     if cfAsNew in aFlags then
@@ -29908,37 +29963,63 @@ begin
   SelfRef := Self as IwbContainerElementRef;
   DoInit(True);
 
+  Result := nil;
   Assert(Assigned(aElement.Def));
-  Assert(arcDef.Element.Equals(aElement.Def));
+  var lElementDef := arcDef.Element;
+  var lIsAlternative := not lElementDef.Equals(aElement.Def);
+  if lIsAlternative then begin
+    Assert(Assigned(aElement.Def.Parent) and aElement.Def.Parent.Equals(lElementDef));
+    Assert(not (lElementDef as IwbSubRecordUnionDef).HasDecider);
+    lElementDef := aElement.Def as IwbRecordMemberDef;
+  end;
 
   if arcSorted and not (cfAsNew in aFlags) then begin
     Assert(not arcSortInvalid);
-    if FindBySortKey(aElement.SortKey[False], False,i) then begin
-      Result := cntElements[i];
-      if cfDeepCopy in aFlags then
-        Result.Assign(wbAssignThis, aElement, False);
-      Exit;
+    var lSortKey := aElement.SortKey[False];
+    if FindBySortKey(lSortKey, False, i) then begin
+      if lIsAlternative and not lElementDef.Equals(cntElements[i].Def) then begin
+        var lCandidate := i;
+        i := -1;
+        while (lCandidate > Low(cntElements)) and (cntElements[Pred(lCandidate)].SortKey[False] = lSortKey) do
+          Dec(lCandidate);
+        while (i < 0) and (lCandidate <= High(cntElements)) and (cntElements[lCandidate].SortKey[False] = lSortKey) do begin
+          if lElementDef.Equals(cntElements[lCandidate].Def) then
+            i := lCandidate;
+          Inc(lCandidate);
+        end;
+      end;
+      if i >= 0 then begin
+        Result := cntElements[i];
+        if cfDeepCopy in aFlags then
+          Result.Assign(wbAssignThis, aElement, False);
+        Exit;
+      end;
     end;
   end;
 
+  var lPlaceholder: IwbElement := nil;
   if (csAsCreatedEmpty in cntStates) then begin
     SetModified(True);
     Assert(Length(cntElements)=1);
-    Result := cntElements[0];
+    if lIsAlternative and not lElementDef.Equals(cntElements[0].Def) then
+      lPlaceholder := cntElements[0]
+    else
+      Result := cntElements[0];
     Exclude(cntStates, csAsCreatedEmpty);
-  end else begin
+  end else
     RefuseEntryAtMaxCount;
-    case arcDef.Element.DefType of
+
+  if not Assigned(Result) then
+    case lElementDef.DefType of
       dtSubRecord:
-        Result := TwbSubRecord.Create(Self, arcDef.Element as IwbSubRecordDef);
+        Result := TwbSubRecord.Create(Self, lElementDef as IwbSubRecordDef);
       dtSubRecordArray:
-        Result := TwbSubRecordArray.Create(Self, nil, wbAssignThis, arcDef.Element as IwbSubRecordArrayDef);
+        Result := TwbSubRecordArray.Create(Self, nil, wbAssignThis, lElementDef as IwbSubRecordArrayDef);
       dtSubRecordStruct:
-        Result := TwbSubRecordStruct.Create(Self, nil, wbAssignThis, arcDef.Element as IwbSubRecordStructDef);
+        Result := TwbSubRecordStruct.Create(Self, nil, wbAssignThis, lElementDef as IwbSubRecordStructDef);
     else
       Assert(False);
     end;
-  end;
 
   try
     Result.Assign(wbAssignThis, aElement, not (cfDeepCopy in aFlags));
@@ -29947,6 +30028,8 @@ begin
     Result := nil;
     raise;
   end;
+  if Assigned(lPlaceholder) then
+    RemoveElement(lPlaceholder);
 end;
 
 function TwbSubRecordArray.AssignInternal(aIndex: Integer; const aElement: IwbElement; aOnlySK: Boolean): IwbElement;
@@ -30592,19 +30675,66 @@ begin
 
   Assert(aElement.SortOrder >= 0);
   Assert(aElement.SortOrder < srcDef.MemberCount);
+  Result := nil;
   Assert(Assigned(aElement.Def));
-  Assert(aElement.Def.Equals(srcDef.Members[aElement.SortOrder]));
+  var lMemberDef := srcDef.Members[aElement.SortOrder];
+  var lIsAlternative := not aElement.Def.Equals(lMemberDef);
+  if lIsAlternative then begin
+    Assert(Assigned(aElement.Def.Parent) and aElement.Def.Parent.Equals(lMemberDef));
+    var lUnionDef := lMemberDef as IwbSubRecordUnionDef;
+    if lUnionDef.HasDecider then begin
+      var lDecided := lUnionDef.GetDecidedMember(SelfRef);
+      if not Assigned(lDecided) then
+        raise Exception.CreateFmt('%s can not be assigned to %s, whose %s is not decided', [aElement.Name, GetName, lMemberDef.Name]);
+      if not aElement.Def.Equals(lDecided) then
+        raise Exception.CreateFmt('%s can not be assigned to %s, whose %s is %s', [aElement.Name, GetName, lMemberDef.Name,
+          lDecided.Name]);
+    end;
+  end;
 
-  Result := GetElementBySortOrder(aElement.SortOrder + GetAdditionalElementCount);
-  if not Assigned(Result) then begin
-    Assign(aElement.SortOrder, aElement, not (cfDeepCopy in aFlags));
-    Result := GetElementBySortOrder(aElement.SortOrder + GetAdditionalElementCount);
+  var lHeld := GetElementBySortOrder(aElement.SortOrder + GetAdditionalElementCount);
+  var lReplace := lIsAlternative and Assigned(lHeld) and not lHeld.Def.Equals(aElement.Def);
+  if (lReplace or not Assigned(lHeld)) and aElement.ContainsReflection then
+    raise Exception.Create(aElement.Name + ' contains Reflection and can not be assigned');
+  if lReplace then begin
+    case aElement.Def.DefType of
+      dtSubRecord:
+        Result := TwbSubRecord.Create(Self, aElement.Def as IwbSubRecordDef);
+      dtSubRecordArray:
+        Result := TwbSubRecordArray.Create(Self, nil, Low(Integer), aElement.Def as IwbSubRecordArrayDef);
+      dtSubRecordStruct:
+        Result := TwbSubRecordStruct.Create(Self, nil, Low(Integer), aElement.Def as IwbSubRecordStructDef);
+    else
+      Assert(False);
+    end;
+    try
+      Result.SortOrder := aElement.SortOrder;
+      if aElement.ElementType <> etTemplate then
+        Result.Assign(wbAssignThis, aElement, not (cfDeepCopy in aFlags));
+    except
+      Result.Container.RemoveElement(Result);
+      Result := nil;
+      raise;
+    end;
+    RemoveElement(lHeld);
+    SortBySortOrder;
+    if ContextObj.Settings.SortSubRecords and (Length(cntElements) > 1) then
+      wbMergeSortPtr(@cntElements[0], Length(cntElements), CompareSubRecords);
+    Exit;
+  end;
+
+  if not Assigned(lHeld) then begin
+    Result := Assign(aElement.SortOrder, aElement, not (cfDeepCopy in aFlags));
     Assert(Assigned(Result));
+    if not ContextObj.Settings.SortSubRecords then
+      SortBySortOrder;
 
     if ContextObj.Settings.SortSubRecords and (Length(cntElements) > 1) then
       wbMergeSortPtr(@cntElements[0], Length(cntElements), CompareSubRecords);
-  end else
+  end else begin
+    Result := lHeld;
     Result.Assign(wbAssignThis, aElement, not (cfDeepCopy in aFlags));
+  end;
 end;
 
 procedure TwbSubRecordStruct.AddRequiredElements;

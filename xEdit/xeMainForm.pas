@@ -4531,13 +4531,7 @@ begin
       try
         Stream := fcWhatsNew.CreateReadStream;
         try
-          reMain.Lines.LoadFromStream(Stream);
-          if wbThemesSupported then begin
-            reMain.SelectAll;
-            reMain.SelAttributes.Color := clWindowText;
-            reMain.SelStart := 0;
-            reMain.SelLength := 0;
-          end;
+          LoadRichText(Stream);
         finally
           Stream.Free;
         end;
@@ -4563,7 +4557,7 @@ begin
     wbPatron := Settings.ReadBool('Options', 'Patron', wbPatron);
     if (not wbPatron or not xeAutoLoad)
 {$IFDEF XE_TEST_CONTROL_POINTS}
-      and not (xeTestSwitches.Conflicts or xeTestSwitches.NavCopy or xeTestSwitches.ViewText or xeTestSwitches.ViewTree or xeTestSwitches.Options or xeTestSwitches.CopyIntoGap or xeTestSwitches.NewFile or xeTestSwitches.GameLink or xeTestSwitches.CheckMenus or xeTestSwitches.FormIDSearch or xeTestSwitches.SplitTreeLOD or xeTestSwitches.DropMaster or xeTestSwitches.DeltaPatch or xeTestSwitches.Merge or xeTestSwitches.MergedPatch or xeTestSwitches.CopyInto or xeTestSwitches.Renumber or xeTestSwitches.ChangeFormID or xeTestSwitches.Hide or xeTestSwitches.Filter or xeTestSwitches.SaveContexts or xeTestSwitches.EndSession or xeTestSwitches.Save or (xeTestSwitches.PumpDuringLoad <> ''))
+      and not (xeTestSwitches.Conflicts or xeTestSwitches.NavCopy or xeTestSwitches.ViewText or xeTestSwitches.WhatsNew or xeTestSwitches.ViewTree or xeTestSwitches.Options or xeTestSwitches.CopyIntoGap or xeTestSwitches.NewFile or xeTestSwitches.GameLink or xeTestSwitches.CheckMenus or xeTestSwitches.FormIDSearch or xeTestSwitches.SplitTreeLOD or xeTestSwitches.DropMaster or xeTestSwitches.DeltaPatch or xeTestSwitches.Merge or xeTestSwitches.MergedPatch or xeTestSwitches.CopyInto or xeTestSwitches.Renumber or xeTestSwitches.ChangeFormID or xeTestSwitches.Hide or xeTestSwitches.Filter or xeTestSwitches.SaveContexts or xeTestSwitches.EndSession or xeTestSwitches.Save or (xeTestSwitches.PumpDuringLoad <> ''))
 {$ENDIF}
     then
       ShowDeveloperMessage;
@@ -19720,6 +19714,12 @@ begin
 
         if xeTestSwitches.ViewText then begin
           DoTestViewText;
+          if xeAutoExit then
+            tmrShutdown.Enabled := True;
+        end;
+
+        if xeTestSwitches.WhatsNew then begin
+          DoTestWhatsNew;
           if xeAutoExit then
             tmrShutdown.Enabled := True;
         end;

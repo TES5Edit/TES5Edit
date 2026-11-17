@@ -6,15 +6,21 @@ xEdit is crucial to our shared modding community and your contribution - no matt
 
 # What's New in xEdit 4.1.5s?
 
+## Improvements
+* The What's New tab shows these notes with their formatting: code in a monospaced font on a shaded box, a rule under the main headings, italics, strike-through, links, and nested and numbered lists, in colours taken from the active theme, dark or light.
+
 ## Bugfixes
 * Remove is no longer offered for a plugin's Player Reference (PLYR) group while it holds a record: the record can not be removed on its own, and removing the group removed it anyway.
 * Setting Persistent or Visible When Distant on a reference whose position names no cell is refused without changing the flag; the flag used to stay changed while the reference stayed in its old group.
 * Cleanup Injected no longer asks to add masters that only a record it then skips would need, because its target already holds its own override of that record.
 * Starfield: Cleanup Injected no longer removes a record's injected references when the record can not be copied into the injecting plugin (such as a record holding Reflection); the record is left as it was and reported as not cleaned.
+* Starfield: copying a placed reference that can not be copied (such as one holding Reflection) no longer leaves an override of its cell, and for an exterior reference of its worldspace, in the target plugin; nothing is added, and the message names the reference and the plugin.
+* Copying a value into a record that holds the same field in its other layout (such as a Skyrim reference's old and new water current velocities) now writes it into the record; it used to fail with an assertion error, and a script using the copy's result worked on an element that was no longer in the record.
 * Starfield: a ship's Weapon Slot 1 - 3 show the blueprint part they name again, instead of only its number.
 * A list no longer grows past its window's edge when Windows rescales the window after it was created (seen at 150% display scaling: the Module Selection list covered the OK button).
 * Copy multiple rows to selected records and a drop of one spreadsheet cell onto another now ask to add the masters the copied values need, as a drop onto the View tab does; they used to write a null reference, or nothing. A record dropped onto a field of the View tab now asks only for the plugin that defines it, not for every master its own contents need.
 * Copying a value that names a record its master does not hold (a reference Check for Errors reports as unresolved) now asks to add that master, as for any other reference; the copy used to ask nothing and then keep the target's old value or, for a list such as keywords, drop the target's entries and write a null entry.
+* A condition's parameter or comparison global (and any other value that can hold either a reference or something else, such as a Starfield traversal) is now copied as it is when Check for Errors reports its reference as unresolved, of the wrong type or a null it does not allow, as other reference fields are copied; the copy used to write a null reference, or keep the target's old value, with an "Error assigning" message, and a Starfield traversal could end up pointing into a different master.
 
 ## Scripting
 * A script can no longer remove a Player Reference (PLYR) record by removing it through its group (RemoveElement, RemoveByIndex) or by removing the group itself (Remove, RemoveElement, RemoveByIndex); Remove of the record itself already refused it.
@@ -24,6 +30,8 @@ xEdit is crucial to our shared modding community and your contribution - no matt
 * A script's RemoveElement or RemoveByIndex with an index now removes the entry that ElementByIndex gives for that index; in a sorted list such as keywords whose stored order differs from the sorted one, it could remove a different entry. IndexOf now gives the index ElementByIndex uses.
 * A script that still holds a flag element after the flag was cleared no longer gets an access violation reading its value or whether it can be edited: it reads as cleared and can not be edited.
 * A script that holds a flag element no longer gets an access violation reading it after another flag of the same value changed: while its own flag stays set, the element keeps answering it.
+* wbCopyElementToRecord and wbCopyElementToFile can now copy an element that is, or sits inside, one of several alternative layouts of a list entry or a field (a land's texture layers, a quest's aliases, a scene action's type-specific data, a Morrowind NPC's packages, a Starfield component's data); every such copy used to fail with an assertion error and leave the empty entry it had created. An alternative the target's own type field does not name (a Timer into a scene action of type Dialogue) is refused with a message, as is one that contains Starfield Reflection data.
+* Starfield: a script that copies a cell or reference into a plugin without first adding the masters it needs (such as wbCopyElementToFile without AddRequiredElementMasters) no longer leaves a traversal naming a record in a different master when the traversal's own master is missing: it is left null, with an "Error assigning" message, as other references are.
 
 # What's New in xEdit 4.1.5r?
 
