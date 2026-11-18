@@ -516,6 +516,7 @@ type
     dfInternalEditOnly,
     dfIsRecordFlags,
     dfKeepInPartialForm,
+    dfKeptOnAssign,
     dfMergeIfMultiple,
     dfMustBeUnion,
     dfNeedsPrepareSave,

@@ -1384,7 +1384,8 @@ type
     mrsConflictStored,
     mrsRegisterLater,
     mrsAssigningWhole,
-    mrsKeepKey
+    mrsKeepKey,
+    mrsRestoring
   );
 
   TwbMainRecordStates = set of TwbMainRecordState;
@@ -1548,6 +1549,8 @@ type
     function IdentityUntouched: Boolean;
     function IsIdentityElement(const aElement: IwbElement): Boolean;
     function IdentityWriteRefusal(const aEditorID: string): string;
+    function WholeAssignKeepsOwn(const aSource: IwbMainRecord): Boolean;
+    function IdentityAssignRefusal(const aSource: IwbMainRecord; out aKept: string): string;
     function ReleaseNameEdges: Boolean;
     function ChainHoldsReferrer(const aReferrer: IwbMainRecord): Boolean;
     procedure RebuildNameEdges;
@@ -15854,6 +15857,40 @@ begin
 
       if aIndex = wbAssignThis then begin
 
+        var lKeptIdentity := '';
+        var lKeptSignatures: TArray<TwbSignature> := nil;
+        var lKeptValues: TArray<string> := nil;
+        var lHeldIndex: Int64 := -1;
+        if Supports(aElement, IwbMainRecord, MainRecord) and WholeAssignKeepsOwn(MainRecord) then begin
+          if IsEmbeddedReference and not aOnlySK then begin
+            AssignReference(aElement, GetFixedFormID);
+            wbCancelLock;
+            wbProgressLock;
+            try
+              PlaceEmbeddedReference;
+            finally
+              wbProgressUnlock;
+              wbCancelUnlock;
+            end;
+            Exit(Self);
+          end;
+          if not (mrsRestoring in mrStates) then begin
+            var lRefusal := IdentityAssignRefusal(MainRecord, lKeptIdentity);
+            if lRefusal <> '' then
+              raise Exception.Create(lRefusal);
+            lHeldIndex := IndexInFile;
+            if lKeptIdentity <> '' then
+              for var lMember := 0 to Pred(mrDef.MemberCount) do
+                if dfKeptOnAssign in mrDef.Members[lMember].DefFlags then begin
+                  var lKeptElement: IwbElement := GetRecordBySignature(mrDef.Members[lMember].GetDefaultSignature);
+                  if Assigned(lKeptElement) then begin
+                    lKeptSignatures := lKeptSignatures + [mrDef.Members[lMember].GetDefaultSignature];
+                    lKeptValues := lKeptValues + [lKeptElement.EditValue];
+                  end;
+                end;
+          end;
+        end;
+
         NeedUpdate := CheckChildOfCell;
 
         SetModified(True);
@@ -15908,6 +15945,22 @@ begin
             end;
           end else
             AddMembersOfNewRecord;
+          if (lKeptIdentity <> '') or (Length(lKeptSignatures) > 0) then
+            if ContextObj.BeginInternalEdit(True) then try
+              if lKeptIdentity <> '' then
+                SetEditorID(lKeptIdentity);
+              for var lKeptIndex := 0 to High(lKeptSignatures) do begin
+                var lKeptTarget: IwbElement := GetRecordBySignature(lKeptSignatures[lKeptIndex]);
+                if not Assigned(lKeptTarget) then
+                  lKeptTarget := Add(string(lKeptSignatures[lKeptIndex]), True);
+                if Assigned(lKeptTarget) then
+                  lKeptTarget.EditValue := lKeptValues[lKeptIndex];
+              end;
+            finally
+              wbEndInternalEdit;
+            end;
+          if lHeldIndex >= 0 then
+            TakeIndexInFile(lHeldIndex);
         finally
           Exclude(mrStates, mrsAssigningWhole);
         end;
@@ -16636,9 +16689,13 @@ begin
   end;
 
   if Assigned(mrDef) then begin
-    if aIndex = wbAssignThis then
-      Result := mrDef.Equals(aElement.Def)
-    else begin
+    if aIndex = wbAssignThis then begin
+      Result := mrDef.Equals(aElement.Def);
+      var lSource: IwbMainRecord;
+      var lKept: string;
+      if Result and Supports(aElement, IwbMainRecord, lSource) then
+        Result := IdentityAssignRefusal(lSource, lKept) = '';
+    end else begin
       Result := (aIndex >= 0) and (aIndex < mrDef.MemberCount) and
         (
           mrDef.Members[aIndex].CanAssign(Self, wbAssignThis, aElement.Def) or
@@ -18895,6 +18952,41 @@ begin
   var lGridBase := mrDef.GetGridFormIDBase;
   Result := (aHasGrid and (lGridBase > 0) and aGrid.ToGridKey(lGridBase, aKey)) or
     ContextObj.FindIdentity(mrDef.GetFormIDBase, mrDef.GetFormIDNameBase, aIdentity, aKey);
+end;
+
+function TwbMainRecord.WholeAssignKeepsOwn(const aSource: IwbMainRecord): Boolean;
+begin
+  Result := Assigned(aSource) and Assigned(mrDef) and not (gcFormIDInRecordHeader in GameDefObj.Capabilities) and
+    (mrStates * [mrsRegisterLater, mrsKeepKey] = []) and not (aSource.IsDeleted or aSource.IsPartialForm);
+end;
+
+function TwbMainRecord.IdentityAssignRefusal(const aSource: IwbMainRecord; out aKept: string): string;
+var
+  lOwn           : string;
+  lSource        : string;
+  lOwnHasGrid    : Boolean;
+  lSourceHasGrid : Boolean;
+  lOwnGrid       : TwbGridCell;
+  lSourceGrid    : TwbGridCell;
+begin
+  Result := '';
+  aKept := '';
+  if not WholeAssignKeepsOwn(aSource) or (mrsRestoring in mrStates) or not mrDef.IsKeyedByIdentity then
+    Exit;
+  if not GetCurrentIdentity(lOwn, lOwnHasGrid, lOwnGrid) or (lOwn = '') then
+    Exit;
+  var lSourceRecord := aSource as TObject as TwbMainRecord;
+  if not lSourceRecord.GetCurrentIdentity(lSource, lSourceHasGrid, lSourceGrid) then
+    lSource := '';
+  lOwnHasGrid := lOwnHasGrid and (mrDef.GetGridFormIDBase > 0);
+  lSourceHasGrid := lSourceHasGrid and Assigned(lSourceRecord.mrDef) and (lSourceRecord.mrDef.GetGridFormIDBase > 0);
+  if (lSource <> '') and (lOwnHasGrid <> lSourceHasGrid) then
+    Exit('the two records are keyed differently, one by its grid and the other by its name');
+  if lOwn.ToLowerInvariant = lSource.ToLowerInvariant then
+    Exit;
+  if lOwnHasGrid then
+    Exit('a record keyed by its grid can only take the content of the record at the same grid');
+  aKept := GetEditorID;
 end;
 
 procedure TwbMainRecord.TakeCopyIdentity(const aSource: IwbMainRecord; const aRules: TwbCopyRules);
@@ -22260,8 +22352,10 @@ begin
         _AddRef; _Release;
       end;
 
+      var lWasRestoring := mrsRestoring in mrStates;
       BeginUpdate;
       try
+        Include(mrStates, mrsRestoring);
         if Assigned(mrDef) then
           AddMembersOfNewRecord;
 
@@ -22293,6 +22387,8 @@ begin
         if not (Master.IsDeleted or Master.IsPartialForm) then
           Self.Assign(wbAssignThis, Master, False);
       finally
+        if not lWasRestoring then
+          Exclude(mrStates, mrsRestoring);
         EndUpdate;
       end;
 
@@ -22412,8 +22508,10 @@ begin
         _AddRef; _Release;
       end;
 
+      var lWasRestoring := mrsRestoring in mrStates;
       BeginUpdate;
       try
+        Include(mrStates, mrsRestoring);
         AddMembersOfNewRecord;
 
         Master := GetMaster;
@@ -22444,6 +22542,8 @@ begin
         if not (Master.IsDeleted or Master.IsPartialForm) then
           Self.Assign(wbAssignThis, Master, False);
       finally
+        if not lWasRestoring then
+          Exclude(mrStates, mrsRestoring);
         EndUpdate;
       end;
     end;

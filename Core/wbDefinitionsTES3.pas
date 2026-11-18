@@ -1522,8 +1522,8 @@ begin
 
   RegisterRecordDef(INFO, 'Dialog Response', @wbKnownSubRecordSignaturesINFO, [
     wbStringForward(INAM, 'Response ID').SetRequired,
-    wbStringForward(PNAM, 'Previous Response ID').SetRequired,
-    wbStringForward(NNAM, 'Next Response ID').SetRequired,
+    wbStringForward(PNAM, 'Previous Response ID').SetRequired.IncludeFlag(dfKeptOnAssign),
+    wbStringForward(NNAM, 'Next Response ID').SetRequired.IncludeFlag(dfKeptOnAssign),
     wbStruct(DATA, 'Data', [
       wbInteger('Dialog Type', itU32, wbDialogTypeEnum),
       wbInteger('Disposition/Index', itU32),
