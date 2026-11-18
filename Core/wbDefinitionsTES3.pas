@@ -1820,7 +1820,7 @@ begin
          .IncludeFlag(dfCollapsed, clpVertices in DefineOptions.Collapse)
          .IncludeFlag(dfNoMove)),
     IfThen(DefineOptions.SimpleRecords,
-      wbByteArray(VTEX, 'Textures'),
+      wbByteArray(VTEX, 'Textures').IncludeFlag(dfLandTextureIndices),
       wbArray(VTEX, 'Textures',
         wbArray('Row',
           wbInteger('Column', itU16), //[LTEX]
@@ -1829,7 +1829,8 @@ begin
            .IncludeFlag(dfNoMove),
       16).SetSummaryName('Rows')
          .IncludeFlag(dfCollapsed, clpOther in DefineOptions.Collapse)
-         .IncludeFlag(dfNoMove))
+         .IncludeFlag(dfNoMove)
+         .IncludeFlag(dfLandTextureIndices))
   ]).SetFormIDBase($D0)
     .SetFormIDNameBase($B0)
     .SetGridFormIDBase(wbLandGridFormIDBase)

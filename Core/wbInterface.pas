@@ -517,6 +517,7 @@ type
     dfIsRecordFlags,
     dfKeepInPartialForm,
     dfKeptOnAssign,
+    dfLandTextureIndices,
     dfMergeIfMultiple,
     dfMustBeUnion,
     dfNeedsPrepareSave,

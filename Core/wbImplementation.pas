@@ -969,6 +969,8 @@ type
     function GetContainedRecordByLoadOrderFormID(const aFormID: TwbFormID; aAllowInjected: Boolean): IwbMainRecord;
     function GetRecordFromIndexByKey(aIndex: TwbNamedIndex; const aKey: string): IwbMainRecord;
     function GetGroupBySignature(const aSignature: TwbSignature): IwbGroupRecord;
+    function PaletteNameAt(aIndex: Int64; out aName: string): Boolean;
+    function LandTexturesRefusal(const aSource: IwbElement): string;
     function HasGroup(const aSignature: TwbSignature): Boolean;
     function GetFileStates: TwbFileStates; inline;
     function GetCRC32: TwbCRC32;
@@ -10009,6 +10011,71 @@ begin
       Dec(Result);
 end;
 
+function TwbFile.PaletteNameAt(aIndex: Int64; out aName: string): Boolean;
+var
+  SelfRef : IwbContainerElementRef;
+  lGroup  : IwbGroupRecord;
+  lRecord : IwbMainRecord;
+
+  function Indexed(const aDef: IwbMainRecordDef): Boolean;
+  begin
+    Result := False;
+    if Assigned(aDef) then
+      for var k := 0 to Pred(aDef.MemberCount) do
+        if dfUniqueInFile in aDef.Members[k].DefFlags then
+          Exit(True);
+  end;
+
+begin
+  aName := '';
+  if aIndex < 0 then
+    Exit(False);
+  SelfRef := Self;
+  DoInit(False);
+  for var i := 0 to Pred(GetElementCount) do
+    if Supports(GetElement(i), IwbGroupRecord, lGroup) and (lGroup.GroupType = 0) and (lGroup.ElementCount > 0) and
+       Supports(lGroup.Elements[0], IwbMainRecord, lRecord) and Indexed(lRecord.GetMainRecordDef) then
+      for var j := 0 to Pred(lGroup.ElementCount) do
+        if Supports(lGroup.Elements[j], IwbMainRecord, lRecord) and not lRecord.IsMarkedDeleted and
+           not (lRecord as TObject as TwbMainRecord).GetFlags.IsIgnored then begin
+          var lIndex := (lRecord as TObject as TwbMainRecord).IndexInFile;
+          if lIndex = aIndex then begin
+            aName := lRecord.EditorID;
+            Exit(True);
+          end;
+        end;
+  Result := False;
+end;
+
+function TwbFile.LandTexturesRefusal(const aSource: IwbElement): string;
+var
+  lData : IwbDataContainer;
+begin
+  Result := '';
+  if not Supports(aSource, IwbDataContainer, lData) then
+    Exit;
+  var lSourceFile := aSource._File;
+  if not Assigned(lSourceFile) or lSourceFile.Equals(Self as IwbFile) then
+    Exit;
+  var lSource := lSourceFile as TObject as TwbFile;
+  var lSeen := TList<Word>.Create;
+  try
+    for var i := 0 to Pred(lData.DataSize div SizeOf(Word)) do begin
+      var lValue := PWord(PByte(lData.DataBasePtr) + i * SizeOf(Word))^;
+      if (lValue = 0) or lSeen.Contains(lValue) then
+        Continue;
+      lSeen.Add(lValue);
+      var lSourceName, lOwnName: string;
+      lSource.PaletteNameAt(lValue - 1, lSourceName);
+      PaletteNameAt(lValue - 1, lOwnName);
+      if not SameText(lSourceName, lOwnName) then
+        Exit(Format('land texture %d names [%s] in %s and [%s] in %s', [lValue, lSourceName, lSourceFile.FileName, lOwnName, GetFileName]));
+    end;
+  finally
+    lSeen.Free;
+  end;
+end;
+
 function TwbFile.GetGroupBySignature(const aSignature: TwbSignature): IwbGroupRecord;
 var
   SelfRef: IwbContainerElementRef;
@@ -15711,6 +15778,11 @@ begin
     if not Assigned(Result) then begin
       if aElement.ContainsReflection then
         raise Exception.Create(aElement.Name + ' contains Reflection and can not be assigned');
+      if dfLandTextureIndices in aElement.Def.DefFlags then begin
+        var lRefusal := (GetFile as TObject as TwbFile).LandTexturesRefusal(aElement);
+        if lRefusal <> '' then
+          raise Exception.Create(lRefusal);
+      end;
       Assign(aElement.SortOrder, aElement, not (cfDeepCopy in aFlags));
       Result := GetElementBySortOrder(aElement.SortOrder + GetAdditionalElementCount);
       Assert(Assigned(Result));
@@ -15891,6 +15963,15 @@ begin
           end;
         end;
 
+        if Supports(aElement, IwbMainRecord, MainRecord) and WholeAssignKeepsOwn(MainRecord) and not (mrsRestoring in mrStates) then
+          for var lMember := 0 to Pred(mrDef.MemberCount) do
+            if dfLandTextureIndices in mrDef.Members[lMember].DefFlags then begin
+              var lRefusal := (GetFile as TObject as TwbFile).LandTexturesRefusal(
+                MainRecord.RecordBySignature[mrDef.Members[lMember].GetDefaultSignature]);
+              if lRefusal <> '' then
+                raise Exception.Create(lRefusal);
+            end;
+
         NeedUpdate := CheckChildOfCell;
 
         SetModified(True);
@@ -15987,6 +16068,13 @@ begin
               else if IsAddChild then
                 Element.Assign(wbAssignAdd, aElement, aOnlySK);
             end else begin
+
+              if IsAdd and Assigned(aElement) and not (mrsAssigningWhole in mrStates) and (dfLandTextureIndices in Member.DefFlags) and
+                 Member.Equals(aElement.Def) then begin
+                var lRefusal := (GetFile as TObject as TwbFile).LandTexturesRefusal(aElement);
+                if lRefusal <> '' then
+                  raise Exception.Create(lRefusal);
+              end;
 
               if Member.DefType = dtSubRecordUnion then begin
                 var lHasSignature: IwbHasSignature;
@@ -24254,6 +24342,15 @@ begin
 
   SelfRef := Self as IwbContainerElementRef;
   DoInit(True);
+
+  var lVtexRecord := GetContainingMainRecord;
+  if (aIndex = wbAssignThis) and Assigned(srDef) and (dfLandTextureIndices in srDef.DefFlags) and Assigned(aElement) and
+     srDef.Equals(aElement.Def) and not (Assigned(lVtexRecord) and
+     (mrsAssigningWhole in (lVtexRecord as TObject as TwbMainRecord).mrStates)) then begin
+    var lRefusal := (GetFile as TObject as TwbFile).LandTexturesRefusal(aElement);
+    if lRefusal <> '' then
+      raise Exception.Create(lRefusal);
+  end;
 
   if (aIndex = wbAssignThis) and not aOnlySK and Assigned(srDef) and (dfFastAssign in srDef.DefFlags) and not (srsIsArray in srStates) and
      GameDefObj.IsMorrowind and Assigned(aElement) and srDef.Equals(aElement.Def) then begin
