@@ -5491,40 +5491,43 @@ begin
     Exit;
 
   var lBaseRecord := lNAME.LinksTo as IwbMainRecord;
-  if not Assigned(lBaseRecord) then
+  if not Assigned(lBaseRecord) or (lBaseRecord.Signature <> LIGH) then
     Exit;
 
-  if lBaseRecord.Signature <> LIGH then
+  var lRadiusElement := lBaseRecord.ElementByPath[IfThen(aElement.GameDefObj.IsStarfield, 'DAT2\Radius', 'DATA\Radius')];
+  if not Assigned(lRadiusElement) then
     Exit;
 
-  var lRadius := lBaseRecord.ElementByPath[IfThen(aElement.GameDefObj.IsStarfield, 'DAT2\Radius', 'DATA\Radius')];
-  if not Assigned(lRadius) then
+  var lFS := TFormatSettings.Invariant;
+  var lRadius: Double;
+  if not TryStrToFloat(lRadiusElement.EditValue, lRadius, lFS) then
     Exit;
+
+  var lValue: Double;
 
   case aType of
     ctCheck: begin
-      var lValue := StrToFloat(aElement.EditValue);
+      if not TryStrToFloat(aElement.EditValue, lValue, lFS) then
+        Exit;
 
       if lValue < 20.0 then
-        aValue := ' <Hint: Light Radius [' + FloatToStr(lValue) + '] is less then minimum of 20>';
+        aValue := ' <Hint: Light Radius [' + FloatToStr(lValue, lFS) + '] is less then minimum of 20>';
     end;
-    ctFromEditValue: begin
-      aValue := FloatToStr(StrToFloat(aValue) - StrToFloat(lRadius.EditValue));
-    end;
-    ctFromNativeValue: begin
-      aValue := FloatToStr(StrToFloat(aValue) - StrToFloat(lRadius.EditValue));
-    end;
-    ctToStr: begin
-      aValue := FloatToStr(StrToFloat(aValue) + StrToFloat(lRadius.EditValue));
+    ctFromEditValue, ctFromNativeValue: begin
+      if not TryStrToFloat(aValue, lValue, lFS) then
+        Exit;
 
-      if StrToFloat(aValue) < 20.0 then
-        aValue := aValue + ' <Hint: Light Radius is less then minimum of 20>';
+      aValue := FloatToStr(lValue - lRadius, lFS);
     end;
-    ctToEditValue: begin
-      aValue := FloatToStr(StrToFloat(aValue) + StrToFloat(lRadius.EditValue));
-    end;
-    ctToNativeValue: begin
-      aValue := FloatToStr(StrToFloat(aValue) + StrToFloat(lRadius.EditValue));
+    ctToStr, ctToEditValue, ctToNativeValue: begin
+      if not TryStrToFloat(aValue, lValue, lFS) then
+        Exit;
+
+      lValue := lValue + lRadius;
+      aValue := FloatToStr(lValue, lFS);
+
+      if (aType = ctToStr) and (lValue < 20.0) then
+        aValue := aValue + ' <Hint: Light Radius is less than minimum of 20>';
     end;
   end;
 end;
