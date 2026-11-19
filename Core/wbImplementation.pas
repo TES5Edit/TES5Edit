@@ -21194,6 +21194,8 @@ var
   Element       : IwbElement;
   LinksToRecord : IwbMainRecord;
 begin
+  if IsEmbeddedReference then
+    raise Exception.Create(GetName + ': a Morrowind reference has no initially disabled state');
   SelfRef := Self;
   var lContext := ContextObj;
 
