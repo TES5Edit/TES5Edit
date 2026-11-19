@@ -158,6 +158,7 @@ type
     procedure TestCheckMenusNavAdd;
     procedure TestCheckMenusWrite;
     procedure TestCheckMenusException(Sender: TObject; E: Exception);
+    procedure TestCheckMenusExpectedException(Sender: TObject; E: Exception);
     procedure TestCheckMenusCloseEntered;
     procedure TestCloseRouteShow;
     procedure TestCloseRouteFault(const aRoute: string);
@@ -4788,6 +4789,19 @@ begin
   TFile.AppendAllText(xeTestSwitches.CheckMenusFile + '.exceptions', lSender + #9 + E.ClassName + #9 + E.Message + sLineBreak, TEncoding.UTF8);
 end;
 
+procedure TxeTestFormHelper.TestCheckMenusExpectedException(Sender: TObject; E: Exception);
+begin
+  var lSender := '';
+  if Assigned(Sender) then
+    lSender := Sender.ClassName;
+  TestHost.TestCheckMenusSeen := TestHost.TestCheckMenusSeen + lSender + ' ' + E.ClassName + ': ' + E.Message + ';';
+  for var i := 1 to 4 do begin
+    Application.ProcessMessages;
+    CheckSynchronize;
+    Sleep(5);
+  end;
+end;
+
 procedure TxeTestFormHelper.TestCheckMenusCloseEntered;
 begin
   var lPage := '<none>';
@@ -5409,6 +5423,64 @@ begin
     end;
     Path('fact anam, arrow keys', lAnam, lAnamTwin, 0, 'c', cAny, cAny, '=',
       function(aLink: TObject): string begin TestPickKey(VK_DOWN); Result := TestPickShown(aLink); TestPickKey(VK_RETURN); end);
+
+    begin
+      var lCount := lItem.Container.ElementByName['Count'];
+      if not Assigned(lCount) then
+        raise Exception.Create('no Count beside ' + lItem.Path);
+      var lBefore := Raw(lCount);
+      var lShown := '';
+      var lError := '';
+      TestHost.TestCheckMenusSeen := '';
+      var lOldException := Application.OnException;
+      Application.OnException := TestCheckMenusExpectedException;
+      try
+        try
+          var lLink := TestPickOpen(lCount);
+          SelectAllText(lLink);
+          TestPickChars('abc');
+          lShown := TestPickShown(lLink);
+          TestPickKey(VK_RETURN);
+        except
+          on E: Exception do
+            lError := E.ClassName + ': ' + E.Message;
+        end;
+      finally
+        Application.OnException := lOldException;
+      end;
+      var lRaised := TestHost.TestCheckMenusSeen;
+      var lEditing := vstView.IsEditing;
+      var lLinkHeld := Assigned(TBaseVirtualTree(vstView).EditLink);
+      var lVisible := 0;
+      for var i := 0 to Pred(vstView.ControlCount) do
+        if (vstView.Controls[i] is TWinControl) and vstView.Controls[i].Visible then
+          Inc(lVisible);
+      var lFocus := '<none>';
+      if Assigned(Screen.ActiveControl) then
+        lFocus := Screen.ActiveControl.Name + ':' + Screen.ActiveControl.ClassName;
+      var lAfter := Raw(lCount);
+      var lAgain := '';
+      try
+        TestPickOpen(lCount);
+        lAgain := BoolToStr(vstView.IsEditing, True);
+        TestPickKey(VK_ESCAPE);
+      except
+        on E: Exception do
+          lAgain := E.ClassName + ': ' + E.Message;
+      end;
+      if vstView.IsEditing then begin
+        vstView.CancelEditNode;
+        TestPickPump;
+      end;
+      TestHost.TestCheckMenusPickLink := nil;
+      TestHost.TestCheckMenusPickEditor := 0;
+      TestHost.TestCheckMenusSeen := '';
+      Line('an invalid number, then Enter: the error shows, the edit ends and the next one opens', BoolToStr((lError = '') and
+        (lShown = 'abc') and (lRaised <> '') and not lEditing and not lLinkHeld and (lVisible = 0) and (lAfter = lBefore) and
+        (lAgain = 'True'), True), Format('shown "%s"'#9'raised %s'#9'editing %s'#9'link held %s'#9'editors visible %d'#9'bytes %s'#9 +
+        'focus %s'#9'next edit %s'#9'%s', [lShown, lRaised, BoolToStr(lEditing, True), BoolToStr(lLinkHeld, True), lVisible,
+        IfThen(lAfter = lBefore, 'unchanged', lAfter), lFocus, lAgain, lError]));
+    end;
 
     begin
       var lRename := Rec('MISC', 'xedit_pick_rename');
