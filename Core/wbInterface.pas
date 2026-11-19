@@ -431,7 +431,8 @@ type
     ksrFullName,
     ksrBaseRecord,
     ksrGridCell,
-    ksrBaseFormComponents
+    ksrBaseFormComponents,
+    ksrDeleted
   );
 
   PwbKnownSubRecordSignatures = ^TwbKnownSubRecordSignatures;
@@ -517,6 +518,7 @@ type
     dfIsRecordFlags,
     dfKeepInPartialForm,
     dfKeptOnAssign,
+    dfKeptWhenDeleted,
     dfLandTextureIndices,
     dfMergeIfMultiple,
     dfMustBeUnion,
@@ -601,7 +603,7 @@ type
     gcMasterFlagFromExtension, gcResourceKeyCRC32NoExtension, gcTextureDDXAlias, gcUpdateArchiveAlwaysLoaded,
     gcWeatherExtendedColors, gcWeatherFogPower, gcWeatherFogMax, gcModelTextureFileHashList, gcCommunityShaders, gcHNVSE,
     gcVWDInTemporary, gcVWDAsQuestChildren, gcComplexFileFileID, gcCanSortINFO, gcOffsetDataPerFile,
-    gcMasterFlagInHeaderData, gcCompressedRecords, gcMasterSizeInHeader
+    gcMasterFlagInHeaderData, gcCompressedRecords, gcMasterSizeInHeader, gcDeletedBySubrecord
   );
   TwbGameCapabilities = set of TwbGameCapability;
 
@@ -6818,6 +6820,8 @@ begin
     Include(Result, gcMasterFlagInHeaderData);
   if aGameMode in [gmTES3] then
     Include(Result, gcMasterSizeInHeader);
+  if aGameMode in [gmTES3] then
+    Include(Result, gcDeletedBySubrecord);
   if not (aGameMode in [gmTES3]) then
     Include(Result, gcCompressedRecords);
   if not (aGameMode in [gmTES3]) then
@@ -7063,6 +7067,7 @@ begin
   gdKnownSubRecordSignatures[ksrBaseRecord] := 'NAME';
   gdKnownSubRecordSignatures[ksrGridCell] := 'XCLC';
   gdKnownSubRecordSignatures[ksrBaseFormComponents] := '____';
+  gdKnownSubRecordSignatures[ksrDeleted] := '____';
 end;
 
 function TwbGameDef.GetKnownSubRecordSignature(aKind: TwbKnownSubRecord): TwbSignature;
@@ -14112,6 +14117,8 @@ begin
             end;
           end;
         end;
+        if Sig = recKnownSRs[ksrDeleted] then
+          recKnownSRMembers[ksrDeleted] := NewLength;
         try
           recSignatures.AddObject(Sig, Pointer(NewLength) );
         except

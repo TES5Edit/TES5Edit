@@ -2202,7 +2202,8 @@ const
     'NNAM',
     '____',
     '____',
-    'BFCB'
+    'BFCB',
+    '____'
   );
 
 function TwbGameDefSF1.wbSoundReference(const aName: string = 'Sound'): IwbValueDef;
