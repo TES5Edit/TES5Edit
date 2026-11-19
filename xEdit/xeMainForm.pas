@@ -11699,6 +11699,19 @@ begin
   if (MainRecord.Signature <> 'ACHR') and (MainRecord.Signature <> 'REFR') then
     Exit;
 
+  if gcReferencesEmbeddedInCell in lGameDef.Capabilities then begin
+    var lBase := MainRecord.BaseRecord;
+    var lTeleport : IwbContainerElementRef;
+    Result := Assigned(lBase) and
+      MainRecord.Def.IsValidBaseSignature(lBase.Signature) and
+      (lBase.Flags._Flags and $400 = 0) and
+      (lBase.Signature <> 'NPC_') and
+      (lBase.Signature <> 'CREA') and
+      not (Supports(MainRecord.ElementByName['Teleport Data'], IwbContainerElementRef, lTeleport) and
+        Assigned(lTeleport.ElementBySignature['DODT']));
+    Exit;
+  end;
+
   if lGameDef.IsSkyrim or lGameDef.IsFallout4 or lGameDef.IsFallout76 or lGameDef.IsStarfield then
     if MainRecord.Flags._Flags and $10000 <> 0 then
       Exit;
@@ -11937,7 +11950,19 @@ begin
   end;
 
   if FilterScaledActors then
-    if Assigned(Signatures) then begin
+    if ReferencesInCells then begin
+      if Assigned(Signatures) then begin
+        HasREFR := Signatures.Find('REFR', Dummy);
+        Signatures.Clear;
+        if HasREFR then
+          Signatures.Add('REFR');
+      end else begin
+        Signatures := TStringList.Create;
+        Signatures.Add('REFR');
+        Signatures.Sorted := True;
+        Signatures.Duplicates := dupIgnore;
+      end;
+    end else if Assigned(Signatures) then begin
       HasACHR := Signatures.Find('ACHR', Dummy);
       HasACRE := Signatures.Find('ACRE', Dummy);
       Signatures.Clear;
@@ -12001,6 +12026,7 @@ begin
 
       if Signatures.Count > 0 then begin
         PotentiallyUnfilteredRefs := True;
+        TopLevelGroups.AddStrings(Signatures);
         TopLevelGroups.Add('CELL');
         TopLevelGroups.Add('WRLD');
       end;
@@ -12088,6 +12114,14 @@ begin
     FilterRequiresMainRecord;
 
   CheckFilterNode := function(aCheckConflict: Boolean): Boolean
+
+    function IsActorBase(const aMainRecord: IwbMainRecord): Boolean;
+    var
+      lSignature : TwbSignature;
+    begin
+      lSignature := aMainRecord.BaseRecordSignature;
+      Result := (lSignature = 'NPC_') or (lSignature = 'CREA') or (lSignature = 'LEVC');
+    end;
 
     function CustomScriptFilter(MainRecord: IwbMainRecord): Boolean;
     begin
@@ -12184,10 +12218,11 @@ begin
                     (FilterByVWD and (MainRecord.IsVisibleWhenDistant <> FilterVWD)) or
                     (FilterByBaseFormID and (MainRecord.BaseRecordID <> FilterBaseFormID)) or
                     (Assigned(BaseSignatures) and not BaseSignatures.Find(MainRecord.BaseRecordSignature, Dummy)) or
-                    (FilterScaledActors and //Signatures will have been set that only actors get this far
+                    (FilterScaledActors and
                       (
                         not Supports(MainRecord.RecordBySignature['XSCL'], IwbRecord, Rec) or
-                        SameValue(Rec.NativeValue, 1)
+                        SameValue(Rec.NativeValue, 1) or
+                        (ReferencesInCells and not IsActorBase(MainRecord))
                       )
                     ) or
 
@@ -12211,7 +12246,6 @@ begin
 
                     (FilterByPersistent and
                       (
-                        ReferencesInCells or
                         (MainRecord.IsPersistent <> FilterPersistent) or
                         (
                           FilterUnnecessaryPersistent and

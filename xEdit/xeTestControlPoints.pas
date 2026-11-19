@@ -189,6 +189,7 @@ type
     procedure DoTestChangeFormID;
     procedure DoTestHide;
     procedure DoTestFilter;
+    procedure DoTestFilterArms;
     procedure TestFilterImages(aLines: TStrings);
     procedure DoTestSaveContextsCompare;
     procedure DoTestEndSession;
@@ -10758,6 +10759,10 @@ var
   lData  : PNavNodeData;
   lCount : Integer;
 begin
+  if xeTestSwitches.FilterArms <> '' then begin
+    DoTestFilterArms;
+    Exit;
+  end;
   lLines := TStringList.Create;
   try
     lLines.Add('# xEdit filter probe');
@@ -10911,6 +10916,141 @@ begin
     if not MoveFileEx(PChar(lTmp), PChar(xeTestSwitches.FilterFile), MOVEFILE_REPLACE_EXISTING) then
       RaiseLastOSError;
   finally
+    lLines.Free;
+    if xeAutoExit then
+      tmrShutdown.Enabled := True;
+  end;
+end;
+
+procedure TxeTestFormHelper.DoTestFilterArms;
+var
+  lLines : TStringList;
+  lArms  : TStringList;
+  lParts : TStringList;
+  lTmp   : string;
+  lNode  : PVirtualNode;
+  lData  : PNavNodeData;
+  lCount : Integer;
+begin
+  lLines := TStringList.Create;
+  lArms := TStringList.Create;
+  lParts := TStringList.Create;
+  try
+    lLines.Add('# xEdit filter arms');
+    lLines.Add('# ' + xeApplicationTitle);
+    lLines.Add('# Columns, tab separated: record left in the tree / file; each arm opens with "# arm <arm>"');
+    CheckResult := 2;
+    try
+      lArms.Delimiter := ';';
+      lArms.StrictDelimiter := True;
+      lArms.DelimitedText := xeTestSwitches.FilterArms;
+      lParts.Delimiter := '+';
+      lParts.StrictDelimiter := True;
+      for var lArm in lArms do begin
+        FilterConflictAll := False;
+        FilterConflictThis := False;
+        FilterByInjectStatus := False;
+        FilterInjectStatus := False;
+        FilterByNotReachableStatus := False;
+        FilterNotReachableStatus := False;
+        FilterByReferencesInjectedStatus := False;
+        FilterReferencesInjectedStatus := False;
+        FilterByEditorID := False;
+        FilterEditorID := '';
+        FilterByName := False;
+        FilterName := '';
+        FilterByBaseEditorID := False;
+        FilterBaseEditorID := '';
+        FilterByBaseName := False;
+        FilterBaseName := '';
+        FilterScaledActors := False;
+        FilterByPersistent := False;
+        FilterPersistent := False;
+        FilterUnnecessaryPersistent := False;
+        FilterMasterIsTemporary := False;
+        FilterIsMaster := False;
+        FilterPersistentPosChanged := False;
+        FilterDeleted := False;
+        FilterByVWD := False;
+        FilterVWD := False;
+        FilterByHasVWDMesh := False;
+        FilterHasVWDMesh := False;
+        FilterByHasPrecombinedMesh := False;
+        FilterHasPrecombinedMesh := False;
+        FilterBySignature := False;
+        FilterSignatures := '';
+        FilterByBaseSignature := False;
+        FilterBaseSignatures := '';
+        FilterConflictAllSet := [];
+        FilterConflictThisSet := [];
+        FlattenBlocks := True;
+        FlattenCellChilds := True;
+        AssignPersWrldChild := True;
+        InheritConflictByParent := True;
+        FilterByRegexComparison := False;
+        FilterByElementValue := False;
+        lParts.DelimitedText := lArm;
+        for var lPart in lParts do
+          if lPart = 'persistent' then begin
+            FilterByPersistent := True;
+            FilterPersistent := True;
+          end else if lPart = 'temporary' then begin
+            FilterByPersistent := True;
+            FilterPersistent := False;
+          end else if lPart = 'unnecessary' then
+            FilterUnnecessaryPersistent := True
+          else if lPart = 'mastertemporary' then
+            FilterMasterIsTemporary := True
+          else if lPart = 'ismaster' then
+            FilterIsMaster := True
+          else if lPart = 'poschanged' then
+            FilterPersistentPosChanged := True
+          else if lPart = 'deleted' then
+            FilterDeleted := True
+          else if lPart = 'scaled' then
+            FilterScaledActors := True
+          else if lPart.StartsWith('basesig=') then begin
+            FilterByBaseSignature := True;
+            FilterBaseSignatures := lPart.Substring(8).Replace('/', ',');
+          end else if lPart.StartsWith('sig=') then begin
+            FilterBySignature := True;
+            FilterSignatures := lPart.Substring(4).Replace('/', ',');
+          end else
+            raise Exception.Create('unknown filter arm part: ' + lPart);
+        FilterPreset := True;
+        try
+          mniNavFilterApplyClick(nil);
+        finally
+          FilterPreset := False;
+        end;
+        lLines.Add('# arm ' + lArm);
+        lCount := 0;
+        lNode := vstNav.GetFirst;
+        while Assigned(lNode) do begin
+          lData := vstNav.GetNodeData(lNode);
+          if Assigned(lData) and Supports(lData.Element, IwbMainRecord) then begin
+            Inc(lCount);
+            lLines.Add(lData.Element.Name + #9 + lData.Element._File.FileName);
+          end;
+          lNode := vstNav.GetNext(lNode);
+        end;
+        lLines.Add('# arm ' + lArm + ' records left: ' + IntToStr(lCount));
+      end;
+      CheckResult := 0;
+    except
+      on E: Exception do begin
+        AddMessage('[Test Filter] FAILED: ' + E.ClassName + ': ' + E.Message);
+        lLines.Add('# FAILED: ' + E.ClassName + ': ' + E.Message);
+      end;
+    end;
+    lLines.Add('# checkResult = ' + IntToStr(CheckResult));
+    lTmp := xeTestSwitches.FilterFile + '.partial';
+    lLines.SaveToFile(lTmp, TEncoding.UTF8);
+    if not MoveFileEx(PChar(lTmp), PChar(xeTestSwitches.FilterFile), MOVEFILE_REPLACE_EXISTING) then
+      RaiseLastOSError;
+  finally
+    lParts.Free;
+    lArms.Free;
     lLines.Free;
     if xeAutoExit then
       tmrShutdown.Enabled := True;
