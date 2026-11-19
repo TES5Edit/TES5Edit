@@ -10889,19 +10889,33 @@ begin
         vstNav.ClearSelection;
         vstNav.Selected[lNode] := True;
         vstNav.FocusedNode := lNode;
-        TestHost.TestFilterAnswered := '';
-        TestHost.TestFilterAnswer := TTimer.Create(Self);
-        TestHost.TestFilterAnswer.Interval := 100;
-        TestHost.TestFilterAnswer.OnTimer := TestFilterAnswerTimer;
-        TestHost.TestFilterAnswer.Enabled := True;
-        try
-          mniNavRemoveIdenticalToMasterClick(nil);
-        finally
-          TestHost.TestFilterAnswer.Enabled := False;
+        if not xeTestSwitches.FilterBaseline then begin
+          TestHost.TestFilterAnswered := '';
+          TestHost.TestFilterAnswer := TTimer.Create(Self);
+          TestHost.TestFilterAnswer.Interval := 100;
+          TestHost.TestFilterAnswer.OnTimer := TestFilterAnswerTimer;
+          TestHost.TestFilterAnswer.Enabled := True;
+          try
+            mniNavRemoveIdenticalToMasterClick(nil);
+          finally
+            TestHost.TestFilterAnswer.Enabled := False;
+          end;
+          if TestHost.TestFilterAnswered <> '' then
+            lLines.Add('# remove: a dialog was answered: ' + TestHost.TestFilterAnswered);
         end;
-        if TestHost.TestFilterAnswered <> '' then
-          lLines.Add('# remove: a dialog was answered: ' + TestHost.TestFilterAnswered);
         lLines.Add('# remove: ' + lFile.FileName + ' records before ' + IntToStr(lBefore) + ', after ' + IntToStr(lFile.RecordCount));
+        if xeTestSwitches.FilterSaveTo <> '' then begin
+          var lPartial := xeTestSwitches.FilterSaveTo + '.partial';
+          var lStream := TFileStream.Create(lPartial, fmCreate);
+          try
+            lFile.WriteToStream(lStream, rmNo);
+          finally
+            lStream.Free;
+          end;
+          if not MoveFileEx(PChar(lPartial), PChar(xeTestSwitches.FilterSaveTo), MOVEFILE_REPLACE_EXISTING) then
+            RaiseLastOSError;
+          lLines.Add('# remove: written to ' + xeTestSwitches.FilterSaveTo);
+        end;
       end;
       CheckResult := 0;
     except

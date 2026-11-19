@@ -388,6 +388,8 @@ type
     FilterHasVWDMesh      : string;
     FilterScaledActors    : Boolean;
     FilterArms            : string;
+    FilterSaveTo          : string;
+    FilterBaseline        : Boolean;
     FilterImages          : Integer;
     Pump                  : string;
     PumpFile              : string;
@@ -962,6 +964,8 @@ begin
     wbFindCmdLineParam('testfilterhasvwdmesh', FilterHasVWDMesh);
     FilterScaledActors := FindCmdLineSwitch('testfilterscaledactors');
     wbFindCmdLineParam('testfilterarms', FilterArms);
+    wbFindCmdLineParam('testfiltersaveto', FilterSaveTo);
+    FilterBaseline := FindCmdLineSwitch('testfilterbaseline');
     if wbFindCmdLineParam('testfilterimages', s) then
       FilterImages := StrToIntDef(s, 0);
     if (FilterFile = '') or
