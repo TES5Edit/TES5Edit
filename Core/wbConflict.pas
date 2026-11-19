@@ -1068,6 +1068,33 @@ begin
   Result := True;
 end;
 
+procedure ReportContentMasters(const aTarget, aContent: IwbElement; const aMasters: TwbFilesSet);
+
+  procedure Walk(const aElement: IwbElement);
+  var
+    lContainer : IwbContainerElementRef;
+    lLinked    : IwbMainRecord;
+  begin
+    if Supports(aElement, IwbContainerElementRef, lContainer) and (lContainer.ElementCount > 0) then begin
+      for var i := 0 to Pred(lContainer.ElementCount) do
+        Walk(lContainer.Elements[i]);
+      Exit;
+    end;
+    if Supports(aElement.LinksTo, IwbMainRecord, lLinked) then begin
+      var lFile := aTarget.ContextObj.ReferenceMasterFor(aTarget, lLinked);
+      if Assigned(lFile) then
+        aMasters.Add(lFile);
+    end else
+      aElement.ReportRequiredMasters(aMasters, False);
+  end;
+
+begin
+  if gcMasterSlotsInFormID in aTarget.GameDefObj.Capabilities then
+    aContent.ReportRequiredMasters(aMasters, False)
+  else
+    Walk(aContent);
+end;
+
 function wbRequiredMastersForAssign(const aTarget: IwbElement; aIndex: Integer; const aSource: IwbElement): TwbFiles;
 var
   lMasters : TwbFilesSet;
@@ -1085,7 +1112,7 @@ var
           lMasters.Add(lFile);
       end
     else
-      aItem.ReportRequiredMasters(lMasters, False);
+      ReportContentMasters(aTarget, aItem, lMasters);
   end;
 
 var
@@ -2752,7 +2779,7 @@ begin
   try
     for var lRow in Rows do
       if lRow.Selected and Assigned(lRow.Cells[Column]) then
-        lRow.Cells[Column].ReportRequiredMasters(lMasters, False);
+        ReportContentMasters(aTargetFile, lRow.Cells[Column], lMasters);
     Result := aTargetFile.RequiredMastersFor(lMasters);
   finally
     lMasters.Free;

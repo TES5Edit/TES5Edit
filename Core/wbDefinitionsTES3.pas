@@ -1522,8 +1522,8 @@ begin
 
   RegisterRecordDef(INFO, 'Dialog Response', @wbKnownSubRecordSignaturesINFO, [
     wbStringForward(INAM, 'Response ID').SetRequired,
-    wbStringForward(PNAM, 'Previous Response ID').SetRequired,
-    wbStringForward(NNAM, 'Next Response ID').SetRequired,
+    wbStringForward(PNAM, 'Previous Response ID').SetRequired.IncludeFlag(dfKeptOnAssign),
+    wbStringForward(NNAM, 'Next Response ID').SetRequired.IncludeFlag(dfKeptOnAssign),
     wbStruct(DATA, 'Data', [
       wbInteger('Dialog Type', itU32, wbDialogTypeEnum),
       wbInteger('Disposition/Index', itU32),
@@ -1820,7 +1820,7 @@ begin
          .IncludeFlag(dfCollapsed, clpVertices in DefineOptions.Collapse)
          .IncludeFlag(dfNoMove)),
     IfThen(DefineOptions.SimpleRecords,
-      wbByteArray(VTEX, 'Textures'),
+      wbByteArray(VTEX, 'Textures').IncludeFlag(dfLandTextureIndices),
       wbArray(VTEX, 'Textures',
         wbArray('Row',
           wbInteger('Column', itU16), //[LTEX]
@@ -1829,7 +1829,8 @@ begin
            .IncludeFlag(dfNoMove),
       16).SetSummaryName('Rows')
          .IncludeFlag(dfCollapsed, clpOther in DefineOptions.Collapse)
-         .IncludeFlag(dfNoMove))
+         .IncludeFlag(dfNoMove)
+         .IncludeFlag(dfLandTextureIndices))
   ]).SetFormIDBase($D0)
     .SetFormIDNameBase($B0)
     .SetGridFormIDBase(wbLandGridFormIDBase)

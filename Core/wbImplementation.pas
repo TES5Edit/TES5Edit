@@ -969,6 +969,8 @@ type
     function GetContainedRecordByLoadOrderFormID(const aFormID: TwbFormID; aAllowInjected: Boolean): IwbMainRecord;
     function GetRecordFromIndexByKey(aIndex: TwbNamedIndex; const aKey: string): IwbMainRecord;
     function GetGroupBySignature(const aSignature: TwbSignature): IwbGroupRecord;
+    function PaletteNameAt(aIndex: Int64; out aName: string): Boolean;
+    function LandTexturesRefusal(const aSource: IwbElement): string;
     function HasGroup(const aSignature: TwbSignature): Boolean;
     function GetFileStates: TwbFileStates; inline;
     function GetCRC32: TwbCRC32;
@@ -1384,7 +1386,8 @@ type
     mrsConflictStored,
     mrsRegisterLater,
     mrsAssigningWhole,
-    mrsKeepKey
+    mrsKeepKey,
+    mrsRestoring
   );
 
   TwbMainRecordStates = set of TwbMainRecordState;
@@ -1548,6 +1551,8 @@ type
     function IdentityUntouched: Boolean;
     function IsIdentityElement(const aElement: IwbElement): Boolean;
     function IdentityWriteRefusal(const aEditorID: string): string;
+    function WholeAssignKeepsOwn(const aSource: IwbMainRecord): Boolean;
+    function IdentityAssignRefusal(const aSource: IwbMainRecord; out aKept: string): string;
     function ReleaseNameEdges: Boolean;
     function ChainHoldsReferrer(const aReferrer: IwbMainRecord): Boolean;
     procedure RebuildNameEdges;
@@ -10006,6 +10011,71 @@ begin
       Dec(Result);
 end;
 
+function TwbFile.PaletteNameAt(aIndex: Int64; out aName: string): Boolean;
+var
+  SelfRef : IwbContainerElementRef;
+  lGroup  : IwbGroupRecord;
+  lRecord : IwbMainRecord;
+
+  function Indexed(const aDef: IwbMainRecordDef): Boolean;
+  begin
+    Result := False;
+    if Assigned(aDef) then
+      for var k := 0 to Pred(aDef.MemberCount) do
+        if dfUniqueInFile in aDef.Members[k].DefFlags then
+          Exit(True);
+  end;
+
+begin
+  aName := '';
+  if aIndex < 0 then
+    Exit(False);
+  SelfRef := Self;
+  DoInit(False);
+  for var i := 0 to Pred(GetElementCount) do
+    if Supports(GetElement(i), IwbGroupRecord, lGroup) and (lGroup.GroupType = 0) and (lGroup.ElementCount > 0) and
+       Supports(lGroup.Elements[0], IwbMainRecord, lRecord) and Indexed(lRecord.GetMainRecordDef) then
+      for var j := 0 to Pred(lGroup.ElementCount) do
+        if Supports(lGroup.Elements[j], IwbMainRecord, lRecord) and not lRecord.IsMarkedDeleted and
+           not (lRecord as TObject as TwbMainRecord).GetFlags.IsIgnored then begin
+          var lIndex := (lRecord as TObject as TwbMainRecord).IndexInFile;
+          if lIndex = aIndex then begin
+            aName := lRecord.EditorID;
+            Exit(True);
+          end;
+        end;
+  Result := False;
+end;
+
+function TwbFile.LandTexturesRefusal(const aSource: IwbElement): string;
+var
+  lData : IwbDataContainer;
+begin
+  Result := '';
+  if not Supports(aSource, IwbDataContainer, lData) then
+    Exit;
+  var lSourceFile := aSource._File;
+  if not Assigned(lSourceFile) or lSourceFile.Equals(Self as IwbFile) then
+    Exit;
+  var lSource := lSourceFile as TObject as TwbFile;
+  var lSeen := TList<Word>.Create;
+  try
+    for var i := 0 to Pred(lData.DataSize div SizeOf(Word)) do begin
+      var lValue := PWord(PByte(lData.DataBasePtr) + i * SizeOf(Word))^;
+      if (lValue = 0) or lSeen.Contains(lValue) then
+        Continue;
+      lSeen.Add(lValue);
+      var lSourceName, lOwnName: string;
+      lSource.PaletteNameAt(lValue - 1, lSourceName);
+      PaletteNameAt(lValue - 1, lOwnName);
+      if not SameText(lSourceName, lOwnName) then
+        Exit(Format('land texture %d names [%s] in %s and [%s] in %s', [lValue, lSourceName, lSourceFile.FileName, lOwnName, GetFileName]));
+    end;
+  finally
+    lSeen.Free;
+  end;
+end;
+
 function TwbFile.GetGroupBySignature(const aSignature: TwbSignature): IwbGroupRecord;
 var
   SelfRef: IwbContainerElementRef;
@@ -15706,6 +15776,13 @@ begin
     end;
 
     if not Assigned(Result) then begin
+      if aElement.ContainsReflection then
+        raise Exception.Create(aElement.Name + ' contains Reflection and can not be assigned');
+      if dfLandTextureIndices in aElement.Def.DefFlags then begin
+        var lRefusal := (GetFile as TObject as TwbFile).LandTexturesRefusal(aElement);
+        if lRefusal <> '' then
+          raise Exception.Create(lRefusal);
+      end;
       Assign(aElement.SortOrder, aElement, not (cfDeepCopy in aFlags));
       Result := GetElementBySortOrder(aElement.SortOrder + GetAdditionalElementCount);
       Assert(Assigned(Result));
@@ -15852,6 +15929,49 @@ begin
 
       if aIndex = wbAssignThis then begin
 
+        var lKeptIdentity := '';
+        var lKeptSignatures: TArray<TwbSignature> := nil;
+        var lKeptValues: TArray<string> := nil;
+        var lHeldIndex: Int64 := -1;
+        if Supports(aElement, IwbMainRecord, MainRecord) and WholeAssignKeepsOwn(MainRecord) then begin
+          if IsEmbeddedReference and not aOnlySK then begin
+            AssignReference(aElement, GetFixedFormID);
+            wbCancelLock;
+            wbProgressLock;
+            try
+              PlaceEmbeddedReference;
+            finally
+              wbProgressUnlock;
+              wbCancelUnlock;
+            end;
+            Exit(Self);
+          end;
+          if not (mrsRestoring in mrStates) then begin
+            var lRefusal := IdentityAssignRefusal(MainRecord, lKeptIdentity);
+            if lRefusal <> '' then
+              raise Exception.Create(lRefusal);
+            lHeldIndex := IndexInFile;
+            if lKeptIdentity <> '' then
+              for var lMember := 0 to Pred(mrDef.MemberCount) do
+                if dfKeptOnAssign in mrDef.Members[lMember].DefFlags then begin
+                  var lKeptElement: IwbElement := GetRecordBySignature(mrDef.Members[lMember].GetDefaultSignature);
+                  if Assigned(lKeptElement) then begin
+                    lKeptSignatures := lKeptSignatures + [mrDef.Members[lMember].GetDefaultSignature];
+                    lKeptValues := lKeptValues + [lKeptElement.EditValue];
+                  end;
+                end;
+          end;
+        end;
+
+        if Supports(aElement, IwbMainRecord, MainRecord) and WholeAssignKeepsOwn(MainRecord) and not (mrsRestoring in mrStates) then
+          for var lMember := 0 to Pred(mrDef.MemberCount) do
+            if dfLandTextureIndices in mrDef.Members[lMember].DefFlags then begin
+              var lRefusal := (GetFile as TObject as TwbFile).LandTexturesRefusal(
+                MainRecord.RecordBySignature[mrDef.Members[lMember].GetDefaultSignature]);
+              if lRefusal <> '' then
+                raise Exception.Create(lRefusal);
+            end;
+
         NeedUpdate := CheckChildOfCell;
 
         SetModified(True);
@@ -15906,6 +16026,22 @@ begin
             end;
           end else
             AddMembersOfNewRecord;
+          if (lKeptIdentity <> '') or (Length(lKeptSignatures) > 0) then
+            if ContextObj.BeginInternalEdit(True) then try
+              if lKeptIdentity <> '' then
+                SetEditorID(lKeptIdentity);
+              for var lKeptIndex := 0 to High(lKeptSignatures) do begin
+                var lKeptTarget: IwbElement := GetRecordBySignature(lKeptSignatures[lKeptIndex]);
+                if not Assigned(lKeptTarget) then
+                  lKeptTarget := Add(string(lKeptSignatures[lKeptIndex]), True);
+                if Assigned(lKeptTarget) then
+                  lKeptTarget.EditValue := lKeptValues[lKeptIndex];
+              end;
+            finally
+              wbEndInternalEdit;
+            end;
+          if lHeldIndex >= 0 then
+            TakeIndexInFile(lHeldIndex);
         finally
           Exclude(mrStates, mrsAssigningWhole);
         end;
@@ -15932,6 +16068,13 @@ begin
               else if IsAddChild then
                 Element.Assign(wbAssignAdd, aElement, aOnlySK);
             end else begin
+
+              if IsAdd and Assigned(aElement) and not (mrsAssigningWhole in mrStates) and (dfLandTextureIndices in Member.DefFlags) and
+                 Member.Equals(aElement.Def) then begin
+                var lRefusal := (GetFile as TObject as TwbFile).LandTexturesRefusal(aElement);
+                if lRefusal <> '' then
+                  raise Exception.Create(lRefusal);
+              end;
 
               if Member.DefType = dtSubRecordUnion then begin
                 var lHasSignature: IwbHasSignature;
@@ -16634,9 +16777,13 @@ begin
   end;
 
   if Assigned(mrDef) then begin
-    if aIndex = wbAssignThis then
-      Result := mrDef.Equals(aElement.Def)
-    else begin
+    if aIndex = wbAssignThis then begin
+      Result := mrDef.Equals(aElement.Def);
+      var lSource: IwbMainRecord;
+      var lKept: string;
+      if Result and Supports(aElement, IwbMainRecord, lSource) then
+        Result := IdentityAssignRefusal(lSource, lKept) = '';
+    end else begin
       Result := (aIndex >= 0) and (aIndex < mrDef.MemberCount) and
         (
           mrDef.Members[aIndex].CanAssign(Self, wbAssignThis, aElement.Def) or
@@ -18893,6 +19040,41 @@ begin
   var lGridBase := mrDef.GetGridFormIDBase;
   Result := (aHasGrid and (lGridBase > 0) and aGrid.ToGridKey(lGridBase, aKey)) or
     ContextObj.FindIdentity(mrDef.GetFormIDBase, mrDef.GetFormIDNameBase, aIdentity, aKey);
+end;
+
+function TwbMainRecord.WholeAssignKeepsOwn(const aSource: IwbMainRecord): Boolean;
+begin
+  Result := Assigned(aSource) and Assigned(mrDef) and not (gcFormIDInRecordHeader in GameDefObj.Capabilities) and
+    (mrStates * [mrsRegisterLater, mrsKeepKey] = []) and not (aSource.IsDeleted or aSource.IsPartialForm);
+end;
+
+function TwbMainRecord.IdentityAssignRefusal(const aSource: IwbMainRecord; out aKept: string): string;
+var
+  lOwn           : string;
+  lSource        : string;
+  lOwnHasGrid    : Boolean;
+  lSourceHasGrid : Boolean;
+  lOwnGrid       : TwbGridCell;
+  lSourceGrid    : TwbGridCell;
+begin
+  Result := '';
+  aKept := '';
+  if not WholeAssignKeepsOwn(aSource) or (mrsRestoring in mrStates) or not mrDef.IsKeyedByIdentity then
+    Exit;
+  if not GetCurrentIdentity(lOwn, lOwnHasGrid, lOwnGrid) or (lOwn = '') then
+    Exit;
+  var lSourceRecord := aSource as TObject as TwbMainRecord;
+  if not lSourceRecord.GetCurrentIdentity(lSource, lSourceHasGrid, lSourceGrid) then
+    lSource := '';
+  lOwnHasGrid := lOwnHasGrid and (mrDef.GetGridFormIDBase > 0);
+  lSourceHasGrid := lSourceHasGrid and Assigned(lSourceRecord.mrDef) and (lSourceRecord.mrDef.GetGridFormIDBase > 0);
+  if (lSource <> '') and (lOwnHasGrid <> lSourceHasGrid) then
+    Exit('the two records are keyed differently, one by its grid and the other by its name');
+  if lOwn.ToLowerInvariant = lSource.ToLowerInvariant then
+    Exit;
+  if lOwnHasGrid then
+    Exit('a record keyed by its grid can only take the content of the record at the same grid');
+  aKept := GetEditorID;
 end;
 
 procedure TwbMainRecord.TakeCopyIdentity(const aSource: IwbMainRecord; const aRules: TwbCopyRules);
@@ -22258,8 +22440,10 @@ begin
         _AddRef; _Release;
       end;
 
+      var lWasRestoring := mrsRestoring in mrStates;
       BeginUpdate;
       try
+        Include(mrStates, mrsRestoring);
         if Assigned(mrDef) then
           AddMembersOfNewRecord;
 
@@ -22291,6 +22475,8 @@ begin
         if not (Master.IsDeleted or Master.IsPartialForm) then
           Self.Assign(wbAssignThis, Master, False);
       finally
+        if not lWasRestoring then
+          Exclude(mrStates, mrsRestoring);
         EndUpdate;
       end;
 
@@ -22410,8 +22596,10 @@ begin
         _AddRef; _Release;
       end;
 
+      var lWasRestoring := mrsRestoring in mrStates;
       BeginUpdate;
       try
+        Include(mrStates, mrsRestoring);
         AddMembersOfNewRecord;
 
         Master := GetMaster;
@@ -22442,6 +22630,8 @@ begin
         if not (Master.IsDeleted or Master.IsPartialForm) then
           Self.Assign(wbAssignThis, Master, False);
       finally
+        if not lWasRestoring then
+          Exclude(mrStates, mrsRestoring);
         EndUpdate;
       end;
     end;
@@ -24152,6 +24342,15 @@ begin
 
   SelfRef := Self as IwbContainerElementRef;
   DoInit(True);
+
+  var lVtexRecord := GetContainingMainRecord;
+  if (aIndex = wbAssignThis) and Assigned(srDef) and (dfLandTextureIndices in srDef.DefFlags) and Assigned(aElement) and
+     srDef.Equals(aElement.Def) and not (Assigned(lVtexRecord) and
+     (mrsAssigningWhole in (lVtexRecord as TObject as TwbMainRecord).mrStates)) then begin
+    var lRefusal := (GetFile as TObject as TwbFile).LandTexturesRefusal(aElement);
+    if lRefusal <> '' then
+      raise Exception.Create(lRefusal);
+  end;
 
   if (aIndex = wbAssignThis) and not aOnlySK and Assigned(srDef) and (dfFastAssign in srDef.DefFlags) and not (srsIsArray in srStates) and
      GameDefObj.IsMorrowind and Assigned(aElement) and srDef.Equals(aElement.Def) then begin
@@ -29996,6 +30195,9 @@ begin
       end;
     end;
   end;
+
+  if aElement.ContainsReflection then
+    raise Exception.Create(aElement.Name + ' contains Reflection and can not be assigned');
 
   var lPlaceholder: IwbElement := nil;
   if (csAsCreatedEmpty in cntStates) then begin
