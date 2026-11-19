@@ -5833,7 +5833,6 @@ var
   lNodeType: TwbWwiseNodeType;
   lList1, lList2: TStringList;
   lString1, lString2: string;
-  lDef: IwbNamedDef;
   lElement: IwbElement;
   lFile: IwbFile;
   lParentNodePath: string;
@@ -5845,16 +5844,22 @@ begin
     Exit;
 
   lNodeType := wntUnknown;
-  if Supports(aElement.Def, IwbWwiseGuidDef, lDef) then
+
+  var lGuidDef: IwbWwiseGuidDef;
+  var lSubRecordDef: IwbSubRecordDef;
+
+  if Supports(aElement.Def, IwbWwiseGuidDef, lGuidDef) then
   begin
-    lNodeType := (lDef as IwbWwiseGuidDef).NodeType;
-    lParentNodePath := (lDef as IwbWwiseGuidDef).ParentNodePath;
+    lNodeType := lGuidDef.NodeType;
+    lParentNodePath := lGuidDef.ParentNodePath;
   end
   else
-  if Supports(aElement.Def, IwbSubRecordWithWwiseGuidDef, lDef) then
+  if Supports(aElement.Def, IwbSubRecordDef, lSubRecordDef) and
+     Supports(lSubRecordDef.Value, IwbWwiseGuidDef, lGuidDef)
+  then
   begin
-    lNodeType := (lDef as IwbSubRecordWithWwiseGuidDef).NodeType;
-    lParentNodePath := (lDef as IwbSubRecordWithWwiseGuidDef).ParentNodePath;
+    lNodeType := lGuidDef.NodeType;
+    lParentNodePath := lGuidDef.ParentNodePath;
   end;
 
   if lNodeType = wntUnknown then
