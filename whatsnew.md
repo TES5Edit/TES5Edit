@@ -8,8 +8,10 @@ xEdit is crucial to our shared modding community and your contribution - no matt
 
 ## Improvements
 * The What's New tab shows these notes with their formatting: code in a monospaced font on a shaded box, a rule under the main headings, italics, strike-through, links, and nested and numbered lists, in colours taken from the active theme, dark or light.
+* The Vampyre Imaging Library is updated from its upstream project; LOD textures generated with it differ in their bytes from those of earlier versions.
 
 ## Bugfixes
+* BSArchPro no longer shows an error at startup when it restores the file list of its previous session: a list saved by an earlier version carries zero bytes after its data, which are now ignored, and lists are saved without them.
 * Remove is no longer offered for a plugin's Player Reference (PLYR) group while it holds a record: the record can not be removed on its own, and removing the group removed it anyway.
 * Setting Persistent or Visible When Distant on a reference whose position names no cell is refused without changing the flag; the flag used to stay changed while the reference stayed in its old group.
 * Cleanup Injected no longer asks to add masters that only a record it then skips would need, because its target already holds its own override of that record.
