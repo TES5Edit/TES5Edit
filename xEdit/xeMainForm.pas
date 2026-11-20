@@ -11673,7 +11673,7 @@ begin
     Exit;
   if aMainRecord.IsMaster then
     Exit;
-  if aMainRecord.Flags.IsDeleted then
+  if aMainRecord.IsDeleted then
     Exit;
   Master := aMainRecord.Master;
   if not Assigned(Master) then
@@ -11695,7 +11695,7 @@ end;
 function IsUnnecessaryPersistent(MainRecord: IwbMainRecord): Boolean;
 begin
   var lGameDef := xeContext.GameDefObj;
-  if MainRecord.Flags.IsDeleted then begin
+  if MainRecord.IsDeleted then begin
     Result := IsMasterTemporary(MainRecord);
     Exit;
   end;

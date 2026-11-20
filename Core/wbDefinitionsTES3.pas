@@ -44,7 +44,8 @@ const
     '____',
     '____',
     '____',
-    '____'
+    '____',
+    'DELE'
   );
 
   wbKnownSubRecordSignaturesLAND : TwbKnownSubRecordSignatures = (
@@ -52,7 +53,8 @@ const
     '____',
     '____',
     'INTV',
-    '____'
+    '____',
+    'DELE'
   );
 
   wbKnownSubRecordSignaturesREFR : TwbKnownSubRecordSignatures = (
@@ -60,7 +62,8 @@ const
     '____',
     'NAME',
     '____',
-    '____'
+    '____',
+    'DELE'
   );
 
   wbKnownSubRecordSignaturesINFO : TwbKnownSubRecordSignatures = (
@@ -68,7 +71,8 @@ const
     'NAME',
     '____',
     '____',
-    '____'
+    '____',
+    'DELE'
   );
 
   wbKnownSubRecordSignaturesINDX : TwbKnownSubRecordSignatures = (
@@ -76,7 +80,8 @@ const
     'DESC',
     '____',
     '____',
-    '____'
+    '____',
+    'DELE'
   );
 
   wbKnownSubRecordSignaturesSCPT : TwbKnownSubRecordSignatures = (
@@ -84,7 +89,8 @@ const
     '____',
     '____',
     '____',
-    '____'
+    '____',
+    'DELE'
   );
 
   wbKnownSubRecordSignaturesSSCR : TwbKnownSubRecordSignatures = (
@@ -92,7 +98,19 @@ const
     'NAME',
     '____',
     '____',
-    '____'
+    '____',
+    'DELE'
+  );
+
+  wbKeptWhenDeleted: array[0..7] of string = (
+    'CELL NAME DATA',
+    'LAND INTV DATA',
+    'PGRD NAME DATA',
+    'INFO INAM PNAM NNAM',
+    'LTEX NAME INTV DATA',
+    'SCPT SCHD',
+    'SSCR DATA NAME',
+    'REFR FRMR NAME CNDT'
   );
 
 function wbNotRemovable(const aElement: IwbElement): Boolean;
@@ -143,20 +161,10 @@ begin
   end;
 end;
 
-procedure wbDeletedAfterLoad(const aElement: IwbElement);
-var
-  Container  : IwbContainerElementRef;
-  MainRecord : IwbMainRecord;
+procedure wbDeletedToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 begin
-  if aElement.ContextObj.BeginInternalEdit then try
-    if not wbTryGetContainerWithValidMainRecord(aElement, Container, MainRecord) then
-      Exit;
-
-    if Assigned(MainRecord.ElementBySignature['DELE']) then
-      Container.ElementNativeValues['DELE'] := 0;
-  finally
-    wbEndInternalEdit;
-  end;
+  if aType = ctToSortKey then
+    aValue := 'Deleted';
 end;
 
 function wbEffectAreaDontShow(const aElement: IwbElement): Boolean;
@@ -822,7 +830,8 @@ end;
 
 function wbDeleted: IwbRecordMemberDef;
 begin
-  Result := wbInteger(DELE, 'Deleted', itU32, wbEnum(['True']));
+  Result := wbByteArray(DELE, 'Deleted', 0, cpNormal).SetToStr(wbDeletedToStr);
+  Result.IncludeFlag(dfNoReport);
 end;
 
 function wbDescription: IwbRecordMemberDef;
@@ -1011,6 +1020,7 @@ begin
   gdKnownSubRecordSignatures[ksrFullName] := 'FNAM';
   gdKnownSubRecordSignatures[ksrBaseRecord] := '____';
   gdKnownSubRecordSignatures[ksrGridCell] := 'DATA';
+  gdKnownSubRecordSignatures[ksrDeleted] := 'DELE';
 
   {>>> Records <<<}
 
@@ -1830,7 +1840,8 @@ begin
       16).SetSummaryName('Rows')
          .IncludeFlag(dfCollapsed, clpOther in DefineOptions.Collapse)
          .IncludeFlag(dfNoMove)
-         .IncludeFlag(dfLandTextureIndices))
+         .IncludeFlag(dfLandTextureIndices)),
+    wbDeleted
   ]).SetFormIDBase($D0)
     .SetFormIDNameBase($B0)
     .SetGridFormIDBase(wbLandGridFormIDBase)
@@ -2164,7 +2175,8 @@ begin
       wbArray(PGRC, 'Point Connections',
         wbArrayS('Point Connection',
           wbInteger('Point', itU32),
-        wbCalcPGRCSize).IncludeFlag(dfElementsFixed)).IncludeFlagOnValue(dfElementsFixed).IncludeFlag(dfCollapsed, clpNavmesh in DefineOptions.Collapse))
+        wbCalcPGRCSize).IncludeFlag(dfElementsFixed)).IncludeFlagOnValue(dfElementsFixed).IncludeFlag(dfCollapsed, clpNavmesh in DefineOptions.Collapse)),
+    wbDeleted
   ]).SetFormIDBase($F0)
     .SetFormIDNameBase($B0)
     .SetGridFormIDBase(wbPathgridGridFormIDBase)
@@ -2327,8 +2339,7 @@ begin
           aFormID.FileID[lLayout] := TwbFileID.CreateFull($FF);
       end;
     end)
-    .SetNewRecordCallback(wbReferenceNewRecord)
-    .SetAfterLoad(wbDeletedAfterLoad);
+    .SetNewRecordCallback(wbReferenceNewRecord);
 
   RegisterRecordDef(REGN, 'Region', [
     wbDeleted,
@@ -2551,7 +2562,6 @@ begin
     wbStringForward(DATA, 'Numerical ID').SetRequired,
     wbNameReference(NAME, 'Script', [SCPT], [], 0, True).SetRequired
   ]).SetFormIDBase($3F)
-    .SetAfterLoad(wbDeletedAfterLoad)
     .IncludeFlag(dfNoCopyAsNew);
 
   RegisterRecordDef(STAT, 'Static',
@@ -2665,6 +2675,24 @@ begin
   AddGroupOrder(SNDG);
   AddGroupOrder(DIAL);
   AddGroupOrder(INFO);
+  for var lEntry in gdRecordDefs do begin
+    var lDef := lEntry.rdeDef;
+    if lDef.KnownSubRecordMemberIndex[ksrDeleted] < 0 then
+      Continue;
+    var lKept: TArray<string> := nil;
+    for var lLine in wbKeptWhenDeleted do
+      if lLine.StartsWith(string(lEntry.rdeSignature) + ' ') then
+        lKept := lLine.Substring(5).Split([' ']);
+    for var i := 0 to Pred(lDef.MemberCount) do begin
+      var lMember := lDef.Members[i];
+      var lKeep := (lKept = nil) and (i = lDef.KnownSubRecordMemberIndex[ksrEditorID]);
+      for var lSignature in lKept do
+        if string(lMember.DefaultSignature) = lSignature then
+          lKeep := True;
+      if lKeep then
+        lMember.IncludeFlagNoClone(dfKeptWhenDeleted);
+    end;
+  end;
   gdNexusModsUrl := 'https://www.nexusmods.com/morrowind/mods/54508';
   gdHEDRVersion := 1.30;
   gdHardcodedRangeAdmitted := True;

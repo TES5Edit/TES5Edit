@@ -1652,6 +1652,13 @@ type
     function GetIsDeleted: Boolean;
     procedure SetIsDeleted(aValue: Boolean);
     function GetIsMarkedDeleted: Boolean;
+    function HoldsDeletion: Boolean;
+    function IsDeletionElement(const aElement: IwbElement): Boolean;
+    function DeletionRefusal(aChildren: Boolean): string;
+    function RestorationSource: IwbMainRecord;
+    procedure DeleteBySubrecord;
+    procedure UndeleteBySubrecord;
+    function DeletedSourceRefused(aIndex: Integer; const aElement: IwbElement): Boolean;
     function GetIsPartialForm: Boolean;
     procedure SetIsPartialForm(aValue: Boolean);
     function GetCanBePartial: Boolean;
@@ -4633,7 +4640,10 @@ var
     if not Assigned(lRecordFile) then
       Exit;
     if aRecord.IsDeleted then
-      Exit(Refused('its header marks it deleted, and its copy would lose what keys it'));
+      if gcDeletedBySubrecord in aContext.GameDefObj.Capabilities then
+        Exit(Refused('it is deleted (it holds a Deleted subrecord)'))
+      else
+        Exit(Refused('its header marks it deleted, and its copy would lose what keys it'));
     if Assigned(lRecord.mrDef) and not lRecord.mrDef.IsKeyedByIdentity then
       Exit(OfReference(aRecord));
     if aNew and Assigned(lRecord.mrDef) and (dfNoCopyAsNew in lRecord.mrDef.DefFlags) then
@@ -15897,6 +15907,12 @@ begin
     if not lContext.Settings.EditAllowed then
       raise Exception.Create(GetName + ' can not be assigned.');
 
+  if not wbIsInternalEdit and Assigned(mrDef) and (aIndex >= 0) and (aIndex = mrDef.KnownSubRecordMemberIndex[ksrDeleted]) then
+    raise Exception.Create(GetName + ': a record is deleted and undeleted through IsDeleted, never by adding its Deleted member');
+
+  if DeletedSourceRefused(aIndex, aElement) then
+    raise Exception.Create(GetName + ': the content of a deleted record (' + (aElement as IwbMainRecord).Name + ') can not be assigned; undelete it first');
+
   if GetIsDeleted then
     if aIndex <> wbAssignThis then
       if not DeletedKeeps(aIndex, aElement) then
@@ -16741,12 +16757,18 @@ function TwbMainRecord.CanAssignInternal(aIndex: Integer; const aElement: IwbEle
 begin
   Result := False;
 
+  if DeletedSourceRefused(aIndex, aElement) then
+    Exit;
+
   if not wbIsInternalEdit then begin
     if not ContextObj.Settings.EditAllowed then
       Exit;
     if Assigned(mrDef) and (dfInternalEditOnly in mrDef.DefFlags) then
       Exit;
   end;
+
+  if not wbIsInternalEdit and Assigned(mrDef) and (aIndex >= 0) and (aIndex = mrDef.KnownSubRecordMemberIndex[ksrDeleted]) then
+    Exit;
 
   if GetIsDeleted then
     if aIndex <> wbAssignThis then
@@ -17215,6 +17237,11 @@ var
   BasePtr     : Pointer;
   GroupRecord : IwbGroupRecord;
 begin
+  if gcDeletedBySubrecord in GameDefObj.Capabilities then begin
+    DeleteBySubrecord;
+    Exit;
+  end;
+
   SelfRef := Self;
   DoInit(False);
 
@@ -17264,10 +17291,190 @@ begin
   end;
 end;
 
+function TwbMainRecord.DeletionRefusal(aChildren: Boolean): string;
+
+  function HoldsRecords(const aGroup: IwbGroupRecord): Boolean;
+  begin
+    Result := False;
+    if not Assigned(aGroup) then
+      Exit;
+    for var i := 0 to Pred(aGroup.ElementCount) do begin
+      var lElement := aGroup.Elements[i];
+      if lElement.ElementType = etMainRecord then
+        Exit(True);
+      var lGroup: IwbGroupRecord;
+      if Supports(lElement, IwbGroupRecord, lGroup) and HoldsRecords(lGroup) then
+        Exit(True);
+    end;
+  end;
+
+begin
+  Result := '';
+  if not (gcDeletedBySubrecord in GameDefObj.Capabilities) then
+    Exit;
+  if not Assigned(mrDef) or (mrDef.KnownSubRecordMemberIndex[ksrDeleted] < 0) then
+    Exit(GetName + ' can not be deleted: the game does not delete a record of this kind');
+  if aChildren and HoldsRecords(mrGroup) then
+    Exit(GetName + ' can not be deleted while its child group holds records, deleted ones included');
+end;
+
+procedure TwbMainRecord.DeleteBySubrecord;
+var
+  SelfRef : IwbContainerElementRef;
+begin
+  if HoldsDeletion then
+    Exit;
+  var lRefusal := DeletionRefusal(True);
+  if lRefusal <> '' then
+    raise Exception.Create(lRefusal);
+
+  SelfRef := Self;
+  DoInit(True);
+
+  wbCancelLock;
+  wbProgressLock;
+  try
+    BeginUpdate;
+    try
+      SetModified(True);
+      if ContextObj.BeginInternalEdit(True) then try
+        for var i := High(cntElements) downto GetAdditionalElementCount do begin
+          var lDef := cntElements[i].Def;
+          if not (Assigned(lDef) and (dfKeptWhenDeleted in lDef.DefFlags)) then
+            RemoveElement(i, True);
+        end;
+        for var i := 0 to Pred(mrDef.MemberCount) do
+          if (dfKeptWhenDeleted in mrDef.Members[i].DefFlags) and mrDef.Members[i].Required and
+             not Assigned(GetElementBySortOrder(i + GetAdditionalElementCount)) then
+            Assign(i, nil, False);
+        var lDeletion := Assign(mrDef.KnownSubRecordMemberIndex[ksrDeleted], nil, False);
+        if not Assigned(lDeletion) then
+          raise Exception.Create(GetName + ' could not be deleted: its Deleted member was not created');
+        lDeletion.EditValue := '00 00 00 00';
+        if Length(cntElements) > 1 then
+          wbMergeSortPtr(@cntElements[0], Length(cntElements), CompareSubRecords);
+      finally
+        wbEndInternalEdit;
+      end;
+      NameKeysChanged([mrFixedFormID]);
+    finally
+      EndUpdate;
+    end;
+  finally
+    wbProgressUnlock;
+    wbCancelUnlock;
+  end;
+end;
+
+function TwbMainRecord.RestorationSource: IwbMainRecord;
+
+  function LoadedByGame(const aVersion: IwbMainRecord): Boolean;
+  begin
+    Result := not (aVersion.IsDeleted or aVersion.IsPartialForm or aVersion.Flags.IsIgnored);
+    if not Result then
+      Exit;
+    var lIsInfo := aVersion.Signature = 'INFO';
+    if not (lIsInfo or (aVersion as TObject as TwbMainRecord).IsEmbeddedReference) then
+      Exit;
+    var lGroup: IwbGroupRecord;
+    if not Supports(aVersion.Container, IwbGroupRecord, lGroup) then
+      Exit;
+    var lHolder := lGroup.ChildrenOf;
+    if Assigned(lHolder) then
+      Result := not (lHolder.Flags.IsIgnored or (lIsInfo and lHolder.IsDeleted));
+  end;
+
+begin
+  Result := nil;
+  var lMaster := GetMaster;
+  if not Assigned(lMaster) then
+    Exit;
+  var lFile := GetFile;
+  var lClosure := lFile.AllMasters;
+  var lSelfIndex := -1;
+  for var i := 0 to Pred(lMaster.OverrideCount) do
+    if Equals(lMaster.Overrides[i]) then begin
+      lSelfIndex := i;
+      Break;
+    end;
+  if lSelfIndex < 0 then
+    Exit;
+  for var i := Pred(lSelfIndex) downto -1 do begin
+    var lVersion := lMaster;
+    if i >= 0 then
+      lVersion := lMaster.Overrides[i];
+    if not LoadedByGame(lVersion) then
+      Continue;
+    for var lCandidate in lClosure do
+      if lVersion._File.Equals(lCandidate) then
+        Exit(lVersion);
+  end;
+end;
+
+procedure TwbMainRecord.UndeleteBySubrecord;
+var
+  SelfRef : IwbContainerElementRef;
+begin
+  SelfRef := Self;
+  DoInit(True);
+  var lSource := RestorationSource;
+  wbCancelLock;
+  try
+    BeginUpdate;
+    try
+      if Assigned(lSource) then
+        AssignInternal(wbAssignThis, lSource, False)
+      else begin
+        SetModified(True);
+        if ContextObj.BeginInternalEdit(True) then try
+          for var i := High(cntElements) downto GetAdditionalElementCount do
+            if not (Assigned(cntElements[i].Def) and (dfKeptWhenDeleted in cntElements[i].Def.DefFlags)) then
+              RemoveElement(i, True);
+          AddMembersOfNewRecord;
+          if Length(cntElements) > 1 then
+            wbMergeSortPtr(@cntElements[0], Length(cntElements), CompareSubRecords);
+        finally
+          wbEndInternalEdit;
+        end;
+        if IsEmbeddedReference then
+          PlaceEmbeddedReference;
+      end;
+    finally
+      EndUpdate;
+    end;
+  finally
+    wbCancelUnlock;
+  end;
+end;
+
+function TwbMainRecord.DeletedSourceRefused(aIndex: Integer; const aElement: IwbElement): Boolean;
+var
+  lSource : IwbMainRecord;
+begin
+  Result := (aIndex = wbAssignThis) and (gcDeletedBySubrecord in GameDefObj.Capabilities) and
+    Supports(aElement, IwbMainRecord, lSource) and lSource.IsDeleted;
+end;
+
 procedure TwbMainRecord.DeleteInto(const aFile: IwbFile);
 var
   MainRecord: IwbMainRecord;
 begin
+  var lRefusal := DeletionRefusal(False);
+  if (lRefusal = '') and (gcDeletedBySubrecord in GameDefObj.Capabilities) then begin
+    var lMaster := (Self as IwbMainRecord).MasterOrSelf;
+    var lHeld: IwbMainRecord := nil;
+    if lMaster._File.Equals(aFile) then
+      lHeld := lMaster;
+    for var i := 0 to Pred(lMaster.OverrideCount) do
+      if lMaster.Overrides[i]._File.Equals(aFile) then
+        lHeld := lMaster.Overrides[i];
+    if Assigned(lHeld) and (lHeld as TObject as TwbMainRecord).HoldsDeletion then
+      Exit;
+    if Assigned(lHeld) then
+      lRefusal := (lHeld as TObject as TwbMainRecord).DeletionRefusal(True);
+  end;
+  if lRefusal <> '' then
+    raise Exception.Create(lRefusal);
   if Supports(CopyInto(aFile, [], wbNoCopyRules), IwbMainRecord, MainRecord) then
     MainRecord.Delete;
 end;
@@ -17520,6 +17727,8 @@ begin
   CurrentDefPos := 0;
   CurrentRecPos := 0;
   Exclude(mrStates, mrsGridCellChecked);
+  var lDeletedIndex := mrDef.KnownSubRecordMemberIndex[ksrDeleted];
+  var lDeletedSignature := mrDef.KnownSubRecordSignatures[ksrDeleted];
 
   while (CurrentRecPos < Length(cntElements)) do begin
     if cntElements[CurrentRecPos].ElementType <> etSubRecord then begin
@@ -17543,6 +17752,22 @@ begin
       end;
       CurrentDef := mrDef.Members[CurrentDefPos];
     end else begin
+      if (lDeletedIndex >= 0) and (CurrentRec.Signature = lDeletedSignature) and (lDeletedIndex in PresentRecords) then begin
+        if wbHasProgressCallback then
+          wbProgressCallback('Error: record ' + String(GetSignature) + ' contains unexpected (or out of order) subrecord ' + String(CurrentRec.Signature));
+        FoundError := True;
+        Inc(CurrentRecPos);
+        Continue;
+      end;
+      if (lDeletedIndex >= 0) and (CurrentDefPos > lDeletedIndex) and (CurrentRec.Signature = lDeletedSignature) then begin
+        (CurrentRec as IwbSubRecordInternal).SetDef(mrDef.Members[lDeletedIndex] as IwbSubRecordDef);
+        (cntElements[CurrentRecPos] as IwbElementInternal).SetSortOrder(lDeletedIndex);
+        (cntElements[CurrentRecPos] as IwbElementInternal).SetMemoryOrder(lDeletedIndex);
+        Include(PresentRecords, lDeletedIndex);
+        LastElementForMember[lDeletedIndex] := cntElements[CurrentRecPos];
+        Inc(CurrentRecPos);
+        Continue;
+      end;
       if not mrDef.ContainsMemberFor(Self, CurrentRec.Signature, CurrentRec) then begin
         if wbHasProgressCallback then
           wbProgressCallback('Error: record ' + String(GetSignature) + ' contains unexpected (or out of order) subrecord ' + String(CurrentRec.DisplaySignature) + ' ' + IntToHex(Int64(Cardinal(CurrentRec.Signature)), 8) );
@@ -17687,7 +17912,7 @@ begin
 
   mrDef.AfterLoad(Self);
 
-  if not (mrStruct.mrsFlags(gcFormIDInRecordHeader in lCapabilities).IsDeleted or GetIsPartialForm) then begin
+  if not (GetIsDeleted or GetIsPartialForm) then begin
     for i := 0 to Pred(mrDef.MemberCount) do
       if mrDef.Members[i].Required then
         Include(RequiredRecords, i);
@@ -18104,6 +18329,8 @@ function TwbMainRecord.DeletedKeeps(aIndex: Integer; const aElement: IwbElement)
 var
   lHasSignature: IwbHasSignature;
 begin
+  if gcDeletedBySubrecord in GameDefObj.Capabilities then
+    Exit(Assigned(mrDef) and (aIndex >= 0) and (aIndex < mrDef.MemberCount) and (dfKeptWhenDeleted in mrDef.Members[aIndex].DefFlags));
   Result := (gcDeletedRecordKeepsBaseRecord in GameDefObj.Capabilities) and Assigned(mrDef) and
     (mrDef.KnownSubRecordMemberIndex[ksrBaseRecord] = aIndex);
   if Result and Supports(aElement, IwbHasSignature, lHasSignature) then
@@ -18280,13 +18507,17 @@ begin
       Exit;
   end;
 
-  if mrStruct.mrsFlags(gcFormIDInRecordHeader in GameDefObj.Capabilities).IsDeleted then begin
+  if GetIsDeleted then begin
     Result := '';
 
     for i := GetAdditionalElementCount to Pred(GetElementCount) do begin
       Element := cntElements[i];
       Def := Element.Def;
       if Assigned(Def) then begin
+        if dfKeptWhenDeleted in Def.DefFlags then
+          Continue;
+        if IsDeletionElement(Element) then
+          Continue;
         if mrDef.IsReference and Supports(Def, IwbSignatureDef, SigDef) and (mrDef.KnownSubRecordSignatures[ksrBaseRecord] = SigDef.DefaultSignature) then
           Continue;
         Result := Result + Def.Name + ', ';
@@ -19586,7 +19817,61 @@ end;
 
 function TwbMainRecord.GetIsDeleted: Boolean;
 begin
-  Result := GetFlags.IsDeleted;
+  if gcDeletedBySubrecord in GameDefObj.Capabilities then
+    Result := HoldsDeletion
+  else
+    Result := GetFlags.IsDeleted;
+end;
+
+function TwbMainRecord.HoldsDeletion: Boolean;
+begin
+  Result := False;
+  if not Assigned(mrDef) or (mrDef.KnownSubRecordMemberIndex[ksrDeleted] < 0) then
+    Exit;
+  var lSignature := mrDef.KnownSubRecordSignatures[ksrDeleted];
+  var lRefHold: TRefGuard;
+  RefShortHold(lRefHold, Self);
+  if Length(cntElements) > 0 then begin
+    var lRecord: IwbRecord;
+    for var i := Low(cntElements) to High(cntElements) do
+      if Supports(cntElements[i], IwbRecord, lRecord) and (lRecord.Signature = lSignature) then
+        Exit(True);
+    Exit;
+  end;
+  if (dcfStorageInvalid in dcFlags) or not Assigned(dcBasePtr) then
+    Exit;
+  var lHeaderSize: NativeUInt := 6;
+  if gcSubrecordSize32Bit in GameDefObj.Capabilities then
+    lHeaderSize := 8;
+  var lIsCell := GetSignature = 'CELL';
+  var lPtr: PByte := GetDataBasePtr;
+  while NativeUInt(lPtr) < NativeUInt(dcDataEndPtr) do begin
+    var lRemaining := NativeUInt(dcDataEndPtr) - NativeUInt(lPtr);
+    if lRemaining < lHeaderSize then
+      Exit;
+    var lSize: NativeUInt;
+    if lHeaderSize = 8 then
+      lSize := PCardinal(lPtr + 4)^
+    else
+      lSize := PWord(lPtr + 4)^;
+    if lSize > lRemaining - lHeaderSize then
+      Exit;
+    var lSub := PwbSignature(lPtr)^;
+    if lIsCell and ((lSub = 'FRMR') or (lSub = 'NAM0') or (lSub = 'MVRF')) then
+      Exit;
+    if lSub = lSignature then
+      Exit(True);
+    Inc(lPtr, lHeaderSize + lSize);
+  end;
+end;
+
+function TwbMainRecord.IsDeletionElement(const aElement: IwbElement): Boolean;
+begin
+  Result := False;
+  if not Assigned(aElement) or not Assigned(mrDef) or (mrDef.KnownSubRecordMemberIndex[ksrDeleted] < 0) then
+    Exit;
+  var lRecord: IwbRecord;
+  Result := Supports(aElement, IwbRecord, lRecord) and (lRecord.Signature = mrDef.KnownSubRecordSignatures[ksrDeleted]);
 end;
 
 function TwbMainRecord.GetIsEditable: Boolean;
@@ -19638,7 +19923,7 @@ end;
 
 function TwbMainRecord.GetIsMarkedDeleted: Boolean;
 begin
-  Result := GetIsDeleted or (GameDefObj.IsMorrowind and Assigned(GetRecordBySignature('DELE')));
+  Result := GetIsDeleted;
 end;
 
 function TwbMainRecord.GetIsInitiallyDisabled: Boolean;
@@ -20507,6 +20792,8 @@ begin
   Result := IsElementEditable(aElement);
   if Result and Assigned(aElement.Def) then
     Result := not aElement.Def.Required;
+  if Result and not wbIsInternalEdit then
+    Result := not IsDeletionElement(aElement);
 end;
 
 function TwbMainRecord.IsSameData(aBase, aEnd: Pointer): Boolean;
@@ -20907,6 +21194,8 @@ var
   Element       : IwbElement;
   LinksToRecord : IwbMainRecord;
 begin
+  if IsEmbeddedReference then
+    raise Exception.Create(GetName + ': a Morrowind reference has no initially disabled state');
   SelfRef := Self;
   var lContext := ContextObj;
 
@@ -21923,6 +22212,11 @@ end;
 
 function TwbMainRecord.RemoveElement(aPos: Integer; aMarkModified: Boolean = False): IwbElement;
 begin
+  var lSelfRef := Self as IwbContainerElementRef;
+  if not wbIsInternalEdit then
+    DoInit(False);
+  if not wbIsInternalEdit and (aPos >= Low(cntElements)) and (aPos <= High(cntElements)) and IsDeletionElement(cntElements[aPos]) then
+    raise Exception.Create(GetName + ': a record is deleted and undeleted through IsDeleted, never by removing its Deleted member');
   Result := inherited RemoveElement(aPos, aMarkModified);
   if aMarkModified then
     if Assigned(Result) and (Result.ElementType = etSubRecord) then begin
@@ -22414,6 +22708,8 @@ begin
   if aValue <> GetIsDeleted then begin
     if aValue then
       Delete
+    else if gcDeletedBySubrecord in GameDefObj.Capabilities then
+      UndeleteBySubrecord
     else begin
       SelfRef := Self;
       DoInit(False);
@@ -26308,7 +26604,8 @@ var
       if (cfDeepCopy in aFlags) or (lIsNew and lByIdentity and not (cfAsNew in aFlags)) then begin
         var lResult := Result as IwbMainRecord;
 
-        if not aSource.IsDeleted then
+        var lOntoTombstone := (gcDeletedBySubrecord in GameDefObj.Capabilities) and not aSource.IsDeleted and lResult.IsDeleted;
+        if not aSource.IsDeleted and not lOntoTombstone then
           lResult.IsDeleted := False;
         if not aSource.IsPartialForm then begin
           if lIsNew and ContextObj.Settings.AllowMakePartial and lResult.CanBePartial then
@@ -26318,7 +26615,7 @@ var
         end else
           lResult.IsPartialForm := True;
 
-        if not (lResult.IsPartialForm or lResult.IsDeleted) then
+        if lOntoTombstone or not (lResult.IsPartialForm or lResult.IsDeleted) then
           if not (cfAsNew in aFlags) and (lResult as TObject as TwbMainRecord).IsEmbeddedReference then
             (lResult as TObject as TwbMainRecord).AssignReference(aElement, lFormID)
           else
@@ -35683,7 +35980,7 @@ begin
           if MainRecordInternal.Signature = GameDefObj.HeaderSignature then
             Flags.SetDeleted(False);
 
-        if Flags.IsDeleted <> MainRecordInternal.GetFlagsPtr.IsDeleted then begin
+        if (Flags.IsDeleted <> MainRecordInternal.GetFlagsPtr.IsDeleted) and not (gcDeletedBySubrecord in GameDefObj.Capabilities) then begin
           Flags.SetDeleted(MainRecordInternal.GetFlagsPtr.IsDeleted);
           ToggleDeleted := True;
         end;
