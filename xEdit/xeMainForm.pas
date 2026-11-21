@@ -13543,7 +13543,7 @@ begin
   mniNavCreateDeltaPatch.Visible := not xeContext.Settings.TranslationMode and Supports(Element, IwbFile);
   mniNavAddMasters.Visible := lEditCommands and Supports(Element, IwbFile);
   mniNavSortMasters.Visible := mniNavAddMasters.Visible;
-  mniNavCleanMasters.Visible := mniNavAddMasters.Visible;
+  mniNavCleanMasters.Visible := mniNavAddMasters.Visible and not lGameDef.IsMorrowind;
   mniNavBatchChangeReferencingRecords.Visible := mniNavAddMasters.Visible;
   mniNavApplyScript.Visible := lEditCommands;
   mniNavGenerateLOD.Visible := mniNavCompareTo.Visible and (lGameDef.GameMode in [gmTES4, gmFO3, gmFNV, gmTES5, gmEnderal, gmTES5VR, gmSSE, gmEnderalSE, gmFO4, gmFO4VR]);
