@@ -5323,158 +5323,129 @@ begin
 end;
 
 procedure wbREFRPersistLocToStr(var aValue: string; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
+var
+  lRef: IwbMainRecord;
+
+  function LinkedRecord(const aLink: IwbElement): IwbMainRecord;
+  begin
+    if not (Assigned(aLink) and Supports(aLink.LinksTo, IwbMainRecord, Result)) then
+      Result := nil;
+  end;
 
   function VisibleLink(const aLink: IwbElement): IwbMainRecord;
   begin
-    if Supports(aLink.LinksTo, IwbMainRecord, Result) then
+    Result := LinkedRecord(aLink);
+    if Assigned(Result) then
       Result := Result.HighestOverrideVisibleForFile[aElement._File];
+  end;
+
+  function LocationOf(const aRecord: IwbMainRecord): IwbMainRecord;
+  begin
+    Result := nil;
+    if not Assigned(aRecord) then
+      Exit;
+
+    var lZone := VisibleLink(aRecord.ElementBySignature[XEZN]);
+    var lDATA: IwbContainerElementRef;
+    if Assigned(lZone) and Supports(lZone.ElementBySignature[DATA], IwbContainerElementRef, lDATA) then
+    begin
+      var lZoneLoc := lDATA.ElementByName['Location'];
+      if Assigned(lZoneLoc) and (lZoneLoc.NativeValue <> 0) then
+        Result := VisibleLink(lZoneLoc);
+    end;
+
+    if not Assigned(Result) then
+      Result := VisibleLink(aRecord.ElementBySignature[XLCN]);
+  end;
+
+  function FindGridCell(const aWorld: IwbMainRecord; const aGridCell: TwbGridCell): IwbMainRecord;
+  begin
+    Result := aWorld.ChildByGridCell[aGridCell];
+    if Assigned(Result) then
+      Exit;
+
+    var lFile := aElement._File;
+    if not Assigned(lFile) then
+      Exit;
+
+    var lFormID := aWorld.LoadOrderFormID;
+    for var lMasterIdx := Pred(lFile.MasterCount[True]) downto 0 do
+    begin
+      var lWorldOverride := lFile.Masters[lMasterIdx, True].ContainedRecordByLoadOrderFormID[lFormID, True];
+      if Assigned(lWorldOverride) then
+      begin
+        Result := lWorldOverride.ChildByGridCell[aGridCell];
+        if Assigned(Result) then
+          Exit;
+      end;
+    end;
+  end;
+
+  procedure Warn;
+  begin
+    aValue := ' <Warning: Reference ' + lRef.ShortName + ' is not in its Persist Location ' + aElement.EditValue + '>';
   end;
 
 begin
   if not (Assigned(aElement) and (aType in [ctCheck])) then
     Exit;
 
-  var lLocation := aElement.LinksTo as IwbMainRecord;
-  if not Assigned(lLocation) then
+  var lPersistLoc := LinkedRecord(aElement);
+  if not Assigned(lPersistLoc) then
     Exit;
 
-  var lLocEDID := lLocation.EditorID;
-  if (lLocEDID = 'DebugLocation') or
-     (lLocEDID = 'PersistAll') or
-     (lLocEDID = 'PersistAllLocation') or
-     (lLocEDID = 'VirtualLocation')
-  then
+  if MatchText(lPersistLoc.EditorID, ['DebugLocation', 'PersistAll', 'PersistAllLocation', 'VirtualLocation']) then
     Exit;
 
-  var lMainRecord := aElement.ContainingMainRecord;
-  if not Assigned(lMainRecord) then
+  lRef := aElement.ContainingMainRecord;
+  if not Assigned(lRef) then
     Exit;
 
-  var lCell := lMainRecord.ElementByName['Cell'];
+  var lCell := LinkedRecord(lRef.ElementByName['Cell']);
   if not Assigned(lCell) then
     Exit;
 
-  var lCellRecord := lCell.LinksTo as IwbMainRecord;
-  if not Assigned(lCellRecord) then
-    Exit;
+  var lWorld := LinkedRecord(lCell.ElementByName['Worldspace']);
 
-  var lWorld := lCellRecord.ElementByName['Worldspace'];
-
-  var lWorldRecord: IwbMainRecord;
-  if Assigned(lWorld) then
-    lWorldRecord := lWorld.LinksTo as IwbMainRecord;
-
-  if Assigned(lWorldRecord) and lMainRecord.IsPersistent then
+  if Assigned(lWorld) and lRef.IsPersistent then
   begin
     var lPosition: TwbVector;
-    lMainRecord.GetPosition(lPosition);
-
-    var lGridCell := lMainRecord.GameDefObj.PositionToGridCell(lPosition);
-
-    lCellRecord := lWorldRecord.ChildByGridCell[lGridCell];
-
-    if not Assigned(lCellRecord) then
-    begin
-      var lFile := aElement._File;
-      var lFormID := lWorldRecord.LoadOrderFormID;
-      for var lMasterIdx := Pred(lFile.MasterCount[True]) downto 0 do
-      begin
-        var lMaster := lFile.Masters[lMasterIdx, True];
-
-        var lWorldRecordOverride := lMaster.ContainedRecordByLoadOrderFormID[lFormID, True];
-        if not Assigned(lWorldRecordOverride) then
-          Continue;
-
-        lCellRecord := lWorldRecordOverride.ChildByGridCell[lGridCell];
-        if Assigned(lCellRecord) then
-          Break;
-      end;
-    end;
+    lRef.GetPosition(lPosition);
+    lCell := FindGridCell(lWorld, lRef.GameDefObj.PositionToGridCell(lPosition));
   end;
 
-  if not Assigned(lCellRecord) then
+  var lCurrentLoc := LocationOf(lCell);
+  if not Assigned(lCurrentLoc) then
+    lCurrentLoc := LocationOf(lWorld);
+
+  if not Assigned(lCurrentLoc) then
+  begin
+    Warn;
     Exit;
-
-  var lPersistLocation: IwbMainRecord;
-
-  var lXEZN := lCellRecord.ElementBySignature[XEZN];
-  var lZone: IwbMainRecord;
-  var lDATA: IwbContainerElementRef;
-  var lDATALoc: IwbElement;
-
-  if Assigned(lXEZN) then
-  begin
-    lZone := VisibleLink(lXEZN);
-    if Assigned(lZone) then
-    begin
-      lDATA := lZone.ElementBySignature[DATA] as IwbContainerElementRef;
-      if Assigned(lDATA) then
-      begin
-        lDATALoc := lDATA.ElementByName['Location'];
-        if Assigned(lDATALoc) and (lDATALoc.NativeValue <> 0) then
-          lPersistLocation := VisibleLink(lDATALoc);
-      end;
-    end;
   end;
 
-  var lXLCN: IwbElement;
-  if not Assigned(lPersistLocation) then
-  begin
-    lXLCN := lCellRecord.ElementBySignature[XLCN];
-    if Assigned(lXLCN) then
-      lPersistLocation := VisibleLink(lXLCN);
-  end;
-
-  if Assigned(lWorldRecord) then
-  begin
-    if not Assigned(lPersistLocation) then
-    begin
-      lXEZN := lWorldRecord.ElementBySignature[XEZN];
-      if Assigned(lXEZN) then
-      begin
-        lZone := VisibleLink(lXEZN);
-        if Assigned(lZone) then
-        begin
-          lDATA := lZone.ElementBySignature[DATA] as IwbContainerElementRef;
-          if Assigned(lDATA) then
-          begin
-            lDATALoc := lDATA.ElementByName['Location'];
-            if Assigned(lDATALoc) and (lDATALoc.NativeValue <> 0) then
-              lPersistLocation := VisibleLink(lDATALoc);
-          end;
-        end;
-      end;
-    end;
-
-    if not Assigned(lPersistLocation) then
-    begin
-      lXLCN := lWorldRecord.ElementBySignature[XLCN];
-      if Assigned(lXLCN) then
-        lPersistLocation := VisibleLink(lXLCN);
-    end;
-  end;
-
+  var lTarget := lPersistLoc.MasterOrSelf;
   var lVisited: TArray<IwbMainRecord>;
-  while Assigned(lPersistLocation) do
+
+  while Assigned(lCurrentLoc) do
   begin
-    var lPersistMaster := lPersistLocation.MasterOrSelf;
-    if lLocation.MasterOrSelf = lPersistMaster then
+    var lMaster := lCurrentLoc.MasterOrSelf;
+    if lMaster = lTarget then
       Exit;
 
-    var lParentLoc := lPersistLocation.ElementBySignature[PNAM];
     for var lVisitedLoc in lVisited do
-      if lVisitedLoc = lPersistMaster then
-        lParentLoc := nil;
-    lVisited := lVisited + [lPersistMaster];
+      if lVisitedLoc = lMaster then
+      begin
+        Warn;
+        Exit;
+      end;
 
-    if Assigned(lParentLoc) then
-      lPersistLocation := VisibleLink(lParentLoc)
-    else
-    begin
-      aValue := '<Warning: Reference ' + lMainRecord.ShortName + ' is not in its Persist Location ' + aElement.EditValue +'>';
-      Exit;
-    end;
+    lVisited := lVisited + [lMaster];
+
+    lCurrentLoc := VisibleLink(lCurrentLoc.ElementBySignature[PNAM]);
   end;
+
+  Warn;
 end;
 
 procedure wbREFRRadiusToStr(var aValue: string; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
