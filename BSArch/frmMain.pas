@@ -1088,7 +1088,8 @@ begin
     try
       zip.Open(aFileName, TZipMode.zmWrite);
       js.SaveToStream(st, True);
-      zip.Add(st.Bytes, 'assets.json');
+      st.Position := 0;
+      zip.Add(st, 'assets.json');
       zip.Close;
       Result := True;
     except
@@ -1123,6 +1124,11 @@ begin
         zip.Close;
       end else
         b := TFile.ReadAllBytes(aFileName);
+
+      var Len := Length(b);
+      while (Len > 0) and (b[Len - 1] = 0) do
+        Dec(Len);
+      SetLength(b, Len);
 
       st := TBytesStream.Create(b);
       js.LoadFromStream(st);
@@ -1187,7 +1193,7 @@ begin
         sl.Add(asset.ArchiveName);
 
     // unload unneeded ones
-    for var i := 0 to Pred(ArchiveManager.Count) do
+    for var i := Pred(ArchiveManager.Count) downto 0 do
       if sl.IndexOf(ArchiveManager[i].FileName) = -1 then
         ArchiveManager.CloseArchive(ArchiveManager[i].FileName);
 
