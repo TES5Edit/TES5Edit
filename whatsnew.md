@@ -4,6 +4,8 @@ If you share your mods on Nexus Mods and use xEdit as a major component in devel
 
 xEdit is crucial to our shared modding community and your contribution - no matter the size - is invaluable and deeply appreciated.
 
+# What's New in xEdit 4.1.5t?
+
 # What's New in xEdit 4.1.5s?
 
 ## Improvements
