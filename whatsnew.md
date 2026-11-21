@@ -7,6 +7,7 @@ xEdit is crucial to our shared modding community and your contribution - no matt
 # What's New in xEdit 4.1.5t?
 
 ## Bugfixes
+* Scripts can no longer write a file loaded through Compare To, for example with SaveAs.pas; like the editor's own save, they now refuse it, so a change made to such a file in memory (by renumbering FormIDs, for example) can never reach a file on disk.
 * The text boxes of the Log Analyzer and the Localization Editor, and text boxes created by scripts, show their text again. They stayed empty because the main window's message log and help text, which use another kind of text control, took the window class those boxes need.
 
 # What's New in xEdit 4.1.5s?
