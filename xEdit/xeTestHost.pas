@@ -225,6 +225,8 @@ type
     WhatsNew              : Boolean;
     WhatsNewDir           : string;
     WhatsNewStyles        : string;
+    Memos                 : Boolean;
+    MemosDir              : string;
     StateManifest         : string;
     FileLists             : string;
     ToolModeAuto          : Boolean;
@@ -618,6 +620,15 @@ begin
     wbFindCmdLineParam('testwhatsnewstyles', WhatsNewStyles);
   end;
 
+  if wbFindCmdLineParam('testmemos', MemosDir) then begin
+    if MemosDir = '' then begin
+      ShowMessage('testmemos requires an output folder, as -testmemos:<folder>');
+      Exit(False);
+    end;
+    Memos := True;
+    xeAutoLoad := True;
+  end;
+
   if wbFindCmdLineParam('testviewtree', ViewTreeFile) then begin
     if (ViewTreeFile = '') or not wbFindCmdLineParam('testviewrecords', ViewTreeList) or (ViewTreeList = '') then begin
       ShowMessage('testviewtree requires an output file and a record list, as -testviewtree:<filename> -testviewrecords:<filename>');
@@ -1001,7 +1012,7 @@ end;
 
 function TxeTestSwitches.Any: Boolean;
 begin
-  Result := Conflicts or NavCopy or ViewText or WhatsNew or ViewTree or Options or CopyIntoGap or NewFile or GameLink or CheckMenus or FormIDSearch or SplitTreeLOD or DropMaster or DeltaPatch or Merge or MergedPatch or CopyInto or
+  Result := Conflicts or NavCopy or ViewText or WhatsNew or Memos or ViewTree or Options or CopyIntoGap or NewFile or GameLink or CheckMenus or FormIDSearch or SplitTreeLOD or DropMaster or DeltaPatch or Merge or MergedPatch or CopyInto or
     Renumber or ChangeFormID or Hide or Filter or SaveContexts or EndSession or Save or (Pump <> '') or (StateManifest <> '');
 end;
 

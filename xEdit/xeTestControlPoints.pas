@@ -136,6 +136,7 @@ type
     procedure DoTestNavCopy;
     procedure DoTestViewText;
     procedure DoTestWhatsNew;
+    procedure DoTestMemos;
     procedure DoTestViewTree;
     procedure DoTestOptions;
     procedure DoTestCopyIntoGap;
@@ -281,6 +282,8 @@ uses
   ImagingTypes,
 
   JsonDataObjects,
+
+  SynEditTypes,
 
   VirtualTrees.EditLink,
   VTEditors,
@@ -1388,6 +1391,162 @@ begin
     if not MoveFileEx(PChar(lTmp), PChar(xeTestSwitches.ViewTextFile), MOVEFILE_REPLACE_EXISTING) then
       RaiseLastOSError;
     AddMessage(Format('[Test View Text] %d rows written to %s', [lLines.Count, xeTestSwitches.ViewTextFile]));
+  finally
+    lLines.Free;
+  end;
+end;
+
+procedure TxeTestFormHelper.DoTestMemos;
+var
+  lLines : TStringList;
+
+  function B(aValue: Boolean): string;
+  begin
+    Result := BoolToStr(aValue, True);
+  end;
+
+  function WindowClassName(aControl: TWinControl): string;
+  var
+    lName : array[0..255] of Char;
+  begin
+    SetString(Result, lName, GetClassName(aControl.Handle, lName, Length(lName)));
+  end;
+
+  function WindowClassState(const aName: string): string;
+  var
+    lClass : TWndClassEx;
+  begin
+    FillChar(lClass, SizeOf(lClass), 0);
+    lClass.cbSize := SizeOf(lClass);
+    if GetClassInfoEx(HInstance, PChar(aName), lClass) then
+      Result := Format('registered extra %d', [lClass.cbWndExtra])
+    else
+      Result := 'not registered';
+  end;
+
+  function HandlerName(const aMethod: TMethod): string;
+  begin
+    if not Assigned(aMethod.Code) then
+      Exit('-');
+    Result := '?';
+    if Assigned(aMethod.Data) then
+      Result := string(TObject(aMethod.Data).MethodName(aMethod.Code));
+  end;
+
+  procedure Describe(const aName: string; aMemo: TSynMemo);
+  begin
+    aMemo.HandleNeeded;
+    var lHighlighter: string := '-';
+    if Assigned(aMemo.Highlighter) then
+      lHighlighter := aMemo.Highlighter.ClassName;
+    var lPopup: string := '-';
+    if Assigned(aMemo.PopupMenu) then
+      lPopup := aMemo.PopupMenu.Name;
+    lLines.Add(aName + #9'class ' + aMemo.ClassName + ' window ' + WindowClassName(aMemo) + ' name ' + aMemo.Name +
+      ' owner ' + aMemo.Owner.Name + ' parent ' + aMemo.Parent.Name + ' visible ' + B(aMemo.Visible));
+    lLines.Add(aName + Format(#9'align %d withmargins %s margins %d %d %d %d bounds %d %d %d %d taborder %d tabstop %s ppi %d',
+      [Ord(aMemo.Align), B(aMemo.AlignWithMargins), aMemo.Margins.Left, aMemo.Margins.Top, aMemo.Margins.Right,
+       aMemo.Margins.Bottom, aMemo.Left, aMemo.Top, aMemo.Width, aMemo.Height, aMemo.TabOrder, B(aMemo.TabStop),
+       aMemo.CurrentPPI]));
+    lLines.Add(aName + Format(#9'font %s height %d charset %d color %.8x style %d parentfont %s parentcolor %s color %.8x',
+      [aMemo.Font.Name, aMemo.Font.Height, aMemo.Font.Charset, Cardinal(aMemo.Font.Color), Byte(aMemo.Font.Style),
+       B(aMemo.ParentFont), B(aMemo.ParentColor), Cardinal(aMemo.Color)]));
+    lLines.Add(aName + Format(#9'readonly %s scrollbars %d wordwrap %s hideselection %s wanttabs %s wantreturns %s border %d popup %s',
+      [B(aMemo.ReadOnly), Ord(aMemo.ScrollBars), B(aMemo.WordWrap), B(aMemo.HideSelection), B(aMemo.WantTabs),
+       B(aMemo.WantReturns), Ord(aMemo.BorderStyle), lPopup]));
+    lLines.Add(aName + Format(#9'gutter %s %d rightedge %d highlighter %s doublebuffered %s modified %s',
+      [B(aMemo.Gutter.Visible), aMemo.Gutter.Width, aMemo.RightEdge, lHighlighter, B(aMemo.DoubleBuffered), B(aMemo.Modified)]));
+    var lFirst: string := '';
+    if aMemo.Lines.Count > 0 then
+      lFirst := aMemo.Lines[0];
+    lLines.Add(aName + #9'first line ' + IntToStr(Length(lFirst)) + ' chars ' + lFirst.Substring(0, 10));
+    lLines.Add(aName + #9'events dblclick ' + HandlerName(TMethod(aMemo.OnDblClick)) + ' keydown ' + HandlerName(TMethod(aMemo.OnKeyDown)) +
+      ' keypress ' + HandlerName(TMethod(aMemo.OnKeyPress)) + ' keyup ' + HandlerName(TMethod(aMemo.OnKeyUp)) +
+      ' mouseup ' + HandlerName(TMethod(aMemo.OnMouseUp)) + ' change ' + HandlerName(TMethod(aMemo.OnChange)));
+    var lVert: TScrollInfo;
+    var lHorz: TScrollInfo;
+    FillChar(lVert, SizeOf(lVert), 0);
+    lVert.cbSize := SizeOf(lVert);
+    lVert.fMask := SIF_ALL;
+    lHorz := lVert;
+    GetScrollInfo(aMemo.Handle, SB_VERT, lVert);
+    GetScrollInfo(aMemo.Handle, SB_HORZ, lHorz);
+    var lOrigin: TDisplayCoord;
+    lOrigin.Column := 1;
+    lOrigin.Row := 1;
+    var lPixel := aMemo.RowColumnToPixels(lOrigin);
+    lLines.Add(aName + Format(#9'native vscroll %d %d %d %d hscroll %d %d %d %d topline %d leftchar %d linesinwindow %d charsinwindow %d charwidth %d lineheight %d origin %d %d client %d %d',
+      [lVert.nMin, lVert.nMax, Integer(lVert.nPage), lVert.nPos, lHorz.nMin, lHorz.nMax, Integer(lHorz.nPage), lHorz.nPos,
+       aMemo.TopLine, aMemo.LeftChar, aMemo.LinesInWindow, aMemo.CharsInWindow, aMemo.CharWidth, aMemo.LineHeight,
+       lPixel.X, lPixel.Y, aMemo.ClientWidth, aMemo.ClientHeight]));
+  end;
+
+  procedure PlainMemo(const aName: string; aMemo: Vcl.StdCtrls.TMemo);
+  begin
+    aMemo.Lines.Add('probe one');
+    aMemo.Lines.Add('probe two');
+    lLines.Add(aName + Format(#9'class %s window %s lines %d textlength %d text %s',
+      [aMemo.ClassName, WindowClassName(aMemo), aMemo.Lines.Count, GetWindowTextLength(aMemo.Handle),
+       string(aMemo.Text).Replace(#13#10, '|')]));
+  end;
+
+begin
+  lLines := TStringList.Create;
+  try
+    ForceDirectories(xeTestSwitches.MemosDir);
+    try
+      lLines.Add('start'#9'TMemo ' + WindowClassState('TMemo') + ' TSynMemo ' + WindowClassState('TSynMemo') +
+        ' messages handle ' + B(mmoMessages.HandleAllocated) + ' info handle ' + B(Memo1.HandleAllocated));
+
+      var lForm := TForm.CreateNew(nil);
+      try
+        var lMemo := Vcl.StdCtrls.TMemo.Create(lForm);
+        lMemo.Parent := lForm;
+        PlainMemo('vcl', lMemo);
+      finally
+        lForm.Free;
+      end;
+
+      var lAnalyzer := TfrmLogAnalyzer.Create(nil);
+      try
+        PlainMemo('loganalyzer', lAnalyzer.memoText);
+      finally
+        lAnalyzer.Free;
+      end;
+
+      Describe('messages', mmoMessages);
+      lLines.Add('messages'#9'filled ' + B(mmoMessages.Lines.Count > 0));
+      Describe('info', Memo1);
+      lLines.Add('info'#9'lines ' + IntToStr(Memo1.Lines.Count));
+      TFile.WriteAllBytes(TPath.Combine(xeTestSwitches.MemosDir, 'info.txt'), TEncoding.UTF8.GetBytes(Memo1.Lines.Text));
+
+      var lScript := TfrmScript.Create(nil);
+      try
+        Describe('script', lScript.Editor);
+        lScript.Editor.Lines.Text := 'unit A;'#13#10'end.';
+        lLines.Add('script'#9'lines ' + IntToStr(lScript.Editor.Lines.Count) + ' text ' + lScript.Editor.Lines.Text.Replace(#13#10, '|'));
+      finally
+        lScript.Free;
+      end;
+
+      var lView := TfrmViewElements.Create(nil);
+      try
+        lView.Settings := Settings;
+        lView.AddElement(Files[High(Files)].Elements[0], False, False);
+        var lViewMemo := lView.pcView.Pages[0].Controls[0] as TSynMemo;
+        Describe('view', lViewMemo);
+        lLines.Add('view'#9'lines ' + IntToStr(lViewMemo.Lines.Count));
+      finally
+        lView.Free;
+      end;
+
+      lLines.Add('end'#9'TMemo ' + WindowClassState('TMemo') + ' TSynMemo ' + WindowClassState('TSynMemo'));
+    except
+      on E: Exception do
+        lLines.Add('exception'#9 + E.ClassName + ': ' + E.Message);
+    end;
+    lLines.WriteBOM := False;
+    lLines.SaveToFile(TPath.Combine(xeTestSwitches.MemosDir, 'report.txt'), TEncoding.UTF8);
   finally
     lLines.Free;
   end;
@@ -3259,9 +3418,9 @@ begin
         var lPage := TfrmViewElements(Screen.CustomForms[i]).pcView.ActivePage;
         if Assigned(lPage) then
           for var c := 0 to Pred(lPage.ControlCount) do
-            if (lPage.Controls[c] is TMemo) and not TMemo(lPage.Controls[c]).ReadOnly then begin
-              TMemo(lPage.Controls[c]).Text := TestHost.TestViewModalMemo;
-              TMemo(lPage.Controls[c]).Modified := True;
+            if (lPage.Controls[c] is TSynMemo) and not TSynMemo(lPage.Controls[c]).ReadOnly then begin
+              TSynMemo(lPage.Controls[c]).Text := TestHost.TestViewModalMemo;
+              TSynMemo(lPage.Controls[c]).Modified := True;
               TestHost.TestViewModalSeen := TestHost.TestViewModalSeen + '(memo set on ' + lPage.Caption + ')';
             end;
       end;
@@ -4772,9 +4931,9 @@ begin
       var lPage := TfrmViewElements(lForm).pcView.ActivePage;
       if Assigned(lPage) then
         for var c := 0 to Pred(lPage.ControlCount) do
-          if (lPage.Controls[c] is TMemo) and not TMemo(lPage.Controls[c]).ReadOnly then begin
-            TMemo(lPage.Controls[c]).Text := TestHost.TestCheckMenusMemo;
-            TMemo(lPage.Controls[c]).Modified := True;
+          if (lPage.Controls[c] is TSynMemo) and not TSynMemo(lPage.Controls[c]).ReadOnly then begin
+            TSynMemo(lPage.Controls[c]).Text := TestHost.TestCheckMenusMemo;
+            TSynMemo(lPage.Controls[c]).Modified := True;
           end;
     end;
     lForm.ModalResult := mrOk;

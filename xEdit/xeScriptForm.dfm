@@ -139,27 +139,6 @@ object frmScript: TfrmScript
       AutoSize = False
     end
   end
-  object Editor: TMemo
-    Left = 0
-    Top = 89
-    Width = 682
-    Height = 284
-    Align = alClient
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clWindowText
-    Font.Height = -11
-    Font.Name = 'Courier New'
-    Font.Style = []
-    ParentFont = False
-    ScrollBars = ssBoth
-    TabOrder = 3
-    WantTabs = True
-    WordWrap = False
-    OnKeyDown = EditorKeyDown
-    OnKeyPress = EditorKeyPress
-    OnKeyUp = EditorKeyUp
-    OnMouseUp = EditorMouseUp
-  end
   object dlgSave: TSaveDialog
     DefaultExt = 'pas'
     Filter = 'Pascal files (*.pas)|*.pas'

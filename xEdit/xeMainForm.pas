@@ -62,9 +62,6 @@ uses
 {$ENDIF}
   xeScriptHost;
 
-type
-  TMemo = class(TSynMemo);
-
 const
   DefaultInterval             = 1 / 24 / 6; // 10 minutes
   MaxSaveListCount            = 5;
@@ -170,7 +167,6 @@ type
     pgMain: TPageControl;
     tbsView: TTabSheet;
     tbsMessages: TTabSheet;
-    mmoMessages: TMemo;
     tmrStartup: TTimer;
     tmrMessages: TTimer;
     vstView: TVirtualEditTree;
@@ -182,7 +178,6 @@ type
     mniNavFilterApply: TMenuItem;
     mniNavFilterApplySelected: TMenuItem;
     tbsInfo: TTabSheet;
-    Memo1: TMemo;
     mniNavCheckForErrors: TMenuItem;
     tbsReferencedBy: TTabSheet;
     vstReferencedBy: TVirtualEditTree;
@@ -799,9 +794,12 @@ type
 
     procedure ExpandButtons;
     procedure ShrinkButtons;
+    procedure CreateMemos;
   public
     BackHistory: IInterfaceList;
     ForwardHistory: IInterfaceList;
+    mmoMessages: TSynMemo;
+    Memo1: TSynMemo;
   protected
     EditWarnOk: Boolean;
     SaveInterval: TDateTime;
@@ -1394,6 +1392,7 @@ procedure xeApplyFontAndScale(aForm: TForm);
 implementation
 
 {$R *.dfm}
+{$R 'xEdit\xeInfoText.res'}
 
 uses
   System.Diagnostics,
@@ -4557,7 +4556,7 @@ begin
     wbPatron := Settings.ReadBool('Options', 'Patron', wbPatron);
     if (not wbPatron or not xeAutoLoad)
 {$IFDEF XE_TEST_CONTROL_POINTS}
-      and not (xeTestSwitches.Conflicts or xeTestSwitches.NavCopy or xeTestSwitches.ViewText or xeTestSwitches.WhatsNew or xeTestSwitches.ViewTree or xeTestSwitches.Options or xeTestSwitches.CopyIntoGap or xeTestSwitches.NewFile or xeTestSwitches.GameLink or xeTestSwitches.CheckMenus or xeTestSwitches.FormIDSearch or xeTestSwitches.SplitTreeLOD or xeTestSwitches.DropMaster or xeTestSwitches.DeltaPatch or xeTestSwitches.Merge or xeTestSwitches.MergedPatch or xeTestSwitches.CopyInto or xeTestSwitches.Renumber or xeTestSwitches.ChangeFormID or xeTestSwitches.Hide or xeTestSwitches.Filter or xeTestSwitches.SaveContexts or xeTestSwitches.EndSession or xeTestSwitches.Save or (xeTestSwitches.PumpDuringLoad <> ''))
+      and not (xeTestSwitches.Conflicts or xeTestSwitches.NavCopy or xeTestSwitches.ViewText or xeTestSwitches.WhatsNew or xeTestSwitches.Memos or xeTestSwitches.ViewTree or xeTestSwitches.Options or xeTestSwitches.CopyIntoGap or xeTestSwitches.NewFile or xeTestSwitches.GameLink or xeTestSwitches.CheckMenus or xeTestSwitches.FormIDSearch or xeTestSwitches.SplitTreeLOD or xeTestSwitches.DropMaster or xeTestSwitches.DeltaPatch or xeTestSwitches.Merge or xeTestSwitches.MergedPatch or xeTestSwitches.CopyInto or xeTestSwitches.Renumber or xeTestSwitches.ChangeFormID or xeTestSwitches.Hide or xeTestSwitches.Filter or xeTestSwitches.SaveContexts or xeTestSwitches.EndSession or xeTestSwitches.Save or (xeTestSwitches.PumpDuringLoad <> ''))
 {$ENDIF}
     then
       ShowDeveloperMessage;
@@ -5880,11 +5879,52 @@ begin
   end;
 end;
 
+procedure TfrmMain.CreateMemos;
+begin
+  mmoMessages := TSynMemo.Create(Self);
+  mmoMessages.AlignWithMargins := True;
+  mmoMessages.SetBounds(0, 0, 894, 570);
+  mmoMessages.Margins.Left := 0;
+  mmoMessages.Margins.Top := 0;
+  mmoMessages.Margins.Right := 0;
+  mmoMessages.Align := alClient;
+  mmoMessages.HideSelection := False;
+  mmoMessages.PopupMenu := pmuMessages;
+  mmoMessages.ScrollBars := ssBoth;
+  mmoMessages.WordWrap := False;
+  mmoMessages.OnDblClick := mmoMessagesDblClick;
+  mmoMessages.Parent := tbsMessages;
+
+  Memo1 := TSynMemo.Create(Self);
+  Memo1.AlignWithMargins := True;
+  Memo1.SetBounds(3, 3, 888, 567);
+  Memo1.Align := alClient;
+  Memo1.BorderStyle := bsNone;
+  Memo1.Font.Charset := ANSI_CHARSET;
+  Memo1.Font.Color := clWindowText;
+  Memo1.Font.Height := -11;
+  Memo1.Font.Name := 'Courier New';
+  Memo1.Font.Style := [];
+  var lText := TResourceStream.Create(HInstance, 'XEINFOTEXT', RT_RCDATA);
+  try
+    Memo1.Lines.LoadFromStream(lText, TEncoding.UTF8);
+  finally
+    lText.Free;
+  end;
+  Memo1.ParentColor := True;
+  Memo1.ParentFont := False;
+  Memo1.ReadOnly := True;
+  Memo1.ScrollBars := ssVertical;
+  Memo1.WordWrap := False;
+  Memo1.Parent := tbsInfo;
+end;
+
 procedure TfrmMain.FormCreate(Sender: TObject);
 var
   i, j, k, l: Integer;
   Rect: TRect;
 begin
+  CreateMemos;
 {$IFDEF XE_TEST_CONTROL_POINTS}
   if xeTestSwitches.Any then
     TestHost := TxeTestHost.Create(Self);
@@ -19749,6 +19789,12 @@ begin
 
         if xeTestSwitches.WhatsNew then begin
           DoTestWhatsNew;
+          if xeAutoExit then
+            tmrShutdown.Enabled := True;
+        end;
+
+        if xeTestSwitches.Memos then begin
+          DoTestMemos;
           if xeAutoExit then
             tmrShutdown.Enabled := True;
         end;

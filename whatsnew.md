@@ -6,6 +6,9 @@ xEdit is crucial to our shared modding community and your contribution - no matt
 
 # What's New in xEdit 4.1.5t?
 
+## Bugfixes
+* The text boxes of the Log Analyzer and the Localization Editor, and text boxes created by scripts, show their text again. They stayed empty because the main window's message log and help text, which use another kind of text control, took the window class those boxes need.
+
 # What's New in xEdit 4.1.5s?
 
 ## Improvements
