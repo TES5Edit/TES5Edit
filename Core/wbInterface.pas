@@ -4676,6 +4676,7 @@ type
     function BeginInternalEdit(aForce: Boolean = False): Boolean;
     procedure DetachFilesFromModules; virtual;
     function SlotLayout: TwbSlotLayout;
+    function FileSlotLayout: TwbSlotLayout;
     function ReferenceMasterFor(const aTarget: IwbElement; const aRecord: IwbMainRecord): IwbFile;
     function FileByLoadOrderFileID(const aFileID: TwbFileID): IwbFile;
     function FormIDFromIdentity(aFormIDBase, aFormIDNameBase: Byte; aIdentity: string): TwbFormID;
@@ -6600,6 +6601,15 @@ begin
     Include(Result, skLight);
   if Settings.PseudoMedium or (gcMediumPlugins in lCapabilities) then
     Include(Result, skMedium);
+end;
+
+function TwbGameContext.FileSlotLayout: TwbSlotLayout;
+begin
+  var lCapabilities := gcGameDefObj.Capabilities;
+  if (gcComplexFileFileID in lCapabilities) or not (gcMasterSlotsInFormID in lCapabilities) then
+    Result := SlotLayout
+  else
+    Result := [];
 end;
 
 function TwbGameContext.BeginInternalEdit(aForce: Boolean): Boolean;
@@ -9271,6 +9281,9 @@ type
     function defIsLocked: Boolean;
     function defGameDefObj: TwbGameDef; virtual;
     function defSlotLayout(const aElement: IwbElement): TwbSlotLayout;
+    function defReferenceFormID(const aElement: IwbElement; const aRecord: IwbMainRecord): TwbFormID;
+    function defFileReferenceFormID(const aElement: IwbElement; const aFormID: TwbFormID): TwbFormID;
+    function defFileSlotLayout(const aElement: IwbElement): TwbSlotLayout;
 
     {---IInterface---}
     function QueryInterface(const IID: TGUID; out Obj): HResult; virtual; stdcall;
@@ -13337,6 +13350,40 @@ begin
       Include(Result, skLight);
     if gcMediumPlugins in lCapabilities then
       Include(Result, skMedium);
+  end;
+end;
+
+function TwbDef.defFileSlotLayout(const aElement: IwbElement): TwbSlotLayout;
+begin
+  if Assigned(aElement) then
+    Exit(aElement.ContextObj.FileSlotLayout);
+
+  var lGameDef := defGameDefObj;
+  if Assigned(lGameDef) and not (gcComplexFileFileID in lGameDef.Capabilities) and
+     (gcMasterSlotsInFormID in lGameDef.Capabilities) then
+    Exit([]);
+  Result := defSlotLayout(nil);
+end;
+
+function TwbDef.defReferenceFormID(const aElement: IwbElement; const aRecord: IwbMainRecord): TwbFormID;
+begin
+  Result := aRecord.LoadOrderFormID;
+  if Result.ToCardinal shr 24 >= $FD then
+    Result := defFileReferenceFormID(aElement, Result);
+end;
+
+function TwbDef.defFileReferenceFormID(const aElement: IwbElement; const aFormID: TwbFormID): TwbFormID;
+begin
+  var lNew: Boolean;
+  var lMainRecord := aElement.ContainingMainRecord;
+  if Assigned(lMainRecord) then
+    lNew := lMainRecord.MastersUpdated
+  else
+    lNew := aElement.MastersUpdated;
+  try
+    Result := aElement._File.LoadOrderFormIDtoFileFormID(aFormID, lNew);
+  except
+    Result := TwbFormID.Null;
   end;
 end;
 
@@ -21193,7 +21240,7 @@ begin
   if Assigned(_File) then begin
     Rec := _File.RecordByEditorID[PwbSignature(@U32)^];
     if Assigned(Rec) then
-      aElement.AddReferencedFromID(Rec.LoadOrderFormID); // should always be 00, these are only defined in Oblivion.esm
+      aElement.AddReferencedFromID(defReferenceFormID(aElement, Rec));
   end;
 end;
 
@@ -21456,7 +21503,7 @@ begin
               Exit('['+lFormID.ToString+'] <Error: Unmapped FormIDs can only be different from 00000000 in modules which have the game master as their first master>');
         end;
 
-        var lLayout := defSlotLayout(aElement);
+        var lLayout := defFileSlotLayout(aElement);
         if lFormID.ObjectID[lLayout] < $800 then
           if not lFile.AllowHardcodedRangeUse then
             lFormID.FileID[lLayout] := TwbFileID.Null;
@@ -21604,7 +21651,7 @@ begin
   if not Assigned(lFile) then
     Exit;
 
-  var lMasterIndex := lFile.GetMasterIndexForFileID(TwbFormID.FromCardinal(aInt).FileID[defSlotLayout(aElement)], False);
+  var lMasterIndex := lFile.GetMasterIndexForFileID(TwbFormID.FromCardinal(aInt).FileID[defFileSlotLayout(aElement)], False);
   if lMasterIndex >= 0 then
     aMasters[lMasterIndex] := True;
 end;
@@ -22065,7 +22112,7 @@ begin
     if Assigned(lFile) then try
       var lFormID := TwbFormID.FromCardinal(aInt);
 
-      var lLayout := defSlotLayout(aElement);
+      var lLayout := defFileSlotLayout(aElement);
       if lFormID.ObjectID[lLayout] < $800 then
         if not lFile.AllowHardcodedRangeUse then
           lFormID.FileID[lLayout] := TwbFileID.Null;
@@ -22096,7 +22143,7 @@ begin
       if Assigned(lFile) then try
         var lFormID := TwbFormID.FromCardinal(aInt);
 
-        var lLayout := defSlotLayout(aElement);
+        var lLayout := defFileSlotLayout(aElement);
         if lFormID.ObjectID[lLayout] < $800 then
           if not lFile.AllowHardcodedRangeUse then
             lFormID.FileID[lLayout] := TwbFileID.Null;
@@ -22222,7 +22269,7 @@ begin
   if aInt <> 0 then begin
     var lGameDef := defGameDefObj;
     var lComplex := Assigned(lGameDef) and (gcComplexFileFileID in lGameDef.Capabilities);
-    Result := FixupFormID(TwbFormID.FromCardinal(aInt), aOld, aNew, aOldCount, aNewCount, lAllowHardcodedRangeUse, defSlotLayout(aElement), lComplex).ToCardinal;
+    Result := FixupFormID(TwbFormID.FromCardinal(aInt), aOld, aNew, aOldCount, aNewCount, lAllowHardcodedRangeUse, defFileSlotLayout(aElement), lComplex).ToCardinal;
   end;
 end;
 
@@ -22411,7 +22458,7 @@ begin
           FormID := TwbFormID.FromCardinal(aInt);
           MainRecord := _File.ContextObj.RecordByLoadOrderFormID(FormID, _File);
         end else begin
-          var lLayout := defSlotLayout(aElement);
+          var lLayout := defFileSlotLayout(aElement);
           if FormID.ObjectID[lLayout] < $800 then
             if not _File.AllowHardcodedRangeUse then
               FormID.FileID[lLayout] := TwbFileID.Null;
@@ -24024,7 +24071,7 @@ begin
     _File := aElement._File;
     if Assigned(_File) then begin
       try
-        var lLayout := defSlotLayout(aElement);
+        var lLayout := defFileSlotLayout(aElement);
         if FormID.ObjectID[lLayout] < $800 then
           if not _File.AllowHardcodedRangeUse then
             FormID.FileID[lLayout] := TwbFileID.Null;
@@ -26229,7 +26276,7 @@ begin
   if Assigned(_File) then begin
     Rec := _File.RecordByEditorID[ToStringTransform(aBasePtr, aEndPtr, aElement, ttToSortKey)];
     if Assigned(Rec) then
-      aElement.AddReferencedFromID(Rec.LoadOrderFormID);
+      aElement.AddReferencedFromID(defReferenceFormID(aElement, Rec));
   end;
 end;
 

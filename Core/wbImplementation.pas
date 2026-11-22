@@ -8703,16 +8703,20 @@ function TwbFile.FileFormIDtoLoadOrderFormID(const aFormID: TwbFormID; aNew: Boo
 begin
   Result := aFormID;
   var lLayout := flContextObj.SlotLayout;
-  if Result.ObjectID[lLayout] < $800 then
+  var lFileLayout := lLayout;
+  if Result.ToCardinal shr 24 >= $FD then
+    lFileLayout := flContextObj.FileSlotLayout;
+  if Result.ObjectID[lFileLayout] < $800 then
     if GetAllowHardcodedRangeUse then begin
       if Result.IsHardcoded then
         Exit;
     end else begin
-      Result.FileID[lLayout] := TwbFileID.Null;
+      Result.FileID[lFileLayout] := TwbFileID.Null;
       Exit;
     end;
 
-  Result.FileID[lLayout] := FileFileIDtoLoadOrderFileID(Result.FileID[lLayout], aNew);
+  Result := TwbFormID.FromCardinal(Result.ObjectID[lFileLayout]).ChangeFileID(lLayout,
+    FileFileIDtoLoadOrderFileID(Result.FileID[lFileLayout], aNew));
 end;
 
 function TwbFile.FindFormID(aFormID: TwbFormID; var Index: Integer; aNewMasters: Boolean): Boolean;
@@ -8750,7 +8754,7 @@ begin
 
   if IsNewRecord(aFormID, aNewMasters) then begin
     var lFileFileID := GetFileFileID(aNewMasters);
-    var lLayout := flContextObj.SlotLayout;
+    var lLayout := flContextObj.FileSlotLayout;
     if aFormID.FileID[lLayout] <> lFileFileID then
       aFormID.FileID[lLayout] := lFileFileID;
   end;
@@ -9286,7 +9290,7 @@ var
   L, H, I, C: Integer;
 begin
   Result := False;
-  var lLayout := flContextObj.SlotLayout;
+  var lLayout := flContextObj.FileSlotLayout;
   aFormID.FileID[lLayout] := TwbFileID.CreateFull(0);
 
   L := Low(flInjectedRecords);
@@ -10185,7 +10189,7 @@ begin
   if Length(flRecords) > 0 then begin
     FormID := flRecords[High(flRecords)].FixedFormID;
     if IsNewRecord(FormID, True) then
-      Result := FormID.ObjectID[flContextObj.SlotLayout];
+      Result := FormID.ObjectID[flContextObj.FileSlotLayout];
   end;
 end;
 
@@ -10540,7 +10544,7 @@ end;
 function TwbFile.GetMasterRecordByFormID(aFormID: TwbFormID; aAllowInjected, aNewMasters: Boolean): IwbMainRecord;
 begin
   var lMaster: IwbFile;
-  var lLayout := flContextObj.SlotLayout;
+  var lLayout := flContextObj.FileSlotLayout;
   if aFormID.ObjectID[lLayout] < $800 then begin
     if GetAllowHardcodedRangeUse then begin
       if aFormID.IsHardcoded then
@@ -11465,7 +11469,7 @@ begin
       end;
     end else begin
       var lFileFileID := GetFileFileID(true);
-      var lLayout := flContextObj.SlotLayout;
+      var lLayout := flContextObj.FileSlotLayout;
 
       if FileHeader.IsLight then begin
         for i := High(flRecords) downto Low(flRecords) do begin
@@ -11874,7 +11878,7 @@ end;
 
 procedure TwbFile.flUnregisterFromMaster(const aRecord: IwbMainRecord; aFormID: TwbFormID);
 begin
-  var lIsHardcoded := aFormID.ObjectID[flContextObj.SlotLayout] < $800;
+  var lIsHardcoded := aFormID.ObjectID[flContextObj.FileSlotLayout] < $800;
   if lIsHardcoded then
     if GetAllowHardcodedRangeUse then
       lIsHardcoded := aFormID.IsHardcoded;
@@ -11882,7 +11886,7 @@ begin
   if lIsHardcoded and (flLoadOrderFileID.FullSlot = 0) then
     lIsHardcoded := False;
 
-  var lFileID := aFormID.FileID[flContextObj.SlotLayout];
+  var lFileID := aFormID.FileID[flContextObj.FileSlotLayout];
 
   if not lIsHardcoded and IsNewRecord(lFileID, True) and not (fsIsCompareLoad in flStates) then begin
     {record for this file}
@@ -16400,7 +16404,7 @@ var
   begin
     Result := True;
     var MainRecord: IwbMainRecord := nil;
-    var lLayout := ContextObj.SlotLayout;
+    var lLayout := ContextObj.FileSlotLayout;
 
     if lNames then begin
       if not Assigned(_File) then begin
@@ -16599,7 +16603,7 @@ begin
 
   var lFile := GetFile;
   if Assigned(lFile) then begin
-    var lLayout := ContextObj.SlotLayout;
+    var lLayout := ContextObj.FileSlotLayout;
     if Result.ObjectID[lLayout] < $800 then
       if lFile.GetAllowHardcodedRangeUse then begin
         if Result.IsHardcoded then
@@ -17074,7 +17078,7 @@ var
             Supports(Group.Container, IwbGroupRecordInternal, Group);
           if Assigned(Group) then begin
             if (Group.GroupType = 0) and (TwbSignature(Group.GroupLabel) = 'CELL') then begin
-              s := '00' + IntToStr(aFormID.ObjectID[aContainer.ContextObj.SlotLayout]);
+              s := '00' + IntToStr(aFormID.ObjectID[aContainer.ContextObj.FileSlotLayout]);
               Block := StrToInt(s[Length(s)]);
               SubBlock := StrToInt(s[Pred(Length(s))]);
 
@@ -18131,7 +18135,7 @@ var
     if aFormID.IsNull then
       Exit;
 
-    var lLayout := ContextObj.SlotLayout;
+    var lLayout := ContextObj.FileSlotLayout;
     if aFormID.ObjectID[lLayout] < $800 then begin
       MasterZeroIsGameMaster;
       if not lAllowHardcodedRangeUse then
@@ -18527,7 +18531,7 @@ begin
       {!!!!! SF1 support?}
       FormID := GetFormID;
       FixedFormID := GetFixedFormID;
-      var lLayout := ContextObj.SlotLayout;
+      var lLayout := ContextObj.FileSlotLayout;
       if _File.IsLight and (FormID.ObjectID[lLayout] > $FFF) and (FixedFormID.FileID[lLayout] = _File.FileFileID[True]) then
         Result := 'ObjectID ' + IntToHex64((FormID.ToCardinal and $00FFFFFF),6) + ' is invalid for a light module.'
       else if _File.IsMedium and (FormID.ObjectID[lLayout] > $FFFF) and (FixedFormID.FileID[lLayout] = _File.FileFileID[True]) then
@@ -19462,13 +19466,13 @@ begin
   if gcComplexFileFileID in lCapabilities then
     Exit;
 
-  if mrStruct.mrsFormID(lFormIDInHeader).FileID[ContextObj.SlotLayout].FullSlot > aAbove then begin
+  if mrStruct.mrsFormID(lFormIDInHeader).FileID[ContextObj.FileSlotLayout].FullSlot > aAbove then begin
     MakeHeaderWriteable;
-    mrStruct.mrsFormID(lFormIDInHeader).FileID[ContextObj.SlotLayout] := TwbFileID.CreateFull(aTo);
+    mrStruct.mrsFormID(lFormIDInHeader).FileID[ContextObj.FileSlotLayout] := TwbFileID.CreateFull(aTo);
     if Assigned(mrGroup) or (GetChildGroup <> nil) then
       mrGroup.GroupLabel := mrStruct.mrsFormID(lFormIDInHeader).ToCardinal;
   end else
-    if mrStruct.mrsFormID(lFormIDInHeader).FileID[ContextObj.SlotLayout].FullSlot = aTo then
+    if mrStruct.mrsFormID(lFormIDInHeader).FileID[ContextObj.FileSlotLayout].FullSlot = aTo then
       if Assigned(mrGroup) or (GetChildGroup <> nil) then
         mrGroup.GroupLabel := mrStruct.mrsFormID(lFormIDInHeader).ToCardinal;
 end;
@@ -20507,7 +20511,7 @@ begin
       Result := IwbMainRecord(mrMaster)._File;
     Exit;
   end;
-  var lLayout := ContextObj.SlotLayout;
+  var lLayout := ContextObj.FileSlotLayout;
   var lFormID := GetFormID;
   if not lFormID.IsNull and
      (lFormID.ObjectID[lLayout] < $800) and
@@ -20994,7 +20998,7 @@ var
   procedure ProcessRef(const aFormID: TwbFormID);
   begin
     var MainRecord: IwbMainRecord := nil;
-    var lLayout := ContextObj.SlotLayout;
+    var lLayout := ContextObj.FileSlotLayout;
 
     if lComplex then begin
 
@@ -21389,7 +21393,7 @@ var
 
         var lCapabilities := GameDefObj.Capabilities;
         var lComplex := gcComplexFileFileID in lCapabilities;
-        var lLayout := ContextObj.SlotLayout;
+        var lLayout := ContextObj.FileSlotLayout;
 
         HeaderUpdated := False;
         OldFormID := GetFixedFormID;
@@ -23122,7 +23126,7 @@ begin
 
   FileFormID := _File.LoadOrderFormIDtoFileFormID(aFormID, True);
 
-  if GetFormID.ObjectID[lLayout] = FileFormID.ObjectID[lLayout] then
+  if GetFormID.ObjectID[ContextObj.FileSlotLayout] = FileFormID.ObjectID[ContextObj.FileSlotLayout] then
     if _File.IsNewRecord(GetFormID, GetMastersUpdated) and _File.IsNewRecord(FileFormID, GetMastersUpdated) then begin
       // we can do this relatively quietly and quickly...
       if Assigned(mrGroup) or (GetChildGroup <> nil)  then
@@ -23580,7 +23584,7 @@ var
 begin
   if mrFixedFormID.IsNull then
     Exit;
-  var lLayout := ContextObj.SlotLayout;
+  var lLayout := ContextObj.FileSlotLayout;
   if (mrFixedFormID.FileID[lLayout].FullSlot = aOldSlot) and
      (ComputeFixedFormID(lCacheable).FileID[lLayout].FullSlot <> aOldSlot)
   then
@@ -24016,7 +24020,7 @@ begin
       raise Exception.Create(GetName + ' is not contained in a group of type "Top CELL"');
   end;
 
-  s := '00' + IntToStr(GetFormID.ObjectID[ContextObj.SlotLayout]);
+  s := '00' + IntToStr(GetFormID.ObjectID[ContextObj.FileSlotLayout]);
   i := Length(s);
   if i > 2 then
     System.Delete(s, 1, i - 2);
@@ -27531,7 +27535,7 @@ begin
       var lFormID := TwbFormID.FromCardinal(GetGroupLabel);
 
       var lFile := GetFile;
-      var lLayout := ContextObj.SlotLayout;
+      var lLayout := ContextObj.FileSlotLayout;
 
       if lFormID.ObjectID[lLayout] < $800 then begin
         var lMasterZeroIsGameMaster := False;
@@ -27656,7 +27660,7 @@ begin
       var lFormID := TwbFormID.FromCardinal(Result);
       if lFile.IsNewRecord(lFormID, GetMastersUpdated) then begin
         var lFileFileID := lFile.FileFileID[GetMastersUpdated];
-        var lLayout := ContextObj.SlotLayout;
+        var lLayout := ContextObj.FileSlotLayout;
         if lFormID.FileID[lLayout] <> lFileFileID then begin
           lFormID.FileID[lLayout] := lFileFileID;
           Result := lFormID.ToCardinal;
@@ -27934,7 +27938,7 @@ begin
             if Assigned(lFile) then
               lAllowHardcodedRangeUse := lFile.AllowHardcodedRangeUse;
 
-            NewFormID := FixupFormID(OldFormID, aOld, aNew, aOldCount, aNewCount, lAllowHardcodedRangeUse, ContextObj.SlotLayout, gcComplexFileFileID in GameDefObj.Capabilities);
+            NewFormID := FixupFormID(OldFormID, aOld, aNew, aOldCount, aNewCount, lAllowHardcodedRangeUse, ContextObj.FileSlotLayout, gcComplexFileFileID in GameDefObj.Capabilities);
             if grStruct.grsLabel <> NewFormID.ToCardinal then begin
               MakeHeaderWriteable;
               grStruct.grsLabel := NewFormID.ToCardinal;
@@ -28070,7 +28074,7 @@ begin
     var lFormID := TwbFormID.FromCardinal(aLabel);
     if lFile.IsNewRecord(lFormID, GetMastersUpdated) then begin
       var lFileFileID := lFile.FileFileID[GetMastersUpdated];
-      var lLayout := ContextObj.SlotLayout;
+      var lLayout := ContextObj.FileSlotLayout;
       if lFormID.FileID[lLayout] <> lFileFileID then begin
         lFormID.FileID[lLayout] := lFileFileID;
         aLabel := lFormID.ToCardinal;
