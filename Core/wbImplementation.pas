@@ -11920,6 +11920,9 @@ begin
     end;
 end;
 
+procedure MergeRepeatedGroup(const aSource, aTarget: IwbGroupRecord; var aCount: Integer); forward;
+procedure MarkWorldsModified(aTop: TwbContainer); forward;
+
 procedure TwbFile.Scan;
 const
   cModuleTypeNames: array[TwbModuleType] of string = ('full', 'medium', 'light');
@@ -12338,12 +12341,8 @@ begin
               Groups[GroupRecord.SortOrder] := GroupRecord;
             end else begin
               j := 0;
-              while GroupRecord.ElementCount > 0 do begin
-                Groups[GroupRecord.SortOrder].AddElement(GroupRecord.RemoveElement(0, True));
-                Inc(j);
-              end;
-              (Groups[GroupRecord.SortOrder] as IwbGroupRecordInternal).Sort;
-              (Groups[GroupRecord.SortOrder] as IwbGroupRecordInternal).SetModified(True);
+              MergeRepeatedGroup(GroupRecord, Groups[GroupRecord.SortOrder], j);
+              MarkWorldsModified(Groups[GroupRecord.SortOrder] as TObject as TwbContainer);
               flProgress('Merged ' + IntToStr(j) + ' record from duplicated group: ' + cntElements[i].Name);
               GroupRecord.Remove;
             end;
@@ -27255,6 +27254,15 @@ begin
   end;
 end;
 
+procedure MarkWorldsModified(aTop: TwbContainer);
+begin
+  for var i := Low(aTop.cntElements) to High(aTop.cntElements) do begin
+    var lWorld: IwbMainRecord;
+    if Supports(aTop.cntElements[i], IwbMainRecord, lWorld) and (lWorld.Signature = 'WRLD') then
+      (lWorld as IwbElementInternal).SetModified(True);
+  end;
+end;
+
 procedure NoteRepeatMerged(const aGroup: IwbGroupRecord);
 begin
   var lGroup := aGroup;
@@ -27277,9 +27285,9 @@ begin
         if Supports(aSource.Elements[0], IwbGroupRecord, lSource) then begin
           var lTarget := aTarget.FindChildGroup(lSource.GroupType, lSource.GroupLabel);
           if Assigned(lTarget) then begin
-            MergeRepeatedGroup(lSource, lTarget, aCount);
             if lSource.GroupType in [1, 6, 7] then
               RepointRepeatOwner(aTarget, lSource, lTarget);
+            MergeRepeatedGroup(lSource, lTarget, aCount);
             aSource.RemoveElement(0, True);
             Continue;
           end;
@@ -27293,18 +27301,14 @@ begin
   finally
     aSource.EndUpdate;
   end;
-  (aTarget as IwbGroupRecordInternal).Sort;
+  (aTarget as IwbGroupRecordInternal).Sort(True);
   (aTarget as IwbGroupRecordInternal).SetModified(True);
 end;
 
 procedure TwbGroupRecord.AfterConstruction;
 begin
   if (gsMergedRepeat in grStates) and ContextObj.BeginInternalEdit(True) then try
-    for var i := Low(cntElements) to High(cntElements) do begin
-      var lWorld: IwbMainRecord;
-      if Supports(cntElements[i], IwbMainRecord, lWorld) and (lWorld.Signature = 'WRLD') then
-        (lWorld as IwbElementInternal).SetModified(True);
-    end;
+    MarkWorldsModified(Self);
   finally
     wbEndInternalEdit;
   end;
@@ -27328,9 +27332,9 @@ begin
               if Supports(GetElement(0), IwbGroupRecord, SrcGrp) then begin
                 var TrgGrp := grDuplicateOf.FindChildGroup(SrcGrp.GroupType, SrcGrp.GroupLabel);
                 if Assigned(TrgGrp) then begin
-                  MergeRepeatedGroup(SrcGrp, TrgGrp, j);
                   if SrcGrp.GroupType in [1, 6, 7] then
                     RepointRepeatOwner(grDuplicateOf, SrcGrp, TrgGrp);
+                  MergeRepeatedGroup(SrcGrp, TrgGrp, j);
                   RemoveElement(0, True);
                   SrcGrp := nil;
                   TrgGrp := nil;

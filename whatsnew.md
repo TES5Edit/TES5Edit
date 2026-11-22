@@ -10,6 +10,7 @@ xEdit is crucial to our shared modding community and your contribution - no matt
 * Scripts can no longer write a file loaded through Compare To, for example with SaveAs.pas; like the editor's own save, they now refuse it, so a change made to such a file in memory (by renumbering FormIDs, for example) can never reach a file on disk.
 * The text boxes of the Log Analyzer and the Localization Editor, and text boxes created by scripts, show their text again. They stayed empty because the main window's message log and help text, which use another kind of text control, took the window class those boxes need.
 * A plugin in which a world's World Children group appears twice, with other records between the two (seen in a file written by the Creation Kit), is read as one group again. The second group used to stay separate, so lookups through the world missed the cells it held; making a reference temporary, for example, created a second exterior cell at a grid the plugin already held. Repeated Block, Sub-Block and cell child groups are joined the same way, and saving such a plugin writes its worlds' offset data afresh.
+* A plugin holding two top groups of one record type is joined into one as a repeated group is: a world's or a topic's child group present in both becomes one group, the joined group is sorted even when three or more are joined, and its worlds are marked so a save writes their offset data afresh.
 
 # What's New in xEdit 4.1.5s?
 
