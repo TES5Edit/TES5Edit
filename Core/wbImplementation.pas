@@ -2246,7 +2246,8 @@ type
     gsSorting,
     gsSortPostponed,
     gsSortForcedPostponed,
-    gsInformedMainRecord
+    gsInformedMainRecord,
+    gsMergedRepeat
   );
 
   TwbGroupStates = set of TwbGroupState;
@@ -27241,8 +27242,72 @@ begin
   end;
 end;
 
+procedure RepointRepeatOwner(const aContainer, aOld, aNew: IwbGroupRecord);
+begin
+  var lContainer := aContainer as TObject as TwbContainer;
+  for var i := Low(lContainer.cntElements) to High(lContainer.cntElements) do begin
+    var lOwner: IwbMainRecord;
+    if Supports(lContainer.cntElements[i], IwbMainRecord, lOwner) and (lOwner.FixedFormID.ToCardinal = aNew.GroupLabel) then begin
+      (lOwner as IwbMainRecordInternal).RemoveChildGroup(aOld);
+      (lOwner as IwbMainRecordInternal).SetChildGroup(aNew);
+      Exit;
+    end;
+  end;
+end;
+
+procedure NoteRepeatMerged(const aGroup: IwbGroupRecord);
+begin
+  var lGroup := aGroup;
+  while lGroup.GroupType <> 1 do
+    if not Supports(lGroup.Container, IwbGroupRecord, lGroup) then
+      Exit;
+  var lTop: IwbGroupRecord;
+  if Supports(lGroup.Container, IwbGroupRecord, lTop) then
+    Include((lTop as TObject as TwbGroupRecord).grStates, gsMergedRepeat);
+end;
+
+procedure MergeRepeatedGroup(const aSource, aTarget: IwbGroupRecord; var aCount: Integer);
+begin
+  aSource.BeginUpdate;
+  try
+    aTarget.BeginUpdate;
+    try
+      while aSource.ElementCount > 0 do begin
+        var lSource: IwbGroupRecord;
+        if Supports(aSource.Elements[0], IwbGroupRecord, lSource) then begin
+          var lTarget := aTarget.FindChildGroup(lSource.GroupType, lSource.GroupLabel);
+          if Assigned(lTarget) then begin
+            MergeRepeatedGroup(lSource, lTarget, aCount);
+            if lSource.GroupType in [1, 6, 7] then
+              RepointRepeatOwner(aTarget, lSource, lTarget);
+            aSource.RemoveElement(0, True);
+            Continue;
+          end;
+        end;
+        aTarget.AddElement(aSource.RemoveElement(0, True));
+        Inc(aCount);
+      end;
+    finally
+      aTarget.EndUpdate;
+    end;
+  finally
+    aSource.EndUpdate;
+  end;
+  (aTarget as IwbGroupRecordInternal).Sort;
+  (aTarget as IwbGroupRecordInternal).SetModified(True);
+end;
+
 procedure TwbGroupRecord.AfterConstruction;
 begin
+  if (gsMergedRepeat in grStates) and ContextObj.BeginInternalEdit(True) then try
+    for var i := Low(cntElements) to High(cntElements) do begin
+      var lWorld: IwbMainRecord;
+      if Supports(cntElements[i], IwbMainRecord, lWorld) and (lWorld.Signature = 'WRLD') then
+        (lWorld as IwbElementInternal).SetModified(True);
+    end;
+  finally
+    wbEndInternalEdit;
+  end;
   if Assigned(grDuplicateOf) then try
     if ContextObj.BeginInternalEdit(True) then try
       var s := grDuplicateOf.ShortName;
@@ -27250,6 +27315,7 @@ begin
       if GetElementCount = 0 then begin
         if Assigned(Container) then
           Container.RemoveElement(Self, True);
+        NoteRepeatMerged(grDuplicateOf);
         raise EwbSkipLoad.Create('Skipped empty duplicate group "' + s + '"');
       end else begin
         var j := 0;
@@ -27262,24 +27328,11 @@ begin
               if Supports(GetElement(0), IwbGroupRecord, SrcGrp) then begin
                 var TrgGrp := grDuplicateOf.FindChildGroup(SrcGrp.GroupType, SrcGrp.GroupLabel);
                 if Assigned(TrgGrp) then begin
-                  SrcGrp.BeginUpdate;
-                  try
-                    TrgGrp.BeginUpdate;
-                    try
-                      while SrcGrp.ElementCount > 0 do begin
-                        TrgGrp.AddElement(SrcGrp.RemoveElement(0, True));
-                        Inc(j);
-                      end;
-                    finally
-                      TrgGrp.EndUpdate;
-                    end;
-                  finally
-                    SrcGrp.EndUpdate;
-                  end;
+                  MergeRepeatedGroup(SrcGrp, TrgGrp, j);
+                  if SrcGrp.GroupType in [1, 6, 7] then
+                    RepointRepeatOwner(grDuplicateOf, SrcGrp, TrgGrp);
                   RemoveElement(0, True);
                   SrcGrp := nil;
-                  (TrgGrp as IwbGroupRecordInternal).Sort;
-                  (TrgGrp as IwbGroupRecordInternal).SetModified(True);
                   TrgGrp := nil;
                   Continue;
                 end;
@@ -27299,6 +27352,7 @@ begin
           Container.RemoveElement(Self, True);
         (grDuplicateOf as IwbGroupRecordInternal).Sort;
         (grDuplicateOf as IwbGroupRecordInternal).SetModified(True);
+        NoteRepeatMerged(grDuplicateOf);
         raise EwbSkipLoad.Create('Merged ' + j.ToString + ' elements from duplicate group into "' + s + '"');
       end;
     finally
@@ -27758,6 +27812,23 @@ begin
   if (grStruct.grsGroupType in [1, 6, 7]) and Assigned(aPrevMainRecord) and (aPrevMainRecord.FixedFormID.ToCardinal = GetGroupLabel) then begin
     (aPrevMainRecord as IwbMainRecordInternal).SetChildGroup(Self);
     Include(grStates, gsInformedMainRecord);
+  end;
+  if not (gsInformedMainRecord in grStates) and not Assigned(grDuplicateOf) then begin
+    var lType := grStruct.grsGroupType;
+    if (lType in [1, 4..9]) or ((lType = 10) and not (gcVWDAsQuestChildren in GameDefObj.Capabilities)) then begin
+      var lContainer := GetContainer;
+      if Assigned(lContainer) then begin
+        var lParent := lContainer as TObject as TwbContainer;
+        for var i := High(lParent.cntElements) downto Low(lParent.cntElements) do begin
+          var lFirst: IwbGroupRecord;
+          if Supports(lParent.cntElements[i], IwbGroupRecord, lFirst) and ((lFirst as TObject) <> Self) and
+             (lFirst.GroupType = lType) and (lFirst.GroupLabel = GetGroupLabel) then begin
+            IsDuplicateOf(lFirst);
+            Break;
+          end;
+        end;
+      end;
+    end;
   end;
 end;
 
