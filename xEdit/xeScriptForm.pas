@@ -24,6 +24,7 @@ uses
   Winapi.Messages,
 
   SynHighlighterPas,
+  SynMemo,
 
   xeMainForm;
 
@@ -54,7 +55,6 @@ type
     lblPosition: TLabel;
     btnSave: TButton;
     dlgSave: TSaveDialog;
-    Editor: TMemo;
     chkScriptsSubDir: TCheckBox;
     edFilter: TEdit;
     lblScript: TLabel;
@@ -93,6 +93,7 @@ type
     procedure DoScriptSelectionChange;
   public
     { Public declarations }
+    Editor: TSynMemo;
     Path: string;
     LastUsedScript: string;
     ScriptFile: string;
@@ -112,6 +113,8 @@ uses
   System.IOUtils,
   System.SysUtils,
   System.UITypes,
+
+  Vcl.Graphics,
 
   Winapi.Windows;
 
@@ -447,6 +450,24 @@ end;
 
 procedure TfrmScript.FormCreate(Sender: TObject);
 begin
+  Editor := TSynMemo.Create(Self);
+  Editor.SetBounds(0, 89, 682, 284);
+  Editor.Align := alClient;
+  Editor.Font.Charset := DEFAULT_CHARSET;
+  Editor.Font.Color := clWindowText;
+  Editor.Font.Height := -11;
+  Editor.Font.Name := 'Courier New';
+  Editor.Font.Style := [];
+  Editor.ParentFont := False;
+  Editor.ScrollBars := ssBoth;
+  Editor.WantTabs := True;
+  Editor.WordWrap := False;
+  Editor.OnKeyDown := EditorKeyDown;
+  Editor.OnKeyPress := EditorKeyPress;
+  Editor.OnKeyUp := EditorKeyUp;
+  Editor.OnMouseUp := EditorMouseUp;
+  Editor.Parent := Self;
+
   cmbScripts.OnBeforeWheel := cmbScriptsBeforeWheel;
   cmbScripts.OnAfterWheel := cmbScriptsAfterWheel;
 

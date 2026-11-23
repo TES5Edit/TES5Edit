@@ -24,6 +24,8 @@ uses
   Vcl.Menus,
   Vcl.StdCtrls,
 
+  SynMemo,
+
   wbInterface,
 
   xeMainForm;
@@ -31,7 +33,7 @@ uses
 type
   TwbEdit = record
     eElement: IwbElement;
-    eMemo: TMemo;
+    eMemo: TSynMemo;
   end;
 
   TwbEdits = TArray<TwbEdit>;
@@ -59,7 +61,7 @@ type
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure FindDialog1Find(Sender: TObject);
   private
-    FMemo   : TMemo;
+    FMemo   : TSynMemo;
     FSelPos : Integer;
 
     Edits: TwbEdits;
@@ -98,7 +100,7 @@ procedure TfrmViewElements.AddElement(const aElement: IwbElement;
   aFocused, aEditable: Boolean);
 var
   TabSheet : TwbTabSheet;
-  Memo     : TMemo;
+  Memo     : TSynMemo;
 begin
   if not Assigned(aElement) then
     Exit;
@@ -110,7 +112,7 @@ begin
   TabSheet.Caption := aElement._File.Name;
 //  TabSheet.Element := aElement;
 
-  Memo := TMemo.Create(TabSheet);
+  Memo := TSynMemo.Create(TabSheet);
   Memo.Parent := TabSheet;
   LoadFont(Settings, 'UI', 'FontViewer', Memo.Font);
   if frmMain.MonospaceFontName <> '' then
@@ -149,11 +151,11 @@ end;
 
 procedure TfrmViewElements.btnCopyToClipboard(Sender: TObject);
 var
-  Memo: TMemo;
+  Memo: TSynMemo;
 begin
   if pcView.PageCount > 0 then
   begin
-    Memo := TMemo(pcView.ActivePage.Controls[0]);
+    Memo := TSynMemo(pcView.ActivePage.Controls[0]);
     Clipboard.AsText := Memo.Text;
     frmMain.PostAddMessage('Copied field to clipboard');
   end
@@ -185,7 +187,7 @@ begin
       aFile2 := Path + Copy(TabSheet2.Caption, 1, Length(TabSheet2.Caption) - 1) + '.txt'
     else
       aFile2 := Path + TabSheet2.Caption + '.txt';
-    TMemo(TabSheet2.Controls[0]).Lines.SaveToFile(aFile2);
+    TSynMemo(TabSheet2.Controls[0]).Lines.SaveToFile(aFile2);
     aParams := StringReplace(aParams, '%2', '"'+aFile2+'"', []);
 
     TabSheet1 := pcView.Pages[Pred(idx)];
@@ -193,7 +195,7 @@ begin
       aFile1 := Path + Copy(TabSheet1.Caption, 1, Length(TabSheet1.Caption) - 1) + '.txt'
     else
       aFile1 := Path + TabSheet1.Caption + '.txt';
-    TMemo(TabSheet1.Controls[0]).Lines.SaveToFile(aFile1);
+    TSynMemo(TabSheet1.Controls[0]).Lines.SaveToFile(aFile1);
     aParams := StringReplace(aParams, '%1', '"'+aFile1+'"', []);
 
     FillChar(StartUpInfo, SizeOf(TStartUpInfo), 0);
@@ -216,18 +218,18 @@ begin
       sl := TStringList.Create;
       try
         sl.LoadfromFile(aFile1);
-        with TMemo(TabSheet1.Controls[0]) do
+        with TSynMemo(TabSheet1.Controls[0]) do
           if (sl.Text<>Lines.Text) and not ReadOnly then begin
-            TMemo(TabSheet1.Controls[0]).Lines.Text := sl.Text;
-            TMemo(TabSheet1.Controls[0]).Modified := True;
+            TSynMemo(TabSheet1.Controls[0]).Lines.Text := sl.Text;
+            TSynMemo(TabSheet1.Controls[0]).Modified := True;
             with TabSheet1 do
               if (Length(Caption)>0) and (Caption[Length(Caption)]<>'*') then Caption := Caption + '*';
           end;
         sl.LoadfromFile(aFile2);
-        with TMemo(TabSheet2.Controls[0]) do
+        with TSynMemo(TabSheet2.Controls[0]) do
           if (sl.Text<>Lines.Text) and not ReadOnly then begin
-            TMemo(TabSheet2.Controls[0]).Lines.Text := sl.Text;
-            TMemo(TabSheet2.Controls[0]).Modified := True;
+            TSynMemo(TabSheet2.Controls[0]).Lines.Text := sl.Text;
+            TSynMemo(TabSheet2.Controls[0]).Modified := True;
             with TabSheet2 do
               if (Length(Caption)>0) and (Caption[Length(Caption)]<>'*') then Caption := Caption + '*';
           end;
@@ -385,8 +387,8 @@ procedure TfrmViewElements.MemoChange(Sender: TObject);
 //var
 //  s: string;
 begin
-  if Sender is TMemo then
-    with TMemo(Sender) do begin
+  if Sender is TSynMemo then
+    with TSynMemo(Sender) do begin
       if Modified then begin
         (Owner as TwbTabSheet).Highlighted := True;
 {        s := (Owner as TwbTabSheet).Caption;
@@ -402,9 +404,9 @@ procedure TfrmViewElements.MemoKeyDown(Sender: TObject; var Key: Word;
   Shift: TShiftState);
 begin
   if (Key = Ord('A')) and (ssCtrl in Shift) then
-    TMemo(Sender).SelectAll
+    TSynMemo(Sender).SelectAll
   else if (Key = Ord('F')) and (ssCtrl in Shift) then begin
-    FMemo := TMemo(Sender);
+    FMemo := TSynMemo(Sender);
     FSelPos := 0;
     FindDialog1.Execute;
   end;

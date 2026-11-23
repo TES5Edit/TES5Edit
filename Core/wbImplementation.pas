@@ -1463,6 +1463,9 @@ type
     function IsEmbeddedReference: Boolean;
     function DefiningFile: IwbFile;
     procedure AssignReference(const aSource: IwbElement; const aKey: TwbFormID);
+    function ReferenceNumberFor(const aKey: TwbFormID): Cardinal;
+    procedure WriteReferenceNumber(aNumber: Cardinal);
+    procedure TakeDeletionIdentity(const aSource: IwbMainRecord; const aKey: TwbFormID);
     procedure InitDataPtr; override; final;
     procedure DecompressIfNeeded;
     procedure ScanData; override; final;
@@ -1632,6 +1635,7 @@ type
     function GetFlagsPtr: PwbMainRecordStructFlags;
     function GetChildGroup: IwbGroupRecord;
     function EnsureChildGroup: IwbGroupRecord;
+    function DeepCopiesChildGroup: Boolean;
     function GetBaseRecord: IwbMainRecord;
     function GetBaseRecordID: TwbFormID;
     function GetBaseRecordSignature: TwbSignature;
@@ -2242,7 +2246,8 @@ type
     gsSorting,
     gsSortPostponed,
     gsSortForcedPostponed,
-    gsInformedMainRecord
+    gsInformedMainRecord,
+    gsMergedRepeat
   );
 
   TwbGroupStates = set of TwbGroupState;
@@ -4623,7 +4628,7 @@ var
       Exit(RecordRefused(aRecord, Format('its FRMR does not give the key it sits at [%s]', [lRecord.GetFixedFormID.ToDisplayString(aContext.SlotLayout)])));
   end;
 
-  function OfRecord(const aRecord: IwbMainRecord; aNew: Boolean): string;
+  function OfRecord(const aRecord: IwbMainRecord; aNew, aParent: Boolean): string;
 
     function Refused(const aWhy: string): string;
     begin
@@ -4645,10 +4650,12 @@ var
     if not Assigned(lRecordFile) then
       Exit;
     if aRecord.IsDeleted then
-      if gcDeletedBySubrecord in aContext.GameDefObj.Capabilities then
+      if not (gcDeletedBySubrecord in aContext.GameDefObj.Capabilities) then
+        Exit(Refused('its header marks it deleted, and its copy would lose what keys it'))
+      else if aNew or aParent then
         Exit(Refused('it is deleted (it holds a Deleted subrecord)'))
-      else
-        Exit(Refused('its header marks it deleted, and its copy would lose what keys it'));
+      else if lRecord.DeletionRefusal(True) <> '' then
+        Exit(Refused('it is deleted while its child group holds records, which a deletion can not hold'));
     if Assigned(lRecord.mrDef) and not lRecord.mrDef.IsKeyedByIdentity then
       Exit(OfReference(aRecord));
     if aNew and Assigned(lRecord.mrDef) and (dfNoCopyAsNew in lRecord.mrDef.DefFlags) then
@@ -4688,17 +4695,21 @@ var
     if lCount > 0 then begin
       var lHolder := aDest.flRecords[lFirst];
       if (lHolder.Signature <> lRecord.GetSignature) or not CurrentIdentityIs(lHolder, lIdentity.ToLowerInvariant) then
-        Result := Refused(Format('"%s" holds %s at its key, which is no version of it', [DestName, lHolder.Name]));
+        Result := Refused(Format('"%s" holds %s at its key, which is no version of it', [DestName, lHolder.Name]))
+      else if aRecord.IsDeleted then
+        Result := (lHolder as TObject as TwbMainRecord).DeletionRefusal(True);
     end;
   end;
 
   function OfParent(const aParent: IwbMainRecord; aNew: Boolean): string;
   begin
-    Result := OfRecord(aParent, aNew);
+    Result := OfRecord(aParent, aNew, True);
     if (Result = '') and Assigned(aParent._File) and Assigned(aDest) then begin
-      var lWritten := aParent.HighestOverrideVisibleForFile[aDest];
+      var lWritten := aDest.GetContainedRecordByLoadOrderFormID(aParent.LoadOrderFormID, True);
+      if not Assigned(lWritten) then
+        lWritten := aParent.HighestOverrideVisibleForFile[aDest];
       if not lWritten.Equals(aParent) then
-        Result := OfRecord(lWritten, aNew);
+        Result := OfRecord(lWritten, aNew, True);
     end;
   end;
 
@@ -4721,11 +4732,24 @@ var
       lGroupRef := aGroup as IwbContainerElementRef;
       for var i := 0 to Pred(lGroupRef.ElementCount) do begin
         if Supports(lGroupRef.Elements[i], IwbMainRecord, lChild) then begin
-          Result := OfRecord(lChild, aAsNew);
+          Result := OfRecord(lChild, aAsNew, False);
           if (Result = '') and aAsNew and not Assigned(lChild.ChildGroup) then
             Result := OfRequest(lChild);
-        end else if Supports(lGroupRef.Elements[i], IwbGroupRecord, lSubGroup) then
-          Result := OfGroup(lSubGroup, False);
+        end else if Supports(lGroupRef.Elements[i], IwbGroupRecord, lSubGroup) then begin
+          if Assigned(lSubGroup.ChildrenOf) and (gcDeletedBySubrecord in aContext.GameDefObj.Capabilities) and
+             lSubGroup.ChildrenOf.IsDeleted and ((lSubGroup.ChildrenOf as TObject as TwbMainRecord).DeletionRefusal(True) = '') then
+            Continue;
+          if Assigned(lSubGroup.ChildrenOf) then begin
+            Result := OfRecord(lSubGroup.ChildrenOf, aAsNew, True);
+            if (Result = '') and Assigned(aDest) then begin
+              var lHeldOwner := aDest.GetContainedRecordByLoadOrderFormID(lSubGroup.ChildrenOf.LoadOrderFormID, True);
+              if Assigned(lHeldOwner) and not lHeldOwner.Equals(lSubGroup.ChildrenOf) then
+                Result := OfRecord(lHeldOwner, aAsNew, True);
+            end;
+          end;
+          if Result = '' then
+            Result := OfGroup(lSubGroup, False);
+        end;
         if Result <> '' then
           Exit;
       end;
@@ -4744,7 +4768,7 @@ begin
   lLastSource := nil;
   lSourceJudged := False;
   if Supports(aItem, IwbMainRecord, lRecord) then begin
-    Result := OfRecord(lRecord, aAsNew);
+    Result := OfRecord(lRecord, aAsNew, False);
     if (Result = '') and aAsNew then
       Result := OfRequest(lRecord);
   end else if Supports(aItem, IwbGroupRecord, lGroup) then begin
@@ -4967,7 +4991,8 @@ begin
   else if lMultiple then begin
     for j := Low(aElements) to High(aElements) do
       try
-        if aOptions.DeepCopy and Supports(aElements[j], IwbMainRecord, lMainRecord) and Assigned(lMainRecord.ChildGroup) then begin
+        if aOptions.DeepCopy and Supports(aElements[j], IwbMainRecord, lMainRecord) and
+           (lMainRecord as TObject as TwbMainRecord).DeepCopiesChildGroup then begin
           wbProgress(aOptions.Operation + ' ' + wbCurrentProgress);
           aResult[j] := AddCopy(lMainRecord.ChildGroup, PathFlags, lRules);
           wbProgress('');
@@ -4994,7 +5019,8 @@ begin
   end else begin
     lMainRecord := nil;
     var lWriteEditorID := (aOptions.Mode = cmNew) and not flContextObj.GameDefObj.IsMorrowind;
-    if aOptions.DeepCopy and Supports(aElements[0], IwbMainRecord, lMainRecord) and Assigned(lMainRecord.ChildGroup) then begin
+    if aOptions.DeepCopy and Supports(aElements[0], IwbMainRecord, lMainRecord) and
+       (lMainRecord as TObject as TwbMainRecord).DeepCopiesChildGroup then begin
       wbCurrentProgress := Format('[%s] into [%s]', [lMainRecord.ChildGroup.FullPath, lFile.FullPath]);
       wbProgress(aOptions.Operation + ' ' + wbCurrentProgress);
       aResult[0] := AddCopy(lMainRecord.ChildGroup, PathFlags, lCallbackOnly);
@@ -5077,6 +5103,11 @@ begin
     end;
   if not lIsMaster then
     raise Exception.CreateFmt('Merge into master: "%s" is not a master of "%s"', [aTarget.FileName, GetFileName]);
+  if flContextObj.GameDefObj.IsMorrowind then
+    for i := 0 to Pred(GetRecordCount) do
+      if GetRecord(i).IsDeleted then
+        raise Exception.CreateFmt('Merge into master: "%s" holds a deletion, %s, which a merge into a Morrowind master does not carry',
+          [GetFileName, GetRecord(i).Name]);
 
   if aTarget.IsUpdate then
     Result.InjectSkippedUpdate := True
@@ -6339,6 +6370,11 @@ var
         if Assigned(lTargetLists[l]) and Assigned(lWinningLists[l]) then
           if not ListsEqual(lTargetLists[l], lWinningLists[l]) then begin
             if not Assigned(lTargetRecord) then begin
+              if lWinner.IsDeleted and flContextObj.GameDefObj.IsMorrowind then begin
+                Report(lWinner.Name + ' can not be merged: its winning version in "' + lWinner._File.FileName + '" is deleted');
+                lFailed.Add(aMaster);
+                Exit;
+              end;
               lTargetRecord := AddCopy(lWinner, [cfDeepCopy], wbNoCopyRules) as IwbMainRecord;
               if not Assigned(lTargetRecord) then begin
                 lFailed.Add(aMaster);
@@ -8672,16 +8708,20 @@ function TwbFile.FileFormIDtoLoadOrderFormID(const aFormID: TwbFormID; aNew: Boo
 begin
   Result := aFormID;
   var lLayout := flContextObj.SlotLayout;
-  if Result.ObjectID[lLayout] < $800 then
+  var lFileLayout := lLayout;
+  if Result.ToCardinal shr 24 >= $FD then
+    lFileLayout := flContextObj.FileSlotLayout;
+  if Result.ObjectID[lFileLayout] < $800 then
     if GetAllowHardcodedRangeUse then begin
       if Result.IsHardcoded then
         Exit;
     end else begin
-      Result.FileID[lLayout] := TwbFileID.Null;
+      Result.FileID[lFileLayout] := TwbFileID.Null;
       Exit;
     end;
 
-  Result.FileID[lLayout] := FileFileIDtoLoadOrderFileID(Result.FileID[lLayout], aNew);
+  Result := TwbFormID.FromCardinal(Result.ObjectID[lFileLayout]).ChangeFileID(lLayout,
+    FileFileIDtoLoadOrderFileID(Result.FileID[lFileLayout], aNew));
 end;
 
 function TwbFile.FindFormID(aFormID: TwbFormID; var Index: Integer; aNewMasters: Boolean): Boolean;
@@ -8719,7 +8759,7 @@ begin
 
   if IsNewRecord(aFormID, aNewMasters) then begin
     var lFileFileID := GetFileFileID(aNewMasters);
-    var lLayout := flContextObj.SlotLayout;
+    var lLayout := flContextObj.FileSlotLayout;
     if aFormID.FileID[lLayout] <> lFileFileID then
       aFormID.FileID[lLayout] := lFileFileID;
   end;
@@ -9255,7 +9295,7 @@ var
   L, H, I, C: Integer;
 begin
   Result := False;
-  var lLayout := flContextObj.SlotLayout;
+  var lLayout := flContextObj.FileSlotLayout;
   aFormID.FileID[lLayout] := TwbFileID.CreateFull(0);
 
   L := Low(flInjectedRecords);
@@ -10154,7 +10194,7 @@ begin
   if Length(flRecords) > 0 then begin
     FormID := flRecords[High(flRecords)].FixedFormID;
     if IsNewRecord(FormID, True) then
-      Result := FormID.ObjectID[flContextObj.SlotLayout];
+      Result := FormID.ObjectID[flContextObj.FileSlotLayout];
   end;
 end;
 
@@ -10509,7 +10549,7 @@ end;
 function TwbFile.GetMasterRecordByFormID(aFormID: TwbFormID; aAllowInjected, aNewMasters: Boolean): IwbMainRecord;
 begin
   var lMaster: IwbFile;
-  var lLayout := flContextObj.SlotLayout;
+  var lLayout := flContextObj.FileSlotLayout;
   if aFormID.ObjectID[lLayout] < $800 then begin
     if GetAllowHardcodedRangeUse then begin
       if aFormID.IsHardcoded then
@@ -11434,7 +11474,7 @@ begin
       end;
     end else begin
       var lFileFileID := GetFileFileID(true);
-      var lLayout := flContextObj.SlotLayout;
+      var lLayout := flContextObj.FileSlotLayout;
 
       if FileHeader.IsLight then begin
         for i := High(flRecords) downto Low(flRecords) do begin
@@ -11843,7 +11883,7 @@ end;
 
 procedure TwbFile.flUnregisterFromMaster(const aRecord: IwbMainRecord; aFormID: TwbFormID);
 begin
-  var lIsHardcoded := aFormID.ObjectID[flContextObj.SlotLayout] < $800;
+  var lIsHardcoded := aFormID.ObjectID[flContextObj.FileSlotLayout] < $800;
   if lIsHardcoded then
     if GetAllowHardcodedRangeUse then
       lIsHardcoded := aFormID.IsHardcoded;
@@ -11851,7 +11891,7 @@ begin
   if lIsHardcoded and (flLoadOrderFileID.FullSlot = 0) then
     lIsHardcoded := False;
 
-  var lFileID := aFormID.FileID[flContextObj.SlotLayout];
+  var lFileID := aFormID.FileID[flContextObj.FileSlotLayout];
 
   if not lIsHardcoded and IsNewRecord(lFileID, True) and not (fsIsCompareLoad in flStates) then begin
     {record for this file}
@@ -11888,6 +11928,9 @@ begin
     except
     end;
 end;
+
+procedure MergeRepeatedGroup(const aSource, aTarget: IwbGroupRecord; var aCount: Integer); forward;
+procedure MarkWorldsModified(aTop: TwbContainer); forward;
 
 procedure TwbFile.Scan;
 const
@@ -12307,12 +12350,8 @@ begin
               Groups[GroupRecord.SortOrder] := GroupRecord;
             end else begin
               j := 0;
-              while GroupRecord.ElementCount > 0 do begin
-                Groups[GroupRecord.SortOrder].AddElement(GroupRecord.RemoveElement(0, True));
-                Inc(j);
-              end;
-              (Groups[GroupRecord.SortOrder] as IwbGroupRecordInternal).Sort;
-              (Groups[GroupRecord.SortOrder] as IwbGroupRecordInternal).SetModified(True);
+              MergeRepeatedGroup(GroupRecord, Groups[GroupRecord.SortOrder], j);
+              MarkWorldsModified(Groups[GroupRecord.SortOrder] as TObject as TwbContainer);
               flProgress('Merged ' + IntToStr(j) + ' record from duplicated group: ' + cntElements[i].Name);
               GroupRecord.Remove;
             end;
@@ -16370,7 +16409,7 @@ var
   begin
     Result := True;
     var MainRecord: IwbMainRecord := nil;
-    var lLayout := ContextObj.SlotLayout;
+    var lLayout := ContextObj.FileSlotLayout;
 
     if lNames then begin
       if not Assigned(_File) then begin
@@ -16569,7 +16608,7 @@ begin
 
   var lFile := GetFile;
   if Assigned(lFile) then begin
-    var lLayout := ContextObj.SlotLayout;
+    var lLayout := ContextObj.FileSlotLayout;
     if Result.ObjectID[lLayout] < $800 then
       if lFile.GetAllowHardcodedRangeUse then begin
         if Result.IsHardcoded then
@@ -17044,7 +17083,7 @@ var
             Supports(Group.Container, IwbGroupRecordInternal, Group);
           if Assigned(Group) then begin
             if (Group.GroupType = 0) and (TwbSignature(Group.GroupLabel) = 'CELL') then begin
-              s := '00' + IntToStr(aFormID.ObjectID[aContainer.ContextObj.SlotLayout]);
+              s := '00' + IntToStr(aFormID.ObjectID[aContainer.ContextObj.FileSlotLayout]);
               Block := StrToInt(s[Length(s)]);
               SubBlock := StrToInt(s[Pred(Length(s))]);
 
@@ -18101,7 +18140,7 @@ var
     if aFormID.IsNull then
       Exit;
 
-    var lLayout := ContextObj.SlotLayout;
+    var lLayout := ContextObj.FileSlotLayout;
     if aFormID.ObjectID[lLayout] < $800 then begin
       MasterZeroIsGameMaster;
       if not lAllowHardcodedRangeUse then
@@ -18497,7 +18536,7 @@ begin
       {!!!!! SF1 support?}
       FormID := GetFormID;
       FixedFormID := GetFixedFormID;
-      var lLayout := ContextObj.SlotLayout;
+      var lLayout := ContextObj.FileSlotLayout;
       if _File.IsLight and (FormID.ObjectID[lLayout] > $FFF) and (FixedFormID.FileID[lLayout] = _File.FileFileID[True]) then
         Result := 'ObjectID ' + IntToHex64((FormID.ToCardinal and $00FFFFFF),6) + ' is invalid for a light module.'
       else if _File.IsMedium and (FormID.ObjectID[lLayout] > $FFFF) and (FixedFormID.FileID[lLayout] = _File.FileFileID[True]) then
@@ -18639,6 +18678,11 @@ begin
       if Assigned(Group) then
         Supports(Group.ElementBySignature[aSignature], IwbMainRecord, Result);
     end;
+end;
+
+function TwbMainRecord.DeepCopiesChildGroup: Boolean;
+begin
+  Result := (GetChildGroup <> nil) and not (GetIsDeleted and (gcDeletedBySubrecord in GameDefObj.Capabilities));
 end;
 
 function TwbMainRecord.GetChildGroup: IwbGroupRecord;
@@ -19427,13 +19471,13 @@ begin
   if gcComplexFileFileID in lCapabilities then
     Exit;
 
-  if mrStruct.mrsFormID(lFormIDInHeader).FileID[ContextObj.SlotLayout].FullSlot > aAbove then begin
+  if mrStruct.mrsFormID(lFormIDInHeader).FileID[ContextObj.FileSlotLayout].FullSlot > aAbove then begin
     MakeHeaderWriteable;
-    mrStruct.mrsFormID(lFormIDInHeader).FileID[ContextObj.SlotLayout] := TwbFileID.CreateFull(aTo);
+    mrStruct.mrsFormID(lFormIDInHeader).FileID[ContextObj.FileSlotLayout] := TwbFileID.CreateFull(aTo);
     if Assigned(mrGroup) or (GetChildGroup <> nil) then
       mrGroup.GroupLabel := mrStruct.mrsFormID(lFormIDInHeader).ToCardinal;
   end else
-    if mrStruct.mrsFormID(lFormIDInHeader).FileID[ContextObj.SlotLayout].FullSlot = aTo then
+    if mrStruct.mrsFormID(lFormIDInHeader).FileID[ContextObj.FileSlotLayout].FullSlot = aTo then
       if Assigned(mrGroup) or (GetChildGroup <> nil) then
         mrGroup.GroupLabel := mrStruct.mrsFormID(lFormIDInHeader).ToCardinal;
 end;
@@ -20338,12 +20382,30 @@ begin
   Result := GetFile.GetMasterForFileID(GetFixedFormID.FileID[ContextObj.SlotLayout], GetMastersUpdated, True);
 end;
 
-procedure TwbMainRecord.AssignReference(const aSource: IwbElement; const aKey: TwbFormID);
+function TwbMainRecord.ReferenceNumberFor(const aKey: TwbFormID): Cardinal;
 begin
   var lLayout := ContextObj.SlotLayout;
   var lSlot := aKey.FileID[lLayout].FullSlot;
   if lSlot >= GetFile.MasterCount[True] then
     lSlot := 0;
+  Result := aKey.ObjectID[lLayout] or (Cardinal(lSlot) shl 24);
+end;
+
+procedure TwbMainRecord.WriteReferenceNumber(aNumber: Cardinal);
+begin
+  if ContextObj.BeginInternalEdit(True) then try
+    var lFRMR: IwbElement := GetRecordBySignature('FRMR');
+    if not Assigned(lFRMR) then
+      lFRMR := Add('FRMR', True);
+    lFRMR.NativeValue := aNumber;
+  finally
+    wbEndInternalEdit;
+  end;
+end;
+
+procedure TwbMainRecord.AssignReference(const aSource: IwbElement; const aKey: TwbFormID);
+begin
+  var lNumber := ReferenceNumberFor(aKey);
   wbProgressLock;
   Include(mrStates, mrsKeepKey);
   try
@@ -20353,16 +20415,48 @@ begin
     finally
       EndUpdate;
     end;
-    if ContextObj.BeginInternalEdit(True) then try
-      var lFRMR: IwbElement := GetRecordBySignature('FRMR');
-      if not Assigned(lFRMR) then
-        lFRMR := Add('FRMR', True);
-      lFRMR.NativeValue := aKey.ObjectID[lLayout] or (Cardinal(lSlot) shl 24);
-    finally
-      wbEndInternalEdit;
-    end;
+    WriteReferenceNumber(lNumber);
   finally
     Exclude(mrStates, mrsKeepKey);
+    wbProgressUnlock;
+  end;
+end;
+
+procedure TwbMainRecord.TakeDeletionIdentity(const aSource: IwbMainRecord; const aKey: TwbFormID);
+var
+  lSignature : IwbHasSignature;
+begin
+  var lSource := aSource as TObject as TwbMainRecord;
+  var lSourceRef := aSource as IwbContainerElementRef;
+  var lReference := IsEmbeddedReference;
+  var lNumber: Cardinal := 0;
+  if lReference then
+    lNumber := ReferenceNumberFor(aKey);
+  wbProgressLock;
+  if lReference then
+    Include(mrStates, mrsKeepKey);
+  try
+    BeginUpdate;
+    try
+      for var i := lSource.GetAdditionalElementCount to Pred(lSourceRef.ElementCount) do begin
+        var lElement := lSourceRef.Elements[i];
+        var lDef := lElement.Def;
+        if not (Assigned(lDef) and (dfKeptWhenDeleted in lDef.DefFlags)) or not Supports(lElement, IwbHasSignature, lSignature) then
+          Continue;
+        if lReference and (lSignature.Signature = 'FRMR') then
+          Continue;
+        var lIndex := mrDef.GetMemberIndexFor(Self, lSignature.Signature, nil);
+        if lIndex >= 0 then
+          AssignInternal(lIndex, lElement, False);
+      end;
+    finally
+      EndUpdate;
+    end;
+    if lReference then
+      WriteReferenceNumber(lNumber);
+  finally
+    if lReference then
+      Exclude(mrStates, mrsKeepKey);
     wbProgressUnlock;
   end;
 end;
@@ -20422,7 +20516,7 @@ begin
       Result := IwbMainRecord(mrMaster)._File;
     Exit;
   end;
-  var lLayout := ContextObj.SlotLayout;
+  var lLayout := ContextObj.FileSlotLayout;
   var lFormID := GetFormID;
   if not lFormID.IsNull and
      (lFormID.ObjectID[lLayout] < $800) and
@@ -20909,7 +21003,7 @@ var
   procedure ProcessRef(const aFormID: TwbFormID);
   begin
     var MainRecord: IwbMainRecord := nil;
-    var lLayout := ContextObj.SlotLayout;
+    var lLayout := ContextObj.FileSlotLayout;
 
     if lComplex then begin
 
@@ -21304,7 +21398,7 @@ var
 
         var lCapabilities := GameDefObj.Capabilities;
         var lComplex := gcComplexFileFileID in lCapabilities;
-        var lLayout := ContextObj.SlotLayout;
+        var lLayout := ContextObj.FileSlotLayout;
 
         HeaderUpdated := False;
         OldFormID := GetFixedFormID;
@@ -23037,7 +23131,7 @@ begin
 
   FileFormID := _File.LoadOrderFormIDtoFileFormID(aFormID, True);
 
-  if GetFormID.ObjectID[lLayout] = FileFormID.ObjectID[lLayout] then
+  if GetFormID.ObjectID[ContextObj.FileSlotLayout] = FileFormID.ObjectID[ContextObj.FileSlotLayout] then
     if _File.IsNewRecord(GetFormID, GetMastersUpdated) and _File.IsNewRecord(FileFormID, GetMastersUpdated) then begin
       // we can do this relatively quietly and quickly...
       if Assigned(mrGroup) or (GetChildGroup <> nil)  then
@@ -23495,7 +23589,7 @@ var
 begin
   if mrFixedFormID.IsNull then
     Exit;
-  var lLayout := ContextObj.SlotLayout;
+  var lLayout := ContextObj.FileSlotLayout;
   if (mrFixedFormID.FileID[lLayout].FullSlot = aOldSlot) and
      (ComputeFixedFormID(lCacheable).FileID[lLayout].FullSlot <> aOldSlot)
   then
@@ -23931,7 +24025,7 @@ begin
       raise Exception.Create(GetName + ' is not contained in a group of type "Top CELL"');
   end;
 
-  s := '00' + IntToStr(GetFormID.ObjectID[ContextObj.SlotLayout]);
+  s := '00' + IntToStr(GetFormID.ObjectID[ContextObj.FileSlotLayout]);
   i := Length(s);
   if i > 2 then
     System.Delete(s, 1, i - 2);
@@ -26535,6 +26629,11 @@ var
       Exit;
     end;
 
+    var lOwner := GetChildrenOf;
+    if (gcDeletedBySubrecord in GameDefObj.Capabilities) and Assigned(lOwner) and lOwner.IsDeleted then
+      raise Exception.CreateFmt('%s can not be copied into "%s": %s, which it belongs to there, is deleted (it holds a Deleted subrecord)',
+        [aSource.Name, _File.FileName, lOwner.Name]);
+
     var lFormID := TwbFormID.Null;
     if cfAsNew in aFlags then
       lFormID := _File.NewFormID
@@ -26558,6 +26657,15 @@ var
     var lCreated := False;
     var lReplaced: IwbMainRecord := nil;
     var lHeldIndex: Int64 := -1;
+
+    if lByIdentity and (gcDeletedBySubrecord in GameDefObj.Capabilities) and aSource.IsDeleted and not (cfAsNew in aFlags) then begin
+      var lSourceWhy := (aSource as TObject as TwbMainRecord).DeletionRefusal(True);
+      if lSourceWhy <> '' then
+        raise Exception.Create(lSourceWhy);
+    end;
+    if lByIdentity and (gcDeletedBySubrecord in GameDefObj.Capabilities) and aSource.IsDeleted and (cfAsNew in aFlags) then
+      raise Exception.CreateFmt('%s can not be copied into "%s": it is deleted (it holds a Deleted subrecord)',
+        [aSource.Name, _File.FileName]);
 
     if not Assigned(Result) then begin
 
@@ -26583,7 +26691,13 @@ var
           lAction := aRules.CanOverwrite(Result, aElement);
         case lAction of
           coCopy: begin
-            if not Equals(Result.Container) then begin
+            if not Equals(Result.Container) or
+               (lByIdentity and (gcDeletedBySubrecord in GameDefObj.Capabilities) and aSource.IsDeleted) then begin
+              if lByIdentity and (gcDeletedBySubrecord in GameDefObj.Capabilities) and aSource.IsDeleted and not (cfAsNew in aFlags) then begin
+                var lHeldWhy := (Result as TObject as TwbMainRecord).DeletionRefusal(True);
+                if lHeldWhy <> '' then
+                  raise Exception.Create(lHeldWhy);
+              end;
               if lByIdentity then
                 lReplaced := Result as IwbMainRecord
               else
@@ -26605,8 +26719,11 @@ var
 
     end;
 
+    var lDeletion := lByIdentity and (gcDeletedBySubrecord in GameDefObj.Capabilities) and aSource.IsDeleted and not (cfAsNew in aFlags);
     try
-      if (cfDeepCopy in aFlags) or (lIsNew and lByIdentity and not (cfAsNew in aFlags)) then begin
+      if lDeletion then
+        (Result as TObject as TwbMainRecord).TakeDeletionIdentity(aSource, lFormID)
+      else if (cfDeepCopy in aFlags) or (lIsNew and lByIdentity and not (cfAsNew in aFlags)) then begin
         var lResult := Result as IwbMainRecord;
 
         var lOntoTombstone := (gcDeletedBySubrecord in GameDefObj.Capabilities) and not aSource.IsDeleted and lResult.IsDeleted;
@@ -26640,6 +26757,8 @@ var
         if cfAsNew in aFlags then
           lCopy.TakeCopyIdentity(aSource, aRules);
         lCopy.TakeIndexInFile(lHeldIndex);
+        if lDeletion then
+          (Result as IwbMainRecord).IsDeleted := True;
         if Assigned(lReplaced) then
           lReplaced.Remove;
         (Result as IwbMainRecordInternal).RegisterWithIdentity(cfAsNew in aFlags);
@@ -26681,6 +26800,26 @@ var
   end;
 
 
+  function GroupHoldsRecords(const aGroup: IwbGroupRecord): Boolean;
+  begin
+    Result := False;
+    for var i := 0 to Pred(aGroup.ElementCount) do begin
+      var lElement := aGroup.Elements[i];
+      if lElement.ElementType = etMainRecord then
+        Exit(True);
+      var lGroup: IwbGroupRecord;
+      if Supports(lElement, IwbGroupRecord, lGroup) and GroupHoldsRecords(lGroup) then
+        Exit(True);
+    end;
+  end;
+
+  procedure RefuseDeletedOwner(const aGroup: IwbGroupRecord; const aOwner: IwbMainRecord);
+  begin
+    if (gcDeletedBySubrecord in GameDefObj.Capabilities) and aOwner.IsDeleted and GroupHoldsRecords(aGroup) then
+      raise Exception.CreateFmt('%s can not be copied into "%s": %s, which it belongs to there, is deleted (it holds a Deleted subrecord)',
+        [aGroup.Name, _File.FileName, aOwner.Name]);
+  end;
+
 begin
   Result := nil;
   SelfRef := Self as IwbContainerElementRef;
@@ -26704,8 +26843,12 @@ begin
           if not Assigned(lSourceMainRecord0Dial) then
             raise Exception.Create('Can''t find record for ' + lGroupRecord0Dial.Name);
           lSourceMainRecord0Dial := lSourceMainRecord0Dial.HighestOverrideVisibleForFile[_File];
+          RefuseDeletedOwner(lGroupRecord0Dial, lSourceMainRecord0Dial);
           var lTargetMainRecord0Dial := AddIfMissingInternal(lSourceMainRecord0Dial, aFlags - [cfAllowOverwrite] + [cfDeepCopy], aRules {CheckMe!}) as IwbMainRecord;
           if Assigned(lTargetMainRecord0Dial) then begin
+            RefuseDeletedOwner(lGroupRecord0Dial, lTargetMainRecord0Dial);
+            if (gcDeletedBySubrecord in GameDefObj.Capabilities) and lTargetMainRecord0Dial.IsDeleted then
+              Exit;
             Result := lTargetMainRecord0Dial.ChildGroup;
             if not Assigned(Result) then
               Result := TwbGroupRecord.Create(Self, 7, lTargetMainRecord0Dial);
@@ -26736,6 +26879,9 @@ begin
             lSourceMainRecord0Cell := lSourceMainRecord0Cell.HighestOverrideVisibleForFile[_File];
             var lTargetMainRecord0Cell := AddIfMissingInternal(lSourceMainRecord0Cell, aFlags - [cfAllowOverwrite] + [cfDeepCopy], aRules) as IwbMainRecord;
             if Assigned(lTargetMainRecord0Cell) then begin
+              RefuseDeletedOwner(lGroupRecord0Cell, lTargetMainRecord0Cell);
+              if (gcDeletedBySubrecord in GameDefObj.Capabilities) and lTargetMainRecord0Cell.IsDeleted then
+                Exit;
               Result := lTargetMainRecord0Cell.ChildGroup;
               if not Assigned(Result) then
                 Result := TwbGroupRecord.Create(Self, 6, lTargetMainRecord0Cell);
@@ -27104,8 +27250,77 @@ begin
   end;
 end;
 
+procedure RepointRepeatOwner(const aContainer, aOld, aNew: IwbGroupRecord);
+begin
+  var lContainer := aContainer as TObject as TwbContainer;
+  for var i := Low(lContainer.cntElements) to High(lContainer.cntElements) do begin
+    var lOwner: IwbMainRecord;
+    if Supports(lContainer.cntElements[i], IwbMainRecord, lOwner) and (lOwner.FixedFormID.ToCardinal = aNew.GroupLabel) then begin
+      (lOwner as IwbMainRecordInternal).RemoveChildGroup(aOld);
+      (lOwner as IwbMainRecordInternal).SetChildGroup(aNew);
+      Exit;
+    end;
+  end;
+end;
+
+procedure MarkWorldsModified(aTop: TwbContainer);
+begin
+  for var i := Low(aTop.cntElements) to High(aTop.cntElements) do begin
+    var lWorld: IwbMainRecord;
+    if Supports(aTop.cntElements[i], IwbMainRecord, lWorld) and (lWorld.Signature = 'WRLD') then
+      (lWorld as IwbElementInternal).SetModified(True);
+  end;
+end;
+
+procedure NoteRepeatMerged(const aGroup: IwbGroupRecord);
+begin
+  var lGroup := aGroup;
+  while lGroup.GroupType <> 1 do
+    if not Supports(lGroup.Container, IwbGroupRecord, lGroup) then
+      Exit;
+  var lTop: IwbGroupRecord;
+  if Supports(lGroup.Container, IwbGroupRecord, lTop) then
+    Include((lTop as TObject as TwbGroupRecord).grStates, gsMergedRepeat);
+end;
+
+procedure MergeRepeatedGroup(const aSource, aTarget: IwbGroupRecord; var aCount: Integer);
+begin
+  aSource.BeginUpdate;
+  try
+    aTarget.BeginUpdate;
+    try
+      while aSource.ElementCount > 0 do begin
+        var lSource: IwbGroupRecord;
+        if Supports(aSource.Elements[0], IwbGroupRecord, lSource) then begin
+          var lTarget := aTarget.FindChildGroup(lSource.GroupType, lSource.GroupLabel);
+          if Assigned(lTarget) then begin
+            if lSource.GroupType in [1, 6, 7] then
+              RepointRepeatOwner(aTarget, lSource, lTarget);
+            MergeRepeatedGroup(lSource, lTarget, aCount);
+            aSource.RemoveElement(0, True);
+            Continue;
+          end;
+        end;
+        aTarget.AddElement(aSource.RemoveElement(0, True));
+        Inc(aCount);
+      end;
+    finally
+      aTarget.EndUpdate;
+    end;
+  finally
+    aSource.EndUpdate;
+  end;
+  (aTarget as IwbGroupRecordInternal).Sort(True);
+  (aTarget as IwbGroupRecordInternal).SetModified(True);
+end;
+
 procedure TwbGroupRecord.AfterConstruction;
 begin
+  if (gsMergedRepeat in grStates) and ContextObj.BeginInternalEdit(True) then try
+    MarkWorldsModified(Self);
+  finally
+    wbEndInternalEdit;
+  end;
   if Assigned(grDuplicateOf) then try
     if ContextObj.BeginInternalEdit(True) then try
       var s := grDuplicateOf.ShortName;
@@ -27113,6 +27328,7 @@ begin
       if GetElementCount = 0 then begin
         if Assigned(Container) then
           Container.RemoveElement(Self, True);
+        NoteRepeatMerged(grDuplicateOf);
         raise EwbSkipLoad.Create('Skipped empty duplicate group "' + s + '"');
       end else begin
         var j := 0;
@@ -27125,24 +27341,11 @@ begin
               if Supports(GetElement(0), IwbGroupRecord, SrcGrp) then begin
                 var TrgGrp := grDuplicateOf.FindChildGroup(SrcGrp.GroupType, SrcGrp.GroupLabel);
                 if Assigned(TrgGrp) then begin
-                  SrcGrp.BeginUpdate;
-                  try
-                    TrgGrp.BeginUpdate;
-                    try
-                      while SrcGrp.ElementCount > 0 do begin
-                        TrgGrp.AddElement(SrcGrp.RemoveElement(0, True));
-                        Inc(j);
-                      end;
-                    finally
-                      TrgGrp.EndUpdate;
-                    end;
-                  finally
-                    SrcGrp.EndUpdate;
-                  end;
+                  if SrcGrp.GroupType in [1, 6, 7] then
+                    RepointRepeatOwner(grDuplicateOf, SrcGrp, TrgGrp);
+                  MergeRepeatedGroup(SrcGrp, TrgGrp, j);
                   RemoveElement(0, True);
                   SrcGrp := nil;
-                  (TrgGrp as IwbGroupRecordInternal).Sort;
-                  (TrgGrp as IwbGroupRecordInternal).SetModified(True);
                   TrgGrp := nil;
                   Continue;
                 end;
@@ -27162,6 +27365,7 @@ begin
           Container.RemoveElement(Self, True);
         (grDuplicateOf as IwbGroupRecordInternal).Sort;
         (grDuplicateOf as IwbGroupRecordInternal).SetModified(True);
+        NoteRepeatMerged(grDuplicateOf);
         raise EwbSkipLoad.Create('Merged ' + j.ToString + ' elements from duplicate group into "' + s + '"');
       end;
     finally
@@ -27336,7 +27540,7 @@ begin
       var lFormID := TwbFormID.FromCardinal(GetGroupLabel);
 
       var lFile := GetFile;
-      var lLayout := ContextObj.SlotLayout;
+      var lLayout := ContextObj.FileSlotLayout;
 
       if lFormID.ObjectID[lLayout] < $800 then begin
         var lMasterZeroIsGameMaster := False;
@@ -27461,7 +27665,7 @@ begin
       var lFormID := TwbFormID.FromCardinal(Result);
       if lFile.IsNewRecord(lFormID, GetMastersUpdated) then begin
         var lFileFileID := lFile.FileFileID[GetMastersUpdated];
-        var lLayout := ContextObj.SlotLayout;
+        var lLayout := ContextObj.FileSlotLayout;
         if lFormID.FileID[lLayout] <> lFileFileID then begin
           lFormID.FileID[lLayout] := lFileFileID;
           Result := lFormID.ToCardinal;
@@ -27622,6 +27826,23 @@ begin
     (aPrevMainRecord as IwbMainRecordInternal).SetChildGroup(Self);
     Include(grStates, gsInformedMainRecord);
   end;
+  if not (gsInformedMainRecord in grStates) and not Assigned(grDuplicateOf) then begin
+    var lType := grStruct.grsGroupType;
+    if (lType in [1, 4..9]) or ((lType = 10) and not (gcVWDAsQuestChildren in GameDefObj.Capabilities)) then begin
+      var lContainer := GetContainer;
+      if Assigned(lContainer) then begin
+        var lParent := lContainer as TObject as TwbContainer;
+        for var i := High(lParent.cntElements) downto Low(lParent.cntElements) do begin
+          var lFirst: IwbGroupRecord;
+          if Supports(lParent.cntElements[i], IwbGroupRecord, lFirst) and ((lFirst as TObject) <> Self) and
+             (lFirst.GroupType = lType) and (lFirst.GroupLabel = GetGroupLabel) then begin
+            IsDuplicateOf(lFirst);
+            Break;
+          end;
+        end;
+      end;
+    end;
+  end;
 end;
 
 procedure TwbGroupRecord.InitDataPtr;
@@ -27722,7 +27943,7 @@ begin
             if Assigned(lFile) then
               lAllowHardcodedRangeUse := lFile.AllowHardcodedRangeUse;
 
-            NewFormID := FixupFormID(OldFormID, aOld, aNew, aOldCount, aNewCount, lAllowHardcodedRangeUse, ContextObj.SlotLayout, gcComplexFileFileID in GameDefObj.Capabilities);
+            NewFormID := FixupFormID(OldFormID, aOld, aNew, aOldCount, aNewCount, lAllowHardcodedRangeUse, ContextObj.FileSlotLayout, gcComplexFileFileID in GameDefObj.Capabilities);
             if grStruct.grsLabel <> NewFormID.ToCardinal then begin
               MakeHeaderWriteable;
               grStruct.grsLabel := NewFormID.ToCardinal;
@@ -27858,7 +28079,7 @@ begin
     var lFormID := TwbFormID.FromCardinal(aLabel);
     if lFile.IsNewRecord(lFormID, GetMastersUpdated) then begin
       var lFileFileID := lFile.FileFileID[GetMastersUpdated];
-      var lLayout := ContextObj.SlotLayout;
+      var lLayout := ContextObj.FileSlotLayout;
       if lFormID.FileID[lLayout] <> lFileFileID then begin
         lFormID.FileID[lLayout] := lFileFileID;
         aLabel := lFormID.ToCardinal;
@@ -28966,7 +29187,8 @@ begin
     AddRequiredMasters(lMasters, aFile);
 
     var lMainRecord: IwbMainRecord;
-    if (cfDeepCopy in aFlags) and Supports(Self, IwbMainRecord, lMainRecord) and Assigned(lMainRecord.ChildGroup) then begin
+    if (cfDeepCopy in aFlags) and Supports(Self, IwbMainRecord, lMainRecord) and
+       (lMainRecord as TObject as TwbMainRecord).DeepCopiesChildGroup then begin
       Result := aFile.AddCopy(lMainRecord.ChildGroup, aFlags * [cfAsNew] + [cfDeepCopy], aRules {CheckMe!});
       var lGroupRecord: IwbGroupRecord;
       if Supports(Result, IwbGroupRecord, lGroupRecord) then
@@ -30027,7 +30249,7 @@ var
 begin
   if Assigned(aTarget) and GameDefObj.IsMorrowind then begin
     var lItem: IwbElement := Self;
-    if aDeepCopy and Supports(Self, IwbMainRecord, lMainRecord) and Assigned(lMainRecord.ChildGroup) then
+    if aDeepCopy and Supports(Self, IwbMainRecord, lMainRecord) and (lMainRecord as TObject as TwbMainRecord).DeepCopiesChildGroup then
       lItem := lMainRecord.ChildGroup;
     if (aTarget as TObject as TwbFile).CopyRefusal(lItem, aAsNew, True, aRules) <> '' then
       Exit;
@@ -34049,7 +34271,7 @@ begin
     Exit;
   var lItem := aItem;
   var lRecord: IwbMainRecord;
-  if aDeep and Supports(aItem, IwbMainRecord, lRecord) and Assigned(lRecord.ChildGroup) then
+  if aDeep and Supports(aItem, IwbMainRecord, lRecord) and (lRecord as TObject as TwbMainRecord).DeepCopiesChildGroup then
     lItem := lRecord.ChildGroup;
   if Assigned(lItem) then
     Result := TwbFile.CopyRefusalOf(Self, nil, lItem, aAsNew, aDeep, wbNoCopyRules);

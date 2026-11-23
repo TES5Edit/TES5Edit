@@ -433,6 +433,8 @@ var
   rm     : TwbResetModified;
 begin
   if Supports(IInterface(Args.Values[0]), IwbFile, _File) then begin
+    if (fsIsCompareLoad in _File.FileStates) and not (fsIsDeltaPatch in _File.FileStates) then
+      raise Exception.Create(_File.FileName + ': a file loaded through Compare To can not be written');
     Stream := TStream(ObjectArgument(Args.Values[1], TStream, 1));
     if Assigned(Stream) then begin
       i := Args.Values[2];
