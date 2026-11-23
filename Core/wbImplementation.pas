@@ -25454,6 +25454,27 @@ begin
 end;
 
 function TwbSubRecord.CheckIn(const aRun: TwbCheckRun): string;
+
+  function MinimumSize(const aDef: IwbValueDef): Int64;
+  var
+    lStruct : IwbStructDef;
+    lArray  : IwbArrayDef;
+  begin
+    if Supports(aDef, IwbResolvableDef) then
+      Exit(0);
+    if Supports(aDef, IwbStructDef, lStruct) then begin
+      Result := 0;
+      var lCount := lStruct.MemberCount;
+      if (lStruct.OptionalFromElement >= 0) and (lStruct.OptionalFromElement < lCount) then
+        lCount := lStruct.OptionalFromElement;
+      for var i := 0 to Pred(lCount) do
+        Inc(Result, MinimumSize(lStruct.Members[i]));
+    end else if Supports(aDef, IwbArrayDef, lArray) and (lArray.ElementCount > 0) then
+      Result := lArray.ElementCount * MinimumSize(lArray.Element)
+    else
+      Result := aDef.DefaultSize[nil, nil, Self];
+  end;
+
 var
   SelfRef : IwbContainerElementRef;
 begin
@@ -25467,8 +25488,16 @@ begin
     Exit;
   DoInit(False);
 
-  if Assigned(srValueDef) then
-    Result := srValueDef.CheckIn(GetDataBasePtr, dcDataEndPtr, Self, aRun);
+  if Assigned(srValueDef) then begin
+    var lBasePtr := GetDataBasePtr;
+    var lEndPtr := dcDataEndPtr;
+    Result := srValueDef.CheckIn(lBasePtr, lEndPtr, Self, aRun);
+    if (Result = '') and wbCheckExpectedBytes and Assigned(lBasePtr) and (lBasePtr = lEndPtr) and not srValueDef.IsVariableSize then begin
+      var lExpected := MinimumSize(srValueDef);
+      if (lExpected > 0) and (lExpected < High(Integer)) then
+        Result := Format('Expected %d bytes of data, found 0', [lExpected]);
+    end;
+  end;
   srDef.ToString(Result, Self, ctCheck);
 end;
 
@@ -35694,8 +35723,8 @@ begin
     Assert(dcDataEndPtr = EndPtr);
   end else begin
     dcDataStorage := nil;
-    dcDataBasePtr := nil;
-    dcDataEndPtr := nil;
+    dcDataBasePtr := @EmptyPtr;
+    dcDataEndPtr := @EmptyPtr;
   end;
 
   Exclude(dcFlags, dcfStorageInvalid);
