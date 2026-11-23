@@ -387,6 +387,9 @@ type
     FilterBaseName        : string;
     FilterHasVWDMesh      : string;
     FilterScaledActors    : Boolean;
+    FilterArms            : string;
+    FilterSaveTo          : string;
+    FilterBaseline        : Boolean;
     FilterImages          : Integer;
     Pump                  : string;
     PumpFile              : string;
@@ -960,6 +963,9 @@ begin
     wbFindCmdLineParam('testfilterbasename', FilterBaseName);
     wbFindCmdLineParam('testfilterhasvwdmesh', FilterHasVWDMesh);
     FilterScaledActors := FindCmdLineSwitch('testfilterscaledactors');
+    wbFindCmdLineParam('testfilterarms', FilterArms);
+    wbFindCmdLineParam('testfiltersaveto', FilterSaveTo);
+    FilterBaseline := FindCmdLineSwitch('testfilterbaseline');
     if wbFindCmdLineParam('testfilterimages', s) then
       FilterImages := StrToIntDef(s, 0);
     if (FilterFile = '') or
@@ -968,7 +974,7 @@ begin
        not ((FilterHasVWDMesh = '') or SameText(FilterHasVWDMesh, 'true') or SameText(FilterHasVWDMesh, 'false')) then begin
       ShowMessage('testfilter requires -testfilter:<filename> [-testfilterpreset:<cleaning|onlyone|conflicts>] ' +
         '[-testfilterbyvalue:<text>] [-testfilterremove:<module>] [-testfilterbaseeditorid:<regex>] [-testfilterbasename:<regex>] ' +
-        '[-testfilterhasvwdmesh:<true|false>] [-testfilterscaledactors]');
+        '[-testfilterhasvwdmesh:<true|false>] [-testfilterscaledactors] [-testfilterarms:<arm;arm;...>]');
       Exit(False);
     end;
     Filter := True;
