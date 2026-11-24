@@ -10051,6 +10051,50 @@ begin
           mniNavCreateSEQFileClick(lMenuItem)
         else if lMenuItem = mniNavChangeName then begin
           pgMain.ActivePage := tbsView;
+          var lPinnedOp := SameText(xeTestSwitches.ChangeFormIDOp, 'changenamepinned');
+          var lPinnedState: TFunc<string, string> := function(aWhen: string): string
+            begin
+              var lShownRecs := '';
+              var lPinRec: IwbMainRecord;
+              for var i := Low(ActiveRecords) to High(ActiveRecords) do begin
+                if lShownRecs <> '' then
+                  lShownRecs := lShownRecs + ',';
+                if Supports(ActiveRecords[i].Element, IwbMainRecord, lPinRec) and Assigned(lPinRec._File) then
+                  lShownRecs := lShownRecs + lPinRec.EditorID + '@' + lPinRec._File.FileName;
+              end;
+              var lHeads := '';
+              for var i := 1 to Pred(vstView.Header.Columns.Count) do
+                lHeads := lHeads + #9 + vstView.Header.Columns[i].Text;
+              Result := 'pinnedview' + #9 + aWhen + #9 + 'pinned ' + BoolToStr(IsPinned, True) + #9 + 'records ' +
+                lShownRecs + #9 + 'path ' + lblPath.Text + lHeads;
+            end;
+          if lPinnedOp then begin
+            var lPinTarget := vstNav.FocusedNode;
+            vstNav.ClearSelection;
+            var lFirstPin: PVirtualNode := nil;
+            for var lPinSpec in xeTestSwitches.ChangeFormIDPinned.Split([',']) do begin
+              var lPinNode := FindNodeForElement(FindRecord(lPinSpec));
+              if not Assigned(lPinNode) then
+                raise Exception.Create('Change NAME test: no nav node for ' + lPinSpec);
+              if not Assigned(lFirstPin) then begin
+                lFirstPin := lPinNode;
+                vstNav.FocusedNode := lPinNode;
+              end;
+              vstNav.Selected[lPinNode] := True;
+            end;
+            vstNavChange(vstNav, vstNav.FocusedNode);
+            if tmrPendingSetActive.Enabled then
+              tmrPendingSetActiveTimer(tmrPendingSetActive);
+            bnPinned.Down := True;
+            bnPinnedClick(bnPinned);
+            vstNav.ClearSelection;
+            vstNav.FocusedNode := lPinTarget;
+            vstNav.Selected[lPinTarget] := True;
+            vstNavChange(vstNav, lPinTarget);
+            if tmrPendingSetActive.Enabled then
+              tmrPendingSetActiveTimer(tmrPendingSetActive);
+            lLines.Add(lPinnedState('before'));
+          end;
           if SameText(xeTestSwitches.ChangeFormIDOp, 'changenamelastnil') or
              SameText(xeTestSwitches.ChangeFormIDOp, 'changenamelastnilmsg') then begin
             vstNavChange(vstNav, vstNav.FocusedNode);
@@ -10174,6 +10218,8 @@ begin
             lLines.Add('pending' + #9 + 'settled' + #9 + 'active ' + lActiveName() + #9 + 'focus ' + lFocusName);
           end;
           lLines.Add('navchange' + #9 + 'during' + #9 + IntToStr(TestHost.TestNavChangeCount - lNavChanges));
+          if lPinnedOp then
+            lLines.Add(lPinnedState('after'));
           lLines.Add('pageend' + #9 + pgMain.ActivePage.Name);
           lLines.Add('path' + #9 + 'after' + #9 + 'visible ' + BoolToStr(lblPath.Visible, True) + #9 + lblPath.Text);
           if xeChangeNameTerminatedAt <> '' then
