@@ -1800,10 +1800,13 @@ type
     After  : string;
   end;
 
+  TwbNameChangeFilterRoute = (nfrSpeakerCell, nfrNotCell);
+
   TwbNameChangeFilter = record
-    Rec  : IwbMainRecord;
-    Path : string;
-    Text : string;
+    Rec   : IwbMainRecord;
+    Path  : string;
+    Text  : string;
+    Route : TwbNameChangeFilterRoute;
   end;
 
   TwbNameChangeFilterMove = record
@@ -2448,6 +2451,7 @@ type
     procedure MarkConflictStored;
     function IsIdentityElement(const aElement: IwbElement): Boolean;
     function IdentityWriteRefusal(const aEditorID: string): string;
+    function NameChangeRefusal(out aIdentity: string; aWithText: Boolean; out aText: string): TwbNameChangeRefusal;
 
     function GetIsESM: Boolean;
     procedure SetIsESM(aValue: Boolean);
@@ -4685,6 +4689,7 @@ type
     function IdentityKeyRefusal(aFormIDBase, aFormIDNameBase: Byte; const aIdentity: string): string;
     function FindIdentity(aFormIDBase, aFormIDNameBase: Byte; const aIdentity: string; out aFormID: TwbFormID): Boolean;
     function IdentityAtKey(aFormIDBase, aFormIDNameBase: Byte; const aKey: TwbFormID; out aIdentity: string): Boolean;
+    function NameReferencesIncomplete: TArray<IwbFile>;
     function NameReferencesStop: string;
     function NameReferencesOutside: string;
     function IsKnownIdentity(aFormIDNameBase: Byte; const aIdentity: string): Boolean;
@@ -8145,6 +8150,16 @@ begin
   Result := AtomicIncrement(gcStampCounter);
 end;
 
+function TwbGameContext.NameReferencesIncomplete: TArray<IwbFile>;
+begin
+  Result := nil;
+  if not GameDefObj.IsMorrowind then
+    Exit;
+  for var lFile in Files do
+    if not lFile.IsDeltaPatch and lFile.NameReferencesJudged and not lFile.HoldsCorruptKey and not lFile.ReferencesComplete then
+      Result := Result + [lFile];
+end;
+
 function TwbGameContext.NameReferencesStop: string;
 var
   lIncomplete, lCorrupt : string;
@@ -8152,14 +8167,11 @@ begin
   Result := '';
   if not GameDefObj.IsMorrowind then
     Exit;
-  for var lFile in Files do begin
-    if lFile.IsDeltaPatch or not lFile.NameReferencesJudged then
-      Continue;
-    if lFile.HoldsCorruptKey then
-      lCorrupt := lCorrupt + ', ' + lFile.FileName
-    else if not lFile.ReferencesComplete then
-      lIncomplete := lIncomplete + ', ' + lFile.FileName;
-  end;
+  for var lFile in NameReferencesIncomplete do
+    lIncomplete := lIncomplete + ', ' + lFile.FileName;
+  for var lFile in Files do
+    if not lFile.IsDeltaPatch and lFile.NameReferencesJudged and lFile.HoldsCorruptKey then
+      lCorrupt := lCorrupt + ', ' + lFile.FileName;
   if lIncomplete <> '' then
     Result := 'references are not complete and current in ' + lIncomplete.Substring(2);
   if lCorrupt <> '' then begin

@@ -162,6 +162,9 @@ type
     TestChangeFormIDAnswerCount : Integer;
     TestChangeFormIDNotOffered  : Boolean;
     TestChangeFormIDFallback    : Boolean;
+    TestChangeNameApplyHook     : TProc;
+    TestChangeNamePlanHook      : TProc;
+    TestNavChangeCount          : Integer;
     TestChangeFormIDCsvAnswered : Boolean;
     TestChangeFormIDClosed      : Boolean;
     TestFilterAnswer         : TTimer;
@@ -912,7 +915,11 @@ begin
             SameText(ChangeFormIDOp, 'setvwd') or SameText(ChangeFormIDOp, 'setvwdinto') or
             SameText(ChangeFormIDOp, 'copyidle') or SameText(ChangeFormIDOp, 'copyrows') or
             SameText(ChangeFormIDOp, 'copyspawnrate') or SameText(ChangeFormIDOp, 'viewadd') or
-            SameText(ChangeFormIDOp, 'createseq') or ChangeFormIDOp.StartsWith('refby', True)) or
+            SameText(ChangeFormIDOp, 'createseq') or ChangeFormIDOp.StartsWith('refby', True) or
+            SameText(ChangeFormIDOp, 'changename') or SameText(ChangeFormIDOp, 'changenamef2') or
+            SameText(ChangeFormIDOp, 'changenamedirect') or SameText(ChangeFormIDOp, 'changenameclosing') or
+            SameText(ChangeFormIDOp, 'changenamelastnil') or SameText(ChangeFormIDOp, 'changenamenofocus') or
+            SameText(ChangeFormIDOp, 'changenamelastnilmsg')) or
        ((SameText(ChangeFormIDOp, 'copyrows') or ChangeFormIDOp.StartsWith('refby', True)) and (ChangeFormIDView = '')) or
        (SameText(ChangeFormIDOp, 'viewadd') and ((ChangeFormIDTarget = '') or (ChangeFormIDRow = ''))) or
        ((SameText(ChangeFormIDOp, 'batchrefs') or SameText(ChangeFormIDOp, 'localize') or

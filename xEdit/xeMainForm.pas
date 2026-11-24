@@ -183,6 +183,7 @@ type
     vstReferencedBy: TVirtualEditTree;
     N1: TMenuItem;
     mniNavChangeFormID: TMenuItem;
+    mniNavChangeName: TMenuItem;
     pmuView: TPopupMenu;
     mniViewEdit: TMenuItem;
     mniNavChangeReferencingRecords: TMenuItem;
@@ -521,6 +522,7 @@ type
     procedure mniNavBuildReachableClick(Sender: TObject);
     procedure mniNavBuildRefClick(Sender: TObject);
     procedure mniNavChangeFormIDClick(Sender: TObject);
+    procedure mniNavChangeNameClick(Sender: TObject);
     procedure mniNavChangeReferencingRecordsClick(Sender: TObject);
     procedure mniNavCheckForErrorsClick(Sender: TObject);
     procedure mniNavCleanupInjectedClick(Sender: TObject);
@@ -838,6 +840,7 @@ type
 
 
     CloseDeferred            : Boolean;
+    ChangeNameActive         : Boolean;
     CloseByUser              : Boolean;
     LongActionDepth          : Integer;
     CancelableLongActionDepth : Integer;
@@ -1228,6 +1231,10 @@ type
     function ShowReferencedByNote: Boolean;
     procedure BuildHardcodedReferences;
     procedure ClearReferencedByListData;
+    function ChangeNameGates(out aRecord: IwbMainRecord): Boolean;
+    function ChangeNameMoved(const aRecord: IwbMainRecord; const aFile: IwbFile; const aIdentity: string): string;
+    procedure ChangeNameRefresh(const aPlan: TwbNameChangePlan; aPage: TTabSheet);
+    function NavPathText(aNode: PVirtualNode): string;
     procedure UpdateReferencedByTabCaption;
   protected
     function ViewCells(aNode: PVirtualNode): PViewNodeDatas;
@@ -1458,6 +1465,7 @@ uses
   xeOptionsForm,
   xeRichEditForm,
   xeScriptForm,
+  xeChangeNameForm,
 {$IFDEF XE_TEST_CONTROL_POINTS}
   xeTestControlPoints,
 {$ENDIF}
@@ -8916,6 +8924,361 @@ begin
   end;
 end;
 
+function TfrmMain.ChangeNameGates(out aRecord: IwbMainRecord): Boolean;
+var
+  lNodeData : PNavNodeData;
+begin
+  aRecord := nil;
+  Result := False;
+  if CloseDeferred or not xeContext.GameDefObj.IsMorrowind or xeContext.Settings.TranslationMode or
+     not xeContext.Settings.EditAllowed or not xeContext.LoaderDone then
+    Exit;
+  if vstNav.SelectedCount <> 1 then
+    Exit;
+  var lNodes := vstNav.GetSortedSelection(True);
+  if Length(lNodes) <> 1 then
+    Exit;
+  lNodeData := vstNav.GetNodeData(lNodes[0]);
+  if not Assigned(lNodeData) or not Supports(lNodeData.Element, IwbMainRecord, aRecord) or not aRecord.IsEditable then begin
+    aRecord := nil;
+    Exit;
+  end;
+  Result := True;
+end;
+
+function TfrmMain.ChangeNameMoved(const aRecord: IwbMainRecord; const aFile: IwbFile; const aIdentity: string): string;
+var
+  lIdentity : string;
+  lText     : string;
+begin
+  Result := '';
+  if not xeContext.Settings.EditAllowed or xeContext.Settings.TranslationMode then
+    Exit('editing is no longer allowed');
+  if not xeContext.LoaderDone then
+    Exit('the editor is not ready');
+  if CloseDeferred then
+    Exit('the editor is closing');
+  if not Assigned(aRecord.Container) or not Assigned(aRecord._File) or not aRecord._File.Equals(aFile) then
+    Exit('the record has been removed');
+  if not aRecord.IsEditable then
+    Exit('the record can no longer be edited');
+  if (aRecord.NameChangeRefusal(lIdentity, False, lText) <> ncrNone) or (lIdentity <> aIdentity) then
+    Exit('the record''s identity has changed');
+end;
+
+procedure TfrmMain.ChangeNameRefresh(const aPlan: TwbNameChangePlan; aPage: TTabSheet);
+var
+  lAffected : TDynMainRecords;
+  lParents  : TList<PVirtualNode>;
+  lNode     : PVirtualNode;
+  lNodeData : PNavNodeData;
+  lRecord   : IwbMainRecord;
+
+  procedure Note(const aRecord: IwbMainRecord);
+  begin
+    if Assigned(aRecord) then
+      lAffected := lAffected + [aRecord];
+  end;
+
+  function IsAffected(const aRecord: IwbMainRecord): Boolean;
+  begin
+    for var lOne in lAffected do
+      if lOne.Equals(aRecord) then
+        Exit(True);
+    Result := False;
+  end;
+
+begin
+  var lPage := aPage;
+  lAffected := nil;
+  Note(aPlan.Rec);
+  for var lRename in aPlan.Renames do
+    Note(lRename.Rec);
+  for var lLeft in aPlan.Left do
+    Note(lLeft.Rec);
+  for var lField in aPlan.Fields do
+    Note(lField.Rec);
+  for var lValue in aPlan.Values do
+    Note(lValue.Rec);
+
+  NavUpdate(True);
+  lParents := TList<PVirtualNode>.Create;
+  vstNav.BeginUpdate;
+  try
+    lNode := vstNav.GetFirstInitialized;
+    while Assigned(lNode) do begin
+      lNodeData := vstNav.GetNodeData(lNode);
+      if Assigned(lNodeData) and Supports(lNodeData.Element, IwbMainRecord, lRecord) and IsAffected(lRecord) then begin
+        lNodeData.ConflictAll := caUnknown;
+        lNodeData.ConflictThis := ctUnknown;
+        vstNav.InvalidateNode(lNode);
+        if not lParents.Contains(vstNav.NodeParent[lNode]) then
+          lParents.Add(vstNav.NodeParent[lNode]);
+      end;
+      lNode := vstNav.GetNextInitialized(lNode);
+    end;
+    for var lParent in lParents do
+      vstNav.Sort(lParent, vstNav.Header.SortColumn, vstNav.Header.SortDirection, False);
+  finally
+    vstNav.EndUpdate;
+    lParents.Free;
+  end;
+  if Assigned(vstNav.FocusedNode) and not IsPinned then begin
+    ApplyPathColor;
+    lblPath.Text := NavPathText(vstNav.FocusedNode);
+    lblPath.Visible := True;
+  end;
+
+  var lLastChange := vstNavLastChangeNode;
+  vstNavLastChangeNode := vstNav.FocusedNode;
+  try
+    var lShown := Assigned(ActiveRecord) and IsAffected(ActiveRecord);
+    for var lOne in ActiveRecords do
+      if Supports(lOne.Element, IwbMainRecord, lRecord) and IsAffected(lRecord) then
+        lShown := True;
+    if lShown then begin
+      ResetActiveTree;
+      if ComparingSiblings then
+        for var i := Low(ActiveRecords) to High(ActiveRecords) do
+          if (Succ(i) < vstView.Header.Columns.Count) and Supports(ActiveRecords[i].Element, IwbMainRecord, lRecord) and
+             Assigned(lRecord._File) then begin
+            vstView.Header.Columns[Succ(i)].Text := lRecord.EditorID + ' [' + lRecord._File.FileName + ']';
+            vstView.Header.Columns[Succ(i)].Hint := vstView.Header.Columns[Succ(i)].Text;
+          end;
+    end;
+    if Assigned(ActiveRecord) and xeContext.LoaderDone then begin
+      ActiveMaster := ActiveRecord.MasterOrSelf;
+      vstReferencedBy.BeginUpdate;
+      try
+        vstReferencedBy.Tag := ActiveMaster.ReferencedByCount;
+        PopulateReferencedByListData(ActiveMaster);
+        ApplyReferencedByFilter;
+        var lNoted := ShowReferencedByNote;
+        tbsReferencedBy.TabVisible := (vstReferencedBy.Tag > 0) or lNoted;
+      finally
+        vstReferencedBy.EndUpdate;
+      end;
+    end;
+    if Assigned(lPage) and lPage.TabVisible then
+      pgMain.ActivePage := lPage
+    else
+      pgMain.ActivePage := tbsView;
+  finally
+    vstNavLastChangeNode := lLastChange;
+  end;
+  UpdateReferencedByTabCaption;
+end;
+
+procedure TfrmMain.mniNavChangeNameClick(Sender: TObject);
+var
+  lRecord   : IwbMainRecord;
+  lFile     : IwbFile;
+  lIdentity : string;
+  lText     : string;
+  lNew      : string;
+  lPlan     : TwbNameChangePlan;
+  lAffected : Boolean;
+  lPage     : TTabSheet;
+
+  function Moved: Boolean;
+  begin
+    if CloseDeferred then
+      Exit(True);
+    var lWhy := ChangeNameMoved(lRecord, lFile, lIdentity);
+    Result := lWhy <> '';
+    if Result then
+      ShowMessage('Change NAME ends: ' + lWhy + '. This command has written no record.');
+  end;
+
+  function Plan: Boolean;
+  begin
+    Result := False;
+    var lFailed := '';
+    LockProcessMessages;
+    try
+      try
+{$IFDEF XE_TEST_CONTROL_POINTS}
+        if Assigned(TestHost) and Assigned(TestHost.TestChangeNamePlanHook) then begin
+          var lHook := TestHost.TestChangeNamePlanHook;
+          TestHost.TestChangeNamePlanHook := nil;
+          lHook();
+        end;
+{$ENDIF}
+        lFile.PlanNameChange(lRecord, lNew, True, lPlan);
+        Result := True;
+      except
+        on E: Exception do begin
+          lFailed := E.Message;
+          if lFailed = '' then
+            lFailed := E.ClassName;
+        end;
+      end;
+    finally
+      UnLockProcessMessages;
+    end;
+    DoProcessMessages;
+    if CloseDeferred then
+      Exit(False);
+    if not Result then
+      ShowMessage('Change NAME could not be planned: ' + lFailed);
+  end;
+
+  procedure ShowRefusal;
+  begin
+    var lWhat := lPlan.RefusalText;
+    if Assigned(lPlan.RefusedRecord) then
+      lWhat := lWhat + #13#10#13#10'Record: ' + lPlan.RefusedRecord.Name;
+    if Assigned(lPlan.RefusedFile) then
+      lWhat := lWhat + #13#10'File: ' + lPlan.RefusedFile.FileName;
+    ShowMessage('Change NAME is refused: ' + lWhat);
+  end;
+
+  function BuildAndReplan: Boolean;
+  begin
+    Result := False;
+    var lFiles := xeContext.NameReferencesIncomplete;
+    if Length(lFiles) = 0 then begin
+      ShowRefusal;
+      Exit;
+    end;
+    if MessageDlg(lPlan.RefusalText + #13#10#13#10'Build reference information for these files and plan again?',
+         mtConfirmation, [mbYes, mbNo], 0) <> mrYes then
+      Exit;
+    if Moved then
+      Exit;
+    lAffected := True;
+    var lStopped := '';
+    try
+      PerformLongAction('Building reference information', '', procedure
+      begin
+        for var lOne in lFiles do begin
+          DoProcessMessages;
+          if CloseDeferred then
+            Break;
+          if not lOne.ReferenceBuildOffered then
+            Continue;
+          wbCurrentAction := 'Building reference information for ' + lOne.Name;
+          wbProgress(wbCurrentAction);
+          if CloseDeferred then
+            Break;
+          lOne.BuildRef;
+        end;
+      end, True);
+    except
+      on E: EAbort do
+        lStopped := 'it was canceled';
+      on E: Exception do begin
+        lStopped := E.Message;
+        if lStopped = '' then
+          lStopped := E.ClassName;
+      end;
+    end;
+    for var lOne in lFiles do
+      if lOne.ReferencesComplete then
+        AddMessage('Change NAME: reference information for ' + lOne.FileName + ' is complete')
+      else
+        AddMessage('Change NAME: reference information for ' + lOne.FileName + ' is not complete');
+    DoProcessMessages;
+    if CloseDeferred then
+      Exit;
+    if lStopped <> '' then begin
+      ShowMessage('Building reference information stopped: ' + lStopped + '. Reference information may have changed; ' +
+        'this command has written no record.');
+      Exit;
+    end;
+    if Moved then
+      Exit;
+    if not Plan then
+      Exit;
+    if Moved then
+      Exit;
+    if lPlan.Refusal <> ncrNone then begin
+      ShowRefusal;
+      Exit;
+    end;
+    Result := True;
+  end;
+
+begin
+  if ChangeNameActive then
+    Exit;
+  ChangeNameActive := True;
+  lAffected := False;
+  lPage := pgMain.ActivePage;
+  try
+    if not ChangeNameGates(lRecord) then
+      Exit;
+    lFile := lRecord._File;
+    if lRecord.NameChangeRefusal(lIdentity, True, lText) <> ncrNone then begin
+      ShowMessage(lText);
+      Exit;
+    end;
+    if not EditWarn then
+      Exit;
+    if Moved then
+      Exit;
+    lNew := lIdentity;
+    if not InputQuery('Change NAME', 'New NAME for ' + lIdentity.Replace('&', '&&') + ':', lNew) then
+      Exit;
+    if lNew = lIdentity then
+      Exit;
+    if Moved then
+      Exit;
+    if not Plan then
+      Exit;
+    if Moved then
+      Exit;
+    if lPlan.Refusal = ncrReferencesNotBuilt then begin
+      if not BuildAndReplan then
+        Exit;
+    end else if lPlan.Refusal <> ncrNone then begin
+      ShowRefusal;
+      Exit;
+    end;
+
+    var lLabels := TxeChangeNameLabels.Capture(lPlan);
+    var lRaised, lEnded: string;
+    var lOutcome := TfrmChangeName.Execute(Self, @lPlan, lLabels,
+      function: string
+      begin
+        Result := ChangeNameMoved(lRecord, lFile, lIdentity);
+      end,
+      function: Boolean
+      begin
+        LockProcessMessages;
+        try
+{$IFDEF XE_TEST_CONTROL_POINTS}
+          if Assigned(TestHost) and Assigned(TestHost.TestChangeNameApplyHook) then
+            TestHost.TestChangeNameApplyHook();
+{$ENDIF}
+          lAffected := True;
+          Result := lFile.ApplyNameChange(lPlan);
+        finally
+          UnLockProcessMessages;
+        end;
+      end, lRaised, lEnded);
+    if lEnded <> '' then begin
+      if not CloseDeferred then
+        ShowMessage('Change NAME ends: ' + lEnded + '. This command has written no record.');
+      Exit;
+    end;
+    if lOutcome = cnoNotApplied then
+      Exit;
+    lAffected := True;
+    for var lLine in xeChangeNameOutcomeLines(lPlan, lLabels, lOutcome, lRaised) do
+      AddMessage(lLine);
+    if lOutcome = cnoFailed then
+      AddMessage('!!! Errors have occured. It is highly recommended to exit without saving as partial changes might have occured !!!');
+  finally
+    try
+      if lAffected then
+        ChangeNameRefresh(lPlan, lPage);
+    finally
+      ChangeNameActive := False;
+    end;
+  end;
+end;
+
 procedure TfrmMain.mniNavChangeFormIDClick(Sender: TObject);
 var
   s                           : string;
@@ -13497,6 +13860,11 @@ begin
 //      mniNavChangeFormID.Visible :=
 //        {(Signature <> 'CELL') and (Signature <> 'WRLD') {and (Signature <> 'DIAL')};
 
+  var lChangeNameRecord: IwbMainRecord;
+  var lChangeNameIdentity, lChangeNameText: string;
+  mniNavChangeName.Visible := not ChangeNameActive and ChangeNameGates(lChangeNameRecord) and
+    (lChangeNameRecord.NameChangeRefusal(lChangeNameIdentity, False, lChangeNameText) = ncrNone);
+
   mniNavRenumberFormIDsFrom.Visible :=
     not xeContext.Settings.TranslationMode and
     xeContext.Settings.EditAllowed and
@@ -18000,16 +18368,45 @@ begin
   end;
 end;
 
+function TfrmMain.NavPathText(aNode: PVirtualNode): string;
+var
+  NodeData : PNavNodeData;
+  t, u     : string;
+begin
+  Result := '';
+  while Assigned(aNode) do begin
+    if Result <> '' then
+      Result := ' \ ' + Result;
+    t := vstNav.Text[aNode, 0, False];
+    NodeData := vstNav.GetNodeData(aNode);
+    if Assigned(NodeData.Element) and (NodeData.Element.ElementType = etFile) then begin
+      u := vstNav.Text[aNode, 2, False];
+      if u <> '' then
+        u := ' (' + u + ')';
+    end else begin
+      u := vstNav.Text[aNode, 1, False];
+      if u <> '' then
+        u := ' <' + u + '>';
+    end;
+    Result := t + u + Result;
+    aNode := vstNav.NodeParent[aNode];
+  end;
+  Result := ' ' + Result;
+end;
+
 procedure TfrmMain.vstNavChange(Sender: TBaseVirtualTree; Node: PVirtualNode);
 var
   NodeData                    : PNavNodeData;
   Element                     : IwbElement;
-  s, t, u                     : string;
 
   HeaderType                  : TwbElementType;
 begin
   HeaderType := etValue;
   vstNavLastChangeNode := Node;
+{$IFDEF XE_TEST_CONTROL_POINTS}
+  if Assigned(TestHost) then
+    Inc(TestHost.TestNavChangeCount);
+{$ENDIF}
   NodeData := Sender.GetNodeData(Sender.FocusedNode);
   if Assigned(NodeData) then begin
     Element := NodeData.Element;
@@ -18021,27 +18418,7 @@ begin
 
     if not IsPinned then begin
       ApplyPathColor;
-
-      s := '';
-      while Assigned(Node) do begin
-        if s <> '' then
-          s := ' \ ' + s;
-        t := vstNav.Text[Node, 0, False];
-        NodeData := Sender.GetNodeData(Node);
-        if Assigned(NodeData.Element) and (NodeData.Element.ElementType = etFile) then begin
-          u := vstNav.Text[Node, 2, False];
-          if u <> '' then
-            u := ' (' + u + ')';
-        end else begin
-          u := vstNav.Text[Node, 1, False];
-          if u <> '' then
-            u := ' <' + u + '>';
-        end;
-        s := t + u + s;
-        Node := vstNav.NodeParent[Node];
-      end;
-      s := ' ' + s;
-      lblPath.Text := s;
+      lblPath.Text := NavPathText(Node);
       lblPath.Visible := True;
     end;
   end
@@ -18773,7 +19150,10 @@ begin
       end;
       VK_F2: begin
         pmuNavPopup(nil);
-        if mniNavChangeFormID.Enabled and mniNavChangeFormID.Visible then
+        if xeContext.GameDefObj.IsMorrowind then begin
+          if mniNavChangeName.Enabled and mniNavChangeName.Visible then
+            mniNavChangeName.Click;
+        end else if mniNavChangeFormID.Enabled and mniNavChangeFormID.Visible then
           mniNavChangeFormID.Click;
       end;
       Ord('M'): if Shift = [ssCtrl] then begin
