@@ -10095,6 +10095,50 @@ begin
               tmrPendingSetActiveTimer(tmrPendingSetActive);
             lLines.Add(lPinnedState('before'));
           end;
+          var lExpandOp := SameText(xeTestSwitches.ChangeFormIDOp, 'changenameexpand');
+          var lExpandNode: PVirtualNode := nil;
+          var lExpandState: TFunc<string, string> := function(aWhen: string): string
+            begin
+              var lAll := 0;
+              var lInit := 0;
+              var lKid := vstNav.GetFirstChildNoInit(lExpandNode);
+              while Assigned(lKid) do begin
+                Inc(lAll);
+                if vsInitialized in lKid.States then
+                  Inc(lInit);
+                lKid := vstNav.GetNextSiblingNoInit(lKid);
+              end;
+              Result := 'expandgroup' + #9 + aWhen + #9 + 'children ' + IntToStr(lAll) + #9 + 'initialized ' + IntToStr(lInit) +
+                #9 + 'expanded ' + BoolToStr(vstNav.Expanded[lExpandNode], True) + #9 + 'sortcolumn ' +
+                IntToStr(vstNav.Header.SortColumn);
+            end;
+          var lGroupOrder: TFunc<string> := function: string
+            begin
+              Result := '';
+              var lKid := vstNav.GetFirstChild(lExpandNode);
+              while Assigned(lKid) do begin
+                var lKidData: PNavNodeData := vstNav.GetNodeData(lKid);
+                var lKidRec: IwbMainRecord;
+                if Result <> '' then
+                  Result := Result + ',';
+                if Assigned(lKidData) and Supports(lKidData.Element, IwbMainRecord, lKidRec) then
+                  Result := Result + lKidRec.EditorID
+                else
+                  Result := Result + '?';
+                lKid := vstNav.GetNextSibling(lKid);
+              end;
+            end;
+          if lExpandOp then begin
+            var lExpandRec := FindRecord(xeTestSwitches.ChangeFormIDView);
+            lExpandNode := FindNodeForElement(lExpandRec.Container);
+            if not Assigned(lExpandNode) then
+              raise Exception.Create('Change NAME test: no nav node for the group of ' + xeTestSwitches.ChangeFormIDView);
+            vstNav.Header.SortColumn := 1;
+            vstNav.Header.SortDirection := sdAscending;
+            vstNav.FullyVisible[lExpandNode] := True;
+            vstNav.Expanded[lExpandNode] := True;
+            lLines.Add(lExpandState('before'));
+          end;
           if SameText(xeTestSwitches.ChangeFormIDOp, 'changenamelastnil') or
              SameText(xeTestSwitches.ChangeFormIDOp, 'changenamelastnilmsg') then begin
             vstNavChange(vstNav, vstNav.FocusedNode);
@@ -10220,6 +10264,12 @@ begin
           lLines.Add('navchange' + #9 + 'during' + #9 + IntToStr(TestHost.TestNavChangeCount - lNavChanges));
           if lPinnedOp then
             lLines.Add(lPinnedState('after'));
+          if lExpandOp then begin
+            lLines.Add(lExpandState('after'));
+            lLines.Add('grouporder' + #9 + 'after' + #9 + lGroupOrder());
+            vstNav.Sort(lExpandNode, vstNav.Header.SortColumn, vstNav.Header.SortDirection, True);
+            lLines.Add('grouporder' + #9 + 'resorted' + #9 + lGroupOrder());
+          end;
           lLines.Add('pageend' + #9 + pgMain.ActivePage.Name);
           lLines.Add('path' + #9 + 'after' + #9 + 'visible ' + BoolToStr(lblPath.Visible, True) + #9 + lblPath.Text);
           if xeChangeNameTerminatedAt <> '' then
