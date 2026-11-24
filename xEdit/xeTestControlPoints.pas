@@ -328,6 +328,8 @@ var
   xeChangeNameCloseArmed      : Boolean;
   xeChangeNameCloseRaiseArmed : Boolean;
   xeChangeNameProgCloseArmed  : Boolean;
+  xeChangeNameCloseTailAt     : Integer;
+  xeChangeNameCloseTailSeen   : Integer;
   xeChangeNameCloseTo         : HWND;
   xeChangeNameCloseForm       : TForm;
   xeChangeNameTerminatedAt    : string;
@@ -386,6 +388,14 @@ begin
     var lCloseForm := xeChangeNameCloseForm;
     TThread.ForceQueue(nil, procedure begin lCloseForm.Close; end);
     DoProcessMessages;
+  end;
+  if (xeChangeNameCloseTailAt > 0) and aStatus.StartsWith('Building reference information for') then begin
+    Inc(xeChangeNameCloseTailSeen);
+    if xeChangeNameCloseTailSeen = xeChangeNameCloseTailAt then begin
+      xeChangeNameCloseTailAt := 0;
+      xeChangeNameTerminatedAt := aStatus;
+      PostMessage(xeChangeNameCloseTo, WM_CLOSE, 0, 0);
+    end;
   end;
   if Assigned(xeChangeNameSavedProgress) then
     xeChangeNameSavedProgress(aStatus);
@@ -11180,7 +11190,7 @@ begin
   end else if HasButton(lForm, mrYes) or HasButton(lForm, mrNo) or HasButton(lForm, mrYesToAll) then begin
     lToken := NextToken(xeTestSwitches.ChangeFormIDAnswers, TestHost.TestChangeFormIDAnswerIndex);
     if (lToken = 'yesterminate') or (lToken = 'yesraise') or (lToken = 'yesraiseempty') or (lToken = 'yesclose') or
-       (lToken = 'yescloseraise') or (lToken = 'yesprogclose') then begin
+       (lToken = 'yescloseraise') or (lToken = 'yesprogclose') or (lToken = 'yesclosetail') then begin
       lResult := mrYes;
       xeChangeNameTerminateArmed := lToken = 'yesterminate';
       xeChangeNameRaiseArmed := lToken = 'yesraise';
@@ -11188,6 +11198,18 @@ begin
       xeChangeNameCloseArmed := lToken = 'yesclose';
       xeChangeNameCloseRaiseArmed := lToken = 'yescloseraise';
       xeChangeNameProgCloseArmed := lToken = 'yesprogclose';
+      xeChangeNameCloseTailSeen := 0;
+      xeChangeNameCloseTailAt := 0;
+      if lToken = 'yesclosetail' then
+        for var lOne in xeContext.NameReferencesIncomplete do
+          if lOne.ReferenceBuildOffered then
+            Inc(xeChangeNameCloseTailAt);
+      if (lToken = 'yescloseraise') or (lToken = 'yesclosetail') then
+        TestHost.TestChangeNamePlanHook := procedure
+          begin
+            if Assigned(TestHost.TestChangeFormIDLines) then
+              TestHost.TestChangeFormIDLines.Add('replan' + #9 + 'entered');
+          end;
       xeChangeNameCloseTo := Handle;
       xeChangeNameCloseForm := Self;
       xeChangeNameSavedProgress := _wbProgressCallback;
