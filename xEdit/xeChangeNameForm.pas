@@ -494,8 +494,6 @@ begin
       lLines.Add('  the apply raised: ' + aRaised);
   end;
   AddReports(lLines, aPlan, aLabels);
-  if aOutcome = cnoCompleted then
-    lLines.AddRange(['', 'Close returns to the editor; the places stay listed in the Messages tab.']);
   Result := lLines.ToArray;
 end;
 
@@ -595,7 +593,10 @@ begin
   else
     fOutcome := cnoCompleted;
   try
-    ShowLines(xeChangeNameOutcomeLines(fPlan^, fLabels, fOutcome, fRaised));
+    var lShown := xeChangeNameOutcomeLines(fPlan^, fLabels, fOutcome, fRaised);
+    if fOutcome = cnoCompleted then
+      lShown := lShown + ['', 'Close returns to the editor and adds the text above to the Messages tab.'];
+    ShowLines(lShown);
   finally
     var lQueued: TMsg;
     while PeekMessage(lQueued, 0, WM_KEYFIRST, WM_KEYLAST, PM_REMOVE) do ;
