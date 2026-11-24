@@ -919,7 +919,8 @@ begin
             SameText(ChangeFormIDOp, 'changename') or SameText(ChangeFormIDOp, 'changenamef2') or
             SameText(ChangeFormIDOp, 'changenamedirect') or SameText(ChangeFormIDOp, 'changenameclosing') or
             SameText(ChangeFormIDOp, 'changenamelastnil') or SameText(ChangeFormIDOp, 'changenamenofocus') or
-            SameText(ChangeFormIDOp, 'changenamelastnilmsg')) or
+            SameText(ChangeFormIDOp, 'changenamelastnilmsg') or SameText(ChangeFormIDOp, 'changenamedeep') or
+            SameText(ChangeFormIDOp, 'changenamepending') or SameText(ChangeFormIDOp, 'changenamependingmsg')) or
        ((SameText(ChangeFormIDOp, 'copyrows') or ChangeFormIDOp.StartsWith('refby', True)) and (ChangeFormIDView = '')) or
        (SameText(ChangeFormIDOp, 'viewadd') and ((ChangeFormIDTarget = '') or (ChangeFormIDRow = ''))) or
        ((SameText(ChangeFormIDOp, 'batchrefs') or SameText(ChangeFormIDOp, 'localize') or

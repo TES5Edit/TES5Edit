@@ -8969,6 +8969,7 @@ end;
 procedure TfrmMain.ChangeNameRefresh(const aPlan: TwbNameChangePlan; aPage: TTabSheet);
 var
   lAffected : TDynMainRecords;
+  lCount    : Integer;
   lParents  : TList<PVirtualNode>;
   lNode     : PVirtualNode;
   lNodeData : PNavNodeData;
@@ -8976,21 +8977,35 @@ var
 
   procedure Note(const aRecord: IwbMainRecord);
   begin
-    if Assigned(aRecord) then
-      lAffected := lAffected + [aRecord];
+    if Assigned(aRecord) then begin
+      lAffected[lCount] := aRecord;
+      Inc(lCount);
+    end;
   end;
 
   function IsAffected(const aRecord: IwbMainRecord): Boolean;
   begin
-    for var lOne in lAffected do
-      if lOne.Equals(aRecord) then
-        Exit(True);
     Result := False;
+    if not Assigned(aRecord) then
+      Exit;
+    var lLow := 0;
+    var lHigh := High(lAffected);
+    while lLow <= lHigh do begin
+      var lMiddle := (lLow + lHigh) shr 1;
+      var lOrder := CmpPtr(lAffected[lMiddle].ElementID, aRecord.ElementID);
+      if lOrder < 0 then
+        lLow := Succ(lMiddle)
+      else if lOrder > 0 then
+        lHigh := Pred(lMiddle)
+      else
+        Exit(True);
+    end;
   end;
 
 begin
   var lPage := aPage;
-  lAffected := nil;
+  SetLength(lAffected, 1 + Length(aPlan.Renames) + Length(aPlan.Left) + Length(aPlan.Fields) + Length(aPlan.Values));
+  lCount := 0;
   Note(aPlan.Rec);
   for var lRename in aPlan.Renames do
     Note(lRename.Rec);
@@ -9000,6 +9015,12 @@ begin
     Note(lField.Rec);
   for var lValue in aPlan.Values do
     Note(lValue.Rec);
+  SetLength(lAffected, lCount);
+  TArray.Sort<IwbMainRecord>(lAffected, TComparer<IwbMainRecord>.Construct(
+    function(const aLeft, aRight: IwbMainRecord): Integer
+    begin
+      Result := CmpPtr(aLeft.ElementID, aRight.ElementID);
+    end));
 
   NavUpdate(True);
   lParents := TList<PVirtualNode>.Create;
@@ -9204,8 +9225,11 @@ begin
     Exit;
   ChangeNameActive := True;
   lAffected := False;
-  lPage := pgMain.ActivePage;
+  lPage := nil;
   try
+    if tmrPendingSetActive.Enabled then
+      tmrPendingSetActiveTimer(tmrPendingSetActive);
+    lPage := pgMain.ActivePage;
     if not ChangeNameGates(lRecord) then
       Exit;
     lFile := lRecord._File;
@@ -9265,8 +9289,7 @@ begin
     if lOutcome = cnoNotApplied then
       Exit;
     lAffected := True;
-    for var lLine in xeChangeNameOutcomeLines(lPlan, lLabels, lOutcome, lRaised) do
-      AddMessage(lLine);
+    AddMessage(string.Join(CRLF, xeChangeNameOutcomeLines(lPlan, lLabels, lOutcome, lRaised)));
     if lOutcome = cnoFailed then
       AddMessage('!!! Errors have occured. It is highly recommended to exit without saving as partial changes might have occured !!!');
   finally

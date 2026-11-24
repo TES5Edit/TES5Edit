@@ -37,7 +37,6 @@ type
 
   TxeChangeNameLabels = record
     Items : TArray<TxeChangeNameLabel>;
-    procedure Add(const aRecord: IwbMainRecord);
     function Find(const aRecord: IwbMainRecord; out aLabel: TxeChangeNameLabel): Boolean;
     function NameOf(const aRecord: IwbMainRecord): string;
     function FileOf(const aRecord: IwbMainRecord): string;
@@ -101,7 +100,9 @@ implementation
 
 uses
   Winapi.Windows,
-  Winapi.Messages;
+  Winapi.Messages,
+  System.Generics.Collections,
+  System.Generics.Defaults;
 
 {$R *.dfm}
 
@@ -115,29 +116,30 @@ const
 
 { TxeChangeNameLabels }
 
-procedure TxeChangeNameLabels.Add(const aRecord: IwbMainRecord);
-var
-  lLabel : TxeChangeNameLabel;
+function CompareRecordIDs(const aLeft, aRight: IwbMainRecord): Integer;
 begin
-  if not Assigned(aRecord) or Find(aRecord, lLabel) then
-    Exit;
-  lLabel := Default(TxeChangeNameLabel);
-  lLabel.Rec := aRecord;
-  lLabel.Name := aRecord.Name;
-  if Assigned(aRecord._File) then
-    lLabel.FileName := aRecord._File.FileName;
-  Items := Items + [lLabel];
+  Result := CmpPtr(aLeft.ElementID, aRight.ElementID);
 end;
 
 function TxeChangeNameLabels.Find(const aRecord: IwbMainRecord; out aLabel: TxeChangeNameLabel): Boolean;
 begin
   aLabel := Default(TxeChangeNameLabel);
-  if Assigned(aRecord) then
-    for var lItem in Items do
-      if lItem.Rec.Equals(aRecord) then begin
-        aLabel := lItem;
+  if Assigned(aRecord) then begin
+    var lLow := 0;
+    var lHigh := High(Items);
+    while lLow <= lHigh do begin
+      var lMiddle := (lLow + lHigh) shr 1;
+      var lOrder := CompareRecordIDs(Items[lMiddle].Rec, aRecord);
+      if lOrder < 0 then
+        lLow := Succ(lMiddle)
+      else if lOrder > 0 then
+        lHigh := Pred(lMiddle)
+      else begin
+        aLabel := Items[lMiddle];
         Exit(True);
       end;
+    end;
+  end;
   Result := False;
 end;
 
@@ -169,26 +171,52 @@ begin
 end;
 
 class function TxeChangeNameLabels.Capture(const aPlan: TwbNameChangePlan): TxeChangeNameLabels;
+var
+  lRecords : TList<IwbMainRecord>;
+
+  procedure Add(const aRecord: IwbMainRecord);
+  begin
+    if Assigned(aRecord) then
+      lRecords.Add(aRecord);
+  end;
+
 begin
   Result := Default(TxeChangeNameLabels);
-  Result.Add(aPlan.Rec);
-  for var lRename in aPlan.Renames do
-    Result.Add(lRename.Rec);
-  for var lLeft in aPlan.Left do
-    Result.Add(lLeft.Rec);
-  for var lField in aPlan.Fields do
-    Result.Add(lField.Rec);
-  for var lValue in aPlan.Values do begin
-    Result.Add(lValue.Rec);
-    Result.Add(lValue.Target);
-    Result.Add(lValue.AfterHit);
-    for var lView in lValue.Views do
-      Result.Add(lView.Hit);
+  lRecords := TList<IwbMainRecord>.Create;
+  try
+    Add(aPlan.Rec);
+    for var lRename in aPlan.Renames do
+      Add(lRename.Rec);
+    for var lLeft in aPlan.Left do
+      Add(lLeft.Rec);
+    for var lField in aPlan.Fields do
+      Add(lField.Rec);
+    for var lValue in aPlan.Values do begin
+      Add(lValue.Rec);
+      Add(lValue.Target);
+      Add(lValue.AfterHit);
+      for var lView in lValue.Views do
+        Add(lView.Hit);
+    end;
+    for var lReport in aPlan.Reports do
+      Add(lReport.Rec);
+    for var lFilter in aPlan.Filters do
+      Add(lFilter.Rec);
+    lRecords.Sort(TComparer<IwbMainRecord>.Construct(CompareRecordIDs));
+    SetLength(Result.Items, lRecords.Count);
+    var lCount := 0;
+    for var lRecord in lRecords do
+      if (lCount = 0) or (CompareRecordIDs(Result.Items[Pred(lCount)].Rec, lRecord) <> 0) then begin
+        Result.Items[lCount].Rec := lRecord;
+        Result.Items[lCount].Name := lRecord.Name;
+        if Assigned(lRecord._File) then
+          Result.Items[lCount].FileName := lRecord._File.FileName;
+        Inc(lCount);
+      end;
+    SetLength(Result.Items, lCount);
+  finally
+    lRecords.Free;
   end;
-  for var lReport in aPlan.Reports do
-    Result.Add(lReport.Rec);
-  for var lFilter in aPlan.Filters do
-    Result.Add(lFilter.Rec);
 end;
 
 { the texts }
@@ -290,18 +318,47 @@ begin
   Result := Format('Change NAME of %s from %s to %s', [aLabels.Describe(aPlan.Rec), Quoted(aPlan.OldIdentity), Quoted(aPlan.NewIdentity)]);
 end;
 
-procedure AddReports(var aLines: TArray<string>; const aPlan: TwbNameChangePlan; const aLabels: TxeChangeNameLabels);
+type
+  TLines = record
+    Items : TArray<string>;
+    Count : Integer;
+    procedure Add(const aLine: string);
+    procedure AddRange(const aLines: array of string);
+    function ToArray: TArray<string>;
+  end;
+
+procedure TLines.Add(const aLine: string);
+begin
+  if Count = Length(Items) then
+    SetLength(Items, 2 * Count + 16);
+  Items[Count] := aLine;
+  Inc(Count);
+end;
+
+procedure TLines.AddRange(const aLines: array of string);
+begin
+  for var lLine in aLines do
+    Add(lLine);
+end;
+
+function TLines.ToArray: TArray<string>;
+begin
+  Result := Copy(Items, 0, Count);
+end;
+
+procedure AddReports(var aLines: TLines; const aPlan: TwbNameChangePlan; const aLabels: TxeChangeNameLabels);
 begin
   if Length(aPlan.Reports) = 0 then
     Exit;
-  aLines := aLines + ['', 'Places the plan found to inspect (none proves an edit is needed):'];
+  aLines.AddRange(['', 'Places the plan found to inspect (none proves an edit is needed):']);
   for var lReport in aPlan.Reports do
-    aLines := aLines + [Format('  %s: %s, %s', [KindText(lReport.Kind), aLabels.Describe(lReport.Rec), lReport.Path])];
+    aLines.Add(Format('  %s: %s, %s', [KindText(lReport.Kind), aLabels.Describe(lReport.Rec), lReport.Path]));
 end;
 
 function xeChangeNameForecast(const aPlan: TwbNameChangePlan; const aLabels: TxeChangeNameLabels): TArray<string>;
 var
   lTarget : IwbMainRecord;
+  lLines  : TLines;
 begin
   var lRewritten := 0;
   var lSkipped := 0;
@@ -313,54 +370,55 @@ begin
   var lChanged := aPlan.ChangedValues;
   var lPairs := aPlan.CellPairs;
   var lMoves := aPlan.FilterMoves;
-  Result := [Format('Records renamed: %d; records left: %d; fields rewritten: %d, skipped: %d; values that change: %d; ' +
+  lLines := Default(TLines);
+  lLines.Add(Format('Records renamed: %d; records left: %d; fields rewritten: %d, skipped: %d; values that change: %d; ' +
     'derived names: %d; cell filters that change: %d; places to inspect: %d',
     [Length(aPlan.Renames), Length(aPlan.Left), lRewritten, lSkipped, Length(lChanged), Length(lPairs), Length(lMoves),
-     Length(aPlan.Reports)])];
+     Length(aPlan.Reports)]));
   if lRewritten = 0 then
-    Result := Result + ['The rename touches no field; Apply still renames the records below.'];
+    lLines.Add('The rename touches no field; Apply still renames the records below.');
 
-  Result := Result + ['', 'Records renamed:'];
+  lLines.AddRange(['', 'Records renamed:']);
   for var lRename in aPlan.Renames do
-    Result := Result + ['  ' + aLabels.Describe(lRename.Rec)];
+    lLines.Add('  ' + aLabels.Describe(lRename.Rec));
   if Length(aPlan.Left) > 0 then begin
-    Result := Result + ['', 'Records left as they are:'];
+    lLines.AddRange(['', 'Records left as they are:']);
     for var lLeft in aPlan.Left do
-      Result := Result + [Format('  %s: %s', [aLabels.Describe(lLeft.Rec), lLeft.Reason])];
+      lLines.Add(Format('  %s: %s', [aLabels.Describe(lLeft.Rec), lLeft.Reason]));
   end;
   if Length(aPlan.Fields) > 0 then begin
-    Result := Result + ['', 'Fields:'];
+    lLines.AddRange(['', 'Fields:']);
     for var i := 0 to High(aPlan.Fields) do
-      Result := Result + [Format('  #%d %s, %s, %s: %s', [Succ(i), aLabels.Describe(aPlan.Fields[i].Rec), aPlan.Fields[i].Path,
-        Quoted(aPlan.Fields[i].Value), WillText(aPlan, i)])];
+      lLines.Add(Format('  #%d %s, %s, %s: %s', [Succ(i), aLabels.Describe(aPlan.Fields[i].Rec), aPlan.Fields[i].Path,
+        Quoted(aPlan.Fields[i].Value), WillText(aPlan, i)]));
   end;
   if Length(lChanged) > 0 then begin
-    Result := Result + ['', 'Values whose meaning changes:'];
+    lLines.AddRange(['', 'Values whose meaning changes:']);
     for var lIndex in lChanged do begin
       var lValue := aPlan.Values[lIndex];
       var lAfter := aPlan.VerdictAfter(lIndex, lTarget);
       var lText := lValue.Value;
       if (lValue.Field >= 0) and (aPlan.OutcomeToBe(lValue.Field) = ncoUpdated) then
         lText := aPlan.NewIdentity;
-      Result := Result + [Format('  %s, %s, %s: before %s, after %s', [aLabels.Describe(lValue.Rec), lValue.Path, Quoted(lText),
-        VerdictText(aPlan, aLabels, lValue.Verdict, lValue.Target, False), VerdictText(aPlan, aLabels, lAfter, lTarget, True)])];
+      lLines.Add(Format('  %s, %s, %s: before %s, after %s', [aLabels.Describe(lValue.Rec), lValue.Path, Quoted(lText),
+        VerdictText(aPlan, aLabels, lValue.Verdict, lValue.Target, False), VerdictText(aPlan, aLabels, lAfter, lTarget, True)]));
       var lDerivedAfter := aPlan.DerivedAfter(lIndex);
       if lValue.Derived or lDerivedAfter then
-        Result := Result + [Format('    names an exterior cell: %s before, %s after', [BoolToStr(lValue.Derived, True),
-          BoolToStr(lDerivedAfter, True)])];
+        lLines.Add(Format('    names an exterior cell: %s before, %s after', [BoolToStr(lValue.Derived, True),
+          BoolToStr(lDerivedAfter, True)]));
       var lBefore := aPlan.ReportBefore(lIndex);
       var lReportAfter := aPlan.ReportAfter(lIndex);
       if (lBefore <> '') or (lReportAfter <> '') then
-        Result := Result + [Format('    check before: %s; after: %s', [TextOrNone(lBefore), TextOrNone(lReportAfter)])];
+        lLines.Add(Format('    check before: %s; after: %s', [TextOrNone(lBefore), TextOrNone(lReportAfter)]));
     end;
   end;
   if Length(lPairs) > 0 then begin
-    Result := Result + ['', 'Derived names:'];
+    lLines.AddRange(['', 'Derived names:']);
     for var lPair in lPairs do
-      Result := Result + [Format('  %s -> %s', [NameOrNone(lPair.Before), NameOrNone(lPair.After)])];
+      lLines.Add(Format('  %s -> %s', [NameOrNone(lPair.Before), NameOrNone(lPair.After)]));
   end;
   if Length(lMoves) > 0 then begin
-    Result := Result + ['', 'Cell filters whose answer changes (the test is about the name, not the whole response):'];
+    lLines.AddRange(['', 'Cell filters whose answer changes (the test is about the name, not the whole response):']);
     for var lMove in lMoves do begin
       var lFilter := aPlan.Filters[lMove.Filter];
       var lRoute := 'Speaker Cell';
@@ -371,11 +429,12 @@ begin
       if lFilter.Route = nfrNotCell then
         lHow := lHow + Format('; the condition holds: %s before, %s after', [BoolToStr(not lMove.WasPrefix, True),
           BoolToStr(lMove.WasPrefix, True)]);
-      Result := Result + [Format('  %s, %s: %s -> %s; %s', [aLabels.Describe(lFilter.Rec), lFilter.Path,
-        NameOrNone(lMove.Names.Before), NameOrNone(lMove.Names.After), lHow])];
+      lLines.Add(Format('  %s, %s: %s -> %s; %s', [aLabels.Describe(lFilter.Rec), lFilter.Path,
+        NameOrNone(lMove.Names.Before), NameOrNone(lMove.Names.After), lHow]));
     end;
   end;
-  AddReports(Result, aPlan, aLabels);
+  AddReports(lLines, aPlan, aLabels);
+  Result := lLines.ToArray;
 end;
 
 function OutcomeText(aOutcome: TwbNameChangeOutcome; const aMessage: string; aFailed: Boolean): string;
@@ -407,33 +466,37 @@ end;
 
 function xeChangeNameOutcomeLines(const aPlan: TwbNameChangePlan; const aLabels: TxeChangeNameLabels; aOutcome: TxeChangeNameOutcome;
   const aRaised: string): TArray<string>;
+var
+  lLines : TLines;
 begin
+  lLines := Default(TLines);
   case aOutcome of
     cnoRefused:
-      Result := ['Change NAME was refused before any write: ' + aPlan.StaleText, 'No record or field was written. ' +
-        'Close and run Change NAME again to see a fresh plan.'];
+      lLines.AddRange(['Change NAME was refused before any write: ' + aPlan.StaleText, 'No record or field was written. ' +
+        'Close and run Change NAME again to see a fresh plan.']);
     cnoCompleted:
-      Result := ['Change NAME completed: ' + xeChangeNameHeading(aPlan, aLabels)];
+      lLines.Add('Change NAME completed: ' + xeChangeNameHeading(aPlan, aLabels));
     cnoFailed:
-      Result := [xeChangeNameFailedText];
+      lLines.Add(xeChangeNameFailedText);
   else
-    Result := ['Change NAME was not applied.'];
+    lLines.Add('Change NAME was not applied.');
   end;
   if aOutcome in [cnoCompleted, cnoFailed] then begin
     for var lRename in aPlan.Renames do
-      Result := Result + [Format('  rename %s: %s', [aLabels.Describe(lRename.Rec), OutcomeText(lRename.Outcome, lRename.Message,
-        aOutcome = cnoFailed)])];
+      lLines.Add(Format('  rename %s: %s', [aLabels.Describe(lRename.Rec), OutcomeText(lRename.Outcome, lRename.Message,
+        aOutcome = cnoFailed)]));
     for var lLeft in aPlan.Left do
-      Result := Result + [Format('  left %s: %s', [aLabels.Describe(lLeft.Rec), lLeft.Reason])];
+      lLines.Add(Format('  left %s: %s', [aLabels.Describe(lLeft.Rec), lLeft.Reason]));
     for var i := 0 to High(aPlan.Fields) do
-      Result := Result + [Format('  field #%d %s, %s: %s', [Succ(i), aLabels.Describe(aPlan.Fields[i].Rec), aPlan.Fields[i].Path,
-        FieldOutcomeText(aPlan, i, aOutcome = cnoFailed)])];
+      lLines.Add(Format('  field #%d %s, %s: %s', [Succ(i), aLabels.Describe(aPlan.Fields[i].Rec), aPlan.Fields[i].Path,
+        FieldOutcomeText(aPlan, i, aOutcome = cnoFailed)]));
     if aRaised <> '' then
-      Result := Result + ['  the apply raised: ' + aRaised];
+      lLines.Add('  the apply raised: ' + aRaised);
   end;
-  AddReports(Result, aPlan, aLabels);
+  AddReports(lLines, aPlan, aLabels);
   if aOutcome = cnoCompleted then
-    Result := Result + ['', 'Close returns to the editor; the places stay listed in the Messages tab.'];
+    lLines.AddRange(['', 'Close returns to the editor; the places stay listed in the Messages tab.']);
+  Result := lLines.ToArray;
 end;
 
 { TfrmChangeName }
@@ -495,7 +558,7 @@ begin
       btnCancel.Caption := 'Close';
       btnCancel.Enabled := True;
       vstFields.Enabled := False;
-      ShowLines(xeChangeNameOutcomeLines(fPlan^, fLabels, fOutcome, fRaised));
+      vstFields.Invalidate;
     end;
   end;
 end;
@@ -531,14 +594,18 @@ begin
     fOutcome := cnoRefused
   else
     fOutcome := cnoCompleted;
-  var lQueued: TMsg;
-  while PeekMessage(lQueued, 0, WM_KEYFIRST, WM_KEYLAST, PM_REMOVE) do ;
-  while PeekMessage(lQueued, 0, WM_MOUSEFIRST, WM_MOUSELAST, PM_REMOVE) do ;
-  while PeekMessage(lQueued, 0, WM_NCMOUSEMOVE, WM_NCXBUTTONDBLCLK, PM_REMOVE) do ;
-  while PeekMessage(lQueued, Handle, WM_CLOSE, WM_CLOSE, PM_REMOVE) do ;
-  while PeekMessage(lQueued, Handle, WM_SYSCOMMAND, WM_SYSCOMMAND, PM_REMOVE) do ;
-  ModalResult := mrNone;
-  SetState(cnsOutcome);
+  try
+    ShowLines(xeChangeNameOutcomeLines(fPlan^, fLabels, fOutcome, fRaised));
+  finally
+    var lQueued: TMsg;
+    while PeekMessage(lQueued, 0, WM_KEYFIRST, WM_KEYLAST, PM_REMOVE) do ;
+    while PeekMessage(lQueued, 0, WM_MOUSEFIRST, WM_MOUSELAST, PM_REMOVE) do ;
+    while PeekMessage(lQueued, 0, WM_NCMOUSEMOVE, WM_NCXBUTTONDBLCLK, PM_REMOVE) do ;
+    while PeekMessage(lQueued, Handle, WM_CLOSE, WM_CLOSE, PM_REMOVE) do ;
+    while PeekMessage(lQueued, Handle, WM_SYSCOMMAND, WM_SYSCOMMAND, PM_REMOVE) do ;
+    ModalResult := mrNone;
+    SetState(cnsOutcome);
+  end;
 end;
 
 procedure TfrmChangeName.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
