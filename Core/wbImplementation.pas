@@ -1120,6 +1120,8 @@ type
 
     procedure Scan; virtual;
     procedure SortRecords;
+    function FormIDOverflowsSlot(const aFormID: TwbFormID; aMastersUpdated: Boolean; out aSlot: TwbFileID): Boolean;
+    procedure CheckNarrowedRecords;
 
     procedure AddMaster(const aFileName: string; isTemporary: Boolean = False; aAutoLoadOrder: Boolean = False; aSilent: Boolean = False); overload;
     procedure AddMaster(const aFile: IwbFile); overload;
@@ -12307,6 +12309,8 @@ begin
   flRecordBits := nil;
   flProgress('FormID index built');
 
+  CheckNarrowedRecords;
+
   flActivateIndices;
 
   if lGameDef.IsSkyrim or lGameDef.IsFallout3 or lGameDef.IsFallout4 or lGameDef.IsFallout76 or lGameDef.IsStarfield then begin
@@ -12752,6 +12756,67 @@ asm
   cmovb rax, rcx
   seta al
   {$ENDIF WIN64}
+end;
+
+function TwbFile.FormIDOverflowsSlot(const aFormID: TwbFormID; aMastersUpdated: Boolean; out aSlot: TwbFileID): Boolean;
+begin
+  Result := False;
+  aSlot := TwbFileID.Null;
+  var lFileLayout := flContextObj.FileSlotLayout;
+  var lObjectID := aFormID.ObjectID[lFileLayout];
+  if lObjectID <= $FFF then
+    Exit;
+  try
+    aSlot := FileFileIDtoLoadOrderFileID(aFormID.FileID[lFileLayout], aMastersUpdated);
+  except
+    on EFileNoSlotExecption do
+      Exit;
+  end;
+  if aSlot.IsLightSlot then
+    Result := True
+  else if aSlot.IsMediumSlot then
+    Result := lObjectID > $FFFF;
+end;
+
+procedure TwbFile.CheckNarrowedRecords;
+var
+  lSlot : TwbFileID;
+begin
+  if (fsIsHardcoded in flStates) or (flContextObj.SlotLayout * [skLight, skMedium] = []) then
+    Exit;
+  var lSelfFileID := GetResolvedLoadOrderFileID(True);
+  var lNarrow := lSelfFileID.IsLightSlot or lSelfFileID.IsMediumSlot;
+  if not lNarrow then
+    for var i := 0 to Pred(GetMasterCount(True)) do begin
+      var lMasterFileID := GetMaster(i, True).ResolvedLoadOrderFileID[True];
+      if lMasterFileID.IsLightSlot or lMasterFileID.IsMediumSlot then begin
+        lNarrow := True;
+        Break;
+      end;
+    end;
+  if not lNarrow then
+    Exit;
+
+  var lShown := GetFileName;
+  if fsIsCompareLoad in flStates then
+    lShown := GetFileNameOnDisk;
+  var lFileLayout := flContextObj.FileSlotLayout;
+  for var i := 0 to Pred(flRecordsCount) do begin
+    var lFormID := flRecords[i].FixedFormID;
+    if not FormIDOverflowsSlot(lFormID, flRecords[i].MastersUpdated, lSlot) then
+      Continue;
+    var lObjectID := lFormID.ObjectID[lFileLayout];
+    var lSlotName := 'medium';
+    if lSlot.IsLightSlot then
+      lSlotName := 'light';
+    if (fsIsCompareLoad in flStates) and (lFormID.FileID[lFileLayout] = GetCompareSelfFileID(True)) then
+      raise Exception.CreateFmt('"%s" can not be loaded for comparison with "%s": its own record %s has ObjectID %.6x, ' +
+        'which does not fit the %s slot "%s" is loaded in', [GetFileNameOnDisk, ExtractFileName(flCompareTo),
+        flRecords[i].Name, lObjectID, lSlotName, ExtractFileName(flCompareTo)]);
+    if wbHasProgressCallback then
+      wbProgressCallback(Format('<Warning: %s in "%s" has ObjectID %.6x, which does not fit the %s slot it maps to; it reads as [%s]>',
+        [flRecords[i].Name, lShown, lObjectID, lSlotName, flRecords[i].LoadOrderFormID.ToString]));
+  end;
 end;
 
 procedure TwbFile.SortRecords;
