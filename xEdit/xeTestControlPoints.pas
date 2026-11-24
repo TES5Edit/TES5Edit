@@ -10193,8 +10193,11 @@ begin
             pmuNavPopup(nil);
             lLines.Add('closinggate' + #9 + 'popup visible ' + BoolToStr(mniNavChangeName.Visible, True));
             mniNavChangeNameClick(lMenuItem);
-            CloseDeferred := False;
             lLines.Add('closinggate' + #9 + 'returned');
+            var lF2Key: Word := VK_F2;
+            vstNavKeyDown(vstNav, lF2Key, []);
+            CloseDeferred := False;
+            lLines.Add('closinggate' + #9 + 'f2 returned');
           end else if SameText(xeTestSwitches.ChangeFormIDOp, 'changenamef2') then begin
             var lKey: Word := VK_F2;
             vstNavKeyDown(vstNav, lKey, []);
@@ -10264,6 +10267,16 @@ begin
             lLines.Add('pending' + #9 + 'settled' + #9 + 'active ' + lActiveName() + #9 + 'focus ' + lFocusName);
           end;
           lLines.Add('navchange' + #9 + 'during' + #9 + IntToStr(TestHost.TestNavChangeCount - lNavChanges));
+          if SameText(xeTestSwitches.ChangeFormIDOp, 'changenamelastnil') or
+             SameText(xeTestSwitches.ChangeFormIDOp, 'changenamelastnilmsg') then begin
+            lLines.Add('postcommand' + #9 + 'timer ' + BoolToStr(tmrPendingSetActive.Enabled, True) + #9 + 'resetdeferred ' +
+              BoolToStr(ResetActiveTreeDeferred, True) + #9 + 'page ' + pgMain.ActivePage.Name + #9 + 'active ' + lActiveName());
+            if tmrPendingSetActive.Enabled then
+              tmrPendingSetActiveTimer(tmrPendingSetActive);
+            Application.ProcessMessages;
+            lLines.Add('postcommand' + #9 + 'settled' + #9 + 'navchange ' + IntToStr(TestHost.TestNavChangeCount - lNavChanges) + #9 +
+              'page ' + pgMain.ActivePage.Name + #9 + 'active ' + lActiveName());
+          end;
           if lPinnedOp then
             lLines.Add(lPinnedState('after'));
           if lExpandOp then begin
