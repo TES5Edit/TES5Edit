@@ -15,6 +15,7 @@ xEdit is crucial to our shared modding community and your contribution - no matt
 * A file loaded through Compare To is refused, with a message naming the record, when one of its own records has an ObjectID too large for the light or medium slot it takes (such as a full version of a plugin compared with its light-flagged release); xEdit read such a record as a record of another plugin. Any other record whose ObjectID does not fit the light or medium slot it maps to (such as a record a plugin places in a light master above xxxFFF) is now reported with a warning when its plugin loads.
 * Saving a plugin with "Simple records" turned off no longer fails with an access violation when a record holds a subrecord stored with no data where its definition expects a fixed size (such as the FaceGen data of some NPCs in Tale of Two Wastelands); such a subrecord is saved as it was, as it already was with "Simple records" on. Check for Errors now reports such a subrecord: "Expected N bytes of data, found 0".
 * The mouse's Back and Forward buttons no longer move the main window to another record while a dialog is open or an operation is running; they used to change the selection and the View behind the dialog.
+* Fallout 3 and Fallout New Vegas: a perk's Quest + Stage effect reads its stage as one byte again (as the game does; 4.1.5q had made it two bytes), so Check for Errors no longer reports vanilla perks such as Scrounger with "Quest Stage [52550] not found".
 
 # What's New in xEdit 4.1.5s?
 
