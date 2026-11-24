@@ -511,8 +511,13 @@ begin
     lForm.fOutcome := cnoNotApplied;
     lForm.lblHeading.Caption := xeChangeNameHeading(aPlan^, aLabels);
     lForm.vstFields.NodeDataSize := SizeOf(Integer);
-    for var i := 0 to High(aPlan.Fields) do
-      PInteger(lForm.vstFields.GetNodeData(lForm.vstFields.AddChild(nil)))^ := i;
+    lForm.vstFields.BeginUpdate;
+    try
+      for var i := 0 to High(aPlan.Fields) do
+        PInteger(lForm.vstFields.GetNodeData(lForm.vstFields.AddChild(nil)))^ := i;
+    finally
+      lForm.vstFields.EndUpdate;
+    end;
     lForm.SetState(cnsSelection);
     lForm.ShowModal;
     aRaised := lForm.fRaised;
