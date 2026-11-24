@@ -9976,6 +9976,36 @@ begin
             mniNavChangeNameClick(lMenuItem)
           else
             lLines.Add('notclicked' + #9 + 'the menu item is hidden');
+          for var lXLine in lLines.ToStringArray do
+            if lXLine.StartsWith('xbutton' + #9) and lXLine.Contains(#9 + 'before' + #9) then begin
+              var lXToken := lXLine.Split([#9])[1];
+              var lXState: TFunc<string> := function: string
+              begin
+                var lBack := 0;
+                if Assigned(BackHistory) then
+                  lBack := BackHistory.Count;
+                var lFwd := 0;
+                if Assigned(ForwardHistory) then
+                  lFwd := ForwardHistory.Count;
+                var lActive := '<none>';
+                if Assigned(ActiveRecord) then
+                  lActive := ActiveRecord.EditorID;
+                var lPage := '<none>';
+                if Assigned(pgMain.ActivePage) then
+                  lPage := pgMain.ActivePage.Name;
+                Result := 'back ' + IntToStr(lBack) + #9 + 'forward ' + IntToStr(lFwd) + #9 + 'page ' + lPage + #9 + 'active ' + lActive +
+                  #9 + 'nested ' + BoolToStr(InNestedLoop, True);
+              end;
+              lLines.Add('xbutton' + #9 + lXToken + #9 + 'controlbefore' + #9 + lXState());
+              var lXButton: NativeUInt := 1;
+              if lXToken.StartsWith('xfwd:') then
+                lXButton := 2;
+              var lXPosted: Boolean := PostMessage(Handle, 524 {WM_XBUTTONUP}, lXButton shl 16, 0);
+              lLines.Add('xbutton' + #9 + lXToken + #9 + 'controlposted ' + BoolToStr(lXPosted, True));
+              Application.ProcessMessages;
+              lLines.Add('xbutton' + #9 + lXToken + #9 + 'controlafter' + #9 + lXState());
+              Break;
+            end;
           lLines.Add('lastchange' + #9 + 'after' + #9 + 'nil ' + BoolToStr(not Assigned(vstNavLastChangeNode), True) + #9 +
             'focus ' + BoolToStr(Assigned(vstNavLastChangeNode) and (vstNavLastChangeNode = vstNav.FocusedNode), True));
           lLines.Add('navchange' + #9 + 'during' + #9 + IntToStr(TestHost.TestNavChangeCount - lNavChanges));
@@ -10525,6 +10555,40 @@ var
       end else if lToken = 'applysysclose' then begin
         var lSysTo := aDialog.Handle;
         TestHost.TestChangeNameApplyHook := procedure begin PostMessage(lSysTo, WM_SYSCOMMAND, SC_CLOSE, 0); end;
+      end else if lToken.StartsWith('xback:') or lToken.StartsWith('xfwd:') then begin
+        var lForward := lToken.StartsWith('xfwd:');
+        var lTarget := FindNamed(lToken.Substring(lToken.IndexOf(':') + 1));
+        if not Assigned(lTarget) then
+          raise Exception.Create('Change NAME test: no record ' + lToken);
+        JumpTo(lTarget, False);
+        JumpTo(lTarget, False);
+        if lForward then
+          acBack.Execute;
+        var lState: TFunc<string> := function: string
+          begin
+            var lBack := 0;
+            if Assigned(BackHistory) then
+              lBack := BackHistory.Count;
+            var lFwd := 0;
+            if Assigned(ForwardHistory) then
+              lFwd := ForwardHistory.Count;
+            var lActive := '<none>';
+            if Assigned(ActiveRecord) then
+              lActive := ActiveRecord.EditorID;
+            var lPage := '<none>';
+            if Assigned(pgMain.ActivePage) then
+              lPage := pgMain.ActivePage.Name;
+            Result := 'back ' + IntToStr(lBack) + #9 + 'forward ' + IntToStr(lFwd) + #9 + 'page ' + lPage + #9 + 'active ' + lActive +
+              #9 + 'nested ' + BoolToStr(InNestedLoop, True);
+          end;
+        lLines.Add('xbutton' + #9 + lToken + #9 + 'before' + #9 + lState());
+        var lButton: NativeUInt := 1;
+        if lForward then
+          lButton := 2;
+        var lPosted: Boolean := PostMessage(aDialog.Handle, 524 {WM_XBUTTONUP}, lButton shl 16, 0);
+        lLines.Add('xbutton' + #9 + lToken + #9 + 'posted ' + BoolToStr(lPosted, True));
+        Application.ProcessMessages;
+        lLines.Add('xbutton' + #9 + lToken + #9 + 'after' + #9 + lState());
       end else if lToken = 'applysendclose' then begin
         var lSendTo := aDialog.Handle;
         TestHost.TestChangeNameApplyHook := procedure begin SendMessage(lSendTo, WM_CLOSE, 0, 0); end;

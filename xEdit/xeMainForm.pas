@@ -2399,7 +2399,7 @@ begin
     Handled := True;
     Exit;
   end;
-  if Msg.message = 524 {WM_XBUTTONUP} then
+  if (Msg.message = 524 {WM_XBUTTONUP}) and not InNestedLoop then
     {$IFDEF WIN32}
     case LongRec(Msg.wParam).Hi of
     {$ENDIF WIN32}
