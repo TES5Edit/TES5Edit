@@ -193,6 +193,8 @@ type
     procedure DoTestFilter;
     procedure DoTestFilterArms;
     procedure TestFilterImages(aLines: TStrings);
+    procedure TestFilterEdits(aLines: TStrings);
+    procedure TestFilterRefold(aLines: TStrings);
     procedure DoTestSaveContextsCompare;
     procedure DoTestEndSession;
     procedure TestEndSessionBegin;
@@ -11849,12 +11851,15 @@ begin
           end else
             raise Exception.Create('unknown filter arm part: ' + lPart);
         FilterPreset := True;
+        var lApplyWatch := TStopwatch.StartNew;
         try
           mniNavFilterApplyClick(nil);
         finally
           FilterPreset := False;
         end;
         lLines.Add('# arm ' + lArm);
+        if xeTestSwitches.FilterRefold then
+          lLines.Add('# refold: the filter''s apply took ' + IntToStr(lApplyWatch.ElapsedMilliseconds) + ' ms');
         lCount := 0;
         lNode := vstNav.GetFirst;
         while Assigned(lNode) do begin
@@ -11867,6 +11872,10 @@ begin
         end;
         lLines.Add('# arm ' + lArm + ' records left: ' + IntToStr(lCount));
       end;
+      if xeTestSwitches.FilterEdits <> '' then
+        TestFilterEdits(lLines)
+      else if xeTestSwitches.FilterRefold then
+        TestFilterRefold(lLines);
       CheckResult := 0;
     except
       on E: Exception do begin
@@ -12028,6 +12037,197 @@ begin
     lNode := lNode.Parent;
     if lNode = vstNav.RootNode then
       Break;
+  end;
+end;
+
+procedure TxeTestFormHelper.TestFilterEdits(aLines: TStrings);
+
+  function Fresh(aNode: PVirtualNode): TConflictAll;
+  var
+    lData   : PNavNodeData;
+    lRecord : IwbMainRecord;
+    lThis   : TConflictThis;
+    lChild  : PVirtualNode;
+    lValue  : TConflictAll;
+  begin
+    Result := caUnknown;
+    lData := vstNav.GetNodeData(aNode);
+    if Assigned(lData) and Supports(lData.Element, IwbMainRecord, lRecord) then
+      ConflictLevelForMainRecord(lRecord, Result, lThis);
+    lChild := vstNav.GetFirstChild(aNode);
+    while Assigned(lChild) do begin
+      lValue := Fresh(lChild);
+      if lValue > Result then
+        Result := lValue;
+      lChild := vstNav.GetNextSibling(lChild);
+    end;
+  end;
+
+  procedure Report(const aTag: string);
+  var
+    lNode : PVirtualNode;
+    lData : PNavNodeData;
+    lKind : string;
+  begin
+    lNode := vstNav.GetFirst;
+    while Assigned(lNode) do begin
+      lData := vstNav.GetNodeData(lNode);
+      if Assigned(lData) and Assigned(lData.Element) then begin
+        if Supports(lData.Element, IwbMainRecord) then
+          lKind := 'record'
+        else if lData.Element.ElementType = etFile then
+          lKind := 'file'
+        else
+          lKind := 'group';
+        if (lKind <> 'record') or not (fsIsGameMaster in lData.Element._File.FileStates) then
+          aLines.Add('# node' + #9 + aTag + #9 + IntToStr(vstNav.GetNodeLevel(lNode)) + #9 + lKind + #9 +
+            lData.Element._File.FileName + #9 + lData.Element.Name + #9 + 'stored ' + wbNameConflictAll[lData.ConflictAll] + #9 +
+            'fresh ' + wbNameConflictAll[Fresh(lNode)]);
+      end;
+      lNode := vstNav.GetNext(lNode);
+    end;
+  end;
+
+var
+  lSpec    : string;
+  lParts   : TArray<string>;
+  lFile    : IwbFile;
+  lRecord  : IwbMainRecord;
+  lColumn  : Integer;
+  lRow     : PVirtualNode;
+  lDatas   : PViewNodeDatas;
+begin
+  xeContext.Settings.DontSave := True;
+  EditWarnOk := True;
+  aLines.Add('# edits: autofree ' + BoolToStr(toAutoFreeOnCollapse in vstNav.TreeOptions.AutoOptions, True) + ', inherit ' +
+    BoolToStr(InheritConflictByParent, True) + ', edit allowed ' + BoolToStr(xeContext.Settings.EditAllowed, True));
+  Report('before');
+  for lSpec in xeTestSwitches.FilterEdits.Split([';']) do begin
+    lParts := lSpec.Split(['|']);
+    if Length(lParts) <> 4 then
+      raise Exception.Create('bad edit: ' + lSpec);
+    lFile := nil;
+    for var i := Low(Files) to High(Files) do
+      if SameText(Files[i].FileName, lParts[0]) then
+        lFile := Files[i];
+    if not Assigned(lFile) then
+      raise Exception.Create('no module ' + lParts[0]);
+    lRecord := nil;
+    for var i := 0 to Pred(lFile.RecordCount) do
+      if SameText(lFile.Records[i].EditorID, lParts[1]) then
+        lRecord := lFile.Records[i];
+    if not Assigned(lRecord) then
+      raise Exception.Create('no record ' + lParts[1] + ' in ' + lParts[0]);
+    DoSetActiveRecord(lRecord, True);
+    DoProcessMessages;
+    lColumn := -1;
+    for var i := Low(ActiveRecords) to High(ActiveRecords) do
+      if Assigned(ActiveRecords[i].Element) and SameText(ActiveRecords[i].Element._File.FileName, lParts[0]) then
+        lColumn := i;
+    if lColumn < 0 then
+      raise Exception.Create('no View column for ' + lParts[0]);
+    lRow := nil;
+    for var lNode in vstView.Nodes(False) do begin
+      lDatas := ViewCells(lNode);
+      if Assigned(lDatas) and Assigned(lDatas[lColumn].Element) and lDatas[lColumn].Element.Name.StartsWith(lParts[2]) then
+        lRow := lNode;
+    end;
+    if not Assigned(lRow) then
+      raise Exception.Create('no View row ' + lParts[2] + ' in column ' + IntToStr(lColumn));
+    vstView.FocusedColumn := lColumn + 1;
+    vstViewNewText(vstView, lRow, lColumn + 1, lParts[3]);
+    DoProcessMessages;
+    aLines.Add('# edit' + #9 + lSpec + #9 + 'column ' + IntToStr(lColumn) + #9 + 'now ' + lRecord.ElementEditValues[lParts[2]]);
+  end;
+  vstNav.Invalidate;
+  UpdateWindow(vstNav.Handle);
+  DoProcessMessages;
+  Report('after');
+  NavUpdate(True);
+  DoProcessMessages;
+  Report('afternavupdate');
+  if xeTestSwitches.FilterRefold then begin
+    TestFilterRefold(aLines);
+    Report('afterrefold');
+  end;
+end;
+
+procedure TxeTestFormHelper.TestFilterRefold(aLines: TStrings);
+var
+  lNodes     : Integer;
+  lRecords   : Integer;
+  lRecomputed: Integer;
+  lChanged   : Integer;
+
+  procedure Refold;
+  var
+    lNode  : PVirtualNode;
+    lData  : PNavNodeData;
+    lChild : PVirtualNode;
+    lKid   : PNavNodeData;
+    lRecord: IwbMainRecord;
+    lAll   : TConflictAll;
+    lThis  : TConflictThis;
+  begin
+    lNode := vstNav.GetLastInitialized;
+    while Assigned(lNode) do begin
+      lData := vstNav.GetNodeData(lNode);
+      if Assigned(lData) then begin
+        if Supports(lData.Element, IwbMainRecord, lRecord) then begin
+          if (lData.OrgConflictAll = caUnknown) or (lRecord.ElementGeneration <> lData.ElementGen) or
+             (lData.ViewEpoch <> ConflictView.Epoch) then begin
+            ConflictLevelForMainRecord(lRecord, lData.OrgConflictAll, lData.OrgConflictThis);
+            lData.ElementGen := lRecord.ElementGeneration;
+            lData.ViewEpoch := ConflictView.Epoch;
+            Inc(lRecomputed);
+          end;
+          lAll := lData.OrgConflictAll;
+          lThis := lData.OrgConflictThis;
+        end else begin
+          lAll := caUnknown;
+          lThis := ctUnknown;
+        end;
+        lChild := lNode.FirstChild;
+        while Assigned(lChild) do begin
+          lKid := vstNav.GetNodeData(lChild);
+          if Assigned(lKid) then begin
+            if lKid.ConflictAll > lAll then
+              lAll := lKid.ConflictAll;
+            if lKid.ConflictThis > lThis then
+              lThis := lKid.ConflictThis;
+          end;
+          lChild := lChild.NextSibling;
+        end;
+        if (lData.ConflictAll <> lAll) or (lData.ConflictThis <> lThis) then begin
+          lData.ConflictAll := lAll;
+          lData.ConflictThis := lThis;
+          vstNav.InvalidateNode(lNode);
+          Inc(lChanged);
+        end;
+      end;
+      lNode := vstNav.GetPreviousInitialized(lNode);
+    end;
+  end;
+
+begin
+  lNodes := 0;
+  lRecords := 0;
+  var lNode := vstNav.GetFirstInitialized;
+  while Assigned(lNode) do begin
+    Inc(lNodes);
+    var lData: PNavNodeData := vstNav.GetNodeData(lNode);
+    if Assigned(lData) and Supports(lData.Element, IwbMainRecord) then
+      Inc(lRecords);
+    lNode := vstNav.GetNextInitialized(lNode);
+  end;
+  for var lPass := 1 to 3 do begin
+    lRecomputed := 0;
+    lChanged := 0;
+    var lWatch := TStopwatch.StartNew;
+    Refold;
+    lWatch.Stop;
+    aLines.Add(Format('# refold pass %d: %d initialised rows (%d records), %d records recomputed, %d rows changed, %.3f ms',
+      [lPass, lNodes, lRecords, lRecomputed, lChanged, lWatch.Elapsed.TotalMilliseconds]));
   end;
 end;
 
