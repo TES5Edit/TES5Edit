@@ -21608,27 +21608,34 @@ var
 begin
   vmax := '';
   try
-    J := TJsonBaseObject.ParseUtf8(GetUrlContent('https://api.github.com/repos/TES5Edit/TES5Edit/releases'));
-    try
-      if J is TJsonArray then begin
-        A := J as TJsonArray;
-        for i := 0 to Pred(A.Count) do try
-          s := A.O[i].S['tag_name'];
-          if s.StartsWith('xedit-') then try
-            v := Copy(s, Succ(Length('xedit-')), High(Integer));
-            if v > vmax then
-              vmax := v;
+    var lContent := TrimLeft(GetUrlContent('https://api.github.com/repos/TES5Edit/TES5Edit/releases'));
+
+    if lContent.StartsWith('[') then begin
+      J := TJsonBaseObject.ParseUtf8(lContent);
+      try
+        if J is TJsonArray then begin
+          A := J as TJsonArray;
+          for i := 0 to Pred(A.Count) do try
+            s := A.O[i].S['tag_name'];
+            if s.StartsWith('xedit-') then try
+              v := Copy(s, Succ(Length('xedit-')), High(Integer));
+              if v > vmax then
+                vmax := v;
+            except
+            end;
           except
           end;
-        except
         end;
+      finally
+        J.Free;
       end;
-    finally
-      J.Free;
     end;
-  except end;
+  except
+  end;
+
   if Terminated then
     Exit;
+
   Synchronize(procedure begin
     if Assigned(frmMain) and not Terminated then begin
       frmMain.GitHubVersion := vmax;
