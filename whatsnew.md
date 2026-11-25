@@ -16,7 +16,7 @@ xEdit is crucial to our shared modding community and your contribution - no matt
 * Saving a plugin with "Simple records" turned off no longer fails with an access violation when a record holds a subrecord stored with no data where its definition expects a fixed size (such as the FaceGen data of some NPCs in Tale of Two Wastelands); such a subrecord is saved as it was, as it already was with "Simple records" on. Check for Errors now reports such a subrecord: "Expected N bytes of data, found 0".
 * The mouse's Back and Forward buttons no longer move the main window to another record while a dialog is open or an operation is running; they used to change the selection and the View behind the dialog.
 * Closing xEdit again while it asks "Cancel the current operation and close?" no longer opens a second copy of that question; the answer to the first one decides.
-* "Save selected text" in the Messages tab saves a name typed without an extension as a .txt file, as it was meant to; it used to save the file under the name exactly as typed.
+* "Save selected text" in the Messages tab saves a name typed without an extension as a .txt file, as it was meant to (it used to save the file under the name exactly as typed), and asks before replacing a file that already exists.
 * Fallout 3 and Fallout New Vegas: a perk's Quest + Stage effect reads its stage as one byte again (as the game does; 4.1.5q had made it two bytes), so Check for Errors no longer reports vanilla perks such as Scrounger with "Quest Stage [52550] not found".
 
 # What's New in xEdit 4.1.5s?

@@ -8494,13 +8494,11 @@ begin
     with TSaveDialog.Create(nil) do try
       Title := 'Save selected text';
       Filter := 'Text files (*.txt)|*.txt';
+      DefaultExt := 'txt';
+      Options := Options + [ofOverwritePrompt];
       InitialDir := wbProgramPath;
-      if Execute then begin
-        s := FileName;
-        if ExtractFileExt(s) = '' then
-          s := s + '.txt';
-        SaveToFile(s);
-      end;
+      if Execute then
+        SaveToFile(FileName);
     finally
       Free;
     end;

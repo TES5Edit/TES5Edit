@@ -10514,6 +10514,8 @@ begin
     AddUnused(lLines, 'refs', xeTestSwitches.ChangeFormIDRefs, TestHost.TestChangeFormIDRefIndex);
     if (xeTestSwitches.ChangeFormIDCsv <> '') and not TestHost.TestChangeFormIDCsvAnswered then
       lLines.Add('unusedanswers' + #9 + 'csv' + #9 + '1' + #9 + ExtractFileName(xeTestSwitches.ChangeFormIDCsv));
+    if (xeTestSwitches.ChangeFormIDOverwrite <> '') and not TestHost.TestChangeFormIDOverwriteAnswered then
+      lLines.Add('unusedanswers' + #9 + 'overwrite' + #9 + '1' + #9 + xeTestSwitches.ChangeFormIDOverwrite);
     if TestHost.TestChangeFormIDFallback then
       lLines.Add('fallback' + #9 + 'a dialog was answered with no listed answer');
     lLines.Add('after' + #9 + 'progress "' + wbCurrentProgress + '"' + #9 + 'page ' + pgMain.ActivePage.Name);
@@ -10854,6 +10856,75 @@ var
     Result := 'items:' + Result;
   end;
 
+  function FindButtonByText(aParent: HWND; const aText: string): HWND;
+  var
+    lChild : HWND;
+    lText  : string;
+  begin
+    Result := 0;
+    lChild := FindWindowEx(aParent, 0, nil, nil);
+    while lChild <> 0 do begin
+      lText := StringOfChar(#0, 64);
+      SetLength(lText, GetWindowText(lChild, PChar(lText), 64));
+      if lText = aText then
+        Exit(lChild);
+      Result := FindButtonByText(lChild, aText);
+      if Result <> 0 then
+        Exit;
+      lChild := FindWindowEx(aParent, lChild, nil, nil);
+    end;
+  end;
+
+  procedure AnswerOverwriteBox;
+  var
+    lWnd     : HWND;
+    lDialog  : HWND;
+    lButton  : HWND;
+    lAnswer  : Integer;
+    lCaption : array[0..255] of Char;
+  begin
+    lDialog := HWND(TestHost.TestChangeFormIDOverwriteOwner);
+    if not IsWindow(lDialog) then
+      Exit;
+    if TestHost.TestChangeFormIDCancelAfterNo then begin
+      if not IsWindowVisible(lDialog) or not IsWindowEnabled(lDialog) then
+        Exit;
+      lCaption[0] := #0;
+      GetWindowText(lDialog, lCaption, Length(lCaption));
+      TestHost.TestChangeFormIDCancelAfterNo := False;
+      TestHost.TestChangeFormIDLines.Add('answer' + #9 + string(lCaption) + #9 + IntToStr(IDCANCEL) + #9 + 'open dialog after no');
+      PostMessage(lDialog, WM_COMMAND, IDCANCEL, 0);
+      Exit;
+    end;
+    if TestHost.TestChangeFormIDOverwriteAnswered or IsWindowEnabled(lDialog) then
+      Exit;
+    if SameText(xeTestSwitches.ChangeFormIDOverwrite, 'yes') then
+      lAnswer := IDYES
+    else if SameText(xeTestSwitches.ChangeFormIDOverwrite, 'no') then
+      lAnswer := IDNO
+    else
+      Exit;
+    lWnd := 0;
+    repeat
+      lWnd := FindWindowEx(0, lWnd, '#32770', nil);
+      if (lWnd = 0) or (lWnd = lDialog) or not IsWindowVisible(lWnd) or (GetWindowThreadProcessId(lWnd, nil) <> MainThreadID) or
+         (FindButtonByText(lWnd, '&Yes') = 0) or (FindButtonByText(lWnd, '&No') = 0) then
+        Continue;
+      if lAnswer = IDYES then
+        lButton := FindButtonByText(lWnd, '&Yes')
+      else
+        lButton := FindButtonByText(lWnd, '&No');
+      lCaption[0] := #0;
+      GetWindowText(lWnd, lCaption, Length(lCaption));
+      TestHost.TestChangeFormIDOverwriteAnswered := True;
+      TestHost.TestChangeFormIDCancelAfterNo := lAnswer = IDNO;
+      TestHost.TestChangeFormIDLines.Add('answer' + #9 + string(lCaption) + #9 + IntToStr(lAnswer) + #9 + 'overwrite box' + #9 +
+        'owned by the dialog ' + BoolToStr(GetWindow(lWnd, GW_OWNER) = lDialog, True));
+      PostMessage(lButton, BM_CLICK, 0, 0);
+      Exit;
+    until lWnd = 0;
+  end;
+
   procedure AnswerOpenDialog;
   var
     lWnd     : HWND;
@@ -10861,6 +10932,9 @@ var
     lAnswer  : Integer;
     lCaption : array[0..255] of Char;
   begin
+    if (xeTestSwitches.ChangeFormIDCsv <> '') and TestHost.TestChangeFormIDCsvAnswered and
+       (xeTestSwitches.ChangeFormIDOverwrite <> '') then
+      AnswerOverwriteBox;
     if (xeTestSwitches.ChangeFormIDCsv = '') or TestHost.TestChangeFormIDCsvAnswered then
       Exit;
     lWnd := 0;
@@ -10875,6 +10949,7 @@ var
       else
         Continue;
       TestHost.TestChangeFormIDCsvAnswered := True;
+      TestHost.TestChangeFormIDOverwriteOwner := NativeUInt(lWnd);
       GetWindowText(lWnd, lCaption, Length(lCaption));
       if SameText(xeTestSwitches.ChangeFormIDCsv, 'cancel') then
         lAnswer := IDCANCEL

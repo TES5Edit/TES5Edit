@@ -166,6 +166,9 @@ type
     TestChangeNamePlanHook      : TProc;
     TestNavChangeCount          : Integer;
     TestChangeFormIDCsvAnswered : Boolean;
+    TestChangeFormIDOverwriteAnswered : Boolean;
+    TestChangeFormIDCancelAfterNo : Boolean;
+    TestChangeFormIDOverwriteOwner : NativeUInt;
     TestChangeFormIDClosed      : Boolean;
     TestFilterAnswer         : TTimer;
     TestFilterAnswered       : string;
@@ -375,6 +378,7 @@ type
     ChangeFormIDCompareTo : string;
     ChangeFormIDOp        : string;
     ChangeFormIDCsv       : string;
+    ChangeFormIDOverwrite : string;
     ChangeFormIDView      : string;
     ChangeFormIDPinned    : string;
     ChangeFormIDRow       : string;
@@ -901,6 +905,7 @@ begin
     wbFindCmdLineParam('testchangeformidcompareto', ChangeFormIDCompareTo);
     wbFindCmdLineParam('testchangeformidop', ChangeFormIDOp);
     wbFindCmdLineParam('testchangeformidcsv', ChangeFormIDCsv);
+    wbFindCmdLineParam('testchangeformidoverwrite', ChangeFormIDOverwrite);
     wbFindCmdLineParam('testchangeformidview', ChangeFormIDView);
     wbFindCmdLineParam('testchangeformidpinned', ChangeFormIDPinned);
     wbFindCmdLineParam('testchangeformidrow', ChangeFormIDRow);
@@ -950,7 +955,7 @@ begin
         'picker''s first <new file> template, its name prompt answered with the next of -testchangeformidids) ' +
         '[-testchangeformidids:<hex|empty|offered|cancel>[,...]] ' +
         '[-testchangeformidanswers:<yes|no|yesall|cancel|ok|translate:<from>:<to>>[,...]] ' +
-        '[-testchangeformidrefs:<all|none|cancel|<index>[;<index>...]>[,...]] [-testchangeformidcsv:<file|cancel>] ' +
+        '[-testchangeformidrefs:<all|none|cancel|<index>[;<index>...]>[,...]] [-testchangeformidcsv:<file|cancel>] [-testchangeformidoverwrite:<yes|no>] ' +
         '[-testchangeformidview:<none|<EditorID>@<module>>] (changerefs: the view left empty, or showing that record) ' +
         '[-testchangeformidcompareto:<file loaded to compare with the last module>]');
       Exit(False);
