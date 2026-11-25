@@ -10902,6 +10902,9 @@ var
       end else if lToken = 'applysendclose' then begin
         var lSendTo := aDialog.Handle;
         TestHost.TestChangeNameApplyHook := procedure begin SendMessage(lSendTo, WM_CLOSE, 0, 0); end;
+      end else if lToken = 'applymainclose' then begin
+        var lMainTo := Handle;
+        TestHost.TestChangeNameApplyHook := procedure begin SendMessage(lMainTo, WM_CLOSE, 0, 0); end;
       end else if lToken = 'applypaint' then begin
         var lPaintOf := aDialog;
         TestHost.TestChangeNameApplyHook := procedure
