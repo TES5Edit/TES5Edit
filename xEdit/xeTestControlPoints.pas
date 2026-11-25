@@ -339,6 +339,7 @@ var
   xeChangeNameStampLines      : TStrings;
   xeChangeNameStampBase       : Int64;
   xeChangeNameKeyTo           : HWND;
+  xeChangeNameRefsFiles       : TArray<IwbFile>;
 
 procedure xeChangeNameStamp(const aName: string);
 var
@@ -10272,6 +10273,9 @@ begin
               lLines.Add('xbutton' + #9 + lXToken + #9 + 'controlafter' + #9 + lXState());
               Break;
             end;
+          for var lRefsFile in xeChangeNameRefsFiles do
+            lLines.Add('refsbuild' + #9 + 'after' + #9 + lRefsFile.FileName + #9 + BoolToStr(fsRefsBuild in lRefsFile.FileStates, True));
+          xeChangeNameRefsFiles := nil;
           lLines.Add('lastchange' + #9 + 'after' + #9 + 'nil ' + BoolToStr(not Assigned(vstNavLastChangeNode), True) + #9 +
             'focus ' + BoolToStr(Assigned(vstNavLastChangeNode) and (vstNavLastChangeNode = vstNav.FocusedNode), True));
           if lPending then begin
@@ -11255,6 +11259,12 @@ begin
       xeChangeNameProgCloseAt := 0;
       if lToken = 'yesprogclose2' then
         xeChangeNameProgCloseAt := 2;
+      if ((lToken = 'yesprogclose') or (lToken = 'yesprogclose2')) and Assigned(TestHost.TestChangeFormIDLines) then begin
+        xeChangeNameRefsFiles := xeContext.NameReferencesIncomplete;
+        for var lRefsFile in xeChangeNameRefsFiles do
+          TestHost.TestChangeFormIDLines.Add('refsbuild' + #9 + 'before' + #9 + lRefsFile.FileName + #9 +
+            BoolToStr(fsRefsBuild in lRefsFile.FileStates, True));
+      end;
       if lToken = 'yesclosetail' then
         for var lOne in xeContext.NameReferencesIncomplete do
           if lOne.ReferenceBuildOffered then
@@ -11464,6 +11474,7 @@ begin
     Exit;
   TestHost.TestChangeFormIDClosed := True;
   TestHost.TestChangeFormIDLines.Add('close');
+  xeChangeNameRefsFiles := nil;
   TestChangeFormIDAfter(TestHost.TestChangeFormIDLines);
   try
     TestChangeFormIDSave;
