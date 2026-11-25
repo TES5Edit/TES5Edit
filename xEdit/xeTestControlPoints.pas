@@ -10035,6 +10035,8 @@ begin
       lMenuItem := mniViewCopyMultipleToSelectedRecords
     else if SameText(xeTestSwitches.ChangeFormIDOp, 'createseq') then
       lMenuItem := mniNavCreateSEQFile
+    else if SameText(xeTestSwitches.ChangeFormIDOp, 'savemessages') then
+      lMenuItem := mniMessagesSaveSelected
     else if xeTestSwitches.ChangeFormIDOp.StartsWith('changename', True) then
       lMenuItem := mniNavChangeName
     else if lRefBy then
@@ -10432,6 +10434,16 @@ begin
             lMenuItem.Click
           else
             lLines.Add('notclicked' + #9 + 'the menu item is hidden');
+        end else if SameText(xeTestSwitches.ChangeFormIDOp, 'savemessages') then begin
+          mmoMessages.Lines.Add('saved line one');
+          mmoMessages.Lines.Add('saved line two');
+          mmoMessages.SelectAll;
+          lLines.Add('savemessages' + #9 + 'selected ' + IntToStr(Length(Trim(mmoMessages.SelText))));
+          mniMessagesSaveSelectedClick(mniMessagesSaveSelected);
+          var lSavedBare := xeTestSwitches.ChangeFormIDCsv;
+          var lSavedTxt := lSavedBare + '.txt';
+          lLines.Add('savedfile' + #9 + lSavedBare + #9 + 'exists ' + BoolToStr(FileExists(lSavedBare), True));
+          lLines.Add('savedfile' + #9 + lSavedTxt + #9 + 'exists ' + BoolToStr(FileExists(lSavedTxt), True));
         end else if SameText(xeTestSwitches.ChangeFormIDOp, 'viewadd') then
           TestChangeFormIDViewAdd(lLines)
         else if not Assigned(lMenuItem) then

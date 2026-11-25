@@ -8499,7 +8499,7 @@ begin
         s := FileName;
         if ExtractFileExt(s) = '' then
           s := s + '.txt';
-        SaveToFile(FileName);
+        SaveToFile(s);
       end;
     finally
       Free;

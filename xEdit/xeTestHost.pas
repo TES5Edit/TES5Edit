@@ -918,6 +918,7 @@ begin
             SameText(ChangeFormIDOp, 'copyidle') or SameText(ChangeFormIDOp, 'copyrows') or
             SameText(ChangeFormIDOp, 'copyspawnrate') or SameText(ChangeFormIDOp, 'viewadd') or
             SameText(ChangeFormIDOp, 'createseq') or ChangeFormIDOp.StartsWith('refby', True) or
+            SameText(ChangeFormIDOp, 'savemessages') or
             SameText(ChangeFormIDOp, 'changename') or SameText(ChangeFormIDOp, 'changenamef2') or
             SameText(ChangeFormIDOp, 'changenamedirect') or SameText(ChangeFormIDOp, 'changenameclosing') or
             SameText(ChangeFormIDOp, 'changenamelastnil') or SameText(ChangeFormIDOp, 'changenamenofocus') or
