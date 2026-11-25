@@ -341,6 +341,30 @@ var
   xeChangeNameKeyTo           : HWND;
   xeChangeNameRefsFiles       : TArray<IwbFile>;
   xeChangeNameRecloseArmed    : Boolean;
+  xeChangeNameJoinArmed       : Boolean;
+  xeChangeNameJoinRaised      : Integer;
+  xeChangeNameJoinPrev        : TwbProgressCallback;
+
+procedure xeChangeNameJoinRaiseProgress(const aStatus: string);
+begin
+  if Assigned(xeChangeNameJoinPrev) then
+    xeChangeNameJoinPrev(aStatus);
+  if xeChangeNameJoinArmed and (aStatus.Contains('is being overridden by record') or
+     aStatus.Contains('while trying to determine master record')) then begin
+    Inc(xeChangeNameJoinRaised);
+    raise Exception.Create('Change NAME test: raised on the override warning');
+  end;
+end;
+
+procedure xeChangeNameJoinDisarm(const aLines: TStrings);
+begin
+  if not xeChangeNameJoinArmed then
+    Exit;
+  xeChangeNameJoinArmed := False;
+  _wbProgressCallback := xeChangeNameJoinPrev;
+  xeChangeNameJoinPrev := nil;
+  aLines.Add('joinraise' + #9 + 'taken ' + IntToStr(xeChangeNameJoinRaised));
+end;
 
 procedure xeChangeNameStamp(const aName: string);
 var
@@ -10857,6 +10881,14 @@ var
         Rows(lToken);
       end else if lToken = 'applyprogress' then begin
         TestHost.TestChangeNameApplyHook := procedure begin Sleep(600); wbProgress('Change NAME test: progress during the apply'); end;
+      end else if lToken = 'applyjoinraise' then begin
+        TestHost.TestChangeNameApplyHook := procedure
+          begin
+            xeChangeNameJoinRaised := 0;
+            xeChangeNameJoinPrev := _wbProgressCallback;
+            _wbProgressCallback := xeChangeNameJoinRaiseProgress;
+            xeChangeNameJoinArmed := True;
+          end;
       end else if lToken = 'applyraise' then begin
         TestHost.TestChangeNameApplyHook := procedure begin raise Exception.Create('Change NAME test: an injected failure'); end;
       end else if lToken = 'applyraiseempty' then begin
@@ -10968,6 +11000,7 @@ var
         aDialog.btnApply.Click;
         xeChangeNameStamp('outcome');
         TestHost.TestChangeNameApplyHook := nil;
+        xeChangeNameJoinDisarm(lLines);
         lLines.Add('applypumped' + #9 + BoolToStr(lPumped, True));
         var lQueuedMsg: TMsg;
         lLines.Add('queuedinput' + #9 + BoolToStr(PeekMessage(lQueuedMsg, 0, WM_KEYFIRST, WM_KEYLAST, PM_REMOVE), True));
@@ -10987,6 +11020,7 @@ var
         aDialog.btnApply.Click;
         xeChangeNameStamp('outcome');
         TestHost.TestChangeNameApplyHook := nil;
+        xeChangeNameJoinDisarm(lLines);
         lLines.Add('applypumped' + #9 + BoolToStr(lRealPumped, True));
         lLines.Add('applyreal' + #9 + 'returned' + #9 + 'modal result ' + IntToStr(aDialog.ModalResult) + #9 + 'state ' +
           IntToStr(Ord(aDialog.State)));
