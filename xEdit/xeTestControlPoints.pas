@@ -340,6 +340,7 @@ var
   xeChangeNameStampBase       : Int64;
   xeChangeNameKeyTo           : HWND;
   xeChangeNameRefsFiles       : TArray<IwbFile>;
+  xeChangeNameRecloseArmed    : Boolean;
 
 procedure xeChangeNameStamp(const aName: string);
 var
@@ -11243,7 +11244,31 @@ begin
       lResult := mrOk;
     end;
   end else if HasButton(lForm, mrYes) or HasButton(lForm, mrNo) or HasButton(lForm, mrYesToAll) then begin
+    if xeChangeNameRecloseArmed then begin
+      xeChangeNameRecloseArmed := False;
+      var lRecloseMsg: TMsg;
+      TestHost.TestChangeFormIDLines.Add('reclose' + #9 + 'queued' + #9 +
+        BoolToStr(PeekMessage(lRecloseMsg, Handle, WM_CLOSE, WM_CLOSE, PM_NOREMOVE), True));
+    end;
     lToken := NextToken(xeTestSwitches.ChangeFormIDAnswers, TestHost.TestChangeFormIDAnswerIndex);
+    if lToken = 'reclosedirect' then begin
+      var lCloseSelf: TForm := Self;
+      TestHost.TestChangeFormIDLines.Add('reclose' + #9 + 'queuedcall' + #9 + lForm.Caption);
+      TThread.ForceQueue(nil, procedure
+        begin
+          var lModal := Assigned(Screen.ActiveForm) and (fsModal in Screen.ActiveForm.FormState);
+          lCloseSelf.Close;
+          if Assigned(TestHost.TestChangeFormIDLines) then
+            TestHost.TestChangeFormIDLines.Add('reclose' + #9 + 'called' + #9 + 'modal ' + BoolToStr(lModal, True));
+        end);
+      Exit;
+    end;
+    if lToken = 'reclose' then begin
+      xeChangeNameRecloseArmed := True;
+      TestHost.TestChangeFormIDLines.Add('reclose' + #9 + 'posted' + #9 + lForm.Caption + #9 +
+        BoolToStr(PostMessage(Handle, WM_CLOSE, 0, 0), True));
+      Exit;
+    end;
     if (lToken = 'yesterminate') or (lToken = 'yesraise') or (lToken = 'yesraiseempty') or (lToken = 'yesclose') or
        (lToken = 'yescloseraise') or (lToken = 'yesprogclose') or (lToken = 'yesclosetail') or (lToken = 'yesprogclose2') then begin
       lResult := mrYes;
@@ -11279,6 +11304,9 @@ begin
       xeChangeNameCloseForm := Self;
       xeChangeNameSavedProgress := _wbProgressCallback;
       _wbProgressCallback := xeChangeNameTerminateProgress;
+    end else if lToken = 'noreclose' then begin
+      lResult := mrNo;
+      xeChangeNameCloseArmed := True;
     end else if lToken = 'yes' then
       lResult := mrYes
     else if lToken = 'no' then

@@ -842,6 +842,7 @@ type
     CloseDeferred            : Boolean;
     ChangeNameActive         : Boolean;
     CloseByUser              : Boolean;
+    CloseConfirming          : Boolean;
     LongActionDepth          : Integer;
     CancelableLongActionDepth : Integer;
     ResetActiveTreeDeferred  : Boolean;
@@ -2217,14 +2218,21 @@ end;
 
 function TfrmMain.CloseQuery: Boolean;
 begin
+  if CloseConfirming then
+    Exit(False);
   if not InNestedLoop then
     Exit(inherited CloseQuery);
   Result := False;
   if CloseDeferred then
     Exit;
   if CloseByUser and (LongActionDepth > 0) and (CancelableLongActionDepth = LongActionDepth) then begin
-    if MessageDlg('Cancel the current operation and close?', mtConfirmation, mbYesNo, 0, mbNo) <> mrYes then
-      Exit;
+    CloseConfirming := True;
+    try
+      if MessageDlg('Cancel the current operation and close?', mtConfirmation, mbYesNo, 0, mbNo) <> mrYes then
+        Exit;
+    finally
+      CloseConfirming := False;
+    end;
     wbForceTerminate := True;
     PostAddMessage('[' + wbFormatElapsedTime(Now - wbStartTime) + '] Close requested: canceling the current operation.');
   end else
