@@ -3456,7 +3456,7 @@ var
     var lMember := aMember as TObject as TwbMainRecord;
     if not lMember.GetCurrentIdentity(lMemberIdentity, lMemberGrid) then
       Exit(Format('%s in %s has no identity', [aMember.Name, aFile.GetFileName]));
-    if lMemberGrid then
+    if lMemberGrid and (lMember.mrDef.GetGridFormIDBase > 0) then
       Exit(Format('%s in %s is keyed through its grid''s fallback', [aMember.Name, aFile.GetFileName]));
     if not aMember.IsEditable then
       Exit(Format('%s in %s can not be edited', [aMember.Name, aFile.GetFileName]));
@@ -19303,7 +19303,7 @@ begin
     if cNotRenamed[i] = lSignature then
       Exit(Refused(ncrKind, '%s is not a record Change NAME renames'));
   var lHasIdentity := GetCurrentIdentity(lIdentity, lHasGrid);
-  if lHasIdentity and lHasGrid then
+  if lHasIdentity and lHasGrid and (mrDef.GetGridFormIDBase > 0) then
     Exit(Refused(ncrKind, '%s is an exterior cell: it is identified by its grid'));
   if not lHasIdentity then
     Exit(Refused(ncrNoIdentity, '%s has no identity'));
