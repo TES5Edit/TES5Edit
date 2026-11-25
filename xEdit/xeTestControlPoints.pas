@@ -10195,6 +10195,55 @@ begin
             if tmrPendingSetActive.Enabled then
               tmrPendingSetActiveTimer(tmrPendingSetActive);
           end;
+          var lRefByOp := SameText(xeTestSwitches.ChangeFormIDOp, 'changenamerefby');
+          var lRefByRows: TFunc<string> := function: string
+            begin
+              Result := IntToStr(vstReferencedBy.RootNodeCount) + ':';
+              vstReferencedBy.SelectAll(False);
+              for var lRefBy in GetRefBySelectionAsMainRecords do
+                Result := Result + ' ' + lRefBy.EditorID + '@' + lRefBy._File.FileName;
+              vstReferencedBy.ClearSelection;
+            end;
+          var lRefByText: TFunc<string> := function: string
+            begin
+              Result := IntToStr(vstReferencedBy.RootNodeCount) + ':';
+              var lRefByNode := vstReferencedBy.GetFirst;
+              while Assigned(lRefByNode) do begin
+                Result := Result + ' ' + vstReferencedBy.Text[lRefByNode, 0, False] + ' | ' + vstReferencedBy.Text[lRefByNode, 3, False] + ';';
+                lRefByNode := vstReferencedBy.GetNext(lRefByNode);
+              end;
+            end;
+          var lRefByState: TFunc<string, string> := function(aWhen: string): string
+            begin
+              var lRefByActive := '<none>';
+              if Assigned(ActiveRecord) then
+                lRefByActive := ActiveRecord.EditorID + ' referenced by ' + IntToStr(ActiveRecord.MasterOrSelf.ReferencedByCount);
+              Result := 'refbystate' + #9 + aWhen + #9 + 'active ' + lRefByActive + #9 + 'timer ' +
+                BoolToStr(tmrPendingSetActive.Enabled, True) + #9 + 'tab visible ' + BoolToStr(tbsReferencedBy.TabVisible, True) +
+                #9 + 'page ' + pgMain.ActivePage.Name;
+            end;
+          if lRefByOp then begin
+            for var lRefFile in xeContext.Files do
+              if lRefFile.ReferenceBuildOffered then
+                lRefFile.BuildRef;
+            if tmrPendingSetActive.Enabled then
+              tmrPendingSetActiveTimer(tmrPendingSetActive);
+            var lRefByShown := TestHost.TestChangeFormIDRecords[0];
+            if xeTestSwitches.ChangeFormIDView <> '' then
+              lRefByShown := FindRecord(xeTestSwitches.ChangeFormIDView);
+            DoSetActiveRecord(IwbMainRecord(nil));
+            DoSetActiveRecord(lRefByShown);
+            Application.ProcessMessages;
+            pgMain.ActivePage := tbsReferencedBy;
+            pgMainChange(pgMain);
+            Application.ProcessMessages;
+            lLines.Add(lRefByState('before'));
+            lLines.Add('refbyrows' + #9 + 'before' + #9 + lRefByRows());
+            lLines.Add('refbytext' + #9 + 'before' + #9 + lRefByText());
+            pgMain.ActivePage := tbsView;
+            pgMainChange(pgMain);
+            Application.ProcessMessages;
+          end;
           if SameText(xeTestSwitches.ChangeFormIDOp, 'changenamelastnilmsg') then
             pgMain.ActivePage := tbsMessages;
           lLines.Add('pagestart' + #9 + pgMain.ActivePage.Name);
@@ -10335,6 +10384,14 @@ begin
             lLines.Add('grouporder' + #9 + 'after' + #9 + lGroupOrder());
             vstNav.Sort(lExpandNode, vstNav.Header.SortColumn, vstNav.Header.SortDirection, True);
             lLines.Add('grouporder' + #9 + 'resorted' + #9 + lGroupOrder());
+          end;
+          if lRefByOp then begin
+            pgMain.ActivePage := tbsReferencedBy;
+            pgMainChange(pgMain);
+            Application.ProcessMessages;
+            lLines.Add(lRefByState('after'));
+            lLines.Add('refbyrows' + #9 + 'after' + #9 + lRefByRows());
+            lLines.Add('refbytext' + #9 + 'after' + #9 + lRefByText());
           end;
           lLines.Add('pageend' + #9 + pgMain.ActivePage.Name);
           lLines.Add('path' + #9 + 'after' + #9 + 'visible ' + BoolToStr(lblPath.Visible, True) + #9 + lblPath.Text);
