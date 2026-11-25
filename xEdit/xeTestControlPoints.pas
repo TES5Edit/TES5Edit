@@ -63,6 +63,7 @@ uses
 type
   TxeTestFormHelper = class helper for TfrmMain
   public
+    procedure TestChangeNameOutcomeKey(Sender: TObject);
     procedure TestFilterAnswerTimer(Sender: TObject);
     procedure TestViewModalAnswerTimer(Sender: TObject);
     procedure TestPumpStart;
@@ -192,6 +193,8 @@ type
     procedure DoTestFilter;
     procedure DoTestFilterArms;
     procedure TestFilterImages(aLines: TStrings);
+    procedure TestFilterEdits(aLines: TStrings);
+    procedure TestFilterRefold(aLines: TStrings);
     procedure DoTestSaveContextsCompare;
     procedure DoTestEndSession;
     procedure TestEndSessionBegin;
@@ -313,9 +316,80 @@ uses
   xeOptionsForm,
   xeRichEditForm,
   xeScriptForm,
+  xeChangeNameForm,
   xeTipForm,
   xeViewElementsForm,
   xeWorldspaceCellDetailsForm;
+
+var
+  xeChangeNameTerminateArmed  : Boolean;
+  xeChangeNameRaiseArmed      : Boolean;
+  xeChangeNameRaiseEmptyArmed : Boolean;
+  xeChangeNameCloseArmed      : Boolean;
+  xeChangeNameCloseRaiseArmed : Boolean;
+  xeChangeNameProgCloseArmed  : Boolean;
+  xeChangeNameCloseTo         : HWND;
+  xeChangeNameCloseForm       : TForm;
+  xeChangeNameTerminatedAt    : string;
+  xeChangeNameSavedProgress   : TwbProgressCallback;
+  xeChangeNameStampLines      : TStrings;
+  xeChangeNameStampBase       : Int64;
+  xeChangeNameKeyTo           : HWND;
+
+procedure xeChangeNameStamp(const aName: string);
+var
+  lNow, lFreq                    : Int64;
+  lCreate, lExit, lKernel, lUser : TFileTime;
+begin
+  if not Assigned(xeChangeNameStampLines) then
+    Exit;
+  QueryPerformanceCounter(lNow);
+  QueryPerformanceFrequency(lFreq);
+  GetThreadTimes(GetCurrentThread, lCreate, lExit, lKernel, lUser);
+  var lCpu := (Int64(lKernel.dwLowDateTime) or (Int64(lKernel.dwHighDateTime) shl 32)) +
+    (Int64(lUser.dwLowDateTime) or (Int64(lUser.dwHighDateTime) shl 32));
+  xeChangeNameStampLines.Add('tick' + #9 + aName + #9 + 'wall ' + IntToStr((lNow - xeChangeNameStampBase) * 1000 div lFreq) + #9 +
+    'cpu ' + IntToStr(lCpu div 10000));
+end;
+
+procedure xeChangeNameTerminateProgress(const aStatus: string);
+begin
+  if xeChangeNameTerminateArmed and aStatus.StartsWith('Building reference information for') then begin
+    xeChangeNameTerminateArmed := False;
+    xeChangeNameTerminatedAt := aStatus;
+    wbForceTerminate := True;
+  end;
+  if xeChangeNameRaiseArmed and aStatus.StartsWith('Building reference information for') then begin
+    xeChangeNameRaiseArmed := False;
+    xeChangeNameTerminatedAt := aStatus;
+    raise Exception.Create('Change NAME test: an injected build failure');
+  end;
+  if xeChangeNameRaiseEmptyArmed and aStatus.StartsWith('Building reference information for') then begin
+    xeChangeNameRaiseEmptyArmed := False;
+    xeChangeNameTerminatedAt := aStatus;
+    raise Exception.Create('');
+  end;
+  if xeChangeNameCloseArmed and aStatus.StartsWith('Building reference information for') then begin
+    xeChangeNameCloseArmed := False;
+    xeChangeNameTerminatedAt := aStatus;
+    PostMessage(xeChangeNameCloseTo, WM_CLOSE, 0, 0);
+  end;
+  if xeChangeNameCloseRaiseArmed and aStatus.StartsWith('Building reference information for') then begin
+    xeChangeNameCloseRaiseArmed := False;
+    xeChangeNameTerminatedAt := aStatus;
+    PostMessage(xeChangeNameCloseTo, WM_CLOSE, 0, 0);
+    raise Exception.Create('Change NAME test: an injected build failure after a close');
+  end;
+  if xeChangeNameProgCloseArmed and aStatus.StartsWith('Building reference information for') then begin
+    xeChangeNameProgCloseArmed := False;
+    xeChangeNameTerminatedAt := aStatus;
+    var lCloseForm := xeChangeNameCloseForm;
+    TThread.ForceQueue(nil, procedure begin lCloseForm.Close; end);
+    DoProcessMessages;
+  end;
+  if Assigned(xeChangeNameSavedProgress) then
+    xeChangeNameSavedProgress(aStatus);
+end;
 
 var
   _TestSaveContextsFiles    : TArray<IwbFile>;
@@ -9553,6 +9627,79 @@ begin
   end;
 end;
 
+procedure TxeTestFormHelper.TestChangeNameOutcomeKey(Sender: TObject);
+begin
+  if (xeChangeNameKeyTo <> 0) and (Sender is TCustomMemo) and string(TCustomMemo(Sender).Text).StartsWith('Change NAME completed') then begin
+    var lPosted := PostMessage(xeChangeNameKeyTo, WM_KEYDOWN, VK_ESCAPE, 0);
+    xeChangeNameKeyTo := 0;
+    TestHost.TestChangeFormIDLines.Add('outcomekey' + #9 + 'posted while the outcome text was set' + #9 + 'posted ' +
+      BoolToStr(lPosted, True));
+  end;
+end;
+
+procedure TestChangeNameProbe(aLines: TStrings; const aRecords: TDynMainRecords; const aIds, aOut: string);
+var
+  lIdentity, lText : string;
+  lPlan            : TwbNameChangePlan;
+  lLabels          : TxeChangeNameLabels;
+  lForecast        : TArray<string>;
+  lOutcome         : TArray<string>;
+begin
+  if Length(aRecords) <> 1 then
+    Exit;
+  var lRecord := aRecords[0];
+  var lNew := aIds.Split([','])[0].Trim;
+  if not Assigned(lRecord._File) or (lRecord.NameChangeRefusal(lIdentity, False, lText) <> ncrNone) or SameText(lIdentity, lNew) then begin
+    aLines.Add('probe' + #9 + 'skipped: the record is renamed, removed or refused');
+    Exit;
+  end;
+  xeChangeNameStamp('probeplanstart');
+  lRecord._File.PlanNameChange(lRecord, lNew, True, lPlan);
+  xeChangeNameStamp('probeplan');
+  aLines.Add('probeplan' + #9 + 'refusal ' + IntToStr(Ord(lPlan.Refusal)) + #9 + 'renames ' + IntToStr(Length(lPlan.Renames)) + #9 +
+    'left ' + IntToStr(Length(lPlan.Left)) + #9 + 'fields ' + IntToStr(Length(lPlan.Fields)) + #9 + 'values ' +
+    IntToStr(Length(lPlan.Values)) + #9 + 'reports ' + IntToStr(Length(lPlan.Reports)) + #9 + 'filters ' + IntToStr(Length(lPlan.Filters)));
+  if lPlan.Refusal <> ncrNone then
+    Exit;
+  for var lRound := 1 to 3 do begin
+    lLabels := TxeChangeNameLabels.Capture(lPlan);
+    xeChangeNameStamp('probelabels');
+  end;
+  aLines.Add('probelabels' + #9 + 'items ' + IntToStr(Length(lLabels.Items)));
+  for var lRound := 1 to 3 do begin
+    lForecast := xeChangeNameForecast(lPlan, lLabels);
+    xeChangeNameStamp('probeforecast');
+  end;
+  for var lRound := 1 to 3 do begin
+    lOutcome := xeChangeNameOutcomeLines(lPlan, lLabels, cnoCompleted, '');
+    xeChangeNameStamp('probeoutcome');
+  end;
+  var lOrder: TArray<Integer>;
+  SetLength(lOrder, Length(lPlan.Fields));
+  for var i := 0 to High(lOrder) do
+    lOrder[i] := i;
+  var lFields := lPlan.Fields;
+  var lSortLabels := lLabels;
+  TArray.Sort<Integer>(lOrder, TComparer<Integer>.Construct(
+    function(const aLeft, aRight: Integer): Integer
+    begin
+      Result := CompareText(lSortLabels.NameOf(lFields[aLeft].Rec), lSortLabels.NameOf(lFields[aRight].Rec));
+      if Result = 0 then
+        Result := CompareText(lSortLabels.FileOf(lFields[aLeft].Rec), lSortLabels.FileOf(lFields[aRight].Rec));
+      if Result = 0 then
+        Result := aLeft - aRight;
+    end));
+  xeChangeNameStamp('probesort');
+  var lSorted: TArray<string>;
+  SetLength(lSorted, Length(lOrder));
+  for var i := 0 to High(lOrder) do
+    lSorted[i] := IntToStr(Succ(lOrder[i])) + #9 + lLabels.NameOf(lFields[lOrder[i]].Rec) + #9 + lLabels.FileOf(lFields[lOrder[i]].Rec);
+  aLines.Add('probetext' + #9 + 'forecast lines ' + IntToStr(Length(lForecast)) + #9 + 'outcome lines ' + IntToStr(Length(lOutcome)));
+  TFile.WriteAllLines(TPath.Combine(aOut, 'probe-forecast.txt'), lForecast);
+  TFile.WriteAllLines(TPath.Combine(aOut, 'probe-outcome.txt'), lOutcome);
+  TFile.WriteAllLines(TPath.Combine(aOut, 'probe-sort.txt'), lSorted);
+end;
+
 procedure TestChangeFormIDRecordLines(aLines: TStrings; const aWhen: string; const aRecords: TDynMainRecords;
   const aBefore: TArray<TwbFormID>);
 var
@@ -9701,6 +9848,20 @@ begin
         tmrPendingSetActiveTimer(tmrPendingSetActive);
     end;
 
+    if SameText(xeTestSwitches.ChangeFormIDOp, 'changenamedeep') then begin
+      QueryPerformanceCounter(xeChangeNameStampBase);
+      xeChangeNameStampLines := lLines;
+      xeChangeNameStamp('expandstart');
+      vstNav.FullExpand;
+      var lInitialized := 0;
+      var lCounted := vstNav.GetFirstInitialized;
+      while Assigned(lCounted) do begin
+        Inc(lInitialized);
+        lCounted := vstNav.GetNextInitialized(lCounted);
+      end;
+      xeChangeNameStamp('expanded');
+      lLines.Add('navdeep' + #9 + 'initialized ' + IntToStr(lInitialized));
+    end;
     lFirst := nil;
     vstNav.ClearSelection;
     if SameText(xeTestSwitches.ChangeFormIDOp, 'batchrefs') or SameText(xeTestSwitches.ChangeFormIDOp, 'localize') then begin
@@ -9826,6 +9987,8 @@ begin
       lMenuItem := mniViewCopyMultipleToSelectedRecords
     else if SameText(xeTestSwitches.ChangeFormIDOp, 'createseq') then
       lMenuItem := mniNavCreateSEQFile
+    else if xeTestSwitches.ChangeFormIDOp.StartsWith('changename', True) then
+      lMenuItem := mniNavChangeName
     else if lRefBy then
       lMenuItem := TestRefByMenuItem
     else
@@ -9888,6 +10051,261 @@ begin
           mniViewCopyMultipleToSelectedRecordsClick(lMenuItem)
         else if lMenuItem = mniNavCreateSEQFile then
           mniNavCreateSEQFileClick(lMenuItem)
+        else if lMenuItem = mniNavChangeName then begin
+          pgMain.ActivePage := tbsView;
+          var lPinnedOp := SameText(xeTestSwitches.ChangeFormIDOp, 'changenamepinned');
+          var lPinnedState: TFunc<string, string> := function(aWhen: string): string
+            begin
+              var lShownRecs := '';
+              var lPinRec: IwbMainRecord;
+              for var i := Low(ActiveRecords) to High(ActiveRecords) do begin
+                if lShownRecs <> '' then
+                  lShownRecs := lShownRecs + ',';
+                if Supports(ActiveRecords[i].Element, IwbMainRecord, lPinRec) and Assigned(lPinRec._File) then
+                  lShownRecs := lShownRecs + lPinRec.EditorID + '@' + lPinRec._File.FileName;
+              end;
+              var lHeads := '';
+              for var i := 1 to Pred(vstView.Header.Columns.Count) do
+                lHeads := lHeads + #9 + vstView.Header.Columns[i].Text;
+              Result := 'pinnedview' + #9 + aWhen + #9 + 'pinned ' + BoolToStr(IsPinned, True) + #9 + 'records ' +
+                lShownRecs + #9 + 'path ' + lblPath.Text + lHeads;
+            end;
+          if lPinnedOp then begin
+            var lPinTarget := vstNav.FocusedNode;
+            vstNav.ClearSelection;
+            var lFirstPin: PVirtualNode := nil;
+            for var lPinSpec in xeTestSwitches.ChangeFormIDPinned.Split([',']) do begin
+              var lPinNode := FindNodeForElement(FindRecord(lPinSpec));
+              if not Assigned(lPinNode) then
+                raise Exception.Create('Change NAME test: no nav node for ' + lPinSpec);
+              if not Assigned(lFirstPin) then begin
+                lFirstPin := lPinNode;
+                vstNav.FocusedNode := lPinNode;
+              end;
+              vstNav.Selected[lPinNode] := True;
+            end;
+            vstNavChange(vstNav, vstNav.FocusedNode);
+            if tmrPendingSetActive.Enabled then
+              tmrPendingSetActiveTimer(tmrPendingSetActive);
+            bnPinned.Down := True;
+            bnPinnedClick(bnPinned);
+            vstNav.ClearSelection;
+            vstNav.FocusedNode := lPinTarget;
+            vstNav.Selected[lPinTarget] := True;
+            vstNavChange(vstNav, lPinTarget);
+            if tmrPendingSetActive.Enabled then
+              tmrPendingSetActiveTimer(tmrPendingSetActive);
+            lLines.Add(lPinnedState('before'));
+          end;
+          var lExpandOp := SameText(xeTestSwitches.ChangeFormIDOp, 'changenameexpand');
+          var lExpandNode: PVirtualNode := nil;
+          var lExpandState: TFunc<string, string> := function(aWhen: string): string
+            begin
+              var lAll := 0;
+              var lInit := 0;
+              var lKid := vstNav.GetFirstChildNoInit(lExpandNode);
+              while Assigned(lKid) do begin
+                Inc(lAll);
+                if vsInitialized in lKid.States then
+                  Inc(lInit);
+                lKid := vstNav.GetNextSiblingNoInit(lKid);
+              end;
+              Result := 'expandgroup' + #9 + aWhen + #9 + 'children ' + IntToStr(lAll) + #9 + 'initialized ' + IntToStr(lInit) +
+                #9 + 'expanded ' + BoolToStr(vstNav.Expanded[lExpandNode], True) + #9 + 'sortcolumn ' +
+                IntToStr(vstNav.Header.SortColumn);
+            end;
+          var lGroupOrder: TFunc<string> := function: string
+            begin
+              Result := '';
+              var lKid := vstNav.GetFirstChild(lExpandNode);
+              while Assigned(lKid) do begin
+                var lKidData: PNavNodeData := vstNav.GetNodeData(lKid);
+                var lKidRec: IwbMainRecord;
+                if Result <> '' then
+                  Result := Result + ',';
+                if Assigned(lKidData) and Supports(lKidData.Element, IwbMainRecord, lKidRec) then
+                  Result := Result + lKidRec.EditorID
+                else
+                  Result := Result + '?';
+                lKid := vstNav.GetNextSibling(lKid);
+              end;
+            end;
+          if lExpandOp then begin
+            var lExpandRec := FindRecord(xeTestSwitches.ChangeFormIDView);
+            lExpandNode := FindNodeForElement(lExpandRec.Container);
+            if not Assigned(lExpandNode) then
+              raise Exception.Create('Change NAME test: no nav node for the group of ' + xeTestSwitches.ChangeFormIDView);
+            vstNav.Header.SortColumn := 1;
+            vstNav.Header.SortDirection := sdAscending;
+            vstNav.FullyVisible[lExpandNode] := True;
+            vstNav.Expanded[lExpandNode] := True;
+            lLines.Add(lExpandState('before'));
+          end;
+          if SameText(xeTestSwitches.ChangeFormIDOp, 'changenamelastnil') or
+             SameText(xeTestSwitches.ChangeFormIDOp, 'changenamelastnilmsg') then begin
+            vstNavChange(vstNav, vstNav.FocusedNode);
+            if tmrPendingSetActive.Enabled then
+              tmrPendingSetActiveTimer(tmrPendingSetActive);
+          end;
+          if SameText(xeTestSwitches.ChangeFormIDOp, 'changenamelastnilmsg') then
+            pgMain.ActivePage := tbsMessages;
+          lLines.Add('pagestart' + #9 + pgMain.ActivePage.Name);
+          lLines.Add('viewstart' + #9 + 'nodes ' + IntToStr(vstView.RootNodeCount));
+          var lNavChanges := TestHost.TestNavChangeCount;
+          if SameText(xeTestSwitches.ChangeFormIDOp, 'changenamelastnil') or
+             SameText(xeTestSwitches.ChangeFormIDOp, 'changenamelastnilmsg') then
+            vstNavLastChangeNode := nil
+          else if SameText(xeTestSwitches.ChangeFormIDOp, 'changenamenofocus') then
+            vstNav.FocusedNode := nil;
+          lLines.Add('pathstart' + #9 + 'visible ' + BoolToStr(lblPath.Visible, True) + #9 + 'focus ' +
+            BoolToStr(Assigned(vstNav.FocusedNode), True) + #9 + 'selected ' + IntToStr(vstNav.SelectedCount));
+          var lActiveName: TFunc<string> := function: string
+            begin
+              if Assigned(ActiveRecord) then
+                Result := ActiveRecord.EditorID
+              else
+                Result := '<none>';
+            end;
+          var lPending := xeTestSwitches.ChangeFormIDOp.StartsWith('changenamepending', True);
+          if lPending then begin
+            var lTargetNode := vstNav.FocusedNode;
+            var lShownNode := FindNodeForElement(FindRecord(xeTestSwitches.ChangeFormIDView));
+            if not Assigned(lShownNode) or not Assigned(lTargetNode) then
+              raise Exception.Create('Change NAME test: no nav node for ' + xeTestSwitches.ChangeFormIDView);
+            vstNav.ClearSelection;
+            vstNav.FocusedNode := lShownNode;
+            vstNav.Selected[lShownNode] := True;
+            vstNavChange(vstNav, lShownNode);
+            if tmrPendingSetActive.Enabled then
+              tmrPendingSetActiveTimer(tmrPendingSetActive);
+            lLines.Add('pending' + #9 + 'shown' + #9 + 'active ' + lActiveName());
+            vstNav.ClearSelection;
+            vstNav.FocusedNode := lTargetNode;
+            vstNav.Selected[lTargetNode] := True;
+            vstNavChange(vstNav, lTargetNode);
+            if SameText(xeTestSwitches.ChangeFormIDOp, 'changenamependingmsg') then
+              pgMain.ActivePage := tbsMessages;
+            lLines.Add('pending' + #9 + 'before' + #9 + 'timer ' + BoolToStr(tmrPendingSetActive.Enabled, True) + #9 + 'active ' +
+              lActiveName() + #9 + 'page ' + pgMain.ActivePage.Name);
+          end;
+          if SameText(xeTestSwitches.ChangeFormIDOp, 'changenameclosing') then begin
+            CloseDeferred := True;
+            pmuNavPopup(nil);
+            lLines.Add('closinggate' + #9 + 'popup visible ' + BoolToStr(mniNavChangeName.Visible, True));
+            mniNavChangeNameClick(lMenuItem);
+            CloseDeferred := False;
+            lLines.Add('closinggate' + #9 + 'returned');
+          end else if SameText(xeTestSwitches.ChangeFormIDOp, 'changenamef2') then begin
+            var lKey: Word := VK_F2;
+            vstNavKeyDown(vstNav, lKey, []);
+          end else if SameText(xeTestSwitches.ChangeFormIDOp, 'changenamedeep') and lMenuItem.Visible then begin
+            var lStampHook: TProc := nil;
+            lStampHook := procedure
+              begin
+                xeChangeNameStamp('planstart');
+                TestHost.TestChangeNamePlanHook := lStampHook;
+              end;
+            TestHost.TestChangeNamePlanHook := lStampHook;
+            xeChangeNameStamp('click');
+            mniNavChangeNameClick(lMenuItem);
+            xeChangeNameStamp('returned');
+            TestHost.TestChangeNamePlanHook := nil;
+            lStampHook := nil;
+            TestChangeNameProbe(lLines, TestHost.TestChangeFormIDRecords, xeTestSwitches.ChangeFormIDIds, xeTestSwitches.ChangeFormIDOut);
+            xeChangeNameStampLines := nil;
+          end else if SameText(xeTestSwitches.ChangeFormIDOp, 'changenamedirect') or lMenuItem.Visible then
+            mniNavChangeNameClick(lMenuItem)
+          else
+            lLines.Add('notclicked' + #9 + 'the menu item is hidden');
+          for var lXLine in lLines.ToStringArray do
+            if lXLine.StartsWith('xbutton' + #9) and lXLine.Contains(#9 + 'before' + #9) then begin
+              var lXToken := lXLine.Split([#9])[1];
+              var lXState: TFunc<string> := function: string
+              begin
+                var lBack := 0;
+                if Assigned(BackHistory) then
+                  lBack := BackHistory.Count;
+                var lFwd := 0;
+                if Assigned(ForwardHistory) then
+                  lFwd := ForwardHistory.Count;
+                var lActive := '<none>';
+                if Assigned(ActiveRecord) then
+                  lActive := ActiveRecord.EditorID;
+                var lPage := '<none>';
+                if Assigned(pgMain.ActivePage) then
+                  lPage := pgMain.ActivePage.Name;
+                Result := 'back ' + IntToStr(lBack) + #9 + 'forward ' + IntToStr(lFwd) + #9 + 'page ' + lPage + #9 + 'active ' + lActive +
+                  #9 + 'nested ' + BoolToStr(InNestedLoop, True);
+              end;
+              lLines.Add('xbutton' + #9 + lXToken + #9 + 'controlbefore' + #9 + lXState());
+              var lXButton: NativeUInt := 1;
+              if lXToken.StartsWith('xfwd:') then
+                lXButton := 2;
+              var lXPosted: Boolean := PostMessage(Handle, 524 {WM_XBUTTONUP}, lXButton shl 16, 0);
+              lLines.Add('xbutton' + #9 + lXToken + #9 + 'controlposted ' + BoolToStr(lXPosted, True));
+              Application.ProcessMessages;
+              lLines.Add('xbutton' + #9 + lXToken + #9 + 'controlafter' + #9 + lXState());
+              Break;
+            end;
+          lLines.Add('lastchange' + #9 + 'after' + #9 + 'nil ' + BoolToStr(not Assigned(vstNavLastChangeNode), True) + #9 +
+            'focus ' + BoolToStr(Assigned(vstNavLastChangeNode) and (vstNavLastChangeNode = vstNav.FocusedNode), True));
+          if lPending then begin
+            lLines.Add('pending' + #9 + 'returned' + #9 + 'timer ' + BoolToStr(tmrPendingSetActive.Enabled, True) + #9 + 'active ' +
+              lActiveName());
+            if tmrPendingSetActive.Enabled then
+              tmrPendingSetActiveTimer(tmrPendingSetActive);
+            var lFocusName := '<none>';
+            var lFocusData: PNavNodeData := nil;
+            if Assigned(vstNav.FocusedNode) then
+              lFocusData := vstNav.GetNodeData(vstNav.FocusedNode);
+            var lFocusRecord: IwbMainRecord;
+            if Assigned(lFocusData) and Supports(lFocusData.Element, IwbMainRecord, lFocusRecord) then
+              lFocusName := lFocusRecord.EditorID;
+            lLines.Add('pending' + #9 + 'settled' + #9 + 'active ' + lActiveName() + #9 + 'focus ' + lFocusName);
+          end;
+          lLines.Add('navchange' + #9 + 'during' + #9 + IntToStr(TestHost.TestNavChangeCount - lNavChanges));
+          if lPinnedOp then
+            lLines.Add(lPinnedState('after'));
+          if lExpandOp then begin
+            lLines.Add(lExpandState('after'));
+            lLines.Add('grouporder' + #9 + 'after' + #9 + lGroupOrder());
+            vstNav.Sort(lExpandNode, vstNav.Header.SortColumn, vstNav.Header.SortDirection, True);
+            lLines.Add('grouporder' + #9 + 'resorted' + #9 + lGroupOrder());
+          end;
+          lLines.Add('pageend' + #9 + pgMain.ActivePage.Name);
+          lLines.Add('path' + #9 + 'after' + #9 + 'visible ' + BoolToStr(lblPath.Visible, True) + #9 + lblPath.Text);
+          if xeChangeNameTerminatedAt <> '' then
+            lLines.Add('terminate' + #9 + xeChangeNameTerminatedAt);
+          begin
+            var lOrderNode := vstNav.GetFirstInitialized;
+            while Assigned(lOrderNode) do begin
+              var lOrderData: PNavNodeData := vstNav.GetNodeData(lOrderNode);
+              var lOrderRec: IwbMainRecord;
+              if Assigned(lOrderData) and Supports(lOrderData.Element, IwbMainRecord, lOrderRec) and Assigned(lOrderRec._File) and
+                 (SameText(lOrderRec._File.FileName, 'M.esm') or SameText(lOrderRec._File.FileName, 'P.esp')) then
+                lLines.Add('navorder' + #9 + 'after' + #9 + lOrderRec._File.FileName + #9 + string(lOrderRec.Signature) + #9 +
+                  lOrderRec.EditorID + #9 + vstNav.Text[lOrderNode, 0, False] + #9 + vstNav.Text[lOrderNode, 1, False]);
+              lOrderNode := vstNav.GetNextInitialized(lOrderNode);
+            end;
+            var lFocusRec: IwbMainRecord;
+            if Assigned(vstNav.FocusedNode) and Assigned(vstNav.GetNodeData(vstNav.FocusedNode)) and
+               Supports(PNavNodeData(vstNav.GetNodeData(vstNav.FocusedNode)).Element, IwbMainRecord, lFocusRec) then
+              lLines.Add('navfocus' + #9 + 'after' + #9 + lFocusRec.EditorID + #9 + 'selected ' + IntToStr(vstNav.SelectedCount))
+            else
+              lLines.Add('navfocus' + #9 + 'after' + #9 + '(none)' + #9 + 'selected ' + IntToStr(vstNav.SelectedCount));
+          end;
+          if Assigned(xeChangeNameSavedProgress) then begin
+            _wbProgressCallback := xeChangeNameSavedProgress;
+            xeChangeNameSavedProgress := nil;
+          end;
+          for var lRenamed in TestHost.TestChangeFormIDRecords do
+            if Assigned(lRenamed._File) then
+              lLines.Add('renamed' + #9 + lRenamed._File.FileName + #9 + lRenamed.EditorID + #9 + 'attached ' +
+                BoolToStr(Assigned(lRenamed.Container), True))
+            else
+              lLines.Add('renamed' + #9 + '(no file)' + #9 + lRenamed.EditorID + #9 + 'attached ' +
+                BoolToStr(Assigned(lRenamed.Container), True));
+        end
         else if lRefBy then begin
           if lMenuItem.Visible then
             lMenuItem.Click
@@ -10319,6 +10737,217 @@ var
     until lWnd = 0;
   end;
 
+  procedure AnswerChangeName(aDialog: TfrmChangeName; const aEntry: string);
+  var
+    lLines : TStrings;
+    lQuiet : Boolean;
+
+    procedure Rows(const aWhen: string);
+    begin
+      if lQuiet then begin
+        lLines.Add('namerows' + #9 + aWhen + #9 + 'fields ' + IntToStr(aDialog.vstFields.RootNodeCount) + #9 + 'shown lines ' +
+          IntToStr(Length(aDialog.ShownLines)));
+        Exit;
+      end;
+      var lNode := aDialog.vstFields.GetFirst;
+      while Assigned(lNode) do begin
+        var lRow := '';
+        for var lColumn := 0 to Pred(aDialog.vstFields.Header.Columns.Count) do
+          lRow := lRow + #9 + aDialog.vstFields.Text[lNode, lColumn, False];
+        lLines.Add('namerow' + #9 + aWhen + #9 + 'checked ' + BoolToStr(aDialog.vstFields.CheckState[lNode] = csCheckedNormal, True) +
+          #9 + 'disabled ' + BoolToStr(aDialog.vstFields.IsDisabled[lNode], True) + lRow);
+        lNode := aDialog.vstFields.GetNext(lNode);
+      end;
+      var lShown: string := aDialog.mmoText.Text;
+      lLines.Add('nametextsize' + #9 + aWhen + #9 + 'lines ' + IntToStr(aDialog.mmoText.Lines.Count) + #9 + 'chars ' + IntToStr(Length(lShown)) +
+        #9 + 'handle ' + BoolToStr(aDialog.mmoText.HandleAllocated, True));
+      var lClassBuf: array[0..255] of Char;
+      GetClassName(aDialog.mmoText.Handle, lClassBuf, 256);
+      lLines.Add('namememo' + #9 + aWhen + #9 + 'vcl ' + aDialog.mmoText.ClassName + #9 + 'window class ' + string(lClassBuf) + #9 +
+        'WM_GETTEXTLENGTH ' + IntToStr(SendMessage(aDialog.mmoText.Handle, WM_GETTEXTLENGTH, 0, 0)) + #9 + 'EM_GETLINECOUNT ' +
+        IntToStr(SendMessage(aDialog.mmoText.Handle, EM_GETLINECOUNT, 0, 0)) + #9 + 'visible ' + BoolToStr(aDialog.mmoText.Visible, True) +
+        #9 + 'parent ' + BoolToStr(Assigned(aDialog.mmoText.Parent), True));
+      for var lShownLine in lShown.Split([#13#10]) do
+        lLines.Add('nametext' + #9 + aWhen + #9 + lShownLine);
+      for var lFormLine in aDialog.ShownLines do
+        lLines.Add('nameshown' + #9 + aWhen + #9 + lFormLine);
+    end;
+
+    function FindNamed(const aSpec: string): IwbMainRecord;
+    begin
+      Result := nil;
+      var lAt := aSpec.LastIndexOf('@');
+      if lAt < 1 then
+        Exit;
+      var lName := aSpec.Substring(0, lAt);
+      var lSig := '';
+      if (lName.Length > 5) and (lName.Chars[4] = ':') then begin
+        lSig := lName.Substring(0, 4);
+        lName := lName.Substring(5);
+      end;
+      for var lFile in Files do
+        if SameText(lFile.FileName, aSpec.Substring(lAt + 1)) then
+          for var k := 0 to Pred(lFile.RecordCount) do
+            if SameText(lFile.Records[k].EditorID, lName) and ((lSig = '') or SameText(string(lFile.Records[k].Signature), lSig)) then
+              Exit(lFile.Records[k]);
+    end;
+
+  begin
+    lLines := TestHost.TestChangeFormIDLines;
+    lQuiet := (';' + aEntry + ';').Contains(';quiet;');
+    xeChangeNameStamp('dialog');
+    lLines.Add('namedialog' + #9 + aDialog.lblHeading.Caption + #9 + 'entry ' + aEntry + #9 + 'state ' + IntToStr(Ord(aDialog.State)));
+    Rows('shown');
+    for var lToken in aEntry.Split([';']) do
+      if lToken.StartsWith('toggle:') then begin
+        var lNode := aDialog.vstFields.GetFirst;
+        while Assigned(lNode) do begin
+          if aDialog.vstFields.Text[lNode, 0, False] = lToken.Substring(7) then
+            if aDialog.vstFields.CheckState[lNode] = csCheckedNormal then
+              aDialog.vstFields.CheckState[lNode] := csUncheckedNormal
+            else
+              aDialog.vstFields.CheckState[lNode] := csCheckedNormal;
+          lNode := aDialog.vstFields.GetNext(lNode);
+        end;
+        xeChangeNameStamp(lToken);
+        Rows(lToken);
+      end else if lToken.StartsWith('sort:') then begin
+        aDialog.vstFields.Header.SortColumn := StrToIntDef(lToken.Substring(5), 0);
+        aDialog.vstFields.SortTree(aDialog.vstFields.Header.SortColumn, aDialog.vstFields.Header.SortDirection);
+        Rows(lToken);
+      end else if lToken = 'applyprogress' then begin
+        TestHost.TestChangeNameApplyHook := procedure begin Sleep(600); wbProgress('Change NAME test: progress during the apply'); end;
+      end else if lToken = 'applyraise' then begin
+        TestHost.TestChangeNameApplyHook := procedure begin raise Exception.Create('Change NAME test: an injected failure'); end;
+      end else if lToken = 'applyraiseempty' then begin
+        TestHost.TestChangeNameApplyHook := procedure begin raise Exception.Create(''); end;
+      end else if lToken = 'applyescape' then begin
+        var lEscapeTo := aDialog.Handle;
+        TestHost.TestChangeNameApplyHook := procedure begin PostMessage(lEscapeTo, WM_KEYDOWN, VK_ESCAPE, 0); end;
+      end else if lToken = 'applysysclose' then begin
+        var lSysTo := aDialog.Handle;
+        TestHost.TestChangeNameApplyHook := procedure begin PostMessage(lSysTo, WM_SYSCOMMAND, SC_CLOSE, 0); end;
+      end else if lToken.StartsWith('xback:') or lToken.StartsWith('xfwd:') then begin
+        var lForward := lToken.StartsWith('xfwd:');
+        var lTarget := FindNamed(lToken.Substring(lToken.IndexOf(':') + 1));
+        if not Assigned(lTarget) then
+          raise Exception.Create('Change NAME test: no record ' + lToken);
+        JumpTo(lTarget, False);
+        JumpTo(lTarget, False);
+        if lForward then
+          acBack.Execute;
+        var lState: TFunc<string> := function: string
+          begin
+            var lBack := 0;
+            if Assigned(BackHistory) then
+              lBack := BackHistory.Count;
+            var lFwd := 0;
+            if Assigned(ForwardHistory) then
+              lFwd := ForwardHistory.Count;
+            var lActive := '<none>';
+            if Assigned(ActiveRecord) then
+              lActive := ActiveRecord.EditorID;
+            var lPage := '<none>';
+            if Assigned(pgMain.ActivePage) then
+              lPage := pgMain.ActivePage.Name;
+            Result := 'back ' + IntToStr(lBack) + #9 + 'forward ' + IntToStr(lFwd) + #9 + 'page ' + lPage + #9 + 'active ' + lActive +
+              #9 + 'nested ' + BoolToStr(InNestedLoop, True);
+          end;
+        lLines.Add('xbutton' + #9 + lToken + #9 + 'before' + #9 + lState());
+        var lButton: NativeUInt := 1;
+        if lForward then
+          lButton := 2;
+        var lPosted: Boolean := PostMessage(aDialog.Handle, 524 {WM_XBUTTONUP}, lButton shl 16, 0);
+        lLines.Add('xbutton' + #9 + lToken + #9 + 'posted ' + BoolToStr(lPosted, True));
+        Application.ProcessMessages;
+        lLines.Add('xbutton' + #9 + lToken + #9 + 'after' + #9 + lState());
+      end else if lToken = 'outcomekey' then begin
+        xeChangeNameKeyTo := aDialog.Handle;
+        aDialog.mmoText.OnChange := TestChangeNameOutcomeKey;
+      end else if lToken = 'applysendclose' then begin
+        var lSendTo := aDialog.Handle;
+        TestHost.TestChangeNameApplyHook := procedure begin SendMessage(lSendTo, WM_CLOSE, 0, 0); end;
+      end else if lToken = 'applypaint' then begin
+        var lPaintOf := aDialog;
+        TestHost.TestChangeNameApplyHook := procedure
+          begin
+            lLines.Add('busypaint' + #9 + 'apply pending ' + BoolToStr(GetUpdateRect(lPaintOf.btnApply.Handle, nil, False), True) + #9 +
+              'cancel pending ' + BoolToStr(GetUpdateRect(lPaintOf.btnCancel.Handle, nil, False), True) + #9 + 'fields pending ' +
+              BoolToStr(GetUpdateRect(lPaintOf.vstFields.Handle, nil, False), True) + #9 + 'text pending ' +
+              BoolToStr(GetUpdateRect(lPaintOf.mmoText.Handle, nil, False), True) + #9 + 'apply enabled ' +
+              BoolToStr(lPaintOf.btnApply.Enabled, True));
+          end;
+      end else if lToken.StartsWith('headerclick:') then begin
+        var lHit: TVTHeaderHitInfo := Default(TVTHeaderHitInfo);
+        lHit.Button := TMouseButton.mbLeft;
+        lHit.Column := StrToIntDef(lToken.Substring(12), 0);
+        aDialog.vstFieldsHeaderClick(aDialog.vstFields.Header, lHit);
+        xeChangeNameStamp(lToken);
+        lLines.Add('headersort' + #9 + lToken + #9 + 'column ' + IntToStr(aDialog.vstFields.Header.SortColumn) + #9 + 'direction ' +
+          IntToStr(Ord(aDialog.vstFields.Header.SortDirection)));
+        Rows(lToken);
+      end else if lToken = 'reenter' then begin
+        pmuNavPopup(nil);
+        lLines.Add('reenter' + #9 + 'popup visible ' + BoolToStr(mniNavChangeName.Visible, True));
+        mniNavChangeNameClick(mniNavChangeName);
+        lLines.Add('reenter' + #9 + 'click returned');
+      end else if lToken.StartsWith('navsort:') then begin
+        var lSortParts := lToken.Substring(8).Split([':']);
+        vstNav.Header.SortColumn := StrToIntDef(lSortParts[0], 0);
+        if (Length(lSortParts) > 1) and (lSortParts[1] = 'd') then
+          vstNav.Header.SortDirection := sdDescending
+        else
+          vstNav.Header.SortDirection := sdAscending;
+        vstNav.SortTree(vstNav.Header.SortColumn, vstNav.Header.SortDirection);
+        lLines.Add('navsort' + #9 + 'before' + #9 + 'column ' + IntToStr(vstNav.Header.SortColumn) + #9 + 'direction ' +
+          IntToStr(Ord(vstNav.Header.SortDirection)));
+        var lOrderNode := vstNav.GetFirstInitialized;
+        while Assigned(lOrderNode) do begin
+          var lOrderData: PNavNodeData := vstNav.GetNodeData(lOrderNode);
+          var lOrderRec: IwbMainRecord;
+          if Assigned(lOrderData) and Supports(lOrderData.Element, IwbMainRecord, lOrderRec) and Assigned(lOrderRec._File) and
+             (SameText(lOrderRec._File.FileName, 'M.esm') or SameText(lOrderRec._File.FileName, 'P.esp')) then
+            lLines.Add('navorder' + #9 + 'before' + #9 + lOrderRec._File.FileName + #9 + string(lOrderRec.Signature) + #9 +
+              lOrderRec.EditorID + #9 + vstNav.Text[lOrderNode, 0, False] + #9 + vstNav.Text[lOrderNode, 1, False]);
+          lOrderNode := vstNav.GetNextInitialized(lOrderNode);
+        end;
+      end else if lToken.StartsWith('remove:') then begin
+        var lGone := FindNamed(lToken.Substring(7));
+        if Assigned(lGone) then begin
+          lGone.Remove;
+          lLines.Add('removed' + #9 + lToken.Substring(7) + #9 + 'attached ' + BoolToStr(Assigned(lGone.Container), True));
+        end else
+          lLines.Add('removed' + #9 + lToken.Substring(7) + #9 + 'not found');
+      end else if lToken = 'apply' then begin
+        var lPumped := False;
+        TThread.ForceQueue(nil, procedure begin lPumped := True; end);
+        xeChangeNameStamp('applystart');
+        aDialog.btnApply.Click;
+        xeChangeNameStamp('outcome');
+        TestHost.TestChangeNameApplyHook := nil;
+        lLines.Add('applypumped' + #9 + BoolToStr(lPumped, True));
+        var lQueuedMsg: TMsg;
+        lLines.Add('queuedinput' + #9 + BoolToStr(PeekMessage(lQueuedMsg, 0, WM_KEYFIRST, WM_KEYLAST, PM_REMOVE), True));
+        lLines.Add('queuedsyscommand' + #9 + BoolToStr(PeekMessage(lQueuedMsg, aDialog.Handle, WM_SYSCOMMAND, WM_SYSCOMMAND, PM_REMOVE),
+          True));        if aDialog.ModalResult <> mrNone then begin
+          lLines.Add('nameended' + #9 + 'modal result ' + IntToStr(aDialog.ModalResult));
+          Exit;
+        end;
+        Rows('outcome');
+        xeChangeNameStamp('close');
+        aDialog.ModalResult := mrCancel;
+        Exit;
+      end else if lToken = 'cancel' then begin
+        lLines.Add('namecancel');
+        xeChangeNameStamp('close');
+        aDialog.ModalResult := mrCancel;
+        Exit;
+      end;
+    lLines.Add('fallback' + #9 + 'the Change NAME dialog had no apply or cancel');
+    TestHost.TestChangeFormIDFallback := True;
+    aDialog.ModalResult := mrCancel;
+  end;
+
 begin
   if not Assigned(TestHost.TestChangeFormIDLines) then
     Exit;
@@ -10337,6 +10966,10 @@ begin
   lExtra := '';
   CollectText(lForm);
   lResult := mrNone;
+  if lForm is TfrmChangeName then begin
+    AnswerChangeName(TfrmChangeName(lForm), NextToken(xeTestSwitches.ChangeFormIDRefs, TestHost.TestChangeFormIDRefIndex));
+    Exit;
+  end;
   if lForm is TfrmModuleSelect then begin
     lExtra := 'offered: ' + string.Join(' | ', TfrmModuleSelect(lForm).AllModules.ToStrings(False));
     if xeTestSwitches.ChangeFormIDTwice then begin
@@ -10495,7 +11128,7 @@ begin
         lExtra := lExtra + ' entered: ' + lEdit.Text;
       lResult := mrOk;
     end;
-  end else if string(lForm.Caption).StartsWith('New FormID') then begin
+  end else if string(lForm.Caption).StartsWith('New FormID') or SameText(lForm.Caption, 'Change NAME') then begin
     lEdit := FindEdit(lForm);
     if Assigned(lEdit) then
       lExtra := 'offered: ' + lEdit.Text;
@@ -10511,7 +11144,21 @@ begin
       if Assigned(lEdit) then begin
         if lToken = 'empty' then
           lEdit.Text := ''
-        else if lToken <> 'offered' then
+        else if lToken.StartsWith('raw:') then
+          lEdit.Text := Trim(xeTestSwitches.ChangeFormIDIds.Split([','])[Pred(TestHost.TestChangeFormIDIdIndex)]).Substring(4)
+        else if lToken.StartsWith('plan') and (lToken.IndexOf(':') > 0) then begin
+          var lPlanTo := Handle;
+          var lPlanOp := lToken.Substring(0, lToken.IndexOf(':'));
+          lEdit.Text := lToken.Substring(Succ(lToken.IndexOf(':')));
+          if lPlanOp = 'planclose' then
+            TestHost.TestChangeNamePlanHook := procedure begin PostMessage(lPlanTo, WM_CLOSE, 0, 0); end
+          else if lPlanOp = 'plansysclose' then
+            TestHost.TestChangeNamePlanHook := procedure begin PostMessage(lPlanTo, WM_SYSCOMMAND, SC_CLOSE, 0); end
+          else if lPlanOp = 'planraise' then
+            TestHost.TestChangeNamePlanHook := procedure begin raise Exception.Create('Change NAME test: an injected plan failure'); end
+          else if lPlanOp = 'planraiseempty' then
+            TestHost.TestChangeNamePlanHook := procedure begin raise Exception.Create(''); end;
+        end else if lToken <> 'offered' then
           lEdit.Text := lToken;
         lExtra := lExtra + ' entered: ' + lEdit.Text;
       end;
@@ -10519,7 +11166,20 @@ begin
     end;
   end else if HasButton(lForm, mrYes) or HasButton(lForm, mrNo) or HasButton(lForm, mrYesToAll) then begin
     lToken := NextToken(xeTestSwitches.ChangeFormIDAnswers, TestHost.TestChangeFormIDAnswerIndex);
-    if lToken = 'yes' then
+    if (lToken = 'yesterminate') or (lToken = 'yesraise') or (lToken = 'yesraiseempty') or (lToken = 'yesclose') or
+       (lToken = 'yescloseraise') or (lToken = 'yesprogclose') then begin
+      lResult := mrYes;
+      xeChangeNameTerminateArmed := lToken = 'yesterminate';
+      xeChangeNameRaiseArmed := lToken = 'yesraise';
+      xeChangeNameRaiseEmptyArmed := lToken = 'yesraiseempty';
+      xeChangeNameCloseArmed := lToken = 'yesclose';
+      xeChangeNameCloseRaiseArmed := lToken = 'yescloseraise';
+      xeChangeNameProgCloseArmed := lToken = 'yesprogclose';
+      xeChangeNameCloseTo := Handle;
+      xeChangeNameCloseForm := Self;
+      xeChangeNameSavedProgress := _wbProgressCallback;
+      _wbProgressCallback := xeChangeNameTerminateProgress;
+    end else if lToken = 'yes' then
       lResult := mrYes
     else if lToken = 'no' then
       lResult := mrNo
@@ -11191,12 +11851,15 @@ begin
           end else
             raise Exception.Create('unknown filter arm part: ' + lPart);
         FilterPreset := True;
+        var lApplyWatch := TStopwatch.StartNew;
         try
           mniNavFilterApplyClick(nil);
         finally
           FilterPreset := False;
         end;
         lLines.Add('# arm ' + lArm);
+        if xeTestSwitches.FilterRefold then
+          lLines.Add('# refold: the filter''s apply took ' + IntToStr(lApplyWatch.ElapsedMilliseconds) + ' ms');
         lCount := 0;
         lNode := vstNav.GetFirst;
         while Assigned(lNode) do begin
@@ -11209,6 +11872,10 @@ begin
         end;
         lLines.Add('# arm ' + lArm + ' records left: ' + IntToStr(lCount));
       end;
+      if xeTestSwitches.FilterEdits <> '' then
+        TestFilterEdits(lLines)
+      else if xeTestSwitches.FilterRefold then
+        TestFilterRefold(lLines);
       CheckResult := 0;
     except
       on E: Exception do begin
@@ -11370,6 +12037,197 @@ begin
     lNode := lNode.Parent;
     if lNode = vstNav.RootNode then
       Break;
+  end;
+end;
+
+procedure TxeTestFormHelper.TestFilterEdits(aLines: TStrings);
+
+  function Fresh(aNode: PVirtualNode): TConflictAll;
+  var
+    lData   : PNavNodeData;
+    lRecord : IwbMainRecord;
+    lThis   : TConflictThis;
+    lChild  : PVirtualNode;
+    lValue  : TConflictAll;
+  begin
+    Result := caUnknown;
+    lData := vstNav.GetNodeData(aNode);
+    if Assigned(lData) and Supports(lData.Element, IwbMainRecord, lRecord) then
+      ConflictLevelForMainRecord(lRecord, Result, lThis);
+    lChild := vstNav.GetFirstChild(aNode);
+    while Assigned(lChild) do begin
+      lValue := Fresh(lChild);
+      if lValue > Result then
+        Result := lValue;
+      lChild := vstNav.GetNextSibling(lChild);
+    end;
+  end;
+
+  procedure Report(const aTag: string);
+  var
+    lNode : PVirtualNode;
+    lData : PNavNodeData;
+    lKind : string;
+  begin
+    lNode := vstNav.GetFirst;
+    while Assigned(lNode) do begin
+      lData := vstNav.GetNodeData(lNode);
+      if Assigned(lData) and Assigned(lData.Element) then begin
+        if Supports(lData.Element, IwbMainRecord) then
+          lKind := 'record'
+        else if lData.Element.ElementType = etFile then
+          lKind := 'file'
+        else
+          lKind := 'group';
+        if (lKind <> 'record') or not (fsIsGameMaster in lData.Element._File.FileStates) then
+          aLines.Add('# node' + #9 + aTag + #9 + IntToStr(vstNav.GetNodeLevel(lNode)) + #9 + lKind + #9 +
+            lData.Element._File.FileName + #9 + lData.Element.Name + #9 + 'stored ' + wbNameConflictAll[lData.ConflictAll] + #9 +
+            'fresh ' + wbNameConflictAll[Fresh(lNode)]);
+      end;
+      lNode := vstNav.GetNext(lNode);
+    end;
+  end;
+
+var
+  lSpec    : string;
+  lParts   : TArray<string>;
+  lFile    : IwbFile;
+  lRecord  : IwbMainRecord;
+  lColumn  : Integer;
+  lRow     : PVirtualNode;
+  lDatas   : PViewNodeDatas;
+begin
+  xeContext.Settings.DontSave := True;
+  EditWarnOk := True;
+  aLines.Add('# edits: autofree ' + BoolToStr(toAutoFreeOnCollapse in vstNav.TreeOptions.AutoOptions, True) + ', inherit ' +
+    BoolToStr(InheritConflictByParent, True) + ', edit allowed ' + BoolToStr(xeContext.Settings.EditAllowed, True));
+  Report('before');
+  for lSpec in xeTestSwitches.FilterEdits.Split([';']) do begin
+    lParts := lSpec.Split(['|']);
+    if Length(lParts) <> 4 then
+      raise Exception.Create('bad edit: ' + lSpec);
+    lFile := nil;
+    for var i := Low(Files) to High(Files) do
+      if SameText(Files[i].FileName, lParts[0]) then
+        lFile := Files[i];
+    if not Assigned(lFile) then
+      raise Exception.Create('no module ' + lParts[0]);
+    lRecord := nil;
+    for var i := 0 to Pred(lFile.RecordCount) do
+      if SameText(lFile.Records[i].EditorID, lParts[1]) then
+        lRecord := lFile.Records[i];
+    if not Assigned(lRecord) then
+      raise Exception.Create('no record ' + lParts[1] + ' in ' + lParts[0]);
+    DoSetActiveRecord(lRecord, True);
+    DoProcessMessages;
+    lColumn := -1;
+    for var i := Low(ActiveRecords) to High(ActiveRecords) do
+      if Assigned(ActiveRecords[i].Element) and SameText(ActiveRecords[i].Element._File.FileName, lParts[0]) then
+        lColumn := i;
+    if lColumn < 0 then
+      raise Exception.Create('no View column for ' + lParts[0]);
+    lRow := nil;
+    for var lNode in vstView.Nodes(False) do begin
+      lDatas := ViewCells(lNode);
+      if Assigned(lDatas) and Assigned(lDatas[lColumn].Element) and lDatas[lColumn].Element.Name.StartsWith(lParts[2]) then
+        lRow := lNode;
+    end;
+    if not Assigned(lRow) then
+      raise Exception.Create('no View row ' + lParts[2] + ' in column ' + IntToStr(lColumn));
+    vstView.FocusedColumn := lColumn + 1;
+    vstViewNewText(vstView, lRow, lColumn + 1, lParts[3]);
+    DoProcessMessages;
+    aLines.Add('# edit' + #9 + lSpec + #9 + 'column ' + IntToStr(lColumn) + #9 + 'now ' + lRecord.ElementEditValues[lParts[2]]);
+  end;
+  vstNav.Invalidate;
+  UpdateWindow(vstNav.Handle);
+  DoProcessMessages;
+  Report('after');
+  NavUpdate(True);
+  DoProcessMessages;
+  Report('afternavupdate');
+  if xeTestSwitches.FilterRefold then begin
+    TestFilterRefold(aLines);
+    Report('afterrefold');
+  end;
+end;
+
+procedure TxeTestFormHelper.TestFilterRefold(aLines: TStrings);
+var
+  lNodes     : Integer;
+  lRecords   : Integer;
+  lRecomputed: Integer;
+  lChanged   : Integer;
+
+  procedure Refold;
+  var
+    lNode  : PVirtualNode;
+    lData  : PNavNodeData;
+    lChild : PVirtualNode;
+    lKid   : PNavNodeData;
+    lRecord: IwbMainRecord;
+    lAll   : TConflictAll;
+    lThis  : TConflictThis;
+  begin
+    lNode := vstNav.GetLastInitialized;
+    while Assigned(lNode) do begin
+      lData := vstNav.GetNodeData(lNode);
+      if Assigned(lData) then begin
+        if Supports(lData.Element, IwbMainRecord, lRecord) then begin
+          if (lData.OrgConflictAll = caUnknown) or (lRecord.ElementGeneration <> lData.ElementGen) or
+             (lData.ViewEpoch <> ConflictView.Epoch) then begin
+            ConflictLevelForMainRecord(lRecord, lData.OrgConflictAll, lData.OrgConflictThis);
+            lData.ElementGen := lRecord.ElementGeneration;
+            lData.ViewEpoch := ConflictView.Epoch;
+            Inc(lRecomputed);
+          end;
+          lAll := lData.OrgConflictAll;
+          lThis := lData.OrgConflictThis;
+        end else begin
+          lAll := caUnknown;
+          lThis := ctUnknown;
+        end;
+        lChild := lNode.FirstChild;
+        while Assigned(lChild) do begin
+          lKid := vstNav.GetNodeData(lChild);
+          if Assigned(lKid) then begin
+            if lKid.ConflictAll > lAll then
+              lAll := lKid.ConflictAll;
+            if lKid.ConflictThis > lThis then
+              lThis := lKid.ConflictThis;
+          end;
+          lChild := lChild.NextSibling;
+        end;
+        if (lData.ConflictAll <> lAll) or (lData.ConflictThis <> lThis) then begin
+          lData.ConflictAll := lAll;
+          lData.ConflictThis := lThis;
+          vstNav.InvalidateNode(lNode);
+          Inc(lChanged);
+        end;
+      end;
+      lNode := vstNav.GetPreviousInitialized(lNode);
+    end;
+  end;
+
+begin
+  lNodes := 0;
+  lRecords := 0;
+  var lNode := vstNav.GetFirstInitialized;
+  while Assigned(lNode) do begin
+    Inc(lNodes);
+    var lData: PNavNodeData := vstNav.GetNodeData(lNode);
+    if Assigned(lData) and Supports(lData.Element, IwbMainRecord) then
+      Inc(lRecords);
+    lNode := vstNav.GetNextInitialized(lNode);
+  end;
+  for var lPass := 1 to 3 do begin
+    lRecomputed := 0;
+    lChanged := 0;
+    var lWatch := TStopwatch.StartNew;
+    Refold;
+    lWatch.Stop;
+    aLines.Add(Format('# refold pass %d: %d initialised rows (%d records), %d records recomputed, %d rows changed, %.3f ms',
+      [lPass, lNodes, lRecords, lRecomputed, lChanged, lWatch.Elapsed.TotalMilliseconds]));
   end;
 end;
 

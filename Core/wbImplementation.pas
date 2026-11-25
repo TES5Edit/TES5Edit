@@ -1556,6 +1556,7 @@ type
     function IdentityUntouched: Boolean;
     function IsIdentityElement(const aElement: IwbElement): Boolean;
     function IdentityWriteRefusal(const aEditorID: string): string;
+    function NameChangeRefusal(out aIdentity: string; aWithText: Boolean; out aText: string): TwbNameChangeRefusal;
     function WholeAssignKeepsOwn(const aSource: IwbMainRecord): Boolean;
     function IdentityAssignRefusal(const aSource: IwbMainRecord; out aKept: string): string;
     function ReleaseNameEdges: Boolean;
@@ -3392,14 +3393,12 @@ end;
 procedure TwbFile.PlanNameChange(const aRecord: IwbMainRecord; const aNewIdentity: string; aReports: Boolean;
   out aPlan: TwbNameChangePlan);
 const
-  cNotRenamed : array[0..7] of TwbSignature = ('LAND', 'PGRD', 'INFO', 'SSCR', 'MGEF', 'SKIL', 'GMST', 'DIAL');
   cCell       : TwbSignature = 'CELL';
   cPathgrid   : TwbSignature = 'PGRD';
   cRegion     : TwbSignature = 'REGN';
 var
   lFiles    : TArray<TwbFile>;
   lIdentity : string;
-  lHasGrid  : Boolean;
   lCount    : Integer;
   lOldLower : string;
   lNewLower : string;
@@ -3424,14 +3423,6 @@ var
     aPlan.Left := nil;
     aPlan.Fields := nil;
     aPlan.Values := nil;
-  end;
-
-  function InList(const aSignature: TwbSignature; const aList: array of TwbSignature): Boolean;
-  begin
-    for var lSignature in aList do
-      if lSignature = aSignature then
-        Exit(True);
-    Result := False;
   end;
 
   function Ordered: TArray<TwbFile>;
@@ -3729,7 +3720,7 @@ var
       end;
   end;
 
-  procedure NoteFilter(const aRec: IwbMainRecord; const aElement: IwbElement; const aFilter: string);
+  procedure NoteFilter(const aRec: IwbMainRecord; const aElement: IwbElement; const aFilter: string; aRoute: TwbNameChangeFilterRoute);
   begin
     var lPrefixed := 0;
     for var lName in lNames do
@@ -3740,6 +3731,7 @@ var
       lItem.Rec := aRec;
       lItem.Path := aElement.Path;
       lItem.Text := aFilter;
+      lItem.Route := aRoute;
       lMovable.Add(lItem);
     end;
   end;
@@ -3785,7 +3777,7 @@ var
       if lFilters then begin
         lElement := aRec.ElementBySignature['ANAM'];
         if TextOf(aRec, lElement, lText) then
-          NoteFilter(aRec, lElement, lText);
+          NoteFilter(aRec, lElement, lText, nfrSpeakerCell);
       end;
       if Supports(aRec.ElementByName['Conditions'], IwbContainerElementRef, lConditions) then
         for var i := 0 to Pred(lConditions.ElementCount) do
@@ -3798,7 +3790,7 @@ var
                 if TextOf(aRec, lObject, lText) and (lText.ToLowerInvariant = lOldLower) then
                   Report(ncpCondition, aRec, lObject);
               end else if lFilters and TextOf(aRec, lObject, lText) then
-                NoteFilter(aRec, lObject, lText);
+                NoteFilter(aRec, lObject, lText, nfrNotCell);
           end;
     end else if lSignature = 'GMST' then
       if (aRec as TObject as TwbMainRecord).GetCurrentIdentity(lName, lGrid) then begin
@@ -3821,27 +3813,10 @@ begin
   var lDef := lRecord.mrDef;
   var lSignature := lRecord.GetSignature;
 
-  if not flContextObj.GameDefObj.IsMorrowind then begin
-    Refuse(ncrKind, 'Change NAME renames Morrowind records', aRecord);
-    Exit;
-  end;
-  if not Assigned(lDef) or not lDef.IsKeyedByIdentity or not lDef.ContainsKnownSubRecord[ksrEditorID] or
-     (dfIdentityQualifiedByTopic in lDef.DefFlags) or InList(lSignature, cNotRenamed) then begin
-    Refuse(ncrKind, Format('%s is not a record Change NAME renames', [aRecord.Name]), aRecord);
-    Exit;
-  end;
-
-  var lHasIdentity := lRecord.GetCurrentIdentity(lIdentity, lHasGrid);
-  if lHasIdentity and lHasGrid then begin
-    Refuse(ncrKind, Format('%s is an exterior cell: it is identified by its grid', [aRecord.Name]), aRecord);
-    Exit;
-  end;
-  if not lHasIdentity then begin
-    Refuse(ncrNoIdentity, Format('%s has no identity', [aRecord.Name]), aRecord);
-    Exit;
-  end;
-  if lIdentity = '' then begin
-    Refuse(ncrNoIdentity, Format('%s has an empty identity', [aRecord.Name]), aRecord);
+  var lRefusalText: string;
+  var lRefusal := lRecord.NameChangeRefusal(lIdentity, True, lRefusalText);
+  if lRefusal <> ncrNone then begin
+    Refuse(lRefusal, lRefusalText, aRecord);
     Exit;
   end;
   aPlan.OldIdentity := lIdentity;
@@ -19303,6 +19278,46 @@ begin
       Exit(aElement.Name = lStruct.Members[i].Name);
 end;
 
+function TwbMainRecord.NameChangeRefusal(out aIdentity: string; aWithText: Boolean; out aText: string): TwbNameChangeRefusal;
+const
+  cNotRenamed : array[0..7] of TwbSignature = ('LAND', 'PGRD', 'INFO', 'SSCR', 'MGEF', 'SKIL', 'GMST', 'DIAL');
+var
+  lIdentity : string;
+  lHasGrid  : Boolean;
+
+  function Refused(aRefusal: TwbNameChangeRefusal; const aFormat: string): TwbNameChangeRefusal;
+  begin
+    if aWithText then
+      aText := Format(aFormat, [GetName]);
+    Result := aRefusal;
+  end;
+
+begin
+  aIdentity := '';
+  aText := '';
+  if not GameDefObj.IsMorrowind then begin
+    if aWithText then
+      aText := 'Change NAME renames Morrowind records';
+    Exit(ncrKind);
+  end;
+  if not Assigned(mrDef) or not mrDef.IsKeyedByIdentity or not mrDef.ContainsKnownSubRecord[ksrEditorID] or
+     (dfIdentityQualifiedByTopic in mrDef.DefFlags) then
+    Exit(Refused(ncrKind, '%s is not a record Change NAME renames'));
+  var lSignature: TwbSignature := GetSignature;
+  for var i := Low(cNotRenamed) to High(cNotRenamed) do
+    if cNotRenamed[i] = lSignature then
+      Exit(Refused(ncrKind, '%s is not a record Change NAME renames'));
+  var lHasIdentity := GetCurrentIdentity(lIdentity, lHasGrid);
+  if lHasIdentity and lHasGrid then
+    Exit(Refused(ncrKind, '%s is an exterior cell: it is identified by its grid'));
+  if not lHasIdentity then
+    Exit(Refused(ncrNoIdentity, '%s has no identity'));
+  if lIdentity = '' then
+    Exit(Refused(ncrNoIdentity, '%s has an empty identity'));
+  aIdentity := lIdentity;
+  Result := ncrNone;
+end;
+
 function TwbMainRecord.IdentityWriteRefusal(const aEditorID: string): string;
 var
   lFormID   : TwbFormID;
@@ -25459,6 +25474,27 @@ begin
 end;
 
 function TwbSubRecord.CheckIn(const aRun: TwbCheckRun): string;
+
+  function MinimumSize(const aDef: IwbValueDef): Int64;
+  var
+    lStruct : IwbStructDef;
+    lArray  : IwbArrayDef;
+  begin
+    if Supports(aDef, IwbResolvableDef) then
+      Exit(0);
+    if Supports(aDef, IwbStructDef, lStruct) then begin
+      Result := 0;
+      var lCount := lStruct.MemberCount;
+      if (lStruct.OptionalFromElement >= 0) and (lStruct.OptionalFromElement < lCount) then
+        lCount := lStruct.OptionalFromElement;
+      for var i := 0 to Pred(lCount) do
+        Inc(Result, MinimumSize(lStruct.Members[i]));
+    end else if Supports(aDef, IwbArrayDef, lArray) and (lArray.ElementCount > 0) then
+      Result := lArray.ElementCount * MinimumSize(lArray.Element)
+    else
+      Result := aDef.DefaultSize[nil, nil, Self];
+  end;
+
 var
   SelfRef : IwbContainerElementRef;
 begin
@@ -25472,8 +25508,16 @@ begin
     Exit;
   DoInit(False);
 
-  if Assigned(srValueDef) then
-    Result := srValueDef.CheckIn(GetDataBasePtr, dcDataEndPtr, Self, aRun);
+  if Assigned(srValueDef) then begin
+    var lBasePtr := GetDataBasePtr;
+    var lEndPtr := dcDataEndPtr;
+    Result := srValueDef.CheckIn(lBasePtr, lEndPtr, Self, aRun);
+    if (Result = '') and wbCheckExpectedBytes and Assigned(lBasePtr) and (lBasePtr = lEndPtr) and not srValueDef.IsVariableSize then begin
+      var lExpected := MinimumSize(srValueDef);
+      if (lExpected > 0) and (lExpected < High(Integer)) then
+        Result := Format('Expected %d bytes of data, found 0', [lExpected]);
+    end;
+  end;
   srDef.ToString(Result, Self, ctCheck);
 end;
 
@@ -35699,8 +35743,8 @@ begin
     Assert(dcDataEndPtr = EndPtr);
   end else begin
     dcDataStorage := nil;
-    dcDataBasePtr := nil;
-    dcDataEndPtr := nil;
+    dcDataBasePtr := @EmptyPtr;
+    dcDataEndPtr := @EmptyPtr;
   end;
 
   Exclude(dcFlags, dcfStorageInvalid);

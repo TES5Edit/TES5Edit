@@ -2027,6 +2027,10 @@ object frmMain: TfrmMain
       Caption = 'Change FormID'
       OnClick = mniNavChangeFormIDClick
     end
+    object mniNavChangeName: TMenuItem
+      Caption = 'Change NAME...'
+      OnClick = mniNavChangeNameClick
+    end
     object mniNavChangeReferencingRecords: TMenuItem
       Caption = 'Change Referencing Records'
       OnClick = mniNavChangeReferencingRecordsClick

@@ -87,6 +87,7 @@ uses
   wbSort in 'Core\wbSort.pas',
   wbStreams in 'Core\wbStreams.pas',
 
+  xeChangeNameForm in 'xEdit\xeChangeNameForm.pas' {frmChangeName},
   xeDeveloperMessageForm in 'xEdit\xeDeveloperMessageForm.pas' {frmDeveloperMessage},
   xeEditWarningForm in 'xEdit\xeEditWarningForm.pas' {frmEditWarning},
   xeFileSelectForm in 'xEdit\xeFileSelectForm.pas' {frmFileSelect},

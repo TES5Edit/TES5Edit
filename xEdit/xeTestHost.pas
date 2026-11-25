@@ -162,6 +162,9 @@ type
     TestChangeFormIDAnswerCount : Integer;
     TestChangeFormIDNotOffered  : Boolean;
     TestChangeFormIDFallback    : Boolean;
+    TestChangeNameApplyHook     : TProc;
+    TestChangeNamePlanHook      : TProc;
+    TestNavChangeCount          : Integer;
     TestChangeFormIDCsvAnswered : Boolean;
     TestChangeFormIDClosed      : Boolean;
     TestFilterAnswer         : TTimer;
@@ -390,6 +393,8 @@ type
     FilterHasVWDMesh      : string;
     FilterScaledActors    : Boolean;
     FilterArms            : string;
+    FilterEdits           : string;
+    FilterRefold          : Boolean;
     FilterSaveTo          : string;
     FilterBaseline        : Boolean;
     FilterImages          : Integer;
@@ -912,7 +917,13 @@ begin
             SameText(ChangeFormIDOp, 'setvwd') or SameText(ChangeFormIDOp, 'setvwdinto') or
             SameText(ChangeFormIDOp, 'copyidle') or SameText(ChangeFormIDOp, 'copyrows') or
             SameText(ChangeFormIDOp, 'copyspawnrate') or SameText(ChangeFormIDOp, 'viewadd') or
-            SameText(ChangeFormIDOp, 'createseq') or ChangeFormIDOp.StartsWith('refby', True)) or
+            SameText(ChangeFormIDOp, 'createseq') or ChangeFormIDOp.StartsWith('refby', True) or
+            SameText(ChangeFormIDOp, 'changename') or SameText(ChangeFormIDOp, 'changenamef2') or
+            SameText(ChangeFormIDOp, 'changenamedirect') or SameText(ChangeFormIDOp, 'changenameclosing') or
+            SameText(ChangeFormIDOp, 'changenamelastnil') or SameText(ChangeFormIDOp, 'changenamenofocus') or
+            SameText(ChangeFormIDOp, 'changenamelastnilmsg') or SameText(ChangeFormIDOp, 'changenamedeep') or
+            SameText(ChangeFormIDOp, 'changenamepending') or SameText(ChangeFormIDOp, 'changenamependingmsg') or
+            SameText(ChangeFormIDOp, 'changenamepinned') or SameText(ChangeFormIDOp, 'changenameexpand')) or
        ((SameText(ChangeFormIDOp, 'copyrows') or ChangeFormIDOp.StartsWith('refby', True)) and (ChangeFormIDView = '')) or
        (SameText(ChangeFormIDOp, 'viewadd') and ((ChangeFormIDTarget = '') or (ChangeFormIDRow = ''))) or
        ((SameText(ChangeFormIDOp, 'batchrefs') or SameText(ChangeFormIDOp, 'localize') or
@@ -975,6 +986,8 @@ begin
     wbFindCmdLineParam('testfilterhasvwdmesh', FilterHasVWDMesh);
     FilterScaledActors := FindCmdLineSwitch('testfilterscaledactors');
     wbFindCmdLineParam('testfilterarms', FilterArms);
+    wbFindCmdLineParam('testfilteredits', FilterEdits);
+    FilterRefold := FindCmdLineSwitch('testfilterrefold');
     wbFindCmdLineParam('testfiltersaveto', FilterSaveTo);
     FilterBaseline := FindCmdLineSwitch('testfilterbaseline');
     if wbFindCmdLineParam('testfilterimages', s) then

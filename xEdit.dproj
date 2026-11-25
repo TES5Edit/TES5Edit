@@ -196,6 +196,10 @@
         <DCCReference Include="Core\wbSaveInterface.pas"/>
         <DCCReference Include="Core\wbSort.pas"/>
         <DCCReference Include="Core\wbStreams.pas"/>
+        <DCCReference Include="xEdit\xeChangeNameForm.pas">
+            <Form>frmChangeName</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
         <DCCReference Include="xEdit\xeDeveloperMessageForm.pas">
             <Form>frmDeveloperMessage</Form>
             <FormType>dfm</FormType>
