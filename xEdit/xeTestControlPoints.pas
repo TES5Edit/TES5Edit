@@ -10972,6 +10972,42 @@ var
         xeChangeNameStamp('close');
         aDialog.ModalResult := mrCancel;
         Exit;
+      end else if lToken = 'applyreal' then begin
+        var lRealPumped := False;
+        TThread.ForceQueue(nil, procedure begin lRealPumped := True; end);
+        xeChangeNameStamp('applystart');
+        aDialog.btnApply.Click;
+        xeChangeNameStamp('outcome');
+        TestHost.TestChangeNameApplyHook := nil;
+        lLines.Add('applypumped' + #9 + BoolToStr(lRealPumped, True));
+        lLines.Add('applyreal' + #9 + 'returned' + #9 + 'modal result ' + IntToStr(aDialog.ModalResult) + #9 + 'state ' +
+          IntToStr(Ord(aDialog.State)));
+        Rows('outcome');
+        var lLoopLines := lLines;
+        var lLoopStart := GetTickCount64;
+        var lLoopTick: TThreadProcedure;
+        lLoopTick := procedure
+          begin
+            var lOpen: TfrmChangeName := nil;
+            for var k := 0 to Pred(Screen.CustomFormCount) do
+              if Screen.CustomForms[k] is TfrmChangeName then
+                lOpen := TfrmChangeName(Screen.CustomForms[k]);
+            if not Assigned(lOpen) then begin
+              lLoopTick := nil;
+              Exit;
+            end;
+            if GetTickCount64 - lLoopStart < 400 then begin
+              TThread.ForceQueue(nil, lLoopTick);
+              Exit;
+            end;
+            lLoopLines.Add('applyloop' + #9 + 'open True' + #9 + 'visible ' + BoolToStr(lOpen.Visible, True) + #9 +
+              'modal result ' + IntToStr(lOpen.ModalResult) + #9 + 'state ' + IntToStr(Ord(lOpen.State)));
+            xeChangeNameStamp('close');
+            lLoopTick := nil;
+            lOpen.btnCancel.Click;
+          end;
+        TThread.ForceQueue(nil, lLoopTick);
+        Exit;
       end else if lToken = 'cancel' then begin
         lLines.Add('namecancel');
         xeChangeNameStamp('close');
