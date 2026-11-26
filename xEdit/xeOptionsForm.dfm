@@ -672,6 +672,23 @@ object frmOptions: TfrmOptions
         Caption = 'Allow compact with injected records'
         TabOrder = 9
       end
+      object cbAllowCompactRenumberInjected: TCheckBox
+        Left = 16
+        Top = 266
+        Width = 438
+        Height = 24
+        Hint = 
+          'With compact allowed on files with injected records: renumber th' +
+          'e injected records that lie past the target range into it, chang' +
+          'ing the files that inject or override them. An override held by ' +
+          'a copy loaded through Compare To of the injecting file or a late' +
+          'r one is changed in memory only; any other of those files that i' +
+          's such a copy, can not be edited, is a delta patch or is a Starf' +
+          'ield blueprint module makes compact refuse, as do records that d' +
+          'o not fit.'
+        Caption = 'Renumber injected records outside the compact range'
+        TabOrder = 10
+      end
     end
   end
   object btnOK: TButton

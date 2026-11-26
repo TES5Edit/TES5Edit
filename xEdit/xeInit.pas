@@ -209,6 +209,7 @@ begin
       xeContext.Settings.FillPNAM := Settings.ReadBool('Options', 'FillPNAM', xeContext.Settings.FillPNAM);
       xeContext.Settings.WriteOffsetData := Settings.ReadBool('Options', 'WriteOffsetData2', xeContext.Settings.WriteOffsetData); {changed name to enforce new default value}
       xeContext.Settings.AllowCompactInjected := Settings.ReadBool('Options', 'AllowCompactInjected', xeContext.Settings.AllowCompactInjected);
+      xeContext.Settings.AllowCompactRenumberInjected := Settings.ReadBool('Options', 'AllowCompactRenumberInjected', xeContext.Settings.AllowCompactRenumberInjected);
       for var lCollapse in TwbGameDefineOptions.CheckableCollapse do
         xeContext.GameDefObj.DefineOptions.SetCollapse(lCollapse, Settings.ReadBool('Options', TwbGameDefineOptions.CollapseSettingsKey(lCollapse), lCollapse in xeContext.GameDefObj.DefineOptions.Collapse));
       wbCollapseBenignArray := Settings.ReadBool('Options', 'CollapseBenignArray', wbCollapseBenignArray);

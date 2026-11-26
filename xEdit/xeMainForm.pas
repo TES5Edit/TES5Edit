@@ -12039,6 +12039,32 @@ var
     end;
 
     SourceFile.PlanFormIDChange(lPlan);
+    var lInjected := '';
+    var lInjectedInMemory := False;
+    if Length(lPlan.InjectedOutside) > 0 then begin
+      var lAllInjected := TStringBuilder.Create;
+      try
+        for i := 0 to High(lPlan.InjectedOutside) do begin
+          var lLine := '    ' + lPlan.InjectedOutside[i].Name + ' in ' + lPlan.InjectedOutside[i]._File.FileName;
+          for var lOverride := 0 to Pred(lPlan.InjectedOutside[i].OverrideCount) do begin
+            var lOverrideFile := lPlan.InjectedOutside[i].Overrides[lOverride]._File;
+            lLine := lLine + ', ' + lOverrideFile.FileName;
+            if [fsIsCompareLoad, fsIsDeltaPatch] * lOverrideFile.FileStates = [fsIsCompareLoad] then
+              lInjectedInMemory := True;
+          end;
+          lAllInjected.Append(CRLF).Append(lLine);
+          if i < 20 then
+            lInjected := lInjected + CRLF + lLine;
+        end;
+        if (Length(lPlan.InjectedOutside) > 20) and (lPlan.Refusal in [fcrNone, fcrCompactInjectedOutside, fcrCompactInjectorNotSaveable]) then begin
+          lInjected := lInjected + CRLF + '    ... and ' + (Length(lPlan.InjectedOutside) - 20).ToString + ' more, listed in the Messages tab';
+          AddMessage('Records other files inject into "' + SourceFile.FileName + '" past the FormID range of the compacted module:' +
+            lAllInjected.ToString);
+        end;
+      finally
+        lAllInjected.Free;
+      end;
+    end;
     case lPlan.Refusal of
       fcrNoOwnRecords, fcrNothingToChange: begin
         ShowMessage('Nothing to do.');
@@ -12060,13 +12086,62 @@ var
         Exit;
       end;
       fcrTooMany: begin
-        ShowMessage('The file contains too many new records for this operation.');
+        var lInjectedCounted := False;
+        if lPlan.Kind = fckCompact then
+          for i := 0 to Pred(SourceFile.InjectedRecordCount) do
+            if SourceFile.InjectedRecords[i].LoadOrderFormID.ObjectID[lLayout] >= LowestFormID then
+              lInjectedCounted := True;
+        if not lInjectedCounted then
+          ShowMessage('The file contains too many new records for this operation.')
+        else if (Length(lPlan.InjectedOutside) < 1) or (LowestFormID >= $800) then
+          ShowMessage('The records to compact do not fit the FormID range of this operation: records other files inject into "' +
+            SourceFile.FileName + '" count against it.')
+        else
+          ShowMessage('The records to compact do not fit the FormID range of this operation: records other files inject into "' +
+            SourceFile.FileName + '" count against it. An injected record that is renumbered never takes an ObjectID below 800.');
         Exit;
       end;
       fcrCompactHasInjectdRecords: begin
         ShowMessage('One or more files are injecting records into this file. Please copy' +CRLF +
           'any injected records into the master and try again, or load only' + CRLF +
           'the file you wish to compact.');
+        Exit;
+      end;
+      fcrCompactInjectedOutside: begin
+        ShowMessage('Other files inject records into "' + SourceFile.FileName + '" past the FormID range the compacted module can ' +
+          'hold; once it is a light or medium module, the game reads those FormIDs as other ones:' + lInjected + CRLF + CRLF +
+          'Enable "Renumber injected records outside the compact range" in the Options to renumber them.' + CRLF + CRLF +
+          'Operation aborted.');
+        Exit;
+      end;
+      fcrCompactInjectorNotSaveable: begin
+        var lHolderFile := lPlan.RefusedRecord._File;
+        var lWhy: string;
+        if [fsIsCompareLoad, fsIsDeltaPatch] * lHolderFile.FileStates = [fsIsCompareLoad] then
+          lWhy := Format('renumbering %s would change "%s", the copy loaded through Compare To from "%s", which xEdit never ' +
+            'saves; start again without comparing it', [lPlan.RefusedRecord.Name, lHolderFile.FileName, lHolderFile.FileNameOnDisk])
+        else if fsIsDeltaPatch in lHolderFile.FileStates then
+          lWhy := Format('%s is held by "%s", a delta patch, whose references xEdit does not renumber; start again without it',
+            [lPlan.RefusedRecord.Name, lHolderFile.FileName])
+        else if not lHolderFile.IsEditable then
+          lWhy := Format('renumbering %s would change "%s", which can not be edited', [lPlan.RefusedRecord.Name, lHolderFile.FileName])
+        else
+          lWhy := Format('renumbering %s would change "%s", a Starfield blueprint module, which xEdit does not save',
+            [lPlan.RefusedRecord.Name, lHolderFile.FileName]);
+        var lThen := '';
+        if not xeContext.Settings.AllowCompactRenumberInjected then
+          lThen := 'If records past the range remain once that is dealt with, enable "Renumber injected records outside the ' +
+            'compact range" in the Options to renumber them.' + CRLF + CRLF;
+        ShowMessage(Format('Other files inject records into "%s" past the FormID range the compacted module can hold, and %s:%s' +
+          CRLF + CRLF + '%sOperation aborted.', [SourceFile.FileName, lWhy, lInjected, lThen]));
+        Exit;
+      end;
+      fcrCompactRecordNarrowed: begin
+        ShowMessage(Format('%s in "%s" has an ObjectID that does not fit the light or medium slot its FormID maps to, so ' +
+          'it reads in the load order as [%s], a FormID that can belong to another record. While such a record is loaded, ' +
+          'Compact can not renumber this module, or the references to it, safely; correct "%s" first.' + CRLF + CRLF +
+          'Operation aborted.', [lPlan.RefusedRecord.Name, lPlan.RefusedRecord._File.FileName,
+          lPlan.RefusedRecord.LoadOrderFormID.ToString, lPlan.RefusedRecord._File.FileName]));
         Exit;
       end;
     end;
@@ -12082,6 +12157,23 @@ var
         else
           s := ' ' + lPlan.PreservedCount.ToString + ' ObjectIDs could be preserved.';
       end;
+    end;
+    if Length(lPlan.InjectedOutside) > 0 then begin
+      if (Length(lPlan.InjectedOutside) = 1) and (Length(lPlan.Records) = 1) then
+        s := s + CRLF + CRLF + 'It is a record another file injects into "' + SourceFile.FileName + '" past the ' +
+          'FormID range. The files that inject or override it, and the loaded files other than delta patches that reference it ' +
+          'and can be edited, are changed too and need saving'
+      else if Length(lPlan.InjectedOutside) = 1 then
+        s := s + CRLF + CRLF + '1 of them is a record another file injects into "' + SourceFile.FileName + '" past the ' +
+          'FormID range. The files that inject or override it, and the loaded files other than delta patches that reference it ' +
+          'and can be edited, are changed too and need saving'
+      else
+        s := s + CRLF + CRLF + Length(lPlan.InjectedOutside).ToString + ' of them are records other files inject into "' +
+          SourceFile.FileName + '" past the FormID range. The files that inject or override them, and the loaded files other ' +
+          'than delta patches that reference them and can be edited, are changed too and need saving';
+      if lInjectedInMemory then
+        s := s + ' (an override held by a file loaded through Compare To is changed in memory only, and that file is never saved)';
+      s := s + ':' + lInjected + CRLF;
     end;
     Result := MessageDlg('This operation will modify the FormID of '+Length(lPlan.Records).ToString+' record(s).' + s + CRLF +
       'Record(s) with the following signature(s) are affected: ' + lPlan.Signatures + CRLF + CRLF +
@@ -13400,6 +13492,7 @@ begin
     cbFillPNAM.Checked := xeContext.Settings.FillPNAM;
     cbWriteOffsetData.Checked := xeContext.Settings.WriteOffsetData;
     cbAllowCompactHasInjected.Checked := xeContext.Settings.AllowCompactInjected;
+    cbAllowCompactRenumberInjected.Checked := xeContext.Settings.AllowCompactRenumberInjected;
     cbFocusAddedElement.Checked := wbFocusAddedElement;
     cbRequireCtrlForDblClick.Checked := wbRequireCtrlForDblClick;
     cbShowFlagEnumValue.Checked := ShowFlagEnumValue;
@@ -13466,6 +13559,7 @@ begin
     xeContext.Settings.FillPNAM := cbFillPNAM.Checked;
     xeContext.Settings.WriteOffsetData := cbWriteOffsetData.Checked;
     xeContext.Settings.AllowCompactInjected := cbAllowCompactHasInjected.Checked;
+    xeContext.Settings.AllowCompactRenumberInjected := cbAllowCompactRenumberInjected.Checked;
     wbFocusAddedElement := cbFocusAddedElement.Checked;
     wbRequireCtrlForDblClick := cbRequireCtrlForDblClick.Checked;
     if ShowFlagEnumValue <> cbShowFlagEnumValue.Checked then begin
@@ -13537,6 +13631,7 @@ begin
     Settings.WriteBool('Options', 'FillPNAM', xeContext.Settings.FillPNAM);
     Settings.WriteBool('Options', 'WriteOffsetData2', xeContext.Settings.WriteOffsetData);
     Settings.WriteBool('Options', 'AllowCompactInjected', xeContext.Settings.AllowCompactInjected);
+    Settings.WriteBool('Options', 'AllowCompactRenumberInjected', xeContext.Settings.AllowCompactRenumberInjected);
     Settings.WriteBool('Options', 'FocusAddedElement', wbFocusAddedElement);
     Settings.WriteBool('Options', 'RequireCtrlForDblClick', wbRequireCtrlForDblClick);
     Settings.WriteBool('Options', 'ShowFlagEnumValue', ShowFlagEnumValue);

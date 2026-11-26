@@ -6,6 +6,9 @@ xEdit is crucial to our shared modding community and your contribution - no matt
 
 # What's New in xEdit 4.1.5t?
 
+## Improvements
+* Compact FormIDs handles records that other loaded plugins inject into the plugin it compacts. By default it still refuses such a plugin; with the expert option "Allow compact with injected records" on, injected records inside the compact range stay where they are and count as taken, and an injected record above the range refuses the compact, naming the record and the plugin that injects it (moving it would leave the game reading it as another plugin's record). With the second expert option, "Renumber injected records outside the compact range", those records are renumbered into the range instead, and the plugins that inject or override them are changed, as overrides of the compacted plugin's own records already are. Compact also refuses when a plugin it would have to change cannot be saved, and when a record's FormID does not fit the light or medium slot it is in.
+
 ## Bugfixes
 * Scripts can no longer write a file loaded through Compare To, for example with SaveAs.pas; like the editor's own save, they now refuse it, so a change made to such a file in memory (by renumbering FormIDs, for example) can never reach a file on disk.
 * The text boxes of the Log Analyzer and the Localization Editor, and text boxes created by scripts, show their text again. They stayed empty because the main window's message log and help text, which use another kind of text control, took the window class those boxes need.

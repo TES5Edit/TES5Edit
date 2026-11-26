@@ -3053,6 +3053,53 @@ var
     end;
   end;
 
+  function IsCompareCopy(const aFile: IwbFile): Boolean;
+  begin
+    Result := [fsIsCompareLoad, fsIsDeltaPatch] * aFile.FileStates = [fsIsCompareLoad];
+  end;
+
+  function CanBeSaved(const aFile: IwbFile): Boolean;
+  begin
+    Result := aFile.IsEditable and not IsCompareCopy(aFile) and not (fsIsDeltaPatch in aFile.FileStates) and
+      not (flContextObj.GameDefObj.IsStarfield and aFile.IsBlueprint);
+  end;
+
+  function IsNarrowed(const aFile: TwbFile; const aRecord: IwbMainRecord): Boolean;
+  begin
+    var lFormID := aRecord.LoadOrderFormID;
+    if lFormID.FileID[lLayout].IsFullSlot then
+      Exit(False);
+    if aFile.flComplexFileFileID then
+      Result := aRecord.FixedFormID.ObjectID[lLayout] <> lFormID.ObjectID[lLayout]
+    else
+      Result := aRecord.FixedFormID.ObjectID[[]] <> lFormID.ObjectID[lLayout];
+  end;
+
+  function NamesTarget(const aFile: TwbFile; const aRecord: IwbMainRecord): Boolean;
+  begin
+    if aRecord.LoadOrderFormID.FileID[lLayout] = lTarget.LoadOrderFileID then
+      Exit(True);
+    try
+      if aFile.FileFileIDtoLoadOrderFileID(aRecord.FixedFormID.FileID[lLayout], aRecord.MastersUpdated) = lTarget.LoadOrderFileID then
+        Exit(True);
+    except
+      on EFileNoSlotExecption do ;
+    end;
+    Result := False;
+  end;
+
+  function FindNarrowed: IwbMainRecord;
+  begin
+    for var lLoaded in flContextObj.Files do
+      if Assigned(lLoaded) and not IsCompareCopy(lLoaded) then begin
+        var lLoadedFile := lLoaded as TObject as TwbFile;
+        for var lAny in lLoadedFile.flRecords do
+          if Assigned(lAny) and IsNarrowed(lLoadedFile, lAny) and NamesTarget(lLoadedFile, lAny) then
+            Exit(lAny);
+      end;
+    Result := nil;
+  end;
+
 begin
   lLayout := flContextObj.SlotLayout;
   lSelf := Self;
@@ -3065,6 +3112,7 @@ begin
   aPlan.RefusedRecord := nil;
   aPlan.InUseFormID := TwbFormID.Null;
   aPlan.InUseHolder := nil;
+  aPlan.InjectedOutside := nil;
 
   if not (gcFormIDInRecordHeader in flContextObj.GameDefObj.Capabilities) or (Assigned(lTarget) and not (gcFormIDInRecordHeader in lTarget.GameDefObj.Capabilities)) then begin
     aPlan.HighFormID := TwbFormID.Null;
@@ -3081,6 +3129,14 @@ begin
     Refuse(fcrCompactHasInjectdRecords);
     Exit;
   end;
+  if (aPlan.Kind = fckCompact) and (lLayout <> []) and not lTarget.LoadOrderFileID.IsFullSlot then begin
+    var lNarrowed := FindNarrowed;
+    if Assigned(lNarrowed) then begin
+      Refuse(fcrCompactRecordNarrowed);
+      aPlan.RefusedRecord := lNarrowed;
+      Exit;
+    end;
+  end;
 
   SetLength(lOwn, GetRecordCount);
   j := 0;
@@ -3089,7 +3145,7 @@ begin
     if lOwn[j].LoadOrderFormID.FileID[lLayout] = GetLoadOrderFileID then
       Inc(j);
   end;
-  if j < 1 then begin
+  if (j < 1) and ((aPlan.Kind <> fckCompact) or (Length(flInjectedRecords) = 0)) then begin
     Refuse(fcrNoOwnRecords);
     Exit;
   end;
@@ -3137,6 +3193,51 @@ begin
     lEnd := lStart.Offset(lLayout, lSpan);
     aPlan.HighFormID := lEnd;
   end;
+  if aPlan.Kind = fckCompact then begin
+    var lOutsideCount := 0;
+    for i := Low(flInjectedRecords) to High(flInjectedRecords) do begin
+      lOld := flInjectedRecords[i].LoadOrderFormID;
+      if lOld > lEnd then
+        Inc(lOutsideCount);
+    end;
+    if lOutsideCount > 0 then begin
+      SetLength(aPlan.InjectedOutside, lOutsideCount);
+      lOutsideCount := 0;
+      for i := Low(flInjectedRecords) to High(flInjectedRecords) do begin
+        lOld := flInjectedRecords[i].LoadOrderFormID;
+        if lOld > lEnd then begin
+          aPlan.InjectedOutside[lOutsideCount] := flInjectedRecords[i];
+          Inc(lOutsideCount);
+        end;
+      end;
+      for lRecord in aPlan.InjectedOutside do begin
+        lHolder := nil;
+        if not CanBeSaved(lRecord._File) then
+          lHolder := lRecord
+        else
+          for k := 0 to Pred(lRecord.OverrideCount) do
+            if not (IsCompareCopy(lRecord.Overrides[k]._File) and (lRecord.Overrides[k]._File.LoadOrder >= lRecord._File.LoadOrder)) and not CanBeSaved(lRecord.Overrides[k]._File) then begin
+              lHolder := lRecord.Overrides[k];
+              Break;
+            end;
+        if Assigned(lHolder) then begin
+          Refuse(fcrCompactInjectorNotSaveable);
+          aPlan.RefusedRecord := lHolder;
+          Exit;
+        end;
+      end;
+      if not flContextObj.Settings.AllowCompactRenumberInjected then begin
+        Refuse(fcrCompactInjectedOutside);
+        Exit;
+      end;
+      var lMovedInjected: TArray<IwbMainRecord>;
+      SetLength(lMovedInjected, Length(aPlan.InjectedOutside));
+      for i := Low(aPlan.InjectedOutside) to High(aPlan.InjectedOutside) do
+        lMovedInjected[High(lMovedInjected) - i] := aPlan.InjectedOutside[i];
+      lOwn := lMovedInjected + lOwn;
+    end;
+  end;
+
   lFloor := lTarget.ObjectIDFloor;
 
   if lTarget.Equals(lSelf) then begin
@@ -3179,6 +3280,8 @@ begin
         if (lOld >= lStart) and (lOld <= lEnd) then
           Continue;
 
+        if (k < Length(aPlan.InjectedOutside)) and (Int64(lStart.ObjectID[lLayout]) + j < $800) then
+          j := $800 - Integer(lStart.ObjectID[lLayout]);
         while (j <= High(lTaken)) and lTaken[j] do
           Inc(j);
         if not OffsetFits(j) then begin

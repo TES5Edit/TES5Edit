@@ -1715,8 +1715,9 @@ type
 
   TwbFormIDChangeKind = (fckRenumber, fckInject, fckCompact);
 
-  TwbFormIDChangeRefusal = (fcrNone, fcrNoOwnRecords, fcrInUse, fcrNotPreservable, fcrTooMany, fcrNothingToChange, fcrNoFormIDs,
-    fcrCompactHasInjectdRecords);
+  TwbFormIDChangeRefusal = (fcrNone, fcrNoOwnRecords, fcrInUse, fcrNotPreservable, fcrTooMany, fcrNothingToChange, fcrNoFormIDs, fcrCompactHasInjectdRecords,
+    fcrCompactInjectedOutside, fcrCompactInjectorNotSaveable,
+    fcrCompactRecordNarrowed);
 
   TwbFormIDChangePlan = record
     Kind           : TwbFormIDChangeKind;
@@ -1734,6 +1735,7 @@ type
     RefusedRecord  : IwbMainRecord;
     InUseFormID    : TwbFormID;
     InUseHolder    : IwbMainRecord;
+    InjectedOutside: TArray<IwbMainRecord>;
   end;
 
   TwbReferenceUpdateOutcome = (ruoNotTried, ruoUnchanged, ruoUpdated, ruoFailed);
@@ -4389,6 +4391,7 @@ type
     FillINOA              : Boolean;
     WriteOffsetData       : Boolean;
     AllowCompactInjected  : Boolean;
+    AllowCompactRenumberInjected : Boolean;
     UDRSetXESP            : Boolean;
     UDRSetScale           : Boolean;
     UDRSetScaleValue      : Single;
@@ -7794,6 +7797,7 @@ begin
   Result.FillINOA := True;
   Result.WriteOffsetData := True;
   Result.AllowCompactInjected := False;
+  Result.AllowCompactRenumberInjected := False;
   Result.UDRSetXESP := True;
   Result.UDRSetZ := True;
   Result.UDRSetZValue := -30000;
