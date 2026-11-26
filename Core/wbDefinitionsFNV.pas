@@ -4316,6 +4316,7 @@ begin
            5,  'Flies',
            6,  'Walks',
            7,  'PC Level Mult',
+           8,  'Use Template',
            9,  'No Low Level Processing',
            11, 'No Blood Spray',
            12, 'No Blood Decal',
@@ -4332,10 +4333,10 @@ begin
            25, 'Tilt Left/Right',
            26, 'No Knockdowns',
            27, 'Not Pushable',
-           27, 'Allow Pickpocket',
-           28, 'Is Ghost',
-           29, 'No Rotating To Head-track',
-           30, 'Invulnerable'
+           28, 'Allow Pickpocket',
+           29, 'Is Ghost',
+           30, 'No Rotating To Head-track',
+           31, 'Invulnerable'
            ])).SetFlagHasDontShow(0,  wbActorTemplateUseModelAnimation)
               .SetFlagHasDontShow(1,  wbActorTemplateUseBaseData)
               .SetFlagHasDontShow(3,  wbActorTemplateUseBaseData)

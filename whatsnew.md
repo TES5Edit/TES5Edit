@@ -21,6 +21,7 @@ xEdit is crucial to our shared modding community and your contribution - no matt
 * Closing xEdit again while it asks "Cancel the current operation and close?" no longer opens a second copy of that question; the answer to the first one decides.
 * "Save selected text" in the Messages tab saves a name typed without an extension as a .txt file, as it was meant to (it used to save the file under the name exactly as typed), and asks before replacing a file that already exists.
 * Fallout 3 and Fallout New Vegas: a perk's Quest + Stage effect reads its stage as one byte again (as the game does; 4.1.5q had made it two bytes), so Check for Errors no longer reports vanilla perks such as Scrounger with "Quest Stage [52550] not found".
+* Fallout New Vegas: a creature's Configuration flags read Not Pushable, Allow Pickpocket, Is Ghost, No Rotating To Head-track and Invulnerable at the right bits again (4.1.5r had moved the last four down by one, so Invulnerable showed as an unknown flag 31). Fallout 3 and Fallout New Vegas: a creature's flag 8 is named Use Template, as an NPC's already was, so Check for Errors no longer reports it as unknown.
 
 # What's New in xEdit 4.1.5s?
 

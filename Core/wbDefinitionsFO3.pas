@@ -3822,6 +3822,7 @@ begin
           5,  'Flies',
           6,  'Walks',
           7,  'PC Level Mult',
+          8,  'Use Template',
           9,  'No Low Level Processing',
           11, 'No Blood Spray',
           12, 'No Blood Decal',
