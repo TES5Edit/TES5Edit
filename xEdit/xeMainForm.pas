@@ -6144,7 +6144,12 @@ begin
       vstNav.Header.Options := vstNav.Header.Options + [hoAutoSpring];
   end;
 
-  if (Shift = [ssAlt]) and (Key in [VK_UP, VK_DOWN, VK_LEFT, VK_RIGHT])then begin
+  if (
+       (Shift = [ssAlt]) or
+       ((GetKeyState(VK_RMENU) < 0) and (Shift = [ssAlt, ssCtrl]))
+     ) and
+     (Key in [VK_UP, VK_DOWN, VK_LEFT, VK_RIGHT])
+  then begin
     if not Assigned(vstView) then
       Exit;
     if not Assigned(vstNav) then
@@ -12058,6 +12063,12 @@ var
         ShowMessage('The file contains too many new records for this operation.');
         Exit;
       end;
+      fcrCompactHasInjectdRecords: begin
+        ShowMessage('One or more files are injecting records into this file. Please copy' +CRLF +
+          'any injected records into the master and try again, or load only' + CRLF +
+          'the file you wish to compact.');
+        Exit;
+      end;
     end;
 
     s := '';
@@ -13388,6 +13399,7 @@ begin
     cbSortINFO.Checked := xeContext.Settings.SortINFO;
     cbFillPNAM.Checked := xeContext.Settings.FillPNAM;
     cbWriteOffsetData.Checked := xeContext.Settings.WriteOffsetData;
+    cbAllowCompactHasInjected.Checked := xeContext.Settings.AllowCompactInjected;
     cbFocusAddedElement.Checked := wbFocusAddedElement;
     cbRequireCtrlForDblClick.Checked := wbRequireCtrlForDblClick;
     cbShowFlagEnumValue.Checked := ShowFlagEnumValue;
@@ -13453,6 +13465,7 @@ begin
     xeContext.Settings.SortINFO := cbSortINFO.Checked;
     xeContext.Settings.FillPNAM := cbFillPNAM.Checked;
     xeContext.Settings.WriteOffsetData := cbWriteOffsetData.Checked;
+    xeContext.Settings.AllowCompactInjected := cbAllowCompactHasInjected.Checked;
     wbFocusAddedElement := cbFocusAddedElement.Checked;
     wbRequireCtrlForDblClick := cbRequireCtrlForDblClick.Checked;
     if ShowFlagEnumValue <> cbShowFlagEnumValue.Checked then begin
@@ -13523,6 +13536,7 @@ begin
     Settings.WriteBool('Options', 'SortINFO', xeContext.Settings.SortINFO);
     Settings.WriteBool('Options', 'FillPNAM', xeContext.Settings.FillPNAM);
     Settings.WriteBool('Options', 'WriteOffsetData2', xeContext.Settings.WriteOffsetData);
+    Settings.WriteBool('Options', 'AllowCompactInjected', xeContext.Settings.AllowCompactInjected);
     Settings.WriteBool('Options', 'FocusAddedElement', wbFocusAddedElement);
     Settings.WriteBool('Options', 'RequireCtrlForDblClick', wbRequireCtrlForDblClick);
     Settings.WriteBool('Options', 'ShowFlagEnumValue', ShowFlagEnumValue);
@@ -21620,27 +21634,34 @@ var
 begin
   vmax := '';
   try
-    J := TJsonBaseObject.ParseUtf8(GetUrlContent('https://api.github.com/repos/TES5Edit/TES5Edit/releases'));
-    try
-      if J is TJsonArray then begin
-        A := J as TJsonArray;
-        for i := 0 to Pred(A.Count) do try
-          s := A.O[i].S['tag_name'];
-          if s.StartsWith('xedit-') then try
-            v := Copy(s, Succ(Length('xedit-')), High(Integer));
-            if v > vmax then
-              vmax := v;
+    var lContent := TrimLeft(GetUrlContent('https://api.github.com/repos/TES5Edit/TES5Edit/releases'));
+
+    if lContent.StartsWith('[') then begin
+      J := TJsonBaseObject.ParseUtf8(lContent);
+      try
+        if J is TJsonArray then begin
+          A := J as TJsonArray;
+          for i := 0 to Pred(A.Count) do try
+            s := A.O[i].S['tag_name'];
+            if s.StartsWith('xedit-') then try
+              v := Copy(s, Succ(Length('xedit-')), High(Integer));
+              if v > vmax then
+                vmax := v;
+            except
+            end;
           except
           end;
-        except
         end;
+      finally
+        J.Free;
       end;
-    finally
-      J.Free;
     end;
-  except end;
+  except
+  end;
+
   if Terminated then
     Exit;
+
   Synchronize(procedure begin
     if Assigned(frmMain) and not Terminated then begin
       frmMain.GitHubVersion := vmax;

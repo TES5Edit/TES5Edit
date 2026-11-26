@@ -663,6 +663,15 @@ object frmOptions: TfrmOptions
         Caption = 'Write worldspace cell offsets (OFST) on save'
         TabOrder = 8
       end
+      object cbAllowCompactHasInjected: TCheckBox
+        Left = 16
+        Top = 242
+        Width = 438
+        Height = 24
+        Hint = 'Allow running compact function on files with injected records.'
+        Caption = 'Allow compact with injected records'
+        TabOrder = 9
+      end
     end
   end
   object btnOK: TButton

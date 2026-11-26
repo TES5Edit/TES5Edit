@@ -89,7 +89,6 @@ function wbBSShaderType(const aName, aDefaultValue: string; const aEvents: array
 function wbBSShaderFlags(const aName, aDefaultValue: string; const aEvents: array of const): TdfDef;
 function wbBSShaderFlags2(const aName, aDefaultValue: string; const aEvents: array of const): TdfDef;
 function wbBSLightingShaderPropertyShaderType(const aName, aDefaultValue: string; const aEvents: array of const): TdfDef;
-function wbBSLightingShaderPropertyPBRFeatures(const aName, aDefaultValue: string; const aEvents: array of const): TdfDef;
 function wbEffectShaderControlledVariable(const aName, aDefaultValue: string; const aEvents: array of const): TdfDef;
 function wbEffectShaderControlledColor(const aName, aDefaultValue: string; const aEvents: array of const): TdfDef;
 function wbLightingShaderControlledVariable(const aName, aDefaultValue: string; const aEvents: array of const): TdfDef;
@@ -1094,23 +1093,7 @@ begin
     17, 'Cloud',
     18, 'LOD Landscape Noise',
     19, 'Multitexture Landscape LOD Blend',
-    20, 'FO4 Dismemberment',
-    21, 'PBR',
-    22, 'PBR Landscape'
-  ], aDefaultValue, aEvents);
-end;
-
-function wbBSLightingShaderPropertyPBRFeatures(const aName, aDefaultValue: string; const aEvents: array of const): TdfDef;
-begin
-  Result := dfFlags(aName, dtU32, [
-    0, 'Subsurface',
-    1, 'Two Layer',
-    2, 'Colored Coat',
-    3, 'Interlayer Parallax',
-    4, 'Coat Normal',
-    5, 'Fuzz',
-    6, 'Hair Marschner',
-    7, 'Glint'
+    20, 'FO4 Dismemberment'
   ], aDefaultValue, aEvents);
 end;
 

@@ -1193,7 +1193,7 @@ begin
         sl.Add(asset.ArchiveName);
 
     // unload unneeded ones
-    for var i := 0 to Pred(ArchiveManager.Count) do
+    for var i := Pred(ArchiveManager.Count) downto 0 do
       if sl.IndexOf(ArchiveManager[i].FileName) = -1 then
         ArchiveManager.CloseArchive(ArchiveManager[i].FileName);
 

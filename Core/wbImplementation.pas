@@ -3077,6 +3077,11 @@ begin
     Exit;
   end;
 
+  if (aPlan.Kind = fckCompact) and (Length(flInjectedRecords) <> 0) and (not flContextObj.Settings.AllowCompactInjected) then begin
+    Refuse(fcrCompactHasInjectdRecords);
+    Exit;
+  end;
+
   SetLength(lOwn, GetRecordCount);
   j := 0;
   for i := Pred(GetRecordCount) downto 0 do begin

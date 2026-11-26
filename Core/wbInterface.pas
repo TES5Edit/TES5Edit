@@ -1715,7 +1715,8 @@ type
 
   TwbFormIDChangeKind = (fckRenumber, fckInject, fckCompact);
 
-  TwbFormIDChangeRefusal = (fcrNone, fcrNoOwnRecords, fcrInUse, fcrNotPreservable, fcrTooMany, fcrNothingToChange, fcrNoFormIDs);
+  TwbFormIDChangeRefusal = (fcrNone, fcrNoOwnRecords, fcrInUse, fcrNotPreservable, fcrTooMany, fcrNothingToChange, fcrNoFormIDs,
+    fcrCompactHasInjectdRecords);
 
   TwbFormIDChangePlan = record
     Kind           : TwbFormIDChangeKind;
@@ -4387,6 +4388,7 @@ type
     FillINOM              : Boolean;
     FillINOA              : Boolean;
     WriteOffsetData       : Boolean;
+    AllowCompactInjected  : Boolean;
     UDRSetXESP            : Boolean;
     UDRSetScale           : Boolean;
     UDRSetScaleValue      : Single;
@@ -7791,6 +7793,7 @@ begin
   Result.FillINOM := True;
   Result.FillINOA := True;
   Result.WriteOffsetData := True;
+  Result.AllowCompactInjected := False;
   Result.UDRSetXESP := True;
   Result.UDRSetZ := True;
   Result.UDRSetZValue := -30000;
@@ -7844,11 +7847,19 @@ begin
       AllowESPMasters := True;
       AllowESPMastersOnSave := True;
     end;
-    gmTES5, gmEnderal, gmTES5VR, gmSSE, gmEnderalSE: begin
+    gmTES5, gmEnderal: begin
       LoadBSAs := True;  // localization won't work otherwise
       HideIgnored := False; // to show Form Version
       AllowESPMasters := True;
       AllowESPMastersOnSave := True;
+    end;
+    gmTES5VR, gmSSE, gmEnderalSE: begin
+      LoadBSAs := True;  // localization won't work otherwise
+      HideIgnored := False;  // to show Form Version
+      AllowESPMasters := True;
+      AllowESPMastersOnSave := True;
+      AlwaysSaveOnam := True;
+      AlwaysSaveOnamForce := True;
     end;
     gmFO4, gmFO4VR: begin
       LoadBSAs := True;  // localization won't work otherwise
