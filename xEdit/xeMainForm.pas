@@ -3859,6 +3859,10 @@ begin
     Exit;
   if xeContext.Settings.TranslationMode then
     Exit;
+  if not (gcFormIDInRecordHeader in xeContext.GameDefObj.Capabilities) then begin
+    ShowMessage('Cleanup Injected works on FormIDs other files inject, and Morrowind records have none.');
+    Exit;
+  end;
 
   if not xeContext.LoaderDone then
     Exit;
@@ -8683,6 +8687,10 @@ begin
     Exit;
   if xeContext.Settings.TranslationMode then
     Exit;
+  if not (gcFormIDInRecordHeader in xeContext.GameDefObj.Capabilities) then begin
+    ShowMessage('Batch Change Referencing Records reads FormIDs from a file, and Morrowind records have none. To redirect links use Change Referencing Records; to rename a named record, use Change NAME.');
+    Exit;
+  end;
 
   NodeData := vstNav.GetNodeData(vstNav.FocusedNode);
   if not Assigned(NodeData) then
@@ -9308,6 +9316,9 @@ begin
   end;
 end;
 
+const
+  cNoFormIDToChange = 'Morrowind records have no FormID to change: they are keyed by their name, index, grid or reference number. To rename a named record, use Change NAME.';
+
 procedure TfrmMain.mniNavChangeFormIDClick(Sender: TObject);
 var
   s                           : string;
@@ -9327,6 +9338,10 @@ begin
     Exit;
   if xeContext.Settings.TranslationMode then
     Exit;
+  if not (gcFormIDInRecordHeader in xeContext.GameDefObj.Capabilities) then begin
+    ShowMessage(cNoFormIDToChange);
+    Exit;
+  end;
 
   AnyErrors := False;
   _File := nil;
@@ -11899,6 +11914,10 @@ var
       Exit;
     if xeContext.Settings.TranslationMode then
       Exit;
+    if not (gcFormIDInRecordHeader in xeContext.GameDefObj.Capabilities) then begin
+      ShowMessage(cNoFormIDToChange);
+      Exit;
+    end;
 
     SourceFile := nil;
 
@@ -14054,6 +14073,7 @@ begin
 
   mniNavCleanupInjected.Visible :=
     mniNavCopyAsOverride.Visible and
+    (gcFormIDInRecordHeader in lGameDef.Capabilities) and
     IsMainRecord and
     MainRecord.ReferencesInjected;
 

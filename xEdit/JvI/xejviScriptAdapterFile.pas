@@ -273,6 +273,8 @@ begin
   Value := 0;
   if Supports(IInterface(Args.Values[0]), IwbFile, _File) then begin
     RequireEditable(_File);
+    if not (gcFormIDInRecordHeader in _File.GameDefObj.Capabilities) then
+      raise Exception.Create('GetNewFormID: Morrowind records have no FormIDs');
     Value := _File.NewFormID.ToCardinal;
   end;
 end;

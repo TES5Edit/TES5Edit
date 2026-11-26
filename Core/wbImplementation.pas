@@ -3066,6 +3066,12 @@ begin
   aPlan.InUseFormID := TwbFormID.Null;
   aPlan.InUseHolder := nil;
 
+  if not (gcFormIDInRecordHeader in flContextObj.GameDefObj.Capabilities) or (Assigned(lTarget) and not (gcFormIDInRecordHeader in lTarget.GameDefObj.Capabilities)) then begin
+    aPlan.HighFormID := TwbFormID.Null;
+    Refuse(fcrNoFormIDs);
+    Exit;
+  end;
+
   if not GetHasLoadOrderFileID then begin
     Refuse(fcrNoOwnRecords);
     Exit;
@@ -3298,6 +3304,11 @@ var
 begin
   lLayout := flContextObj.SlotLayout;
   Result := False;
+  if not (gcFormIDInRecordHeader in flContextObj.GameDefObj.Capabilities) or (Assigned(aPlan.Target) and not (gcFormIDInRecordHeader in aPlan.Target.GameDefObj.Capabilities)) then
+    raise Exception.Create('Apply FormID change: Morrowind records have no FormIDs');
+  for var lItem in aPlan.Records do
+    if Assigned(lItem) and not (gcFormIDInRecordHeader in lItem.GameDefObj.Capabilities) then
+      raise Exception.Create('Apply FormID change: Morrowind records have no FormIDs');
   for k := Low(aPlan.Records) to High(aPlan.Records) do begin
     lRecord := aPlan.Records[k];
     lOld := lRecord.LoadOrderFormID;
@@ -3348,6 +3359,8 @@ procedure TwbFile.FinishFormIDChange(const aPlan: TwbFormIDChangePlan);
 begin
   if aPlan.Refusal <> fcrNone then
     Exit;
+  if not (gcFormIDInRecordHeader in flContextObj.GameDefObj.Capabilities) or (Assigned(aPlan.Target) and not (gcFormIDInRecordHeader in aPlan.Target.GameDefObj.Capabilities)) then
+    raise Exception.Create('Finish FormID change: Morrowind records have no FormIDs');
   if aPlan.Target.IsEditable then
     aPlan.Target.NextObjectID := aPlan.HighFormID.Next(flContextObj.SlotLayout).ObjectID[flContextObj.SlotLayout];
 end;
@@ -4311,6 +4324,8 @@ var
   end;
 
 begin
+  if not (gcFormIDInRecordHeader in flContextObj.GameDefObj.Capabilities) then
+    raise Exception.Create('Plan reference replacement: Morrowind records have no FormIDs');
   lSelfRef := Self;
   lLayout := flContextObj.SlotLayout;
   Result.Entries := nil;
@@ -4435,6 +4450,8 @@ procedure TwbFile.SetOwnRecordFormID(const aOldFormID, aNewFormID: TwbFormID; co
 var
   lRecord : IwbMainRecord;
 begin
+  if not (gcFormIDInRecordHeader in flContextObj.GameDefObj.Capabilities) then
+    raise Exception.Create('Set own record FormID: Morrowind records have no FormIDs');
   lRecord := GetOwnRecordByLoadOrderFormID(aOldFormID);
   if not Assigned(lRecord) then
     Exit;
@@ -17608,6 +17625,8 @@ var
 begin
   lSelfRef := Self;
   Result := 0;
+  if not (gcFormIDInRecordHeader in GameDefObj.Capabilities) then
+    raise Exception.Create('Change FormID: a Morrowind record''s FormID is derived from the record and can not be set');
   aNewFormID.CheckAssignable(ContextObj.SlotLayout);
 
   lMaster := lSelfRef.MasterOrSelf;

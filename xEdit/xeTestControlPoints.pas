@@ -8376,6 +8376,13 @@ begin
     if TestHost.TestMergeNotOffered then
       raise Exception.Create(lTarget.FileName + ' was not offered by the inject''s module picker');
     TestHost.TestMergeLines.Add('inject' + #9 + 'own records before ' + IntToStr(lBefore) + ', after ' + IntToStr(OwnRecords(lSource)));
+    if not (gcFormIDInRecordHeader in xeContext.GameDefObj.Capabilities) then begin
+      TestHost.TestMergeLines.Add('stopped' + #9 + 'Morrowind: the copy is not run after the inject');
+      CheckResult := 0;
+      TestHost.TestMergeAnswer.Enabled := False;
+      TestMergeWrite;
+      Exit;
+    end;
 
     vstNav.ClearSelection;
     lGroups := 0;

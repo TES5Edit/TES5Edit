@@ -1715,7 +1715,7 @@ type
 
   TwbFormIDChangeKind = (fckRenumber, fckInject, fckCompact);
 
-  TwbFormIDChangeRefusal = (fcrNone, fcrNoOwnRecords, fcrInUse, fcrNotPreservable, fcrTooMany, fcrNothingToChange);
+  TwbFormIDChangeRefusal = (fcrNone, fcrNoOwnRecords, fcrInUse, fcrNotPreservable, fcrTooMany, fcrNothingToChange, fcrNoFormIDs);
 
   TwbFormIDChangePlan = record
     Kind           : TwbFormIDChangeKind;
@@ -28211,7 +28211,8 @@ var
 begin
   Result := Default(TwbCleanupInjectedPlan);
   for var lElement in aElements do
-    if Assigned(lElement) and (lElement.ElementType = etMainRecord) and Supports(lElement, IwbMainRecord, lMainRecord) then begin
+    if Assigned(lElement) and (lElement.ElementType = etMainRecord) and (gcFormIDInRecordHeader in lElement.GameDefObj.Capabilities) and
+      Supports(lElement, IwbMainRecord, lMainRecord) then begin
       lSources := lElement.InjectionSourceFiles;
       if Length(lSources) = 1 then begin
         if not Assigned(Result.Target) then
@@ -28239,6 +28240,11 @@ end;
 
 procedure TwbCleanupInjectedPlan.Apply(const aReport: TProc<string>);
 begin
+  if Assigned(Target) and not (gcFormIDInRecordHeader in Target.GameDefObj.Capabilities) then
+    raise Exception.Create('Cleanup injected: Morrowind records have no FormIDs');
+  for var lItem in Records do
+    if Assigned(lItem) and not (gcFormIDInRecordHeader in lItem.GameDefObj.Capabilities) then
+      raise Exception.Create('Cleanup injected: Morrowind records have no FormIDs');
   for var lRecord in Records do begin
     if Assigned(Target.ContainedRecordByLoadOrderFormID[lRecord.LoadOrderFormID, False]) then begin
       if Assigned(aReport) then
