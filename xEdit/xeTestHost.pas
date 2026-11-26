@@ -383,6 +383,9 @@ type
     ChangeFormIDView      : string;
     ChangeFormIDPinned    : string;
     ChangeFormIDRow       : string;
+    ChangeFormIDBuild     : string;
+    ChangeFormIDLoading   : Boolean;
+    ChangeFormIDClick     : Boolean;
     Hide                  : Boolean;
     HideFile              : string;
     HideRecord            : string;
@@ -911,8 +914,11 @@ begin
     wbFindCmdLineParam('testchangeformidview', ChangeFormIDView);
     wbFindCmdLineParam('testchangeformidpinned', ChangeFormIDPinned);
     wbFindCmdLineParam('testchangeformidrow', ChangeFormIDRow);
+    wbFindCmdLineParam('testchangeformidbuild', ChangeFormIDBuild);
     ChangeFormIDShift := FindCmdLineSwitch('testchangeformidshift');
     ChangeFormIDTwice := FindCmdLineSwitch('testchangeformidtwice');
+    ChangeFormIDLoading := FindCmdLineSwitch('testchangeformidloading');
+    ChangeFormIDClick := FindCmdLineSwitch('testchangeformidclick');
     if ChangeFormIDOp = '' then
       ChangeFormIDOp := 'changeformid';
     if (ChangeFormIDFile = '') or
@@ -959,6 +965,8 @@ begin
         '[-testchangeformidanswers:<yes|no|yesall|cancel|ok|translate:<from>:<to>>[,...]] ' +
         '[-testchangeformidrefs:<all|none|cancel|<index>[;<index>...]>[,...]] [-testchangeformidcsv:<file|cancel>] [-testchangeformidoverwrite:<yes|no>] ' +
         '[-testchangeformidview:<none|<EditorID>@<module>>] (changerefs: the view left empty, or showing that record) ' +
+        '[-testchangeformidbuild:<all|<module>[,...]>] (references built before the command) [-testchangeformidloading] (the command ' +
+        'run while the loader is not done) [-testchangeformidclick] (the menu item clicked rather than its handler called) ' +
         '[-testchangeformidcompareto:<file loaded to compare with the last module>]');
       Exit(False);
     end;

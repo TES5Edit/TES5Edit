@@ -3014,13 +3014,33 @@ begin
   if xeContext.Settings.TranslationMode then
     Exit;
 
+  if not xeContext.LoaderDone then
+    Exit;
+
   NodeData := vstNav.GetNodeData(vstNav.FocusedNode);
   MainRecord := NodeData.Element as IwbMainRecord;
+
+  var lStop := xeContext.NameReferencesStop;
+  if lStop <> '' then begin
+    ShowMessage('Change Referencing Records can not run: ' + lStop);
+    Exit;
+  end;
+  var lOutside := xeContext.NameReferencesOutside;
+  if lOutside <> '' then
+    AddMessage('Change Referencing Records: NAME references build no entries in ' + lOutside + ', so records there are not listed');
 
   if not EditWarn then
     Exit;
 
-  var lUpdate := MainRecord.MasterOrSelf.PlanReferenceUpdate;
+  var lUpdate: TwbReferenceUpdate;
+  try
+    lUpdate := MainRecord.MasterOrSelf.PlanReferenceUpdate;
+  except
+    on E: Exception do begin
+      ShowMessage('Error: ' + E.Message);
+      Exit;
+    end;
+  end;
 
   if InputQuery('New FormID', 'Please enter the new FormID in hex. e.g. 0404CC43. The FormID needs to be a load order corrected form ID.', s) then try
     NewFormID := TwbFormID.FromStr(s);

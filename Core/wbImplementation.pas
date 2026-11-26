@@ -17776,6 +17776,11 @@ var
   lRecord  : IwbMainRecord;
   lCount   : Integer;
 begin
+  if mrContextObj.GameDefObj.IsMorrowind and not mrContextObj.LoaderDone then
+    raise Exception.Create('Change Referencing Records: the context is still loading');
+  var lStop := mrContextObj.NameReferencesStop;
+  if lStop <> '' then
+    raise Exception.Create('Change Referencing Records: ' + lStop);
   lSelfRef := Self;
   Result.Items := nil;
   SetLength(Result.Items, lSelfRef.ReferencedByCount);

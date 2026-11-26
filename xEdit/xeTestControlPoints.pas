@@ -9889,6 +9889,17 @@ begin
         lSpec.Substring(0, lSpec.LastIndexOf('@')) + #9 + TestChangeFormIDText(lRecord.LoadOrderFormID) + #9 +
         string(lRecord.Signature) + #9 + 'editable ' + BoolToStr(lRecord.IsEditable, True));
     end;
+    if xeTestSwitches.ChangeFormIDBuild <> '' then
+      for var lBuildFile in xeContext.Files do begin
+        var lBuild := SameText(xeTestSwitches.ChangeFormIDBuild, 'all') and lBuildFile.ReferenceBuildOffered;
+        for var lBuildName in xeTestSwitches.ChangeFormIDBuild.Split([',']) do
+          if SameText(lBuildName, lBuildFile.FileName) then
+            lBuild := True;
+        if lBuild then begin
+          lBuildFile.BuildRef;
+          lLines.Add('built' + #9 + lBuildFile.FileName + #9 + 'complete ' + BoolToStr(lBuildFile.ReferencesComplete, True));
+        end;
+      end;
     TestChangeFormIDRecordLines(lLines, 'before', TestHost.TestChangeFormIDRecords, TestHost.TestChangeFormIDBefore);
     TestChangeFormIDFiles(lLines, 'before', Files);
 
@@ -10085,12 +10096,20 @@ begin
     TestHost.TestChangeFormIDAnswer.OnTimer := TestChangeFormIDAnswerTimer;
     TestHost.TestChangeFormIDAnswer.Enabled := True;
 
+    var lWasLoaderDone := xeContext.LoaderDone;
+    if xeTestSwitches.ChangeFormIDLoading then begin
+      xeContext.LoaderDone := False;
+      lLines.Add('loading' + #9 + 'True');
+    end;
     _TestChangeFormIDSink := lLines;
     _TestChangeFormIDPrevProgress := _wbProgressCallback;
     _wbProgressCallback := TestChangeFormIDProgress;
     try
       try
-        if lMenuItem = mniNavChangeReferencingRecords then
+        if xeTestSwitches.ChangeFormIDClick and Assigned(lMenuItem) then begin
+          lLines.Add('click' + #9 + lMenuItem.Name + #9 + 'enabled ' + BoolToStr(lMenuItem.Enabled, True));
+          lMenuItem.Click;
+        end else if lMenuItem = mniNavChangeReferencingRecords then
           mniNavChangeReferencingRecordsClick(lMenuItem)
         else if lMenuItem = mniNavBatchChangeReferencingRecords then
           mniNavBatchChangeReferencingRecordsClick(lMenuItem)
@@ -10499,6 +10518,10 @@ begin
       lLines.Add('editwarn' + #9 + BoolToStr(EditWarnOk, True));
     finally
       _wbProgressCallback := _TestChangeFormIDPrevProgress;
+      if xeTestSwitches.ChangeFormIDLoading then begin
+        lLines.Add('loaderdone' + #9 + 'after' + #9 + BoolToStr(xeContext.LoaderDone, True));
+        xeContext.LoaderDone := lWasLoaderDone;
+      end;
       _TestChangeFormIDSink := nil;
       _TestChangeFormIDPrevProgress := nil;
       TestHost.TestChangeFormIDAnswer.Enabled := False;
