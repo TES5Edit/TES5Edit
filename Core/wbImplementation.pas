@@ -4134,6 +4134,7 @@ begin
         Continue;
       end;
       var lMemberName := aPlan.Renames[i].Rec.Name;
+      var lMemberText := lNow.Renames[i].Rec.EditorID;
       try
         var lMember := lNow.Renames[i].Rec;
         lMember.EditorID := aPlan.NewIdentity;
@@ -4151,8 +4152,15 @@ begin
           lStopped := True;
         end;
       end;
-      if lStopped then
+      if lStopped then begin
         lStoppedBy := Format('not done: the rename of %s did not take', [lMemberName]);
+        try
+          lNow.Renames[i].Rec.EditorID := lMemberText;
+        except
+          on E: Exception do
+            aPlan.Renames[i].Message := aPlan.Renames[i].Message + '; its previous name could not be put back: ' + E.Message;
+        end;
+      end;
     end;
 
     for var i := 0 to High(aPlan.Fields) do begin
