@@ -369,6 +369,7 @@ type
     ChangeFormIDFile      : string;
     ChangeFormIDRecords   : string;
     ChangeFormIDShift     : Boolean;
+    KeepEditWarn          : Boolean;
     ChangeFormIDTwice     : Boolean;
     ChangeFormIDTarget    : string;
     ChangeFormIDIds       : string;
@@ -565,6 +566,7 @@ var
   s: string;
 begin
   Result := True;
+  KeepEditWarn := FindCmdLineSwitch('testkeepeditwarn');
   if wbFindCmdLineParam('testconflicts', ConflictsFile) then begin
     if ConflictsFile = '' then begin
       ShowMessage('testconflicts requires an output file, as -testconflicts:<filename>');

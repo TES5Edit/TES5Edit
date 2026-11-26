@@ -8297,7 +8297,7 @@ end;
 procedure TxeTestFormHelper.DoTestMerge;
 begin
   xeContext.Settings.DontSave := True;
-  EditWarnOk := True;
+  EditWarnOk := not xeTestSwitches.KeepEditWarn;
   CheckResult := 2;
   TestHost.TestMergeLines := TStringList.Create;
   TestHost.TestMergeLines.Add('# xEdit merge into master probe');
@@ -8377,6 +8377,7 @@ begin
       raise Exception.Create(lTarget.FileName + ' was not offered by the inject''s module picker');
     TestHost.TestMergeLines.Add('inject' + #9 + 'own records before ' + IntToStr(lBefore) + ', after ' + IntToStr(OwnRecords(lSource)));
     if not (gcFormIDInRecordHeader in xeContext.GameDefObj.Capabilities) then begin
+      TestHost.TestMergeLines.Add('editwarn' + #9 + BoolToStr(EditWarnOk, True));
       TestHost.TestMergeLines.Add('stopped' + #9 + 'Morrowind: the copy is not run after the inject');
       CheckResult := 0;
       TestHost.TestMergeAnswer.Enabled := False;
@@ -9181,7 +9182,7 @@ end;
 procedure TxeTestFormHelper.DoTestRenumber;
 begin
   xeContext.Settings.DontSave := True;
-  EditWarnOk := True;
+  EditWarnOk := not xeTestSwitches.KeepEditWarn;
   CheckResult := 2;
   TestHost.TestRenumberLines := TStringList.Create;
   TestHost.TestRenumberLines.Add('# xEdit renumber / inject / compact probe');
@@ -9375,6 +9376,7 @@ begin
         on E: Exception do
           lLines.Add('raised' + #9 + E.ClassName + #9 + E.Message);
       end;
+      lLines.Add('editwarn' + #9 + BoolToStr(EditWarnOk, True));
     finally
       _wbProgressCallback := _TestRenumberPrevProgress;
       _TestRenumberSink := nil;
@@ -9787,7 +9789,7 @@ end;
 procedure TxeTestFormHelper.DoTestChangeFormID;
 begin
   xeContext.Settings.DontSave := True;
-  EditWarnOk := True;
+  EditWarnOk := not xeTestSwitches.KeepEditWarn;
   CheckResult := 2;
   TestHost.TestChangeFormIDLines := TStringList.Create;
   TestHost.TestChangeFormIDLines.Add('# xEdit change FormID probe');
@@ -10494,6 +10496,7 @@ begin
         on E: Exception do
           lLines.Add('raised' + #9 + E.ClassName + #9 + E.Message);
       end;
+      lLines.Add('editwarn' + #9 + BoolToStr(EditWarnOk, True));
     finally
       _wbProgressCallback := _TestChangeFormIDPrevProgress;
       _TestChangeFormIDSink := nil;
