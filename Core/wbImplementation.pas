@@ -30944,6 +30944,9 @@ begin
   Result := nil;
   Assert(Assigned(aElement.Def));
   var lElementDef := arcDef.Element;
+  if lElementDef.DefType = dtSubRecordRecursive then
+    lElementDef := (lElementDef as IwbSubRecordRecursiveDef).Target;
+
   var lIsAlternative := not lElementDef.Equals(aElement.Def);
   if lIsAlternative then begin
     Assert(Assigned(aElement.Def.Parent) and aElement.Def.Parent.Equals(lElementDef));
@@ -31043,7 +31046,6 @@ begin
   end;
 
   if (aIndex = wbAssignThis) and arcDef.CanAssign(Self, aIndex, aElement.Def) then begin
-
     if aOnlySK then
       Exit;
 
@@ -31072,7 +31074,12 @@ begin
       RefuseEntryAtMaxCount;
 
       ElementDef := arcDef.Element;
-      while ElementDef.DefType = dtSubRecordUnion do begin
+      while ElementDef.DefType in [dtSubRecordUnion, dtSubRecordRecursive] do begin
+        if ElementDef.DefType = dtSubRecordRecursive then begin
+          ElementDef := (ElementDef as IwbSubRecordRecursiveDef).Target;
+          Continue;
+        end;
+
         if Assigned(lElement) then begin
           var lTemplate: IwbTemplateElement;
           if Supports(lElement, IwbTemplateElement, lTemplate) then begin
@@ -31330,8 +31337,31 @@ var
 begin
   SelfRef := Self;
 
+  var lMaxCount := -1;
+  if arcDef.CountLimitsLoad and Assigned(eContainer) then begin
+    var lOwner: IwbContainerElementRef;
+    if Supports(IwbContainer(eContainer), IwbContainerElementRef, lOwner) then
+      for var lCountPath in arcDef.CountPaths do begin
+        if lCountPath = '' then
+          Continue;
+
+        var lCounter := lOwner.ElementByPath[lCountPath];
+        if not Assigned(lCounter) then
+          Continue;
+
+        var lValue := lCounter.NativeValue;
+        if VarIsOrdinal(lValue) then begin
+          lMaxCount := lValue;
+          Break;
+        end;
+      end;
+  end;
+
   while (aPos < aContainer.ElementCount) and
     (aContainer[aPos].ElementType = etSubRecord) do begin
+
+    if (lMaxCount >= 0) and (Length(cntElements) >= lMaxCount) then
+      Break;
 
     SubRecord := aContainer[aPos] as IwbSubRecordInternal;
     if SubRecord.Skipped then begin
@@ -31339,11 +31369,16 @@ begin
       Continue;
     end;
     ElementDef := arcDef.Element;
-    if ElementDef.DefType = dtSubRecordUnion then begin
-      ElementDef := (ElementDef as IwbRecordDef).GetMemberFor(Self, SubRecord.Signature, SubRecord);
+    while ElementDef.DefType in [dtSubRecordUnion, dtSubRecordRecursive] do begin
+      if ElementDef.DefType = dtSubRecordUnion then
+        ElementDef := (ElementDef as IwbRecordDef).GetMemberFor(Self, SubRecord.Signature, SubRecord)
+      else
+        ElementDef := (ElementDef as IwbSubRecordRecursiveDef).Target;
       if not Assigned(ElementDef) then
         Break;
     end;
+    if not Assigned(ElementDef) then
+      Break;
 
     if not ElementDef.CanHandle(Self, SubRecord.Signature, SubRecord) then
       Break;
@@ -31659,6 +31694,9 @@ begin
   Result := nil;
   Assert(Assigned(aElement.Def));
   var lMemberDef := srcDef.Members[aElement.SortOrder];
+  if lMemberDef.DefType = dtSubRecordRecursive then
+    lMemberDef := (lMemberDef as IwbSubRecordRecursiveDef).Target;
+
   var lIsAlternative := not aElement.Def.Equals(lMemberDef);
   if lIsAlternative then begin
     Assert(Assigned(aElement.Def.Parent) and aElement.Def.Parent.Equals(lMemberDef));
@@ -31730,10 +31768,14 @@ begin
     for CurrentDefPos := 0 to Pred(srcDef.MemberCount) do begin
       CurrentDef := srcDef.Members[CurrentDefPos];
       if lRepeated or ((CurrentDefPos = 0) and not (srcDef.AllowUnordered or (dfStructFirstNotRequired in srcDef.DefFlags))) or CurrentDef.Required then begin
+        if CurrentDef.DefType = dtSubRecordRecursive then
+          Continue;
 
         if CurrentDef.DefType = dtSubRecordUnion then begin
           CurrentDef := (CurrentDef as IwbRecordDef).Members[0];
           Assert(Assigned(CurrentDef));
+          if CurrentDef.DefType = dtSubRecordRecursive then
+            Continue;
         end;
 
         case CurrentDef.DefType of
@@ -31853,6 +31895,10 @@ begin
         end else begin
 
           var lDefType := lMember.DefType;
+          if lDefType = dtSubRecordRecursive then begin
+            lMember := (lMember as IwbSubRecordRecursiveDef).Target;
+            lDefType := lMember.DefType;
+          end;
           if lDefType = dtSubRecordUnion then begin
             if Assigned(aElement) then begin
               lMember := aElement.Def as IwbRecordMemberDef;
@@ -31867,6 +31913,8 @@ begin
                   lDecidedIdx := lUnion.GetMemberIndex(lContainerRef);
 
                 lMember := lUnion.Members[lDecidedIdx];
+                if lMember.DefType = dtSubRecordRecursive then
+                  lMember := (lMember as IwbSubRecordRecursiveDef).Target;
                 lDefType := lMember.DefType;
               until lDefType <> dtSubRecordUnion;
             end;
@@ -32051,8 +32099,11 @@ begin
           Continue;
         end;
 
-        if CurrentDef.DefType = dtSubRecordUnion then begin
-          CurrentDef := (CurrentDef as IwbRecordDef).GetMemberFor(Self, CurrentRec.Signature, CurrentRec);
+        while CurrentDef.DefType in [dtSubRecordUnion, dtSubRecordRecursive] do begin
+          if CurrentDef.DefType = dtSubRecordUnion then
+            CurrentDef := (CurrentDef as IwbRecordDef).GetMemberFor(Self, CurrentRec.Signature, CurrentRec)
+          else
+            CurrentDef := (CurrentDef as IwbSubRecordRecursiveDef).Target;
           Assert(Assigned(CurrentDef));
         end;
 
