@@ -2337,19 +2337,22 @@ type
 
   TwbSubRecordArray = class(TwbContainer, IwbSubRecordArray, IwbSubRecordArrayInternal, IwbSortableContainer, IwbHasSignature)
   protected {private}
-    arcDef         : IwbSubRecordArrayDef;
-    arcSorted      : Boolean;
-    arcSortInvalid : Boolean;
-    arcNameGen     : Integer;
-    arcContextObj  : TwbGameContext;
-    arcPendingFor  : Pointer;
+    arcDef          : IwbSubRecordArrayDef;
+    arcSorted       : Boolean;
+    arcSortInvalid  : Boolean;
+    arcNameGen      : Integer;
+    arcContextObj   : TwbGameContext;
+    arcPendingFor   : Pointer;
+    arcNameOverride : string;
+
     function AtMaxCount: Boolean;
     procedure RefuseEntryAtMaxCount;
   protected
-    constructor Create(const aOwner     : IwbContainer;
-                       const aContainer : IwbContainer;
-                             aPos       : Integer;
-                       const aDef       : IwbSubRecordArrayDef);
+    constructor Create(const aOwner        : IwbContainer;
+                       const aContainer    : IwbContainer;
+                             aPos          : Integer;
+                       const aDef          : IwbSubRecordArrayDef;
+                       const aNameOverride : string = '');
 
     function GameDefObj: TwbGameDef; override; final;
     function ContextObj: TwbGameContext; override; final;
@@ -2401,14 +2404,16 @@ type
 
   TwbSubRecordStruct = class(TwbContainer, IwbSubRecordStruct, IwbHasSignature)
   protected {private}
-    srcDef        : IwbRecordDef;
-    srcContextObj : TwbGameContext;
-    srcPendingFor : Pointer;
+    srcDef          : IwbRecordDef;
+    srcContextObj   : TwbGameContext;
+    srcPendingFor   : Pointer;
+    srcNameOverride : string;
   protected
-    constructor Create(const aOwner     : IwbContainer;
-                       const aContainer : IwbContainer;
-                             aPos       : Integer;
-                       const aDef       : IwbSubRecordStructDef);
+    constructor Create(const aOwner        : IwbContainer;
+                       const aContainer    : IwbContainer;
+                             aPos          : Integer;
+                       const aDef          : IwbSubRecordStructDef;
+                       const aNameOverride : string = '');
 
     function GameDefObj: TwbGameDef; override; final;
     function ContextObj: TwbGameContext; override; final;
@@ -30943,9 +30948,14 @@ begin
 
   Result := nil;
   Assert(Assigned(aElement.Def));
+
+  var lNameOverride := '';
   var lElementDef := arcDef.Element;
-  if lElementDef.DefType = dtSubRecordRecursive then
+  if lElementDef.DefType = dtSubRecordRecursive then begin
+    lNameOverride := lElementDef.Name;
     lElementDef := (lElementDef as IwbSubRecordRecursiveDef).Target;
+  end;
+
 
   var lIsAlternative := not lElementDef.Equals(aElement.Def);
   if lIsAlternative then begin
@@ -30998,9 +31008,9 @@ begin
       dtSubRecord:
         Result := TwbSubRecord.Create(Self, lElementDef as IwbSubRecordDef);
       dtSubRecordArray:
-        Result := TwbSubRecordArray.Create(Self, nil, wbAssignThis, lElementDef as IwbSubRecordArrayDef);
+        Result := TwbSubRecordArray.Create(Self, nil, wbAssignThis, lElementDef as IwbSubRecordArrayDef, lNameOverride);
       dtSubRecordStruct:
-        Result := TwbSubRecordStruct.Create(Self, nil, wbAssignThis, lElementDef as IwbSubRecordStructDef);
+        Result := TwbSubRecordStruct.Create(Self, nil, wbAssignThis, lElementDef as IwbSubRecordStructDef, lNameOverride);
     else
       Assert(False);
     end;
@@ -31073,9 +31083,11 @@ begin
     end else begin
       RefuseEntryAtMaxCount;
 
+      var lNameOverride := '';
       ElementDef := arcDef.Element;
       while ElementDef.DefType in [dtSubRecordUnion, dtSubRecordRecursive] do begin
         if ElementDef.DefType = dtSubRecordRecursive then begin
+          lNameOverride := ElementDef.Name;
           ElementDef := (ElementDef as IwbSubRecordRecursiveDef).Target;
           Continue;
         end;
@@ -31102,9 +31114,9 @@ begin
           dtSubRecord:
             Element := TwbSubRecord.Create(Self, ElementDef as IwbSubRecordDef);
           dtSubRecordArray:
-            Element := TwbSubRecordArray.Create(Self, nil, wbAssignThis, ElementDef as IwbSubRecordArrayDef);
+            Element := TwbSubRecordArray.Create(Self, nil, wbAssignThis, ElementDef as IwbSubRecordArrayDef, lNameOverride);
           dtSubRecordStruct:
-            Element := TwbSubRecordStruct.Create(Self, nil, wbAssignThis, ElementDef as IwbSubRecordStructDef);
+            Element := TwbSubRecordStruct.Create(Self, nil, wbAssignThis, ElementDef as IwbSubRecordStructDef, lNameOverride);
         else
           Assert(False);
         end;
@@ -31220,15 +31232,18 @@ begin
   Result := cntElementRefs < 1;
 end;
 
-constructor TwbSubRecordArray.Create(const aOwner     : IwbContainer;
-                                     const aContainer : IwbContainer;
-                                           aPos       : Integer;
-                                     const aDef       : IwbSubRecordArrayDef);
+constructor TwbSubRecordArray.Create(const aOwner        : IwbContainer;
+                                     const aContainer    : IwbContainer;
+                                           aPos          : Integer;
+                                     const aDef          : IwbSubRecordArrayDef;
+                                     const aNameOverride : string = '');
 var
   DEV      : TArray<string>;
   MinCount : Integer;
   i        : Integer;
 begin
+  arcNameOverride := aNameOverride;
+
   arcDef := aDef;
   if not Assigned(aOwner) and Assigned(aContainer) then begin
     arcContextObj := aContainer.ContextObj;
@@ -31368,12 +31383,17 @@ begin
       Inc(aPos);
       Continue;
     end;
+
+    var lNameOverride := '';
     ElementDef := arcDef.Element;
     while ElementDef.DefType in [dtSubRecordUnion, dtSubRecordRecursive] do begin
       if ElementDef.DefType = dtSubRecordUnion then
         ElementDef := (ElementDef as IwbRecordDef).GetMemberFor(Self, SubRecord.Signature, SubRecord)
-      else
+      else begin
+        lNameOverride := ElementDef.Name;
         ElementDef := (ElementDef as IwbSubRecordRecursiveDef).Target;
+      end;
+
       if not Assigned(ElementDef) then
         Break;
     end;
@@ -31390,10 +31410,10 @@ begin
         AddElement(SubRecord);
       end;
       dtSubRecordArray: begin
-        Element := TwbSubRecordArray.Create(Self, aContainer, aPos, ElementDef as IwbSubRecordArrayDef);
+        Element := TwbSubRecordArray.Create(Self, aContainer, aPos, ElementDef as IwbSubRecordArrayDef, lNameOverride);
       end;
       dtSubRecordStruct:
-        Element := TwbSubRecordStruct.Create(Self, aContainer, aPos, ElementDef as IwbSubRecordStructDef);
+        Element := TwbSubRecordStruct.Create(Self, aContainer, aPos, ElementDef as IwbSubRecordStructDef, lNameOverride);
     else
       raise Exception.CreateFmt('Unexpected def type for SubRecord %s in array', [String(SubRecord.Signature)]);
     end;
@@ -31476,7 +31496,11 @@ end;
 
 function TwbSubRecordArray.GetName: string;
 begin
-  Result := arcDef.GetName;
+  Result :=
+  if arcNameOverride <> '' then
+    arcNameOverride
+  else
+    arcDef.GetName;
 end;
 
 function TwbSubRecordArray.GetSignature: TwbSignature;
@@ -31693,9 +31717,13 @@ begin
   Assert(aElement.SortOrder < srcDef.MemberCount);
   Result := nil;
   Assert(Assigned(aElement.Def));
+
+  var lNameOverride := '';
   var lMemberDef := srcDef.Members[aElement.SortOrder];
-  if lMemberDef.DefType = dtSubRecordRecursive then
+  if lMemberDef.DefType = dtSubRecordRecursive then begin
+    lNameOverride := lMemberDef.Name;
     lMemberDef := (lMemberDef as IwbSubRecordRecursiveDef).Target;
+  end;
 
   var lIsAlternative := not aElement.Def.Equals(lMemberDef);
   if lIsAlternative then begin
@@ -31715,14 +31743,15 @@ begin
   var lReplace := lIsAlternative and Assigned(lHeld) and not lHeld.Def.Equals(aElement.Def);
   if (lReplace or not Assigned(lHeld)) and aElement.ContainsReflection then
     raise Exception.Create(aElement.Name + ' contains Reflection and can not be assigned');
+
   if lReplace then begin
     case aElement.Def.DefType of
       dtSubRecord:
         Result := TwbSubRecord.Create(Self, aElement.Def as IwbSubRecordDef);
       dtSubRecordArray:
-        Result := TwbSubRecordArray.Create(Self, nil, Low(Integer), aElement.Def as IwbSubRecordArrayDef);
+        Result := TwbSubRecordArray.Create(Self, nil, Low(Integer), aElement.Def as IwbSubRecordArrayDef, lNameOverride);
       dtSubRecordStruct:
-        Result := TwbSubRecordStruct.Create(Self, nil, Low(Integer), aElement.Def as IwbSubRecordStructDef);
+        Result := TwbSubRecordStruct.Create(Self, nil, Low(Integer), aElement.Def as IwbSubRecordStructDef, lNameOverride);
     else
       Assert(False);
     end;
@@ -31832,9 +31861,9 @@ begin
           dtSubRecord:
             lReplacementElement := TwbSubRecord.Create(lContainer, aElement.Def as IwbSubRecordDef);
           dtSubRecordArray:
-            lReplacementElement := TwbSubRecordArray.Create(lContainer, nil, Low(Integer), aElement.Def as IwbSubRecordArrayDef);
+            lReplacementElement := TwbSubRecordArray.Create(lContainer, nil, Low(Integer), aElement.Def as IwbSubRecordArrayDef, srcNameOverride);
           dtSubRecordStruct:
-            lReplacementElement := TwbSubRecordStruct.Create(lContainer, nil, Low(Integer), aElement.Def as IwbSubRecordStructDef);
+            lReplacementElement := TwbSubRecordStruct.Create(lContainer, nil, Low(Integer), aElement.Def as IwbSubRecordStructDef, srcNameOverride);
         else
           Assert(False);
         end;
@@ -31893,9 +31922,10 @@ begin
           if Assigned(aElement) then
             lResultElement.Assign(wbAssignThis, aElement, aOnlySK)
         end else begin
-
+          var lNameOverride := '';
           var lDefType := lMember.DefType;
           if lDefType = dtSubRecordRecursive then begin
+            lNameOverride := lMember.Name;
             lMember := (lMember as IwbSubRecordRecursiveDef).Target;
             lDefType := lMember.DefType;
           end;
@@ -31913,8 +31943,10 @@ begin
                   lDecidedIdx := lUnion.GetMemberIndex(lContainerRef);
 
                 lMember := lUnion.Members[lDecidedIdx];
-                if lMember.DefType = dtSubRecordRecursive then
+                if lMember.DefType = dtSubRecordRecursive then begin
+                  lNameOverride := lMember.Name;
                   lMember := (lMember as IwbSubRecordRecursiveDef).Target;
+                end;
                 lDefType := lMember.DefType;
               until lDefType <> dtSubRecordUnion;
             end;
@@ -31924,9 +31956,9 @@ begin
             dtSubRecord:
               lResultElement := TwbSubRecord.Create(Self, lMember as IwbSubRecordDef);
             dtSubRecordArray:
-              lResultElement := TwbSubRecordArray.Create(Self, nil, Low(Integer), lMember as IwbSubRecordArrayDef);
+              lResultElement := TwbSubRecordArray.Create(Self, nil, Low(Integer), lMember as IwbSubRecordArrayDef, lNameOverride);
             dtSubRecordStruct:
-              lResultElement := TwbSubRecordStruct.Create(Self, nil, Low(Integer), lMember as IwbSubRecordStructDef);
+              lResultElement := TwbSubRecordStruct.Create(Self, nil, Low(Integer), lMember as IwbSubRecordStructDef, lNameOverride);
             dtSubRecordUnion:
               lResultElement := nil;
           else
@@ -32019,10 +32051,11 @@ begin
   Result := cntElementRefs < 1;
 end;
 
-constructor TwbSubRecordStruct.Create(const aOwner     : IwbContainer;
-                                      const aContainer : IwbContainer;
-                                            aPos       : Integer;
-                                      const aDef       : IwbSubRecordStructDef);
+constructor TwbSubRecordStruct.Create(const aOwner        : IwbContainer;
+                                      const aContainer    : IwbContainer;
+                                            aPos          : Integer;
+                                      const aDef          : IwbSubRecordStructDef;
+                                      const aNameOverride : string = '');
 var
   CurrentDefPos : Integer;
   CurrentRec    : IwbSubRecordInternal;
@@ -32032,6 +32065,8 @@ var
   LastElement   : IwbElementInternal;
   FoundMembers  : IwbElements;
 begin
+  srcNameOverride := aNameOverride;
+
   srcDef := aDef as IwbRecordDef;
   if not Assigned(aOwner) and Assigned(aContainer) then begin
     srcContextObj := aContainer.ContextObj;
@@ -32099,11 +32134,14 @@ begin
           Continue;
         end;
 
+        var lNameOverride := '';
         while CurrentDef.DefType in [dtSubRecordUnion, dtSubRecordRecursive] do begin
           if CurrentDef.DefType = dtSubRecordUnion then
             CurrentDef := (CurrentDef as IwbRecordDef).GetMemberFor(Self, CurrentRec.Signature, CurrentRec)
-          else
+          else begin
+            lNameOverride := CurrentDef.Name;
             CurrentDef := (CurrentDef as IwbSubRecordRecursiveDef).Target;
+          end;
           Assert(Assigned(CurrentDef));
         end;
 
@@ -32121,8 +32159,8 @@ begin
             AddElement(CurrentRec);
             Element := CurrentRec as IwbElementInternal;
           end;
-          dtSubRecordArray  : Element := TwbSubRecordArray.Create(Self, aContainer, aPos, CurrentDef as IwbSubRecordArrayDef);
-          dtSubRecordStruct : Element := TwbSubRecordStruct.Create(Self, aContainer, aPos, CurrentDef as IwbSubRecordStructDef);
+          dtSubRecordArray  : Element := TwbSubRecordArray.Create(Self, aContainer, aPos, CurrentDef as IwbSubRecordArrayDef, lNameOverride);
+          dtSubRecordStruct : Element := TwbSubRecordStruct.Create(Self, aContainer, aPos, CurrentDef as IwbSubRecordStructDef, lNameOverride);
         else
           raise Exception.CreateFmt('Unexpected def type for SubRecord %s', [String(CurrentRec.Signature)]);
         end;
@@ -32255,7 +32293,11 @@ end;
 
 function TwbSubRecordStruct.GetName: string;
 begin
-  Result := srcDef.GetName;
+  Result :=
+  if srcNameOverride <> '' then
+    srcNameOverride
+  else
+    srcDef.GetName;
 end;
 
 function TwbSubRecordStruct.GetSignature: TwbSignature;
@@ -32451,7 +32493,11 @@ begin
       TargetMemberIndex := -1;
       for j := 0 to Pred(SelfRecordDef.MemberCount) do begin
         TargetElementDef := SelfRecordDef.Members[j];
-        if SourceElementDef.Name = TargetElementDef.Name then
+        var lSourceName := SourceElementDef.Name;
+        if TargetElementDef.DefType = dtSubRecordRecursive then
+          lSourceName := SourceElement.Name;
+
+        if lSourceName = TargetElementDef.Name then
           if TargetElementDef.CanAssign(nil, wbAssignThis, SourceElementDef) then begin
             TargetMemberIndex := j;
             Break;
