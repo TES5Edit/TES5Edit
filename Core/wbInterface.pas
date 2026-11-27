@@ -31384,12 +31384,12 @@ end;
 
 procedure TwbSubRecordRecursiveDef.InjectSignatures;
 begin
-  var lTargetObj := srrTarget as TwbDef;
   var lChild: TwbDef := Self;
   var lParent: TwbDef := defParent;
 
-  repeat
+  for var lLevel := 1 to srrLevelsUp do begin
     var lExposes: Boolean;
+
     if lParent is TwbSubRecordStructDef then begin
       var lPos := lParent.GetChildPos(lChild);
       Assert(lPos >= 0);
@@ -31402,7 +31402,7 @@ begin
             srsSignatures.AddObject(srrTarget.Signatures[lSigIdx], Pointer(lPos));
 
         lExposes := lPos = 0;
-      end
+      end;
     end else if lParent is TwbSubRecordUnionDef then begin
       var lPos := lParent.GetChildPos(lChild);
       Assert(lPos >= 0);
@@ -31412,13 +31412,13 @@ begin
           sruSignatures.AddObject(srrTarget.Signatures[lSigIdx], Pointer(lPos));
 
         lExposes := True;
-      end
+      end;
     end else if lParent is TwbSubRecordArrayDef then
       lExposes := True
     else
       raise Exception.Create(GetFullPath + ': wbRRecursive path contains unsupported definition');
 
-    if lParent = lTargetObj then begin
+    if lLevel = srrLevelsUp then begin
       if lExposes then
         raise Exception.Create(GetFullPath + ': wbRRecursive is left-recursive (target starts with itself)');
       Exit;
@@ -31429,8 +31429,7 @@ begin
 
     lChild := lParent;
     lParent := lParent.DefParent;
-
-  until False;
+  end;
 end;
 
 procedure TwbSubRecordRecursiveDef.Report(const aParents: TwbDefPath);
@@ -31456,9 +31455,6 @@ begin
   var lTarget: IwbRecordMemberDef;
   if not Supports(lDef, IwbRecordMemberDef, lTarget) then
     raise Exception.Create(GetFullPath + ': wbRRecursive target is not a record member definition');
-
-  if lTarget.Name <> ndName then
-    raise Exception.Create(GetFullPath + ': wbRRecursive name does not match target "' + lTarget.Name + '"');
 
   srrTarget := lTarget;
 end;
