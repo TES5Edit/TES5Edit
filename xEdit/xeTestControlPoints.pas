@@ -8378,33 +8378,41 @@ begin
     TestHost.TestMergeLines.Add('inject' + #9 + 'own records before ' + IntToStr(lBefore) + ', after ' + IntToStr(OwnRecords(lSource)));
     if not (gcFormIDInRecordHeader in xeContext.GameDefObj.Capabilities) then begin
       TestHost.TestMergeLines.Add('editwarn' + #9 + BoolToStr(EditWarnOk, True));
-      TestHost.TestMergeLines.Add('stopped' + #9 + 'Morrowind: the copy is not run after the inject');
-      CheckResult := 0;
       TestHost.TestMergeAnswer.Enabled := False;
-      TestMergeWrite;
-      Exit;
+      var lResult := lSource.MergeIntoMaster(lTarget);
+      lGroups := 0;
+      for var i := 0 to Pred(lSource.ElementCount) do
+        if Supports(lSource.Elements[i], IwbGroupRecord) then begin
+          Inc(lGroups);
+          TestHost.TestMergeLines.Add('selected' + #9 + lSource.Elements[i].Name);
+        end;
+      if lGroups = 0 then
+        TestHost.TestMergeLines.Add('copy' + #9 + 'no top level group in ' + lSource.FileName + ', nothing to copy');
+      for var i := Low(lResult.Copied) to High(lResult.Copied) do
+        if not Assigned(lResult.Copied[i]) then
+          TestHost.TestMergeLines.Add('copyfailed' + #9 + lResult.Groups[i].Name);
+    end else begin
+      vstNav.ClearSelection;
+      lGroups := 0;
+      for var i := 0 to Pred(lSource.ElementCount) do
+        if Supports(lSource.Elements[i], IwbGroupRecord) then begin
+          lNode := FindNodeForElement(lSource.Elements[i]);
+          if not Assigned(lNode) then
+            raise Exception.Create('no nav node for ' + lSource.Elements[i].Name);
+          vstNav.Selected[lNode] := True;
+          if lGroups = 0 then
+            vstNav.FocusedNode := lNode;
+          Inc(lGroups);
+          TestHost.TestMergeLines.Add('selected' + #9 + lSource.Elements[i].Name);
+        end;
+      if lGroups > 0 then
+        mniNavCopyIntoClick(mniNavDeepCopyAsOverrideWithOverwriting)
+      else
+        TestHost.TestMergeLines.Add('copy' + #9 + 'no top level group in ' + lSource.FileName + ', nothing to copy');
+      TestHost.TestMergeAnswer.Enabled := False;
+      if TestHost.TestMergeNotOffered then
+        raise Exception.Create(lTarget.FileName + ' was not offered by the copy''s module picker');
     end;
-
-    vstNav.ClearSelection;
-    lGroups := 0;
-    for var i := 0 to Pred(lSource.ElementCount) do
-      if Supports(lSource.Elements[i], IwbGroupRecord) then begin
-        lNode := FindNodeForElement(lSource.Elements[i]);
-        if not Assigned(lNode) then
-          raise Exception.Create('no nav node for ' + lSource.Elements[i].Name);
-        vstNav.Selected[lNode] := True;
-        if lGroups = 0 then
-          vstNav.FocusedNode := lNode;
-        Inc(lGroups);
-        TestHost.TestMergeLines.Add('selected' + #9 + lSource.Elements[i].Name);
-      end;
-    if lGroups > 0 then
-      mniNavCopyIntoClick(mniNavDeepCopyAsOverrideWithOverwriting)
-    else
-      TestHost.TestMergeLines.Add('copy' + #9 + 'no top level group in ' + lSource.FileName + ', nothing to copy');
-    TestHost.TestMergeAnswer.Enabled := False;
-    if TestHost.TestMergeNotOffered then
-      raise Exception.Create(lTarget.FileName + ' was not offered by the copy''s module picker');
 
     TestHost.TestMergeLines.Add('target' + #9 + lTarget.FileName + #9 + 'records ' + IntToStr(lTarget.RecordCount) + #9 +
       'masters ' + IntToStr(lTarget.MasterCount[True]));
