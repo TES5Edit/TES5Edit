@@ -429,8 +429,9 @@ function wbWorldXWEMDontShow     (const aElement: IwbElement): Boolean;
 {>>> Float Normalizers <<<} //1
 function wbNormalizeToRange(aMin, aMax: Extended): TwbFloatNormalizer;
 
-{>>> FormID Filter Callbacks <<<} //4
+{>>> FormID Filter Callbacks <<<} //5
 function wbCELLRegionFilter     (const aElement: IwbElement; const aMainRecord: IwbMainRecord): Boolean;
+function wbPACKTemplateFilter   (const aElement: IwbElement; const aMainRecord: IwbMainRecord): Boolean;
 function wbQUSTUniqueActorFilter(const aElement: IwbElement; const aMainRecord: IwbMainRecord): Boolean;
 function wbREFRTeleportFilter   (const aElement: IwbElement; const aMainRecord: IwbMainRecord): Boolean;
 function wbVMADObjectFilter     (const aElement: IwbElement; const aMainRecord: IwbMainRecord): Boolean;
@@ -2467,7 +2468,7 @@ begin
     aConflictPriority := cpIgnore;
 end;
 
-{>>> FormID Filter Callbacks <<<} //4
+{>>> FormID Filter Callbacks <<<} //5
 
 function wbCELLRegionFilter(const aElement: IwbElement; const aMainRecord: IwbMainRecord): Boolean;
 begin
@@ -2489,6 +2490,25 @@ begin
     Exit;
 
   if lWorld.MasterOrSelf = lWNAM.MasterOrSelf then
+    Result := True;
+end;
+
+function wbPACKTemplateFilter(const aElement: IwbElement; const aMainRecord: IwbMainRecord): Boolean;
+begin
+  Result := False;
+
+  if not (Assigned(aElement) and Assigned(aMainRecord)) then
+    Exit;
+
+  var lPKDT := aMainRecord.ElementBySignature[PKDT] as IwbContainerElementRef;
+  if not Assigned(lPKDT) then
+    Exit;
+
+  var lType := lPKDT.ElementByName['Type'];
+  if not Assigned(lType) then
+    Exit;
+
+  if lType.NativeValue = 19 then
     Result := True;
 end;
 

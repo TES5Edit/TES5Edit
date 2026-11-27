@@ -8581,7 +8581,7 @@ begin
     wbFormIDCk(QNAM, 'Owner Quest', [QUST]),
     wbStruct(PKCU, 'Counter', [
       wbInteger('Data Input Count', itU32),
-      wbFormIDCk('Package Template', [PACK, NULL]),
+      wbFormIDCk('Package Template', [PACK, NULL]).SetFormIDFilter(wbPACKTemplateFilter),
       wbInteger('Version Counter (autoincremented)', itU32)
     ]).SetRequired,
     wbRStruct('Package Data', [
