@@ -8664,7 +8664,7 @@ begin
             ])
           ])
       ])
-    ]),
+    ]).SetDontShow(wbPACKTemplateDontShow),
     wbRArray('Data Inputs',
       wbRStruct('Data Input', [
         wbInteger(UNAM, 'Index', itU8),
