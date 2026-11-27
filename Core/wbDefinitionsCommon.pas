@@ -559,6 +559,7 @@ procedure wbINFOResponseFileNameToStr        (var aValue: string; aBasePtr, aEnd
 procedure wbLCTNUniqueNPCToStr               (var aValue: string; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 procedure wbNPCPackageToStr                  (var aValue: string; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 procedure wbNPCTemplateToStr                 (var aValue: string; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
+procedure wbPACKDataInputIndexToStr          (var aValue: string; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 procedure wbPERKRankToStr                    (var aValue: string; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 procedure wbObjectPropertyToStr              (var aValue: string; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 procedure wbQUSTAliasToStr                   (var aValue: string; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
@@ -575,9 +576,11 @@ procedure wbToStringFromLinksToMainRecordName(var aValue: string; aBasePtr, aEnd
 procedure wbVec3ToStr                        (var aValue: string; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 procedure wbWwiseGuidToStr                   (var aValue: string; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 
-{>>> RUnion Deciders <<<} //2
-function wbSceneActionTypeDecider  (const aContainer: IwbContainerElementRef): Integer;
-function wbSceneTimelineTypeDecider(const aContainer: IwbContainerElementRef): Integer;
+{>>> RUnion Deciders <<<} //4
+function wbPACKDataInputValueDecider     (const aContainer: IwbContainerElementRef): Integer;
+function wbPACKProcedureTreeBranchDecider(const aContainer: IwbContainerElementRef): Integer;
+function wbSceneActionTypeDecider        (const aContainer: IwbContainerElementRef): Integer;
+function wbSceneTimelineTypeDecider      (const aContainer: IwbContainerElementRef): Integer;
 
 {>>> Union Deciders <<<} //24
 function wbFlagDecider(aFlag: Byte): TwbUnionDecider;
@@ -643,7 +646,8 @@ function wbIdxAddonNode      : TwbNamedIndex;
 function wbIdxCollisionLayer : TwbNamedIndex;
 
 {>>> String Enum Defs <<<} //1
-function wbPACKDataInputTypeEnum: IwbStringDefFormater;
+function wbPACKDataInputTypeEnum     : IwbStringDefFormater;
+function wbPACKProcedureTreeTypeEnum : IwbStringDefFormater;
 
 {>>> Enum Defs <<<} //27
 function wbActorImpactMaterialEnum       : IwbEnumDef;
@@ -5147,6 +5151,88 @@ begin
   end;
 end;
 
+procedure wbPACKDataInputIndexToStr(var aValue: string; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
+begin
+  if not (Assigned(aElement) and (aType in [ctCheck, ctToStr])) then
+    Exit;
+
+  var lIndexText :=
+  if aType = ctToStr then
+    aValue
+  else
+    VarToStr(aElement.NativeValue);
+
+  if lIndexText = '255' then begin
+    if aType = ctToStr then
+      aValue := '[255] None';
+
+    Exit;
+  end;
+
+  var lMainRecord := aElement.ContainingMainRecord;
+  var lDepth := 0;
+  while Assigned(lMainRecord) do begin
+    var lPKCU := lMainRecord.ElementBySignature[PKCU] as IwbContainerElementRef;
+    if not Assigned(lPKCU) then
+      Exit;
+
+    var lTemplate := lPKCU.ElementByName['Package Template'];
+    if not Assigned(lTemplate) then
+      Exit;
+
+    if lTemplate.NativeValue = 0 then
+      Break;
+
+    Inc(lDepth);
+    if lDepth > 32 then
+      Exit;
+
+    lMainRecord := lTemplate.LinksTo as IwbMainRecord;
+  end;
+
+  if not Assigned(lMainRecord) then
+    Exit;
+
+  var lDataInputs := lMainRecord.ElementByName['Data Inputs'] as IwbContainerElementRef;
+  if not Assigned(lDataInputs) then
+    Exit;
+
+  var lFound := False;
+  var lName := '';
+  for var lIndex := 0 to Pred(lDataInputs.ElementCount) do begin
+    var lDataInput := lDataInputs[lIndex] as IwbContainerElementRef;
+    if not Assigned(lDataInput) then
+      Continue;
+
+    var lUNAM := lDataInput.ElementBySignature[UNAM];
+    if not Assigned(lUNAM) or not SameText(lUNAM.EditValue, lIndexText) then
+      Continue;
+
+    lFound := True;
+    var lBNAM := lDataInput.ElementBySignature[BNAM];
+    if Assigned(lBNAM) then
+      lName := lBNAM.EditValue;
+    Break;
+  end;
+
+  case aType of
+    ctCheck: begin
+      if not lFound then
+        aValue := ' <Warning: Data Input [' + lIndexText + '] not found>';
+    end;
+    ctToStr: begin
+      if lFound and (lName <> '') then
+      begin
+        while Length(aValue) < 3 do
+          aValue := '0' + aValue;
+
+        aValue := '[' + aValue + '] ' + lName;
+      end else if not lFound then
+        aValue := aValue + ' <Warning: Data Input not found>';
+    end;
+  end;
+end;
+
 procedure wbPERKRankToStr(var aValue: string; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 begin
   if not Assigned(aElement) then
@@ -5986,7 +6072,59 @@ begin
   end;
 end;
 
-{>>> RUnion Deciders <<<} //2
+{>>> RUnion Deciders <<<} //4
+
+function wbPACKDataInputValueDecider(const aContainer: IwbContainerElementRef): Integer;
+begin
+  Result := -1;
+  if not Assigned(aContainer) then
+    Exit;
+
+  var lANAM := aContainer.ElementBySignature[ANAM];
+  if not Assigned(lANAM) then
+    Exit;
+
+  var lType := lANAM.EditValue;
+
+  if MatchText(lType, ['Bool', 'Float', 'Int', 'ObjectList']) then
+    Result := 0
+  else
+  if SameText(lType, 'Location') then
+    Result := 2
+  else
+  if MatchText(lType, ['SingleRef', 'TargetSelector']) then
+    Result := 3
+  else
+  if SameText(lType, 'Topic') then
+  begin
+    if aContainer.ContainingMainRecord.Version <= 19 then
+      Result := 4
+    else
+      Result := 1;
+  end;
+end;
+
+function wbPACKProcedureTreeBranchDecider(const aContainer: IwbContainerElementRef): Integer;
+begin
+  Result := -1;
+  if not Assigned(aContainer) then
+    Exit;
+
+  var lANAM := aContainer.ElementBySignature[ANAM];
+  if not Assigned(lANAM) then
+    Exit;
+
+  var lType := lANAM.EditValue;
+
+  if MatchText(lType, ['Random', 'Sequence', 'Stacked']) then
+    Result := 0
+  else
+  if SameText(lType, 'Simultaneous') then
+    Result := 1
+  else
+  if SameText(lType, 'Procedure') then
+    Result := 2;
+end;
 
 function wbSceneActionTypeDecider(const aContainer: IwbContainerElementRef): Integer;
 begin
@@ -7259,6 +7397,18 @@ begin
       'SingleRef',
       'TargetSelector',
       'Topic'
+    ]);
+end;
+
+function wbPACKProcedureTreeTypeEnum: IwbStringDefFormater;
+begin
+  Result :=
+    wbStringEnum([
+      'Procedure',
+      'Random',
+      'Sequence',
+      'Simultaneous',
+      'Stacked'
     ]);
 end;
 
