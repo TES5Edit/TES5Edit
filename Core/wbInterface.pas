@@ -4611,6 +4611,28 @@ type
     Identity   : string;
   end;
 
+  TwbInfoPlace = record
+    Id      : string;
+    Prev    : string;
+    Deleted : Boolean;
+  end;
+
+  TwbInfoOrder = class
+  private
+    ioOrder    : TList<string>;
+    ioPlaces   : TDictionary<string, TwbInfoPlace>;
+    ioSpelling : string;
+  public
+    constructor Create;
+    destructor Destroy; override;
+    procedure Insert(const aInfo: IwbMainRecord);
+    function BeginTopic(const aTopic: IwbMainRecord): Boolean;
+    procedure InsertTopic(const aFile: IwbFile; const aTopic: IwbMainRecord; const aSkip: IwbMainRecord = nil);
+    function LastLive: string;
+    function SameState(const aOther: TwbInfoOrder): Boolean;
+    property Spelling: string read ioSpelling;
+  end;
+
   TwbGameContext = class(TInterfacedObject, IwbGameContext)
   protected
     gcRenameQueue    : TList<TwbPendingSave>;
@@ -4715,6 +4737,7 @@ type
     function UnusedIndexIdentity(const aDef: IwbMainRecordDef; const aEnum: IwbEnumDef): string;
     function CanAddNewRecord(const aDef: IwbMainRecordDef): Boolean;
     function InFileStreamOrder(const aFile: IwbFile; const aRecords: TArray<IwbMainRecord>): TArray<IwbMainRecord>; virtual; abstract;
+    function TopicChangedByMerge(const aSource, aTarget: IwbFile; const aTopic: IwbMainRecord): string; virtual; abstract;
     class function IdentityText(const aIdentity: string): string; static;
     class function NoIdentityKeyText(aFormIDBase: Byte; const aIdentity: string): string; static;
     function ExpandFileName(const aFileName: string): string;
@@ -8469,6 +8492,116 @@ function TwbGameContext.CanAddNewRecord(const aDef: IwbMainRecordDef): Boolean;
 begin
   var lEnum := IdentityEnum(aDef);
   Result := not Assigned(lEnum) or (UnusedIndexIdentity(aDef, lEnum) <> '');
+end;
+
+constructor TwbInfoOrder.Create;
+begin
+  inherited;
+  ioOrder := TList<string>.Create;
+  ioPlaces := TDictionary<string, TwbInfoPlace>.Create;
+end;
+
+destructor TwbInfoOrder.Destroy;
+begin
+  ioPlaces.Free;
+  ioOrder.Free;
+  inherited;
+end;
+
+procedure TwbInfoOrder.Insert(const aInfo: IwbMainRecord);
+var
+  lPlace  : TwbInfoPlace;
+  lPlaced : TwbInfoPlace;
+begin
+  lPlace.Id := aInfo.EditorID;
+  lPlace.Prev := '';
+  var lPrev := aInfo.ElementBySignature['PNAM'];
+  if Assigned(lPrev) then
+    lPlace.Prev := LowerCase(lPrev.EditValue);
+  lPlace.Deleted := Assigned(aInfo.ElementBySignature['DELE']);
+  var lKey := LowerCase(lPlace.Id);
+  var lWasPlaced := ioPlaces.TryGetValue(lKey, lPlaced);
+  if not (lWasPlaced and (lPlaced.Prev = lPlace.Prev)) then begin
+    var lBefore := 0;
+    if lPlace.Prev <> '' then
+      if ioPlaces.ContainsKey(lPlace.Prev) then
+        lBefore := Succ(ioOrder.IndexOf(lPlace.Prev))
+      else
+        lBefore := ioOrder.Count;
+    if lWasPlaced then begin
+      var lAt := ioOrder.IndexOf(lKey);
+      ioOrder.Delete(lAt);
+      if lBefore > lAt then
+        Dec(lBefore);
+    end;
+    ioOrder.Insert(lBefore, lKey);
+  end;
+  ioPlaces.AddOrSetValue(lKey, lPlace);
+end;
+
+function TwbInfoOrder.BeginTopic(const aTopic: IwbMainRecord): Boolean;
+begin
+  Result := False;
+  if not Assigned(aTopic) or aTopic.Flags.IsIgnored then
+    Exit;
+  if Assigned(aTopic.ElementBySignature['DELE']) then begin
+    ioOrder.Clear;
+    ioPlaces.Clear;
+    ioSpelling := '';
+    Exit;
+  end;
+  if ioSpelling = '' then
+    ioSpelling := aTopic.EditorID;
+  Result := True;
+end;
+
+procedure TwbInfoOrder.InsertTopic(const aFile: IwbFile; const aTopic: IwbMainRecord; const aSkip: IwbMainRecord);
+begin
+  if not BeginTopic(aTopic) then
+    Exit;
+  var lGroup := aTopic.ChildGroup;
+  if not Assigned(lGroup) then
+    Exit;
+  var lInfos: TArray<IwbMainRecord>;
+  SetLength(lInfos, lGroup.ElementCount);
+  var lCount := 0;
+  for var i := 0 to Pred(lGroup.ElementCount) do begin
+    var lInfo: IwbMainRecord;
+    if Supports(lGroup.Elements[i], IwbMainRecord, lInfo) and not (Assigned(aSkip) and lInfo.Equals(aSkip)) and
+       not lInfo.Flags.IsIgnored then begin
+      lInfos[lCount] := lInfo;
+      Inc(lCount);
+    end;
+  end;
+  SetLength(lInfos, lCount);
+  for var lInfo in aTopic.ContextObj.InFileStreamOrder(aFile, lInfos) do
+    Insert(lInfo);
+end;
+
+function TwbInfoOrder.LastLive: string;
+begin
+  Result := '';
+  for var i := Pred(ioOrder.Count) downto 0 do begin
+    var lPlace := ioPlaces[ioOrder[i]];
+    if not lPlace.Deleted then
+      Exit(lPlace.Id);
+  end;
+end;
+
+function TwbInfoOrder.SameState(const aOther: TwbInfoOrder): Boolean;
+begin
+  Result := False;
+  if ioOrder.Count <> aOther.ioOrder.Count then
+    Exit;
+  for var i := 0 to Pred(ioOrder.Count) do begin
+    if ioOrder[i] <> aOther.ioOrder[i] then
+      Exit;
+    var lMine := ioPlaces[ioOrder[i]];
+    var lTheirs := aOther.ioPlaces[ioOrder[i]];
+    if (lMine.Prev <> lTheirs.Prev) or (lMine.Deleted <> lTheirs.Deleted) then
+      Exit;
+  end;
+  Result := True;
 end;
 
 class function TwbGameContext.IdentityText(const aIdentity: string): string;

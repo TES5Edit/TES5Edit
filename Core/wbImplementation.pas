@@ -48,6 +48,7 @@ type
     function FileRecordsInStreamOrder(const aFile: IwbFile): TArray<IwbMainRecord>; override; final;
   public
     function InFileStreamOrder(const aFile: IwbFile; const aRecords: TArray<IwbMainRecord>): TArray<IwbMainRecord>; override; final;
+    function TopicChangedByMerge(const aSource, aTarget: IwbFile; const aTopic: IwbMainRecord): string; override; final;
   protected
     lgcDenseRecords : TArray<Pointer>;
     lgcFreeIDs      : TArray<Cardinal>;
@@ -5190,6 +5191,56 @@ var
         GetElement(k).ResetConflict;
   end;
 
+  function CellRecordOf(const aRecord: IwbMainRecord): IwbMainRecord;
+  var
+    lGroup : IwbGroupRecord;
+  begin
+    Result := nil;
+    var lContainer := aRecord.Container;
+    while Assigned(lContainer) do begin
+      if Supports(lContainer, IwbGroupRecord, lGroup) and Assigned(lGroup.ChildrenOf) then
+        Exit(lGroup.ChildrenOf);
+      lContainer := lContainer.Container;
+    end;
+  end;
+
+  function CellOf(const aRecord: IwbMainRecord): string;
+  var
+    lGrid : TwbGridCell;
+  begin
+    Result := '';
+    var lCell := CellRecordOf(aRecord);
+    if Assigned(lCell) then begin
+      Result := lCell.EditorID;
+      if lCell.GetGridCell(lGrid) then
+        if Result = '' then
+          Result := Format('%d, %d', [lGrid.x, lGrid.y])
+        else
+          Result := Format('%s (%d, %d)', [Result, lGrid.x, lGrid.y]);
+    end;
+    if Result = '' then
+      Result := '?';
+  end;
+
+  procedure CollectUnits(const aContainer: IwbContainer; var aUnits: TDynElements; var aCount: Integer);
+  var
+    lRecord : IwbMainRecord;
+    lGroup  : IwbGroupRecord;
+  begin
+    for var k := 0 to Pred(aContainer.ElementCount) do begin
+      var lElement := aContainer.Elements[k];
+      if Supports(lElement, IwbMainRecord, lRecord) then begin
+        if lRecord.Signature <> flContextObj.GameDefObj.HeaderSignature then begin
+          if aCount = Length(aUnits) then
+            SetLength(aUnits, aCount * 2 + 16);
+          aUnits[aCount] := lRecord;
+          Inc(aCount);
+        end;
+      end else if Supports(lElement, IwbGroupRecord, lGroup) then
+        CollectUnits(lGroup as IwbContainer, aUnits, aCount);
+    end;
+  end;
+
 begin
   Result := Default(TwbMergeIntoMasterResult);
   if not Assigned(aTarget) then
@@ -5213,6 +5264,162 @@ begin
       if GetRecord(i).IsDeleted then
         raise Exception.CreateFmt('Merge into master: "%s" holds a deletion, %s, which a merge into a Morrowind master does not carry',
           [GetFileName, GetRecord(i).Name]);
+
+  if flContextObj.GameDefObj.IsMorrowind then begin
+    Result.Plan.Kind := fckInject;
+    Result.Plan.Target := aTarget;
+    Result.Plan.Refusal := fcrNoFormIDs;
+    var lUnits: TDynElements := nil;
+    SetLength(lUnits, GetRecordCount);
+    var lUnitCount := 0;
+    for i := 0 to Pred(GetElementCount) do
+      if Supports(GetElement(i), IwbGroupRecord) then
+        CollectUnits(GetElement(i) as IwbContainer, lUnits, lUnitCount);
+    SetLength(lUnits, lUnitCount);
+    if Length(lUnits) = 0 then
+      Exit;
+    if not aTarget.AcceptsCopiesOf(lUnits, False, False, 0) then
+      raise Exception.CreateFmt('Merge into master: "%s" can not take copies of the records of "%s"', [aTarget.FileName, GetFileName]);
+    var lDest := aTarget as TObject as TwbFile;
+    wbCancelLock;
+    wbProgressLock;
+    try
+      lSet := nil;
+      var lTopics: THashSet<IwbMainRecord> := nil;
+      try
+        lSet := TwbFilesSet.Create;
+        lTopics := THashSet<IwbMainRecord>.Create;
+        for var lUnit in lUnits do begin
+          var lRecord := lUnit as IwbMainRecord;
+          var lReference := (lRecord as TObject as TwbMainRecord).IsEmbeddedReference;
+          var lWhy := lDest.CopyRefusal(lRecord, False, True, wbNoCopyRules);
+          if lWhy <> '' then
+            raise Exception.Create('Merge into master: ' + lWhy);
+          if lRecord.Flags.IsIgnored then
+            raise Exception.CreateFmt('Merge into master: "%s" holds an ignored record, %s, which a merge into a Morrowind master ' +
+              'does not carry', [GetFileName, lRecord.Name]);
+          var lHeld := lDest.GetContainedRecordByLoadOrderFormID(lRecord.LoadOrderFormID, False);
+          if Assigned(lHeld) and lHeld.Flags.IsIgnored then
+            raise Exception.CreateFmt('Merge into master: "%s" holds %s as an ignored record, which a merge into a Morrowind ' +
+              'master does not carry', [aTarget.FileName, lHeld.Name]);
+          if Assigned(lHeld) and lHeld.IsDeleted then
+            raise Exception.CreateFmt('Merge into master: "%s" holds %s as a deletion, which a merge into a Morrowind master does ' +
+              'not carry', [aTarget.FileName, lHeld.Name]);
+          if Assigned(lHeld) and (lRecord.Signature = 'CELL') then begin
+            var lKeptAll: TArray<string> := ['WHGT', 'AMBI', 'RGNN', 'NAM5'];
+            for var lKept in lKeptAll do begin
+              var lInHeld := Assigned(lHeld.ElementBySignature[StrToSignature(lKept)]);
+              var lInSource := Assigned(lRecord.ElementBySignature[StrToSignature(lKept)]);
+              if lKept = 'WHGT' then begin
+                lInHeld := lInHeld or Assigned(lHeld.ElementBySignature['INTV']);
+                lInSource := lInSource or Assigned(lRecord.ElementBySignature['INTV']);
+              end;
+              if lInHeld and not lInSource then
+                raise Exception.CreateFmt('Merge into master: %s of "%s" has no %s, which "%s" holds; OpenMW keeps the master''s, ' +
+                  'a merge would remove it', [lRecord.Name, GetFileName, lKept, aTarget.FileName]);
+            end;
+          end;
+          if Assigned(lHeld) and (lRecord.Signature = 'SSCR') and
+             not SameText(lRecord.ElementEditValues['NAME'], lHeld.ElementEditValues['NAME']) then
+            raise Exception.CreateFmt('Merge into master: %s of "%s" starts script %s and "%s" starts %s under the same ' +
+              'numerical ID; a merge would replace that start entry', [lRecord.Name, GetFileName,
+              lRecord.ElementEditValues['NAME'], aTarget.FileName, lHeld.ElementEditValues['NAME']]);
+          if lReference then begin
+            var lNumber: Cardinal := lRecord.RecordBySignature['FRMR'].NativeValue;
+            if lNumber shr 24 = 0 then
+              raise Exception.CreateFmt('Merge into master: "%s" owns reference %s in cell %s; moving it into "%s" would give it a ' +
+                'new identity', [GetFileName, IntToHex(lNumber, 8), CellOf(lRecord), aTarget.FileName]);
+            if RecordCountAt(lRecord.FixedFormID) > 1 then
+              raise Exception.CreateFmt('Merge into master: "%s" holds more than one reference at the number of %s in cell %s',
+                [GetFileName, lRecord.Name, CellOf(lRecord)]);
+            if Assigned(lHeld) then begin
+              if lDest.RecordCountAt(lHeld.FixedFormID) > 1 then
+                raise Exception.CreateFmt('Merge into master: "%s" holds more than one reference at the number of %s of "%s"',
+                  [aTarget.FileName, lRecord.Name, GetFileName]);
+              if Assigned(lHeld.RecordBySignature['CNDT']) then
+                raise Exception.CreateFmt('Merge into master: %s in cell %s of "%s" overrides a reference "%s" holds as a moved ' +
+                  'reference in cell %s; a copy over it would leave the move without its cell', [lRecord.Name, CellOf(lRecord),
+                  GetFileName, aTarget.FileName, CellOf(lHeld)]);
+              var lCell := CellRecordOf(lRecord);
+              var lHeldCell := CellRecordOf(lHeld);
+              if not Assigned(lCell) or not Assigned(lHeldCell) or (lCell.LoadOrderFormID <> lHeldCell.LoadOrderFormID) then
+                raise Exception.CreateFmt('Merge into master: %s in cell %s of "%s" is held by "%s" in cell %s; a merge does not move a ' +
+                  'reference to another cell', [lRecord.Name, CellOf(lRecord), GetFileName, aTarget.FileName, CellOf(lHeld)]);
+            end;
+          end;
+          var lTopic: IwbMainRecord := nil;
+          if lRecord.Signature = 'DIAL' then
+            lTopic := lRecord
+          else if lRecord.Signature = 'INFO' then begin
+            var lGroup: IwbGroupRecord;
+            if Supports(lRecord.Container, IwbGroupRecord, lGroup) then
+              lTopic := lGroup.ChildrenOf;
+          end;
+          if Assigned(lTopic) and not lTopics.Contains(lTopic) then begin
+            lTopics.Add(lTopic);
+            var lChange := flContextObj.TopicChangedByMerge(Self, aTarget, lTopic);
+            if lChange <> '' then
+              raise Exception.Create('Merge into master: ' + lChange);
+          end;
+          lRecord.ReportRequiredMastersForCopy(lSet, False, False);
+        end;
+        var lNeeded := TwbFilesSet.Create;
+        try
+          for var lFile in lSet do
+            if ((lFile as TObject) <> Self) and ((lFile as TObject) <> (aTarget as TObject)) then
+              lNeeded.Add(lFile);
+          Result.Masters := lDest.RequiredMastersFor(lNeeded);
+        finally
+          lNeeded.Free;
+        end;
+      finally
+        lTopics.Free;
+        lSet.Free;
+      end;
+      if lDest.GetMasterCount(True) + Length(Result.Masters) > Succ(TwbFileID.MaxFullSlot(flContextObj.SlotLayout)) then
+        raise Exception.CreateFmt('Merge into master: "%s" can not take %d more masters', [aTarget.FileName, Length(Result.Masters)]);
+      if Length(Result.Masters) > 0 then begin
+        lNames := TStringList.Create;
+        try
+          for var lFile in Result.Masters do
+            lNames.Add(lFile.FileName);
+          aTarget.AddMastersIfMissing(lNames);
+        finally
+          lNames.Free;
+        end;
+      end;
+      Result.Groups := lUnits;
+      SetLength(Result.Copied, Length(lUnits));
+      try
+        for i := 0 to High(lUnits) do begin
+          var lCopy: IwbElement := nil;
+          try
+            lCopy := lDest.AddCopy(lUnits[i], [cfDeepCopy, cfAllowOverwrite], wbNoCopyRules);
+          except
+            on E: EAbort do
+              raise EAbort.CreateFmt('Merge into master: copying %s into "%s" stopped after %d of %d records and %d added masters, ' +
+                'which remain changed in memory and are not saved: %s', [lUnits[i].Name, aTarget.FileName, i, Length(lUnits),
+                Length(Result.Masters), E.Message]);
+            on E: Exception do
+              raise Exception.CreateFmt('Merge into master: copying %s into "%s" failed after %d of %d records and %d added masters, ' +
+                'which remain changed in memory and are not saved: %s: %s', [lUnits[i].Name, aTarget.FileName, i, Length(lUnits),
+                Length(Result.Masters), E.ClassName, E.Message]);
+          end;
+          if not Assigned(lCopy) then
+            raise Exception.CreateFmt('Merge into master: copying %s into "%s" returned no record after %d of %d records and %d ' +
+              'added masters, which remain changed in memory and are not saved', [lUnits[i].Name, aTarget.FileName, i, Length(lUnits),
+              Length(Result.Masters)]);
+          Result.Copied[i] := lCopy;
+        end;
+      finally
+        ResetGroups;
+      end;
+    finally
+      wbProgressUnlock;
+      wbCancelUnlock;
+    end;
+    Exit;
+  end;
 
   if aTarget.IsUpdate then
     Result.InjectSkippedUpdate := True
@@ -34627,6 +34834,102 @@ begin
   for var i := Low(lSorted) to High(lSorted) do
     lRecords[i] := lSorted[i] as IwbMainRecord;
   Result := (aFile as TObject as TwbFile).RecordsInStreamOrder(lRecords);
+end;
+
+function TwbLoadingGameContext.TopicChangedByMerge(const aSource, aTarget: IwbFile; const aTopic: IwbMainRecord): string;
+var
+  lFiles  : TArray<IwbFile>;
+  lStack  : TwbInfoOrder;
+  lMerged : TwbInfoOrder;
+
+  procedure InsertMergedTopic(const aKey: TwbFormID);
+  begin
+    var lSourceTopic := aSource.ContainedRecordByLoadOrderFormID[aKey, False];
+    var lTargetTopic := aTarget.ContainedRecordByLoadOrderFormID[aKey, False];
+    var lTopic := lSourceTopic;
+    if not Assigned(lTopic) then
+      lTopic := lTargetTopic;
+    if not lMerged.BeginTopic(lTopic) then
+      Exit;
+    var lRecords: TArray<IwbMainRecord> := nil;
+    var lCount := 0;
+    for var lSide := 0 to 1 do begin
+      var lSideTopic := lTargetTopic;
+      if lSide = 1 then
+        lSideTopic := lSourceTopic;
+      if not Assigned(lSideTopic) or not Assigned(lSideTopic.ChildGroup) then
+        Continue;
+      var lGroup := lSideTopic.ChildGroup;
+      SetLength(lRecords, lCount + lGroup.ElementCount);
+      for var i := 0 to Pred(lGroup.ElementCount) do begin
+        var lInfo: IwbMainRecord;
+        if Supports(lGroup.Elements[i], IwbMainRecord, lInfo) and
+           ((lSide = 0) or not Assigned(aTarget.ContainedRecordByLoadOrderFormID[lInfo.LoadOrderFormID, False])) then begin
+          lRecords[lCount] := lInfo;
+          Inc(lCount);
+        end;
+      end;
+    end;
+    SetLength(lRecords, lCount);
+    for var lInfo in InFileStreamOrder(aTarget, lRecords) do begin
+      var lValues := lInfo;
+      if lInfo._File.Equals(aTarget) then begin
+        var lUnit := aSource.ContainedRecordByLoadOrderFormID[lInfo.LoadOrderFormID, False];
+        if Assigned(lUnit) then
+          lValues := lUnit;
+      end;
+      if not lValues.Flags.IsIgnored then
+        lMerged.Insert(lValues);
+    end;
+  end;
+
+begin
+  lFiles := nil;
+  for var lFile in gcFiles do
+    if Assigned(lFile) and (lFile.LoadOrder >= 0) and (lFile.LoadOrder <= aSource.LoadOrder) and
+       not (fsIsCompareLoad in lFile.FileStates) then begin
+      SetLength(lFiles, Succ(Length(lFiles)));
+      lFiles[High(lFiles)] := lFile;
+    end;
+  TArray.Sort<IwbFile>(lFiles, TComparer<IwbFile>.Construct(
+    function(const aLeft, aRight: IwbFile): Integer
+    begin
+      Result := CmpI32(aLeft.LoadOrder, aRight.LoadOrder);
+    end));
+  var lKey := aTopic.LoadOrderFormID;
+  lStack := TwbInfoOrder.Create;
+  try
+    lMerged := TwbInfoOrder.Create;
+    try
+      for var lFile in lFiles do begin
+        lStack.InsertTopic(lFile, lFile.ContainedRecordByLoadOrderFormID[lKey, False]);
+        if lFile.Equals(aSource) then
+          Continue;
+        if lFile.Equals(aTarget) then
+          InsertMergedTopic(lKey)
+        else
+          lMerged.InsertTopic(lFile, lFile.ContainedRecordByLoadOrderFormID[lKey, False]);
+      end;
+      Result := '';
+      if lStack.Spelling <> lMerged.Spelling then begin
+        if lMerged.Spelling = '' then
+          Exit(Format('merged into "%s", topic %s of "%s" would no longer load: a file loading between them deletes it',
+            [aTarget.FileName, aTopic.EditorID, aSource.FileName]));
+        Result := Format('merged into "%s", topic %s of "%s" would load as "%s" where it loads as "%s" now; OpenMW keeps the ' +
+          'first spelling it loads', [aTarget.FileName, aTopic.EditorID, aSource.FileName, lMerged.Spelling, lStack.Spelling]);
+      end;
+      if not lStack.SameState(lMerged) then
+        if Result = '' then
+          Result := Format('merged into "%s", the INFOs of topic %s of "%s" would not load as they do now',
+            [aTarget.FileName, aTopic.EditorID, aSource.FileName])
+        else
+          Result := Result + ', and its INFOs would not load as they do now';
+    finally
+      lMerged.Free;
+    end;
+  finally
+    lStack.Free;
+  end;
 end;
 
 function TwbLoadingGameContext.NameFileKey(const aElement: IwbElement; const aLoadOrderFormID: TwbFormID;
