@@ -1220,6 +1220,8 @@ type
     procedure Delocalize; override; final;
     function GetStringID: Cardinal; override; final;
 
+    procedure MarkModifiedRecursive(const aElementTypes: TwbElementTypes); override;
+
     {---IwbContainerElementRef---}
     procedure PrepareSave; override;
 
@@ -35790,6 +35792,26 @@ begin
     Result := True
   else
     Result := False;
+end;
+
+procedure TwbDataContainer.MarkModifiedRecursive(
+  const aElementTypes: TwbElementTypes);
+var
+  SelfRef: IwbContainerElementRef;
+begin
+  if not (GetElementType in aElementTypes) then
+    Exit;
+
+  SelfRef := Self as IwbContainerElementRef;
+  DoInit(False);
+
+  if not Assigned(eContainer) or IwbContainer(eContainer).IsElementEditable(Self) then begin
+    var lValueDef := GetValueDef;
+    if Assigned(lValueDef) and Assigned(dcDataBasePtr) then
+      lValueDef.NormalizeData(dcDataBasePtr, dcDataEndPtr, Self);
+  end;
+
+  inherited;
 end;
 
 procedure TwbDataContainer.MergeStorageInternal(var aBasePtr: Pointer; aEndPtr: Pointer);
