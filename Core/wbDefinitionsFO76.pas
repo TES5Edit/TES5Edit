@@ -17738,8 +17738,8 @@ begin
   gdNexusModsUrl := 'https://www.nexusmods.com/fallout76/mods/30';
   {if wbToolMode = tmLODgen then
     wbNexusModsUrl := '';}
-  gdHEDRVersion := 266.0;
-  gdDefaultFormVersion := 209;
+  gdHEDRVersion := 280.0;
+  gdDefaultFormVersion := 210;
   gdQuestFlagsSignature := 'DNAM';
 end;
 
