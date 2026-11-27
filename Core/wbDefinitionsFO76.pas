@@ -13335,7 +13335,7 @@ begin
           wbInteger('Branch Count', itU32),
           wbInteger('Flags', itU32, wbFlags([
             'Repeat when Complete',
-            'Unknown 1'
+            'Run Until All Children Complete'
           ])).IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse)
         ]),
         wbString(PNAM, 'Procedure Type'),
