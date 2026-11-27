@@ -8490,7 +8490,7 @@ begin
 
   var wbPRCB :=
     wbStruct(PRCB, 'Root', [
-      wbInteger('Branch Count', itU32),
+      wbInteger('Branch Count', itU32, nil, cpBenign),
       wbInteger('Flags', itU32,
         wbFlags([
         {0} 'Repeat when Complete',
@@ -8630,39 +8630,39 @@ begin
     ]),
     wbByteArray(XNAM, 'Marker', 1).SetRequired,
     wbRStruct('Procedure Tree', [
-      wbRStruct('Branch', [
-        wbString(ANAM, 'Branch Type').SetFormaterOnValue(wbPACKProcedureTreeTypeEnum),
-        wbCITCReq,
-        wbConditions,
-        wbRUnion('Branch Data', wbPACKProcedureTreeBranchDecider, [
-        {0} wbRStruct('Branch Data', [
-              wbPRCB.SetRequired,
-              wbRArray('Branches',
-                wbRRecursive('Branch', 4)
-              ).SetCountPath('PRCB\[0]', True)
-            ]),
-        {1} wbRStruct('Branch Data', [
-              wbPRCB.SetRequired,
-              wbRArray('Branches',
-                wbRRecursive('Branch', 4)
-              ).SetCountPath('PRCB\[0]', True),
-              wbRUnion('Flags Override', [
-              {0} wbPFO2,
-              {1} wbPFOR
-              ])
-            ]),
-        {2} wbRStruct('Branch Data', [
-              wbString(PNAM, 'Procedure Type'),
-              wbInteger(FNAM, 'Success Completes Package', itU32, wbBoolEnum),
-              wbRArray('Data Input Indexes',
-                wbInteger(PKC2, 'Index', itU8).SetToStr(wbPACKDataInputIndexToStr)
-              ),
-              wbRUnion('Flags Override', [
-              {0} wbPFO2,
-              {1} wbPFOR
-              ])
+      wbString(ANAM, 'Branch Type')
+        .SetFormaterOnValue(wbPACKProcedureTreeTypeEnum)
+        .SetDefaultEditValue('Procedure'),
+      wbCITCReq,
+      wbConditions,
+      wbRUnion('Branch Data', wbPACKProcedureTreeBranchDecider, [
+      {0} wbRStruct('Branch Data', [
+            wbPRCB.SetRequired,
+            wbRArray('Branches',
+              wbRRecursive('Branch', 4)
+            ).SetCountPath('PRCB\[0]', True)
+          ]),
+      {1} wbRStruct('Branch Data', [
+            wbPRCB.SetRequired,
+            wbRArray('Branches',
+              wbRRecursive('Branch', 4)
+            ).SetCountPath('PRCB\[0]', True),
+            wbRUnion('Flags Override', [
+            {0} wbPFO2,
+            {1} wbPFOR
             ])
-        ])
+          ]),
+      {2} wbRStruct('Branch Data', [
+            wbString(PNAM, 'Procedure Type'),
+            wbInteger(FNAM, 'Success Completes Package', itU32, wbBoolEnum),
+            wbRArray('Data Input Indexes',
+              wbInteger(PKC2, 'Index', itU8).SetToStr(wbPACKDataInputIndexToStr)
+            ),
+            wbRUnion('Flags Override', [
+            {0} wbPFO2,
+            {1} wbPFOR
+            ])
+          ])
       ])
     ]),
     wbRArray('Data Inputs',
