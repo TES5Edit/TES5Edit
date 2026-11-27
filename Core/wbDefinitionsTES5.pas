@@ -8494,7 +8494,7 @@ begin
       wbInteger('Flags', itU32,
         wbFlags([
         {0} 'Repeat when Complete',
-        {1} 'Unknown 1'
+        {1} 'Run Until All Children Complete'
         ])).IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse)
     ]);
 
