@@ -17168,9 +17168,16 @@ begin
   mrBaseRecordID := TwbFormID.Null;
   Exclude(mrStates, mrsBaseRecordChecked);
 
-  Result := inherited CompareExchangeFormID(aOldFormID, aNewFormID);
-  if {Result and} (csRefsBuild in cntStates) then // if you changed to an already existing FormID
-    BuildRef;
+  try
+    Result := inherited CompareExchangeFormID(aOldFormID, aNewFormID);
+    if Result then
+      ResetConflict;
+    if {Result and} (csRefsBuild in cntStates) then // if you changed to an already existing FormID
+      BuildRef;
+  except
+    ResetConflict;
+    raise;
+  end;
 end;
 
 procedure TwbMainRecord.ContainerChanged;
