@@ -261,6 +261,7 @@ begin
     AddConst(cUnit, 'dtSubRecordArray', ord(dtSubRecordArray));
     AddConst(cUnit, 'dtSubRecordStruct', ord(dtSubRecordStruct));
     AddConst(cUnit, 'dtSubRecordUnion', ord(dtSubRecordUnion));
+    AddConst(cUnit, 'dtSubRecordRecursive', ord(dtSubRecordRecursive));
     AddConst(cUnit, 'dtString', ord(dtString));
     AddConst(cUnit, 'dtLString', ord(dtLString));
     AddConst(cUnit, 'dtLenString', ord(dtLenString));

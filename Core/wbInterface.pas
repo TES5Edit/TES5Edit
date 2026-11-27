@@ -463,6 +463,7 @@ type
     dtSubRecordArray,
     dtSubRecordStruct,
     dtSubRecordUnion,
+    dtSubRecordRecursive,
     dtString,
     dtLString,
     dtLenString,
@@ -575,6 +576,7 @@ var
     dtSubRecordArray,
     dtSubRecordStruct,
     dtSubRecordUnion,
+    dtSubRecordRecursive,
     dtArray,
     dtStruct,
     dtUnion,
@@ -3309,10 +3311,17 @@ type
     function GetSorted(const aContainer: IwbContainer): Boolean;
     function GetCountPaths: TArray<string>;
     function GetCount: Integer;
+    function GetCountLimitsLoad: Boolean;
     function GetMaxCount: UInt64;
 
-    function SetCountPath(const aValue: string): IwbSubRecordArrayDef; overload;
-    function SetCountPath(const aValues: array of string): IwbSubRecordArrayDef; overload;
+    function SetCountPath(const aValue      : string;
+                                aLimitsLoad : Boolean = False)
+                                            : IwbSubRecordArrayDef; overload;
+
+    function SetCountPath(const aValues     : array of string;
+                                aLimitsLoad : Boolean = False)
+                                            : IwbSubRecordArrayDef; overload;
+
     function SetIsSorted(const aIsSorted: TwbIsSortedCallback): IwbSubRecordArrayDef;
     function SetMaxCount(const aMaxCount: UInt64): IwbSubRecordArrayDef;
 
@@ -3325,6 +3334,7 @@ type
     property Sorted[const aContainer: IwbContainer]: Boolean read GetSorted;
     property CountPaths: TArray<string> read GetCountPaths;
     property DefaultEditValues: TwbStringArray read GetDefaultEditValues;
+    property CountLimitsLoad: Boolean read GetCountLimitsLoad;
   end;
 
   IwbSubRecordStructDef = interface(IwbRecordMemberDef)
@@ -3354,6 +3364,18 @@ type
     property HasDecider: Boolean read GetHasDecider;
     property Members[aIndex: Integer]: IwbRecordMemberDef read GetMember;
     property MemberCount: Integer read GetMemberCount;
+  end;
+
+  IwbSubRecordRecursiveDef = interface(IwbRecordMemberDef)
+  ['{C4BC9C8F-9201-48D9-A268-CF27253098A6}']
+    function GetLevelsUp: Integer;
+    function GetTarget: IwbRecordMemberDef;
+
+    property LevelsUp: Integer
+      read GetLevelsUp;
+
+    property Target: IwbRecordMemberDef
+      read GetTarget;
   end;
 
   IwbResolvableDef = interface(IwbValueDef)
@@ -5835,6 +5857,10 @@ function wbRUnion(const aName     : string;
                         aPriority : TwbConflictPriority = cpNormal;
                         aRequired : Boolean = False)
                                   : IwbSubRecordUnionDef; overload;
+
+function wbRRecursive(const aName     : string;
+                      const aLevelsUp : Integer)
+                                      : IwbSubRecordRecursiveDef;
 
 
 {--- wbStructS - array of struct ----------------------------------------------}
@@ -9905,6 +9931,7 @@ type
     sraDefaultEditValues : TwbStringArray;
     sraCountPaths        : TArray<string>;
     sraMaxCount          : UInt64;
+    sraCountLimitsLoad   : Boolean;
 
     procedure CheckMaxCount;
   public
@@ -9951,13 +9978,20 @@ type
     function GetSorted(const aContainer: IwbContainer): Boolean;
     function GetCountPaths: TArray<string>;
     function GetCount: Integer;
+    function GetCountLimitsLoad: Boolean;
     function GetMaxCount: UInt64;
 
     function SetDefaultEditValues(const aValues: array of string): IwbSubRecordArrayDef;
     function GetDefaultEditValues: TwbStringArray;
 
-    function SetCountPath(const aValue: string): IwbSubRecordArrayDef; overload;
-    function SetCountPath(const aValues: array of string): IwbSubRecordArrayDef; overload;
+    function SetCountPath(const aValue      : string;
+                                aLimitsLoad : Boolean = False)
+                                            : IwbSubRecordArrayDef; overload;
+
+    function SetCountPath(const aValues     : array of string;
+                                aLimitsLoad : Boolean = False)
+                                            : IwbSubRecordArrayDef; overload;
+
     function SetIsSorted(const aIsSorted: TwbIsSortedCallback): IwbSubRecordArrayDef;
     function SetMaxCount(const aMaxCount: UInt64): IwbSubRecordArrayDef;
   end;
@@ -10124,6 +10158,47 @@ type
     function GetHasDecider: Boolean;
     function GetMemberIndex(const aContainer: IwbContainerElementRef): Integer;
     function GetDecidedMember(const aContainer: IwbContainerElementRef): IwbRecordMemberDef;
+  end;
+
+  TwbSubRecordRecursiveDef = class(TwbRecordMemberDef, IwbSubRecordRecursiveDef)
+  private
+    srrLevelsUp        : Integer;
+    [Unsafe] srrTarget : IwbRecordMemberDef;
+
+    procedure ResolveTarget;
+    procedure InjectSignatures;
+
+  public
+    constructor Clone(const aSource: TwbDef); override; final;
+    constructor Create(const aName     : string;
+                             aLevelsUp : Integer); reintroduce;
+
+    {---IwbDef---}
+    function GetDefType: TwbDefType; override; final;
+    function GetDefTypeName: string; override; final;
+    function CanAssign(const aElement: IwbElement; aIndex: Integer; const aDef: IwbDef): Boolean; override; final;
+    function GetAssignTemplates(const aContainer: IwbContainerElementRef; aIndex: Integer): TwbDefs; override; final;
+    function GetConflictPriority(const aElement: IwbElement): TwbConflictPriority; override; final;
+    function GetConflictPriorityCanChange: Boolean; override; final;
+    function GetDontShow(const aElement: IwbElement): Boolean; override; final;
+    function GetHasDontShow: Boolean; override; final;
+    procedure Report(const aParents: TwbDefPath); override; final;
+
+    {---IwbDefInternal---}
+    procedure InitFromParentBeforeChildren; override; final;
+
+    {---IwbSignatureDef---}
+    function GetDefaultSignature: TwbSignature; override; final;
+    function GetSignature(const aIndex: Integer): TwbSignature; override; final;
+    function GetSignatureCount: Integer; override; final;
+    function CanHandle(const aContainer     : IwbContainerElementRef;
+                       const aSignature     : TwbSignature;
+                       const aDataContainer : IwbDataContainer)
+                                            : Boolean; override; final;
+
+    {---IwbSubRecordRecursiveDef---}
+    function GetLevelsUp: Integer;
+    function GetTarget: IwbRecordMemberDef;
   end;
 
   TwbSubRecordStructSKDef = class(TwbSubRecordStructDef, IwbHasSortKeyDef)
@@ -12907,6 +12982,13 @@ function wbRUnion(const aName     : string;
                                   : IwbSubRecordUnionDef; overload;
 begin
   Result := TwbSubRecordUnionDef.Create(aPriority, aRequired, aName, aMembers, aSkipSigs, aDecider);
+end;
+
+function wbRRecursive(const aName     : string;
+                      const aLevelsUp : Integer)
+                                      : IwbSubRecordRecursiveDef;
+begin
+  Result := TwbSubRecordRecursiveDef.Create(aName, aLevelsUp);
 end;
 
 
@@ -15786,6 +15868,7 @@ begin
     Self.sraCountPaths := Copy(sraCountPaths);
     Self.sraIsSorted := sraIsSorted;
     Self.sraMaxCount := sraMaxCount;
+    Self.sraCountLimitsLoad := sraCountLimitsLoad;
   end;
 end;
 
@@ -15869,6 +15952,11 @@ begin
   Result := sraCount;
 end;
 
+function TwbSubRecordArrayDef.GetCountLimitsLoad: Boolean;
+begin
+  Result := sraCountLimitsLoad;
+end;
+
 function TwbSubRecordArrayDef.GetCountPaths: TArray<string>;
 begin
   Result := sraCountPaths;
@@ -15928,15 +16016,19 @@ begin
   defReported := True;
 end;
 
-function TwbSubRecordArrayDef.SetCountPath(const aValue: string): IwbSubRecordArrayDef;
+function TwbSubRecordArrayDef.SetCountPath(const aValue      : string;
+                                                 aLimitsLoad : Boolean = False)
+                                                             : IwbSubRecordArrayDef;
 begin
   if aValue = '' then
-    Result := SetCountPath([])
+    Result := SetCountPath([], aLimitsLoad)
   else
-    Result := SetCountPath([aValue]);
+    Result := SetCountPath([aValue], aLimitsLoad);
 end;
 
-function TwbSubRecordArrayDef.SetCountPath(const aValues: array of string): IwbSubRecordArrayDef;
+function TwbSubRecordArrayDef.SetCountPath(const aValues     : array of string;
+                                                 aLimitsLoad : Boolean = False)
+                                                             : IwbSubRecordArrayDef;
 begin
   var lDifferent := False;
 
@@ -15955,15 +16047,18 @@ begin
       Inc(lNewLength);
     end;
 
+  var lNewLimitsLoad := aLimitsLoad and (lNewLength > 0);
+
   if not lDifferent then
-    lDifferent := lNewLength <> lOldLength;
+    lDifferent := (lNewLength <> lOldLength) or (lNewLimitsLoad <> sraCountLimitsLoad);
 
   if lDifferent then begin
     if defIsLocked then
-      Exit(TwbSubRecordArrayDef(Duplicate).SetCountPath(aValues));
+      Exit(TwbSubRecordArrayDef(Duplicate).SetCountPath(aValues, aLimitsLoad));
 
     SetLength(lNewCountPaths, lNewLength);
     sraCountPaths := lNewCountPaths;
+    sraCountLimitsLoad := lNewLimitsLoad;
   end;
 
   Result := Self;
@@ -31144,6 +31239,228 @@ begin
     aText := ToStrings[j]
   else
     Result := aText = '';
+end;
+
+{ TwbSubRecordRecursiveDef }
+
+function TwbSubRecordRecursiveDef.CanAssign(const aElement: IwbElement;
+  aIndex: Integer; const aDef: IwbDef): Boolean;
+begin
+  if dfDontAssign in defFlags then
+    Exit(False);
+
+  var lOther: IwbSubRecordRecursiveDef;
+  if Supports(aDef, IwbSubRecordRecursiveDef, lOther) then
+    Exit((lOther.Name = ndName) and (lOther.LevelsUp = srrLevelsUp));
+
+  Result := Assigned(srrTarget) and srrTarget.CanAssign(aElement, aIndex, aDef);
+end;
+
+function TwbSubRecordRecursiveDef.CanHandle(
+  const aContainer: IwbContainerElementRef; const aSignature: TwbSignature;
+  const aDataContainer: IwbDataContainer): Boolean;
+begin
+  Result := Assigned(srrTarget) and srrTarget.CanHandle(aContainer, aSignature, aDataContainer);
+end;
+
+constructor TwbSubRecordRecursiveDef.Clone(const aSource: TwbDef);
+begin
+  with aSource as TwbSubRecordRecursiveDef do
+    Self.Create(ndName, srrLevelsUp).AfterClone(aSource);
+end;
+
+constructor TwbSubRecordRecursiveDef.Create(const aName: string;
+  aLevelsUp: Integer);
+begin
+  inherited Create(cpNormal, False, aName, False);
+  srrLevelsUp := aLevelsUp;
+end;
+
+function TwbSubRecordRecursiveDef.GetAssignTemplates(
+  const aContainer: IwbContainerElementRef; aIndex: Integer): TwbDefs;
+begin
+  Result := nil;
+  if dfDontAssign in defFlags then
+    Exit;
+
+  if Assigned(srrTarget) then
+    Result := srrTarget.GetAssignTemplates(aContainer, aIndex);
+end;
+
+function TwbSubRecordRecursiveDef.GetConflictPriority(
+  const aElement: IwbElement): TwbConflictPriority;
+begin
+  Result :=
+  if Assigned(srrTarget) then
+    srrTarget.GetConflictPriority(aElement)
+  else
+    inherited;
+end;
+
+function TwbSubRecordRecursiveDef.GetConflictPriorityCanChange: Boolean;
+begin
+  Result :=
+  if Assigned(srrTarget) then
+    srrTarget.GetConflictPriorityCanChange
+  else
+    inherited;
+end;
+
+function TwbSubRecordRecursiveDef.GetDefaultSignature: TwbSignature;
+begin
+  Result :=
+  if Assigned(srrTarget) then
+    srrTarget.DefaultSignature
+  else
+    inherited;
+end;
+
+function TwbSubRecordRecursiveDef.GetDefType: TwbDefType;
+begin
+  Result := dtSubRecordRecursive;
+end;
+
+function TwbSubRecordRecursiveDef.GetDefTypeName: string;
+begin
+  Result := 'SubRecordRecursive (' + srrLevelsUp.ToString + ' up)';
+end;
+
+function TwbSubRecordRecursiveDef.GetDontShow(
+  const aElement: IwbElement): Boolean;
+begin
+  Result :=
+  if Assigned(srrTarget) then
+    srrTarget.GetDontShow(aElement)
+  else
+    inherited;
+end;
+
+function TwbSubRecordRecursiveDef.GetHasDontShow: Boolean;
+begin
+  Result :=
+  if Assigned(srrTarget) then
+    srrTarget.GetHasDontShow
+  else
+    inherited;
+end;
+
+function TwbSubRecordRecursiveDef.GetLevelsUp: Integer;
+begin
+  Result := srrLevelsUp;
+end;
+
+function TwbSubRecordRecursiveDef.GetSignature(
+  const aIndex: Integer): TwbSignature;
+begin
+  raise Exception.Create('Invalid index');
+end;
+
+function TwbSubRecordRecursiveDef.GetSignatureCount: Integer;
+begin
+  Result := 0;
+end;
+
+function TwbSubRecordRecursiveDef.GetTarget: IwbRecordMemberDef;
+begin
+  Result := srrTarget;
+end;
+
+procedure TwbSubRecordRecursiveDef.InitFromParentBeforeChildren;
+begin
+  var lExplicitRequired := defRequired;
+
+  inherited;
+
+  defRequired := False;
+  if lExplicitRequired then
+    raise Exception.Create(GetFullPath + ': wbRRecursive can not be required');
+
+  ResolveTarget;
+
+  defFlags := defFlags + (srrTarget as TwbDef).defFlags;
+
+  InjectSignatures;
+end;
+
+procedure TwbSubRecordRecursiveDef.InjectSignatures;
+begin
+  var lTargetObj := srrTarget as TwbDef;
+  var lChild: TwbDef := Self;
+  var lParent: TwbDef := defParent;
+
+  repeat
+    var lExposes: Boolean;
+    if lParent is TwbSubRecordStructDef then begin
+      var lPos := lParent.GetChildPos(lChild);
+      Assert(lPos >= 0);
+
+      with TwbSubRecordStructDef(lParent) do begin
+        if srsAllowUnordered or (dfAllowAnyMember in defFlags) then
+          raise Exception.Create(Self.GetFullPath + ': wbRRecursive is not supported inside an unordered wbRStruct');
+
+        for var lSigIdx := 0 to Pred(srrTarget.SignatureCount) do
+            srsSignatures.AddObject(srrTarget.Signatures[lSigIdx], Pointer(lPos));
+
+        lExposes := lPos = 0;
+      end
+    end else if lParent is TwbSubRecordUnionDef then begin
+      var lPos := lParent.GetChildPos(lChild);
+      Assert(lPos >= 0);
+
+      with TwbSubRecordUnionDef(lParent) do begin
+        for var lSigIdx := 0 to Pred(srrTarget.SignatureCount) do
+          sruSignatures.AddObject(srrTarget.Signatures[lSigIdx], Pointer(lPos));
+
+        lExposes := True;
+      end
+    end else if lParent is TwbSubRecordArrayDef then
+      lExposes := True
+    else
+      raise Exception.Create(GetFullPath + ': wbRRecursive path contains unsupported definition');
+
+    if lParent = lTargetObj then begin
+      if lExposes then
+        raise Exception.Create(GetFullPath + ': wbRRecursive is left-recursive (target starts with itself)');
+      Exit;
+    end;
+
+    if not lExposes then
+      Exit;
+
+    lChild := lParent;
+    lParent := lParent.DefParent;
+
+  until False;
+end;
+
+procedure TwbSubRecordRecursiveDef.Report(const aParents: TwbDefPath);
+begin
+  defReported := True;
+end;
+
+procedure TwbSubRecordRecursiveDef.ResolveTarget;
+begin
+  if Assigned(srrTarget) then
+    Exit;
+
+  if srrLevelsUp < 1 then
+    raise Exception.Create(GetFullPath + ': wbRRecursive LevelsUp must be >= 1');
+
+  var lDef: TwbDef := Self;
+  for var lLevel := 1 to srrLevelsUp do begin
+    lDef := lDef.DefParent;
+    if not Assigned(lDef) then
+      raise Exception.Create(GetFullPath + ': wbRRecursive LevelsUp exceeds the definition depth');
+  end;
+
+  var lTarget: IwbRecordMemberDef;
+  if not Supports(lDef, IwbRecordMemberDef, lTarget) then
+    raise Exception.Create(GetFullPath + ': wbRRecursive target is not a record member definition');
+
+  if lTarget.Name <> ndName then
+    raise Exception.Create(GetFullPath + ': wbRRecursive name does not match target "' + lTarget.Name + '"');
+
+  srrTarget := lTarget;
 end;
 
 initialization
