@@ -23,6 +23,7 @@ xEdit is crucial to our shared modding community and your contribution - no matt
 * Fallout 3 and Fallout New Vegas: a perk's Quest + Stage effect reads its stage as one byte again (as the game does; 4.1.5q had made it two bytes), so Check for Errors no longer reports vanilla perks such as Scrounger with "Quest Stage [52550] not found".
 * Fallout New Vegas: a creature's Configuration flags read Not Pushable, Allow Pickpocket, Is Ghost, No Rotating To Head-track and Invulnerable at the right bits again (4.1.5r had moved the last four down by one, so Invulnerable showed as an unknown flag 31). Fallout 3 and Fallout New Vegas: a creature's flag 8 is named Use Template, as an NPC's already was, so Check for Errors no longer reports it as unknown.
 * After Change Referencing Records, Change FormID, Renumber FormIDs or a script rewrites a reference, the conflict colours of the records whose references changed are refreshed; they used to keep their colours from before the change until the record was edited again.
+* Morrowind: an interior cell with no water height (such as Tribunal's Mournhold cells) no longer reads a made-up Water Height of NaN; it was added to every interior cell that had neither a water height nor the older INTV field.
 
 # What's New in xEdit 4.1.5s?
 

@@ -151,7 +151,7 @@ begin
       Exit;
 
     if (Container.ElementNativeValues['DATA\Flags'] and 1) <> 0 then begin
-      if not Assigned(MainRecord.ElementBySignature['WHGT']) then begin
+      if not Assigned(MainRecord.ElementBySignature['WHGT']) and Assigned(MainRecord.ElementBySignature['INTV']) then begin
         Container.ElementNativeValues['WHGT'] := Container.ElementNativeValues['INTV'];
         Container.RemoveElement('INTV');
       end;
