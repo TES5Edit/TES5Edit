@@ -10832,6 +10832,53 @@ var
   lToken  : string;
   lList   : TCheckListBox;
 
+  function TestRefsRecord(const aSpec: string): IwbMainRecord;
+  begin
+    Result := nil;
+    var lAt := aSpec.LastIndexOf('@');
+    if lAt < 1 then
+      Exit;
+    for var i := Low(Files) to High(Files) do
+      if SameText(Files[i].FileName, aSpec.Substring(lAt + 1)) then
+        for var j := 0 to Pred(Files[i].RecordCount) do
+          if SameText(Files[i].Records[j].EditorID, aSpec.Substring(0, lAt)) then
+            Exit(Files[i].Records[j]);
+  end;
+
+  function TestRefsRetarget(const aElement: IwbElement; const aFrom, aTo: string): Boolean;
+  var
+    lContainer : IwbContainerElementRef;
+  begin
+    Result := False;
+    if Supports(aElement, IwbContainerElementRef, lContainer) and (lContainer.ElementCount > 0) then begin
+      for var i := 0 to Pred(lContainer.ElementCount) do
+        if TestRefsRetarget(lContainer.Elements[i], aFrom, aTo) then
+          Exit(True);
+    end else if SameText(aElement.EditValue, aFrom) then begin
+      aElement.EditValue := aTo;
+      Result := True;
+    end;
+  end;
+
+  procedure TestRefsAddReferrer;
+  begin
+    var lRecord := TestRefsRecord('l2@M.esm');
+    var lDone := Assigned(lRecord) and TestRefsRetarget(lRecord, 'z', 'b');
+    var lB := TestRefsRecord('b@M.esm');
+    var lRefBy := -1;
+    if Assigned(lB) then
+      lRefBy := lB.ReferencedByCount;
+    TestHost.TestChangeFormIDLines.Add('addref' + #9 + BoolToStr(lDone, True) + #9 + 'refby ' + IntToStr(lRefBy));
+  end;
+
+  procedure TestRefsRemove(const aSpec: string);
+  begin
+    var lRecord := TestRefsRecord(aSpec);
+    if Assigned(lRecord) then
+      lRecord.Remove;
+    TestHost.TestChangeFormIDLines.Add('removed' + #9 + aSpec + #9 + BoolToStr(Assigned(lRecord), True));
+  end;
+
   function HasButton(aOwner: TComponent; aResult: TModalResult): Boolean;
   begin
     Result := False;
@@ -11321,10 +11368,14 @@ begin
       end else begin
         for var i := 0 to Pred(lList.Count) do
           lList.Checked[i] := False;
-        if lToken = 'all' then begin
+        if (lToken = 'all') or (lToken = 'alladdref') or lToken.StartsWith('allremove:') then begin
           for var i := 0 to Pred(lList.Count) do
             if lList.ItemEnabled[i] then
               lList.Checked[i] := True;
+          if lToken = 'alladdref' then
+            TestRefsAddReferrer
+          else if lToken.StartsWith('allremove:') then
+            TestRefsRemove(lToken.Substring(Length('allremove:')));
         end else if lToken <> 'none' then
           for var lIndex in lToken.Split([';']) do begin
             var i := StrToIntDef(lIndex, -1);
@@ -11467,6 +11518,14 @@ begin
             TestHost.TestChangeNamePlanHook := procedure begin raise Exception.Create('Change NAME test: an injected plan failure'); end
           else if lPlanOp = 'planraiseempty' then
             TestHost.TestChangeNamePlanHook := procedure begin raise Exception.Create(''); end;
+        end else if lToken.StartsWith('key:') or lToken.StartsWith('keyaddref:') then begin
+          var lKeyRecord := TestRefsRecord(lToken.Substring(Succ(lToken.IndexOf(':'))));
+          if Assigned(lKeyRecord) then
+            lEdit.Text := IntToHex(lKeyRecord.LoadOrderFormID.ToCardinal, 8)
+          else
+            lEdit.Text := 'nokey';
+          if lToken.StartsWith('keyaddref:') then
+            TestRefsAddReferrer;
         end else if lToken <> 'offered' then
           lEdit.Text := lToken;
         lExtra := lExtra + ' entered: ' + lEdit.Text;

@@ -3052,6 +3052,16 @@ begin
       Exit;
     end;
 
+    if xeContext.GameDefObj.IsMorrowind then begin
+      var lTarget := xeContext.RecordByLoadOrderFormID(NewFormID, nil);
+      if not Assigned(lTarget) then begin
+        ShowMessage('Change Referencing Records: no record has the key ' + NewFormID.ToDisplayString(xeContext.SlotLayout));
+        Exit;
+      end;
+      lUpdate := MainRecord.MasterOrSelf.PlanReferenceUpdate;
+      lUpdate.Pin(MainRecord, lTarget);
+    end;
+
     if Length(lUpdate.Items) > 0 then
       ShowChangeReferencedBy(OldFormID, NewFormID, lUpdate, False)
     else
@@ -16035,6 +16045,7 @@ var
   s          : string;
   lUpdate    : TwbReferenceUpdate;
 begin
+  lUpdate := aUpdate;
   lUpdate.Items := Copy(aUpdate.Items);
 
   if aSilent then begin

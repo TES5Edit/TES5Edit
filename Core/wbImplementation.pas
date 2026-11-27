@@ -17782,19 +17782,21 @@ begin
   if lStop <> '' then
     raise Exception.Create('Change Referencing Records: ' + lStop);
   lSelfRef := Self;
-  Result.Items := nil;
-  SetLength(Result.Items, lSelfRef.ReferencedByCount);
+  var lPlan := Default(TwbReferenceUpdate);
+  lPlan.Scope := aInFile;
+  SetLength(lPlan.Items, lSelfRef.ReferencedByCount);
   lCount := 0;
   for var i := 0 to Pred(lSelfRef.ReferencedByCount) do begin
     lRecord := lSelfRef.ReferencedBy[i];
     if Assigned(aInFile) and not aInFile.Equals(lRecord._File) then
       Continue;
-    Result.Items[lCount].Rec := lRecord;
-    Result.Items[lCount].Selected := True;
-    Result.Items[lCount].Outcome := ruoNotTried;
+    lPlan.Items[lCount].Rec := lRecord;
+    lPlan.Items[lCount].Selected := True;
+    lPlan.Items[lCount].Outcome := ruoNotTried;
     Inc(lCount);
   end;
-  SetLength(Result.Items, lCount);
+  SetLength(lPlan.Items, lCount);
+  Result := lPlan;
 end;
 
 destructor TwbMainRecord.Destroy;

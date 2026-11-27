@@ -1747,7 +1747,17 @@ type
   end;
 
   TwbReferenceUpdate = record
-    Items : TArray<TwbReferenceUpdateItem>;
+  private
+    procedure ApplyItems(const aOldFormID, aNewFormID: TwbFormID);
+  public
+    Items     : TArray<TwbReferenceUpdateItem>;
+    Scope     : IwbFile;
+    Source    : IwbMainRecord;
+    SourceKey : TwbFormID;
+    Target    : IwbMainRecord;
+    TargetKey : TwbFormID;
+    procedure Pin(const aFocused, aTarget: IwbMainRecord);
+    function StaleReason: string;
     procedure Apply(const aOldFormID, aNewFormID: TwbFormID);
     function AnyFailed: Boolean;
   end;
@@ -28001,7 +28011,84 @@ end;
 
 { TwbReferenceUpdate }
 
+procedure TwbReferenceUpdate.Pin(const aFocused, aTarget: IwbMainRecord);
+begin
+  if not Assigned(aFocused) or not Assigned(aTarget) then
+    raise Exception.Create('Change Referencing Records: a pin needs the focused record and the target');
+  var lSource := aFocused;
+  var lSourceKey := lSource.LoadOrderFormID;
+  var lTarget := aTarget.MasterOrSelf;
+  var lTargetKey := lTarget.LoadOrderFormID;
+  Source := lSource;
+  SourceKey := lSourceKey;
+  Target := lTarget;
+  TargetKey := lTargetKey;
+end;
+
+function TwbReferenceUpdate.StaleReason: string;
+begin
+  Result := '';
+  if not Assigned(Source) then
+    Exit;
+  var lContext := Source.ContextObj;
+  if lContext.GameDefObj.IsMorrowind and not lContext.LoaderDone then
+    Exit('the context is still loading');
+  Result := lContext.NameReferencesStop;
+  if Result <> '' then
+    Exit;
+  if not Assigned(Source._File) or (Source.LoadOrderFormID <> SourceKey) then
+    Exit('the record whose referrers were to be updated has been renamed or removed');
+  if not Assigned(Target._File) or (Target.LoadOrderFormID <> TargetKey) then
+    Exit('the record the entered key named has been renamed or removed');
+  var lOwner := lContext.RecordByLoadOrderFormID(TargetKey, nil);
+  if not Assigned(lOwner) or not lOwner.MasterOrSelf.Equals(Target) then
+    Exit('the entered key no longer names the record it named');
+  var lNow := Source.MasterOrSelf.PlanReferenceUpdate(Scope);
+  var lNowSet := THashSet<Pointer>.Create;
+  try
+    var lPinnedSet := THashSet<Pointer>.Create;
+    try
+      for var i := Low(lNow.Items) to High(lNow.Items) do
+        lNowSet.Add(lNow.Items[i].Rec.ElementID);
+      for var i := Low(Items) to High(Items) do
+        lPinnedSet.Add(Items[i].Rec.ElementID);
+      var lSame := lNowSet.Count = lPinnedSet.Count;
+      if lSame then
+        for var lID in lPinnedSet do
+          if not lNowSet.Contains(lID) then begin
+            lSame := False;
+            Break;
+          end;
+      if not lSame then
+        Result := 'the referring records changed after the list was made';
+    finally
+      lPinnedSet.Free;
+    end;
+  finally
+    lNowSet.Free;
+  end;
+end;
+
 procedure TwbReferenceUpdate.Apply(const aOldFormID, aNewFormID: TwbFormID);
+begin
+  if not Assigned(Source) then begin
+    ApplyItems(aOldFormID, aNewFormID);
+    Exit;
+  end;
+  wbLockProcessMessages;
+  try
+    var lStale := StaleReason;
+    if (lStale = '') and ((aOldFormID <> SourceKey) or (aNewFormID <> TargetKey)) then
+      lStale := 'the keys given are not the ones the list was made for';
+    if lStale <> '' then
+      raise Exception.Create('Change Referencing Records: ' + lStale + ', so nothing was changed');
+    ApplyItems(aOldFormID, aNewFormID);
+  finally
+    wbUnLockProcessMessages;
+  end;
+end;
+
+procedure TwbReferenceUpdate.ApplyItems(const aOldFormID, aNewFormID: TwbFormID);
 var
   lTried   : TArray<Integer>;
   lLabels  : TArray<string>;
