@@ -3161,6 +3161,8 @@ type
 
     function SetSetToDefault(const aCallback: TwbSetToDefaultCallback): IwbValueDef{Self};
 
+    procedure NormalizeData(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement);
+
     property Size[aBasePtr, aEndPtr: Pointer; const aElement: IwbElement]: Integer
       read GetSize;
     property DefaultSize[aBasePtr, aEndPtr: Pointer; const aElement: IwbElement]: Integer
@@ -10293,6 +10295,8 @@ type
     function ReportValueMasters(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aMasters: TwbFilesSet): Boolean; virtual;
     procedure ReportUnresolvedMasters(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aMasters: TwbFilesSet); virtual;
     function CompareExchangeFormID(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aOldFormID: TwbFormID; aNewFormID: TwbFormID): Boolean; virtual;
+
+    procedure NormalizeData(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement); virtual;
   end;
 
   TwbGuidDef = class(TwbValueDef, IwbGuidDef)
@@ -10516,6 +10520,7 @@ type
 
     procedure PrepareSave(const aDataContainer : IwbDataContainer); override; final;
 
+    procedure NormalizeData(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement); override; final;
     {---IwbStringDef---}
     function GetStringSize: Integer;
     function SetFormater(const aFormater: IwbStringDefFormater): IwbStringDef;
@@ -20568,6 +20573,23 @@ begin
   Result := sdSize;
 end;
 
+procedure TwbStringDef.NormalizeData(aBasePtr, aEndPtr: Pointer;
+  const aElement: IwbElement);
+begin
+  if not (dfStringTrim in DefFlags) then
+    Exit;
+
+  var lValue: string := ToStringTransform(aBasePtr, aEndPtr, aElement, ttToNativeValue);
+
+  if Assigned(aElement) then begin
+    var lRecord := aElement.ContainingMainRecord;
+    if Assigned(lRecord) and lRecord.IsIdentityElement(aElement) then
+      Exit;
+  end;
+
+  FromNativeValue(aBasePtr, aEndPtr, aElement, lValue);
+end;
+
 function TwbStringDef.StoreRefusal(const aElement: IwbElement; const aValue: string): string;
 var
   lBytes : TBytes;
@@ -20856,12 +20878,20 @@ begin
   Result := s;
 
   if (dfStringTrim in DefFlags) then
-  if (aTransformType in [ttToString, ttToSortKey, ttToEditValue, ttFromEditValue, ttFromNativeValue]) then begin
-    Result := Trim(Result);
+    if (aTransformType in [
+      ttFromEditValue,
+      ttFromNativeValue,
+      ttToEditValue,
+      ttToNativeValue,
+      ttToString,
+      ttToSortKey
+    ])
+    then begin
+      Result := Trim(Result);
 
-    if Result = '' then
-      Result := ' ';
-  end;
+      if Result = '' then
+        Result := ' ';
+    end;
 
   if wbShowStringBytes then begin
     if aTransformType = ttToString then begin
@@ -24002,6 +24032,12 @@ end;
 function TwbValueDef.MastersUpdated(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aOld, aNew: TwbFileIDs; aOldCount, aNewCount: TwbSlotCounts): Boolean;
 begin
   Result := False;
+  {can be overriden}
+end;
+
+procedure TwbValueDef.NormalizeData(aBasePtr, aEndPtr: Pointer;
+  const aElement: IwbElement);
+begin
   {can be overriden}
 end;
 
