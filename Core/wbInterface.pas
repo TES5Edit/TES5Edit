@@ -11168,6 +11168,8 @@ type
                              aNoReach       : Boolean = False);
     destructor Destroy; override; final;
 
+    procedure AfterClone(const aSource: TwbDef); override;
+
     function IsValid(const aSignature: TwbSignature): Boolean; override; final;
     function IsValidFlst(const aSignature: TwbSignature): Boolean; override; final;
     function CheckFlst(const aMainRecord: IwbMainRecord): Boolean; override; final;
@@ -17337,9 +17339,7 @@ begin
     Exit(TwbIntegerDef(Duplicate).SetFormIDFilter(aFormIDFilter));
 
   Result := Self;
-
-  if Assigned(inFormater) then
-    TwbFormIDChecked(inFormater).fidcFilterCallback := aFormIDFilter;
+  TwbFormIDChecked(inFormater).fidcFilterCallback := aFormIDFilter;
 end;
 
 procedure TwbIntegerDef.SetLinksTo(aBasePtr, aEndPtr: Pointer; const aElement, aValue: IwbElement);
@@ -24128,6 +24128,14 @@ end;
 
 { TwbFormIDChecked }
 
+procedure TwbFormIDChecked.AfterClone(const aSource: TwbDef);
+begin
+  inherited AfterClone(aSource);
+
+  with aSource as TwbFormIDChecked do
+    Self.fidcFilterCallback := fidcFilterCallback;
+end;
+
 function TwbFormIDChecked.CanAssign(const aElement: IwbElement; aIndex: Integer; const aDef: IwbDef): Boolean;
 var
   FormIDChecked : IwbFormIDChecked;
@@ -24275,11 +24283,8 @@ end;
 
 constructor TwbFormIDChecked.Clone(const aSource: TwbDef);
 begin
-  with aSource as TwbFormIDChecked do begin
-    Self.Create(fidcValidRefsArr, fidcValidFlstRefsArr, fidcPersistent, fidcNoReach);
-    Self.fidcFilterCallback := fidcFilterCallback;
-    Self.AfterClone(aSource);
-  end;
+  with aSource as TwbFormIDChecked do
+    Self.Create(fidcValidRefsArr, fidcValidFlstRefsArr, fidcPersistent, fidcNoReach).AfterClone(aSource);
 end;
 
 constructor TwbFormIDChecked.Create(const aValidRefs     : TwbSignatures;
@@ -24406,20 +24411,15 @@ end;
 
 function TwbFormIDChecked.IsValidMainRecord(const aMainRecord: IwbMainRecord): Boolean;
 begin
-  Result := False;
-
   if wbDisableFormIDCheck then
     Exit(True);
 
-  if IsValid(aMainRecord.Signature) and CheckFlst(aMainRecord) then
-    Exit(True);
+  Result :=
+    (IsValid(aMainRecord.Signature) and CheckFlst(aMainRecord)) or
+    (fidcPersistent and aMainRecord.Def.IsReference and aMainRecord.IsPersistent);
 
-  if fidcPersistent then
-    if aMainRecord.Def.IsReference and aMainRecord.IsPersistent then
-      Exit(True);
-
-  if Assigned(fidcFilterCallback) and fidcFilterCallback(fidcActiveElement, aMainRecord) then
-    Exit(True);
+  if Result and Assigned(fidcFilterCallback) and Assigned(fidcActiveElement) then
+    Result := fidcFilterCallback(fidcActiveElement, aMainRecord);
 end;
 
 procedure TwbFormIDChecked.Report(const aParents: TwbDefPath);
