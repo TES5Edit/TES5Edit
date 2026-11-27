@@ -25514,6 +25514,7 @@ begin
     Exit;
 
   BasePtr := GetDataBasePtr;
+  var lInitEndPtr := dcDataEndPtr;
   ValueDef := Resolve(srDef.Value, BasePtr, dcDataEndPtr, Self);
   srArraySizePrefix := 0;
   srResolvedDef := nil;
@@ -25562,17 +25563,18 @@ begin
         Element := TwbValue.Create(Self, BasePtr, dcDataEndPtr, ValueDef, '');
       end;
 
-  if Assigned(dcDataEndPtr) and Assigned(BasePtr) and (BasePtr <> dcDataEndPtr) then begin
+  if Assigned(dcDataEndPtr) and Assigned(BasePtr) and (BasePtr <> dcDataEndPtr) and (BasePtr <> lInitEndPtr) then begin
     HasUnusedData := Assigned(ValueDef) and not SameText(ValueDef.Name, 'Unused');
     if HasUnusedData and Assigned(ValueDef) and (ValueDef.DefType = dtString) then begin
       HasUnusedData := False;
-      while NativeUInt(BasePtr) < NativeUInt(dcDataEndPtr) do begin
-        if PAnsiChar(BasePtr)^ <> #0 then begin
-          HasUnusedData := True;
-          Break;
+      if dcDataEndPtr = lInitEndPtr then
+        while NativeUInt(BasePtr) < NativeUInt(dcDataEndPtr) do begin
+          if PAnsiChar(BasePtr)^ <> #0 then begin
+            HasUnusedData := True;
+            Break;
+          end;
+          Inc(PByte(BasePtr));
         end;
-        Inc(PByte(BasePtr));
-      end;
     end;
     if HasUnusedData then begin
       if wbReportMode then
