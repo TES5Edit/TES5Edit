@@ -32181,9 +32181,31 @@ begin
       end;
     end;
 
+    var lMissingRequired: TArray<Integer> := nil;
+    if aPos <> Low(Integer) then
+      for var lMemberIdx := 0 to Pred(srcDef.MemberCount) do
+        if not Assigned(FoundMembers[lMemberIdx]) and srcDef.Members[lMemberIdx].Required then
+          lMissingRequired := lMissingRequired + [lMemberIdx];
+
     FoundMembers := nil;
 
     srcDef.AfterLoad(Self);
+
+    if Length(lMissingRequired) > 0 then
+      if ContextObj.BeginInternalEdit then try
+        for var lMemberIdx in lMissingRequired do begin
+          if wbMoreInfoForRequired then
+            wbProgressCallback(' Adding missing member: ' + GetName + '\' + srcDef.Members[lMemberIdx].GetName);
+
+          Assign(lMemberIdx, nil, False);
+        end;
+
+        if not ContextObj.Settings.SortSubRecords then
+          SortBySortOrder;
+      finally
+        wbEndInternalEdit;
+      end;
+
     srcPendingFor := nil;
 
     if aPos = Low(Integer) then begin
