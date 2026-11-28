@@ -28,6 +28,7 @@ begin
     Result := 1;
     Exit;
   end;
+  slRefs := TStringList.Create;
   Result := 0;
 end;
 
@@ -43,8 +44,10 @@ begin
     Result := 1;
     Exit;
   end;
-  if not InputQuery('Enter', 'Variations number (min is 2)', s) then 
+  if not InputQuery('Enter', 'Variations number (min is 2)', s) then begin
+    Result := 1;
     Exit;
+  end;
 
   varnum := StrToIntDef(s, 0);
   if varnum < 2 then begin
@@ -53,7 +56,6 @@ begin
     Exit;
   end;
   
-  slRefs := TStringList.Create;
   for i := 0 to ReferencedByCount(e) - 1 do begin
     ref := ReferencedByIndex(e, i);
     if Signature(ref) = 'REFR' then
@@ -61,8 +63,7 @@ begin
   end;
   
   if slRefs.Count < varnum then begin
-    AddMessage('The number of variations is greater than the number of REFR references (' + StrToInt(slRefs.Count) + '), please use lower value');
-    Finalize;
+    AddMessage('The number of variations is greater than the number of REFR references (' + IntToStr(slRefs.Count) + '), please use lower value');
     Result := 1;
     Exit;
   end;
@@ -85,7 +86,6 @@ begin
     r := wbCopyElementToFile(e, GetFile(e), True, True);
     if not Assigned(r) then begin
       AddMessage('Fatal: can not make a copy from ' + Name(e) + '. Plugin is read only.');
-      Finalize;
       Result := 1;
       Exit;
     end;
@@ -97,8 +97,7 @@ begin
   end;
   // rename base object as a first variation
   SetElementEditValues(e, 'EDID', EditorID(e) + 'a');
-  
-  Finalize;
+
   Result := 1;
 end;
 

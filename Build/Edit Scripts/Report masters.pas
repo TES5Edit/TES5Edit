@@ -46,7 +46,6 @@ begin
       //clb.Items.Add(GetFileName(e));
       
       if frm.ShowModal <> mrOk then begin
-        Finalize;
         Result := 1;
         Exit;
       end;
@@ -56,7 +55,6 @@ begin
           slCheckMasters.Add(clb.Items[i]);
       
       if slCheckMasters.Count = 0 then begin
-        Finalize;
         Result := 1;
         Exit;
       end;
