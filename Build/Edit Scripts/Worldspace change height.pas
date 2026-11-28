@@ -1,7 +1,7 @@
 {
   Changes height of exterior worldspace cells in specified range, both references and landscape.
   Water level, WRLD properties, navmeshes and doors teleport coordinates are not affected! Tweak manually.
-  Works for all games, apply to worldspace in xEdit.
+  Works for all games but Morrowind, apply to worldspace in xEdit.
   ShiftZ must be divisible by 8
   Min/Max constants set the range of cells to update
 }
@@ -17,8 +17,20 @@ const
   sRefSignatures = 'REFR,ACHR,PGRE,PMIS,PHZD,PARW,PBAR,PBEA,PCON,PFLA';
  
 //===========================================================================
+function RefusedForMorrowind: Boolean;
+begin
+  Result := wbGameMode = gmTES3;
+  if Result then
+    AddMessage('This script does not work for Morrowind: it reads a cell''s grid from XCLC and takes a cell to be 4096 units, and a Morrowind cell holds its grid in DATA and is 8192 units');
+end;
+
+//===========================================================================
 function Initialize: integer;
 begin
+  if RefusedForMorrowind then begin
+    Result := 1;
+    Exit;
+  end;
   if wbSimpleRecords then begin
     MessageDlg('Simple records must be unchecked in xEdit options', mtInformation, [mbOk], 0);
     Result := 1;
@@ -32,6 +44,10 @@ var
   Sig: string;
   cell: IInterface;
 begin
+  if RefusedForMorrowind then begin
+    Result := 1;
+    Exit;
+  end;
   Sig := Signature(e);
 
   if Sig = 'LAND' then begin

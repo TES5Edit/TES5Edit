@@ -8502,8 +8502,10 @@ begin
     raise Exception.Create('File "' + GetFileName + '" is not editable');
   if GetIsNotPlugin then
     Exit;
-  if not (gcMasterSlotsInFormID in flContextObj.GameDefObj.Capabilities) then
+  if not (gcMasterSlotsInFormID in flContextObj.GameDefObj.Capabilities) then begin
+    flProgress('Keeps every master: Clean Masters does not work for Morrowind plugins.');
     Exit;
+  end;
   if (GetElementCount < 1) or not Supports(GetElement(0), IwbContainerElementRef, Header) then
     raise Exception.CreateFmt('Unexpected error reading file "%s"', [flFileName]);
 
@@ -31228,6 +31230,28 @@ var
   SelfRef       : IwbContainerElementRef;
   ElementDef    : IwbRecordMemberDef;
   DataContainer : IwbDataContainer;
+
+  function IncomingAlternative(const aIncoming: IwbElement): IwbRecordMemberDef;
+  var
+    lTemplate     : IwbTemplateElement;
+    lHasSignature : IwbHasSignature;
+    lData         : IwbDataContainer;
+  begin
+    Result := arcDef.Element;
+    if Result.DefType <> dtSubRecordUnion then
+      Exit(nil);
+    if Supports(aIncoming, IwbTemplateElement, lTemplate) then begin
+      if not Supports(lTemplate.Def, IwbRecordMemberDef, Result) or (Result.DefType = dtSubRecordUnion) then
+        Result := nil;
+      Exit;
+    end;
+    if not Supports(aIncoming, IwbHasSignature, lHasSignature) then
+      Exit(nil);
+    Supports(aIncoming, IwbDataContainer, lData);
+    while Assigned(Result) and (Result.DefType = dtSubRecordUnion) do
+      Result := (Result as IwbRecordDef).GetMemberFor(Self, lHasSignature.Signature, lData);
+  end;
+
 begin
   Result := nil;
 
@@ -31270,14 +31294,20 @@ begin
 
     var lElement := aElement;
 
+    var lPlaceholder: IwbElement := nil;
     if (csAsCreatedEmpty in cntStates) and Assigned(lElement) then begin
+      var lIncoming := IncomingAlternative(lElement);
       SetModified(True);
       Assert(Length(cntElements)=1);
-      Element := cntElements[0];
+      if Assigned(lIncoming) and not lIncoming.Equals(cntElements[0].Def) then
+        lPlaceholder := cntElements[0]
+      else
+        Element := cntElements[0];
       Exclude(cntStates, csAsCreatedEmpty);
-    end else begin
+    end else
       RefuseEntryAtMaxCount;
 
+    if not Assigned(Element) then begin
       ElementDef := arcDef.Element;
       while ElementDef.DefType = dtSubRecordUnion do begin
         if Assigned(lElement) then begin
@@ -31316,8 +31346,13 @@ begin
         Exclude(cntStates, csAsCreatedEmpty);
     except
       Element.Container.RemoveElement(Element);
+      if Assigned(lPlaceholder) then
+        Include(cntStates, csAsCreatedEmpty);
       raise;
     end;
+
+    if Assigned(lPlaceholder) and Assigned(Element) then
+      RemoveElement(lPlaceholder);
 
     Result := Element;
   end;
