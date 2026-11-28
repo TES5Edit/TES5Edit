@@ -403,8 +403,8 @@ begin
     var i : integer;
     for i := 0 to 3 do begin
       case Container.ElementNativeValues['IRDT\Effects\Magic Effects\Magic Effect #' + IntToStr(i)] of
-        17, 22, 74, 79: Container.ElementNativeValues['IRDT\Effects\Skills\Skill #' + IntToStr(i)] := -1;
-        21, 26, 78, 83: Container.ElementNativeValues['IRDT\Effects\Attributes\Attribute #' + IntToStr(i)] := -1;
+        17, 22, 74, 79, 85: Container.ElementNativeValues['IRDT\Effects\Skills\Skill #' + IntToStr(i)] := -1;
+        21, 26, 78, 83, 89: Container.ElementNativeValues['IRDT\Effects\Attributes\Attribute #' + IntToStr(i)] := -1;
       else
         Container.ElementNativeValues['IRDT\Effects\Skills\Skill #' + IntToStr(i)] := -1;
         Container.ElementNativeValues['IRDT\Effects\Attributes\Attribute #' + IntToStr(i)] := -1;
