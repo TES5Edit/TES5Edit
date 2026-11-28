@@ -15632,9 +15632,9 @@ begin
     wbFormIDCk(FLAV, 'Anim Flavor', [KYWD]),
     wbStruct(PKCU, 'Counter', [
       wbInteger('Data Input Count', itU32),
-      wbFormIDCk('Package Template', [PACK, NULL]),
+      wbFormIDCk('Package Template', [PACK, NULL]).SetFormIDFilter(wbPACKTemplateFilter),
       wbInteger('Version Counter (autoincremented)', itU32)
-    ], cpNormal, True),
+    ]).SetRequired,
 
     wbRStruct('Package Data', [
       wbRArray('Data Input Values', wbRStruct('Value', [
@@ -15741,10 +15741,12 @@ begin
         wbConditions,
         wbStruct(PRCB, 'Root', [
           wbInteger('Branch Count', itU32),
-          wbInteger('Flags', itU32, wbFlags([
-            'Repeat when Complete',
-            'Unknown 1'
-          ])).IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse)
+          wbInteger('Flags', itU32,
+            wbFlags([
+            {0} 'Repeat when Complete',
+            {1} 'Run Until All Children Complete'
+            ])
+          ).IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse)
         ]),
         wbString(PNAM, 'Procedure Type'),
         wbInteger(FNAM, 'Flags', itU32, wbFlags(['Success Completes Package'])).IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse),

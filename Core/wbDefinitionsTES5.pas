@@ -3178,10 +3178,11 @@ begin
 
   wbPDTO :=
     wbStruct(PDTO, 'Topic Data', [
-      wbInteger('Type', itU32, wbEnum([
-        'Topic Ref',
-        'Topic Subtype'
-      ])),
+      wbInteger('Type', itU32,
+        wbEnum([
+        {0} 'Topic Ref',
+        {1} 'Topic Subtype'
+        ])),
       wbUnion('Data', wbTypeDecider, [
         wbFormIDCk('Topic', [DIAL, NULL]),
         wbInteger('Subtype', itU32, wbSubtypeNamesEnum)
@@ -8487,6 +8488,48 @@ begin
     9, 'World Interactions'
   ], False, 10), True);
 
+  var wbPRCB :=
+    wbStruct(PRCB, 'Root', [
+      wbInteger('Branch Count', itU32, nil, cpBenign),
+      wbInteger('Flags', itU32,
+        wbFlags([
+        {0} 'Repeat when Complete',
+        {1} 'Run Until All Children Complete'
+        ])).IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse)
+    ]);
+
+  var wbPFOR :=
+    wbStruct(PFOR, 'Flags Override', [
+      wbInteger('Set General Flags', itU32, wbPackageFlags)
+        .IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse),
+      wbInteger('Clear General Flags', itU32, wbPackageFlags)
+        .IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse),
+      wbInteger('Set Interrupt Flags', itU16, wbPKDTInterruptFlags)
+        .IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse),
+      wbInteger('Clear Interrupt Flags', itU16, wbPKDTInterruptFlags)
+        .IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse)
+    ]);
+
+  var wbPFO2 :=
+    wbStruct(PFO2, 'Flags Override', [
+      wbInteger('Set General Flags', itU32, wbPackageFlags)
+        .IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse),
+      wbInteger('Clear General Flags', itU32, wbPackageFlags)
+        .IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse),
+      wbInteger('Set Interrupt Flags', itU16, wbPKDTInterruptFlags)
+        .IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse),
+      wbInteger('Clear Interrupt Flags', itU16, wbPKDTInterruptFlags)
+        .IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse),
+      wbInteger('Preferred Speed Override', itU8,
+        wbEnum([
+        {0} 'Walk',
+        {1} 'Jog',
+        {2} 'Run',
+        {3} 'Fast Walk'
+        ])),
+      wbUnused(3)
+    ]);
+
   RegisterRecordDef(PACK, 'Package', [
     wbEDID,
     wbVMADFragmentedPACK,
@@ -8538,7 +8581,7 @@ begin
     wbFormIDCk(QNAM, 'Owner Quest', [QUST]),
     wbStruct(PKCU, 'Counter', [
       wbInteger('Data Input Count', itU32),
-      wbFormIDCk('Package Template', [PACK, NULL]),
+      wbFormIDCk('Package Template', [PACK, NULL]).SetFormIDFilter(wbPACKTemplateFilter),
       wbInteger('Version Counter (autoincremented)', itU32)
     ]).SetRequired,
     wbRStruct('Package Data', [
@@ -8547,81 +8590,84 @@ begin
           wbString(ANAM, 'Type')
             .SetFormaterOnValue(wbPACKDataInputTypeEnum)
             .SetAfterSet(wbPACKDataInputTypeAfterSet),
-          wbUnion(CNAM, 'Value', wbPubPackCNAMDecider, [
-          {0} wbUnknown,
-          {1} wbInteger('Bool', itU8, wbBoolEnum).SetAfterLoad(wbPACKDataBoolAfterLoad),
-          {2} wbInteger('Integer', itU32),
-          {3} wbFloat('Float')
-          ]).IncludeFlag(dfUnionStaticResolve),
-          wbUnknown(BNAM),
-          wbPDTOs,
-          wbPLDT,
-          wbStruct(PTDA, 'Target', [
-            wbInteger('Type', itS32,
-              wbEnum([
-              {0} 'Specific Reference',
-              {1} 'Object ID',
-              {2} 'Object Type',
-              {3} 'Linked Reference',
-              {4} 'Ref Alias',
-              {5} 'Unknown 5',
-              {6} 'Self'
-              ])).SetDefaultNativeValue(2),
-            wbUnion('Target', wbTypeDecider, [
-            {0} wbFormIDCkNoReach('Reference', [ACHR, PARW, PBAR, PBEA, PCON, PFLA, PGRE, PHZD, PLYR, PMIS, REFR], True),
-            {1} wbFormIDCkNoReach('Object ID', [ACTI, ALCH, AMMO, ARMO, BOOK, CONT, DOOR, FACT, FLST, FLOR, FURN, IDLM, INGR, KEYM, LIGH, MISC, MSTT, NPC_, PROJ, SCRL, SHOU, SLGM, SOUN, SPEL, STAT, TXST, WEAP]),
-            {2} wbInteger('Object Type', itU32, wbObjectTypeEnum),
-            {3} wbFormID('Reference'),
-            {4} wbInteger('Alias', itS32, wbPackageLocationAliasToStr, wbAliasToInt),
-            {5} wbByteArray('Unknown', 4, cpIgnore),
-            {6} wbByteArray('Unknown', 4, cpIgnore)
-            ]),
-            wbInteger('Count / Distance', itS32)
-          ]),
-        wbFormIDCK(TPIC, 'Dialogue Topic', [DIAL])
+          wbRUnion('Data', wbPACKDataInputValueDecider, [
+          {0} wbUnion(CNAM, 'Value', wbPubPackCNAMDecider, [
+              {0} wbUnknown,
+              {1} wbInteger('Bool', itU8, wbBoolEnum).SetAfterLoad(wbPACKDataBoolAfterLoad),
+              {2} wbInteger('Integer', itU32),
+              {3} wbFloat('Float')
+              ]).IncludeFlagOnValue(dfUnionStaticResolve),
+          {1} wbPDTO,
+          {2} wbPLDT,
+          {3} wbStruct(PTDA, 'Target', [
+                wbInteger('Type', itS32,
+                  wbEnum([
+                  {0} 'Specific Reference',
+                  {1} 'Object ID',
+                  {2} 'Object Type',
+                  {3} 'Linked Reference',
+                  {4} 'Ref Alias',
+                  {5} 'Unknown 5',
+                  {6} 'Self'
+                  ])).SetDefaultNativeValue(2),
+                wbUnion('Target', wbTypeDecider, [
+                {0} wbFormIDCkNoReach('Reference', [ACHR, PARW, PBAR, PBEA, PCON, PFLA, PGRE, PHZD, PLYR, PMIS, REFR], True),
+                {1} wbFormIDCkNoReach('Object ID', [ACTI, ALCH, AMMO, ARMO, BOOK, CONT, DOOR, FACT, FLST, FLOR, FURN, IDLM, INGR, KEYM, LIGH, MISC, MSTT, NPC_, PROJ, SCRL, SHOU, SLGM, SOUN, SPEL, STAT, TXST, WEAP]),
+                {2} wbInteger('Object Type', itU32, wbObjectTypeEnum),
+                {3} wbFormID('Reference'),
+                {4} wbInteger('Alias', itS32, wbPackageLocationAliasToStr, wbAliasToInt),
+                {5} wbByteArray('Unknown', 4, cpIgnore),
+                {6} wbByteArray('Unknown', 4, cpIgnore)
+                ]),
+                wbInteger('Count / Distance', itS32)
+              ]),
+          {4} wbFormIDCK(TPIC, 'Dialogue Topic', [DIAL])
+          ]).SetRequired
         ])),
-      wbRArray('Indexes', wbInteger(UNAM, 'Index', itS8))
+      wbRArray('Indexes',
+        wbInteger(UNAM, 'Index', itU8).SetToStr(wbPACKDataInputIndexToStr)
+      )
     ]),
     wbByteArray(XNAM, 'Marker', 1).SetRequired,
     wbRStruct('Procedure Tree', [
-      wbRArray('Branches',
-        wbRStruct('Branch', [
-          wbString(ANAM, 'Branch Type'),
-          wbCITCReq,
-          wbConditions,
-          wbStruct(PRCB, 'Root', [
-            wbInteger('Branch Count', itU32),
-            wbInteger('Flags', itU32,
-              wbFlags([
-              {0} 'Repeat when Complete',
-              {1} 'Unknown 1'
-              ])).IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse)
+      wbString(ANAM, 'Branch Type')
+        .SetFormaterOnValue(wbPACKProcedureTreeTypeEnum)
+        .SetDefaultEditValue('Procedure'),
+      wbCITCReq,
+      wbConditions,
+      wbRUnion('Branch Data', wbPACKProcedureTreeBranchDecider, [
+      {0} wbRStruct('Branch Data', [
+            wbPRCB.SetRequired,
+            wbRArray('Branches',
+              wbRRecursive('Branch', 4)
+            ).SetCountPath('PRCB\[0]', True)
           ]),
-          wbString(PNAM, 'Procedure Type'),
-          wbInteger(FNAM, 'Success Completes Package', itU32, wbBoolEnum),
-          wbRArray('Data Input Indexes', wbInteger(PKC2, 'Index', itU8)),
-        {>>> PFO2 should be single, there is only 1 PACK [00095F46] <PatrolAndHunt> in Skyrim.esm with 2xPFO2 <<<}
-          wbRArray('Flags Override',
-            wbStruct(PFO2, 'Data', [
-              wbInteger('Set General Flags', itU32, wbPackageFlags).IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse),
-              wbInteger('Clear General Flags', itU32, wbPackageFlags).IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse),
-              wbInteger('Set Interrupt Flags', itU16, wbPKDTInterruptFlags).IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse),
-              wbInteger('Clear Interrupt Flags', itU16, wbPKDTInterruptFlags).IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse),
-              wbInteger('Preferred Speed Override', itU8,
-                wbEnum([
-                {0} 'Walk',
-                {1} 'Jog',
-                {2} 'Run',
-                {3} 'Fast Walk'
-                ])),
-              wbUnused(3)
-            ])),
-          wbRArray('Unknown', wbUnknown(PFOR), cpIgnore)
-        ]))
+      {1} wbRStruct('Branch Data', [
+            wbPRCB.SetRequired,
+            wbRArray('Branches',
+              wbRRecursive('Branch', 4)
+            ).SetCountPath('PRCB\[0]', True),
+            wbRUnion('Flags Override', [
+            {0} wbPFO2,
+            {1} wbPFOR
+            ])
+          ]),
+      {2} wbRStruct('Branch Data', [
+            wbString(PNAM, 'Procedure Type'),
+            wbInteger(FNAM, 'Success Completes Package', itU32, wbBoolEnum),
+            wbRArray('Data Input Indexes',
+              wbInteger(PKC2, 'Index', itU8).SetToStr(wbPACKDataInputIndexToStr)
+            ),
+            wbRUnion('Flags Override', [
+            {0} wbPFO2,
+            {1} wbPFOR
+            ])
+          ])
+      ])
     ]).SetDontShow(wbPACKTemplateDontShow),
     wbRArray('Data Inputs',
       wbRStruct('Data Input', [
-        wbInteger(UNAM, 'Index', itS8),
+        wbInteger(UNAM, 'Index', itU8),
         wbString(BNAM, 'Name'),
         wbInteger(PNAM, 'Public', itU32, wbBoolEnum)
       ])

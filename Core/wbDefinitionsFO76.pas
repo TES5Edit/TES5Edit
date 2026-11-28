@@ -13228,37 +13228,8 @@ begin
     wbStruct(PKDT, 'Pack Data', [
       wbInteger('General Flags', itU32, wbPackageFlags),
       wbInteger('Type', itU8, wbEnum ([], [
-         1, 'Follow',
-         6, 'Travel',
-        10, 'Flee Not Combat',
-        14, 'Guard',
-        15, 'Dialogue',
         18, 'Package',
-        19, 'Package Template',
-        20, 'Activate',
-        21, 'Alarm',
-        22, 'Flee',
-        23, 'Trespass',
-        24, 'Spectator',
-        25, 'ReactToDead',
-        26, 'GetUp from Chair/Bed',
-        27, 'Do Nothing',
-        28, 'In Game Dialogue',
-        29, 'Surface',
-        30, 'Search For Attacker',
-        31, 'Avoid Player',
-        32, 'Bump Reaction',
-        33, 'React to Grenade or Mine',
-        34, 'Steal Warning',
-        35, 'Pickpocket Warning',
-        36, 'Movement Blocked',
-        37, 'Feed',
-        38, 'Cannibal',
-        39, 'Land',
-        41, 'Mount Actor',
-        42, 'Dismount Actor',
-        43, 'Clear Mount Position',
-        44, 'Clear Power Armor Exit'
+        19, 'Package Template'
       ])).SetDefaultEditValue('Package'),
       wbInteger('Interrupt Override', itU8, wbEnum([
         {0} 'Spectator: Threat Ref',
@@ -13301,9 +13272,9 @@ begin
     wbFormIDCk(QNAM, 'Owner Quest', [QUST]),
     wbStruct(PKCU, 'Counter', [
       wbInteger('Data Input Count', itU32),
-      wbFormIDCk('Package Template', [PACK, NULL]),
+      wbFormIDCk('Package Template', [PACK, NULL]).SetFormIDFilter(wbPACKTemplateFilter),
       wbInteger('Version Counter (autoincremented)', itU32)
-    ], cpNormal, True),
+    ]).SetRequired,
 
     wbRStruct('Package Data', [
       wbRArray('Data Input Values', wbRStruct('Value', [
@@ -13335,7 +13306,7 @@ begin
           wbInteger('Branch Count', itU32),
           wbInteger('Flags', itU32, wbFlags([
             'Repeat when Complete',
-            'Unknown 1'
+            'Run Until All Children Complete'
           ])).IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse)
         ]),
         wbString(PNAM, 'Procedure Type'),
@@ -17767,8 +17738,8 @@ begin
   gdNexusModsUrl := 'https://www.nexusmods.com/fallout76/mods/30';
   {if wbToolMode = tmLODgen then
     wbNexusModsUrl := '';}
-  gdHEDRVersion := 266.0;
-  gdDefaultFormVersion := 209;
+  gdHEDRVersion := 280.0;
+  gdDefaultFormVersion := 210;
   gdQuestFlagsSignature := 'DNAM';
 end;
 
