@@ -174,7 +174,6 @@ type
     UDR    : Integer;
     NAV    : Integer;
     function LOOTEntry(aFileChanged: Boolean; const aAppName, aVersion, aNexusModsUrl: string): string;
-    function BOSSEntry(const aAppName: string): string;
   end;
   PwbDirtyInfo = ^TwbDirtyInfo;
   TwbDirtyInfos = TArray<TwbDirtyInfo>;
@@ -1897,21 +1896,6 @@ begin
   end;
 end;
 
-function TwbDirtyInfo.BOSSEntry(const aAppName: string): string;
-begin
-  Result := '';
-  if (ITM <> 0) or (UDR <> 0) then begin
-    Result := Result + CRLF + Plugin;
-    Result := Result + CRLF + Format('  IF CHECKSUM("%s", %s) DIRTY: %d ITM, %d UDR records. Needs %sEdit cleaning: "http://cs.elderscrolls.com/index.php?title=TES4Edit_Cleaning_Guide"', [
-      Plugin,
-      IntToHex(CRC32, 8),
-      ITM,
-      UDR,
-      aAppName
-    ]);
-  end;
-end;
-
 function wbDirtyInfoFor(var aInfos: TwbDirtyInfos; const aPlugin: string; aCRC32: TwbCRC32): PwbDirtyInfo;
 begin
   for var i := Low(aInfos) to High(aInfos) do
@@ -1924,25 +1908,14 @@ begin
 end;
 
 procedure wbReportDirtyInfos(const aInfos: TwbDirtyInfos; aGameDef: TwbGameDef; const aNexusModsUrl: string; const aOnMessage: TwbConflictMessageProc);
-var
-  lBOSS : Boolean;
 begin
   if Length(aInfos) < 1 then
     Exit;
-  lBOSS := False;
+
   aOnMessage('');
   aOnMessage('LOOT Masterlist Entries');
-  for var i := Low(aInfos) to High(aInfos) do begin
+  for var i := Low(aInfos) to High(aInfos) do
     aOnMessage(aInfos[i].LOOTEntry((i = 0) or not SameText(aInfos[i].Plugin, aInfos[Pred(i)].Plugin), aGameDef.AppName, VersionString.ToString, aNexusModsUrl));
-    if (aInfos[i].ITM <> 0) or (aInfos[i].UDR <> 0) then
-      lBOSS := aGameDef.GameMode = gmTES4;
-  end;
-  aOnMessage('');
-  if lBOSS then begin
-    aOnMessage('BOSS Masterlist Entries');
-    for var lInfo in aInfos do
-      aOnMessage(lInfo.BOSSEntry(aGameDef.AppName));
-  end;
 end;
 
 constructor TwbQuickClean.Create(const aFile: IwbFile; aView: TwbConflictView; const aOnMessage, aOnProgress: TwbConflictMessageProc);
