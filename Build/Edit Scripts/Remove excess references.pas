@@ -24,6 +24,7 @@ var
 begin
   if Pos(Signature(e), sRefSignatures) > 0 then begin
     //if GetElementEditValues(e, 'NAME') = 'IronArrow "Iron Arrow" [AMMO:0001397D]' then
+    if not GetIsPersistent(e) then
       lst.Add(e);
   end 
   else if Signature(e) = 'CELL' then begin

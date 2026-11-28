@@ -9,13 +9,30 @@ const
   ShiftX = 2;
   ShiftY = -3;
   CellSize = 4096;
- 
+
+function RefusedForMorrowind: Boolean;
+begin
+  Result := wbGameMode = gmTES3;
+  if Result then
+    AddMessage('This script does not work for Morrowind: it reads a cell''s grid from XCLC and takes a cell to be 4096 units, and a Morrowind cell holds its grid in DATA and is 8192 units');
+end;
+
+function Initialize: integer;
+begin
+  if RefusedForMorrowind then
+    Result := 1;
+end;
+
 function Process(e: IInterface): integer;
 var
   Sig: string;
   ent, ents, point: IInterface;
   i, j: integer;
 begin
+  if RefusedForMorrowind then begin
+    Result := 1;
+    Exit;
+  end;
   Sig := Signature(e);
 
   // update regions

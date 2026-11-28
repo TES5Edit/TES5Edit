@@ -15,8 +15,19 @@ var
   Refs: array [0..50000] of IInterface;
   RefsCount: integer;
 
+function RefusedForMorrowind: Boolean;
+begin
+  Result := wbGameMode = gmTES3;
+  if Result then
+    AddMessage('This script does not work for Morrowind: it reads a cell''s grid from XCLC and takes a cell to be 4096 units, and a Morrowind cell holds its grid in DATA and is 8192 units');
+end;
+
 function Initialize: integer;
 begin
+  if RefusedForMorrowind then begin
+    Result := 1;
+    Exit;
+  end;
   slCELL := TStringList.Create;
   RefsCount := 0;
 end;
@@ -25,6 +36,10 @@ function Process(e: IInterface): integer;
 var
   Sig, s: string;
 begin
+  if RefusedForMorrowind then begin
+    Result := 1;
+    Exit;
+  end;
   Sig := Signature(e);
   
   // build a list of temporary cells

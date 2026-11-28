@@ -38,6 +38,7 @@ uses
   xeFileSelectForm,
   xeInit,
   xeMainForm,
+  xejviScriptAdapterContainer,
   xejviScriptArguments;
 
 const
@@ -359,6 +360,11 @@ var
 begin
   Value := False;
   if Supports(IInterface(Args.Values[0]), IwbElement, Element) then begin
+    if Element.ElementType = etFile then
+      raise Exception.Create(Element.Path + ': A file can not be removed');
+    RequireEditable(Element);
+    RequireNotFileHeader(Element);
+    RequireRemovable(Element);
     Node := frmMain.FindNodeForElement(Element);
     if Assigned(Node) then begin
       NodeData := frmMain.vstNav.GetNodeData(Node);
