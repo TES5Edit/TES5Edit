@@ -12,6 +12,19 @@
 }
 unit RemoveInvalidEntriesFromLists;
 
+function RefusedForMorrowind: Boolean;
+begin
+  Result := wbGameMode = gmTES3;
+  if Result then
+    AddMessage('This script does not work for Morrowind: it removes entries that link to no record, and a Morrowind AI package links to none');
+end;
+
+function Initialize: integer;
+begin
+  if RefusedForMorrowind then
+    Result := 1;
+end;
+
 procedure SanitizeList(entries: IInterface; refpath: string);
 var
   entry: IInterface;
@@ -34,6 +47,10 @@ var
   entries, entry: IInterface;
   i: integer;
 begin
+  if RefusedForMorrowind then begin
+    Result := 1;
+    Exit;
+  end;
   if Signature(e) = 'FLST' then
     SanitizeList(ElementByName(e, 'FormIDs'), '')
   
