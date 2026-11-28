@@ -2323,17 +2323,17 @@ begin
       wbInteger('Number of Floats', itU32),
       wbInteger('Compiled Size', itU32),
       wbInteger('Local Variable Size', itU32)
-    ]).SetSummaryKeyOnValue([4,5,2,1,3])
+    ]).SetSummaryKeyOnValue([4,5,1,2,3])
       .SetSummaryPrefixSuffixOnValue(4, '{Compiled Size: ', ',')
       .SetSummaryPrefixSuffixOnValue(5, 'Local Var Size: ', ',')
-      .SetSummaryPrefixSuffixOnValue(2, 'Shorts: ', ',')
-      .SetSummaryPrefixSuffixOnValue(1, 'Longs: ', ',')
+      .SetSummaryPrefixSuffixOnValue(1, 'Shorts: ', ',')
+      .SetSummaryPrefixSuffixOnValue(2, 'Longs: ', ',')
       .SetSummaryPrefixSuffixOnValue(3, 'Floats: ', '}')
       .SetRequired
       .IncludeFlag(dfSummaryMembersNoName)
       .IncludeFlag(dfCollapsed, clpScriptData in DefineOptions.Collapse),
     wbDeleted,
-    wbArrayS(SCVR, 'Script Variables', wbString('Script Variable', 0, cpCritical).IncludeFlag(dfInternalEditOnly)).IncludeFlagOnValue(dfElementsFixed).IncludeFlag(dfFastAssign),
+    wbArray(SCVR, 'Script Variables', wbString('Script Variable', 0, cpCritical).IncludeFlag(dfInternalEditOnly)).IncludeFlagOnValue(dfElementsFixed).IncludeFlagOnValue(dfNoStringListTerminator).IncludeFlagOnValue(dfNotAlignable).IncludeFlag(dfFastAssign),
     wbByteArray(SCDT, 'Compiled Script'),
     wbStringScript(SCTX, 'Script Source').SetRequired
   ]).SetFormIDBase($30)

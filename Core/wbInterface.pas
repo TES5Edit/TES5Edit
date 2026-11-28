@@ -527,6 +527,7 @@ type
     dfNoCopyAsOverride,
     dfNoMove,
     dfNoReport,
+    dfNoStringListTerminator,
     dfNotAlignable,
     dfRemoveLastOnly,
     dfSkipImplicitEdit,
